@@ -1,0 +1,21 @@
+{
+  "unit": "kgCO2e",
+  "note": "Empreinte carbone indicative par meuble selon la décision. keep = conservation (≈0), secondhand = seconde main, new = neuf durable. Valeurs de référence à affiner.",
+  "categories": {
+    "canape": { "keep": 0, "secondhand": 15, "new": 90 },
+    "fauteuil": { "keep": 0, "secondhand": 8, "new": 45 },
+    "table-basse": { "keep": 0, "secondhand": 6, "new": 35 },
+    "table-a-manger": { "keep": 0, "secondhand": 12, "new": 70 },
+    "chaise": { "keep": 0, "secondhand": 3, "new": 18 },
+    "lit": { "keep": 0, "secondhand": 14, "new": 80 },
+    "matelas": { "keep": 0, "secondhand": 0, "new": 60 },
+    "armoire": { "keep": 0, "secondhand": 16, "new": 95 },
+    "commode": { "keep": 0, "secondhand": 10, "new": 55 },
+    "etagere": { "keep": 0, "secondhand": 7, "new": 40 },
+    "bureau": { "keep": 0, "secondhand": 9, "new": 50 },
+    "buffet": { "keep": 0, "secondhand": 13, "new": 75 },
+    "tapis": { "keep": 0, "secondhand": 4, "new": 25 },
+    "luminaire": { "keep": 0, "secondhand": 2, "new": 12 },
+    "decoration": { "keep": 0, "secondhand": 1, "new": 6 }
+  }
+}

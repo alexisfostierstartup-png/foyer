@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Foyer
 
-## Getting Started
+PWA mobile-first qui transforme une photo de pièce (salon ou chambre) en projet déco soft — en préservant l'architecture, en gardant le mobilier existant quand c'est possible, et en proposant un projet éco-aligné.
 
-First, run the development server:
+## Setup
 
 ```bash
+npm install
+cp .env.local.example .env.local   # puis renseignez GEMINI_API_KEY
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Ouvrez [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Next.js 16 (App Router) + TypeScript
+- Tailwind CSS v4 (palette Foyer définie dans `app/globals.css`)
+- shadcn/ui (composants dans `components/ui`)
+- Polices : Fraunces (titres) + Inter (UI) via `next/font/google`
+- Stockage local : fichiers dans `public/uploads`, projets en JSON dans `data/projects.json`
+- Pas d'auth, pas de DB, pas de paiement (cette phase)
 
-## Learn More
+## Architecture des dossiers
 
-To learn more about Next.js, take a look at the following resources:
+```
+/app
+  /(marketing)/page.tsx              Landing
+  /(create)/create/page.tsx          Écran 1 : Upload
+  /(create)/create/style/page.tsx    Écran 2 : Choix style
+  /(create)/create/generating/page.tsx  Écran 3 : Génération (loader)
+  /(create)/create/[projectId]/page.tsx Écran 4 : Rendu + marquage
+  /api/detect/route.ts               Détection mobilier (Gemini Vision)
+  /api/generate/route.ts             Génération rendu (Nano Banana)
+  /api/upload/route.ts               Upload + resize photo
+/components
+  /ui                                shadcn
+  /create                            Composants spécifiques au flow
+  /shared                            Composants réutilisables (logo, footer)
+/lib
+  /ai/gemini.ts                      Wrapper Gemini Vision
+  /ai/nano-banana.ts                 Wrapper Nano Banana
+  /ai/prompts.ts                     Templates de prompts
+  /storage/fs.ts                     Helpers filesystem local
+  /storage/projects.ts               CRUD JSON projets
+  /types.ts                          Types TypeScript globaux
+  /constants.ts                      Constantes (styles, décisions, ambiances)
+/data
+  /styles.json                       10 styles seed
+  /co2-factors.json                  Facteurs CO2 par catégorie
+  /projects.json                     Stockage projets (init [])
+/public
+  /uploads                           Photos uploadées par les users
+  /moodboards                        Moodboards pré-générés (V2)
+/scripts
+  /generate-moodboards.ts            Script de pré-génération (V2)
+/design                              Maquettes Claude Design (référence, hors build)
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Couleurs sémantiques
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `foyer-sage` = Garder (mobilier conservé)
+- `foyer-ochre` = Customiser (repeindre/recouvrir)
+- `foyer-terra` = Remplacer / Acheter / CTA principal
+- `foyer-water` = Accent éco
 
-## Deploy on Vercel
+## Commandes utiles
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run dev      # serveur de développement
+npm run build    # build de production
+npm run start    # serveur de production
+```
