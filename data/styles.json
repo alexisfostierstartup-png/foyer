@@ -1,92 +1,56 @@
 [
   {
-    "id": "japandi",
-    "name": "Japandi",
-    "description": "Minimalisme japonais et chaleur scandinave, lignes épurées et matières naturelles.",
-    "paletteHex": ["#EDE7DD", "#C9BBA8", "#7A6F5F", "#2E2A24"],
-    "materials": ["chêne clair", "lin", "céramique mate", "bambou"],
-    "mood": "Calme, épuré, organique",
-    "moodboardUrl": "/moodboards/japandi.jpg"
+    "id": "doux",
+    "name": "Doux",
+    "description": "Lumière tamisée, matériaux naturels. Une pièce où l'on souffle.",
+    "paletteHex": ["#F5EFE6", "#E5DCC3", "#A8957A"],
+    "materials": ["lin écru", "chêne blanc", "céramique blanche", "laine douce"],
+    "mood": "calme, lumineux, matériaux naturels, atmosphère paisible",
+    "moodboardUrl": "/moodboards/doux.svg"
   },
   {
-    "id": "scandinave",
-    "name": "Scandinave",
-    "description": "Bois clair, blancs doux et touches pastel pour une atmosphère lumineuse et cosy.",
-    "paletteHex": ["#FAF6F0", "#E3D9CC", "#A8C0B8", "#3D3A35"],
-    "materials": ["bouleau", "laine", "coton", "céramique blanche"],
-    "mood": "Lumineux, douillet, simple",
-    "moodboardUrl": "/moodboards/scandinave.jpg"
+    "id": "brut",
+    "name": "Brut",
+    "description": "Métal noir, bois foncé, contrastes francs. Pour les pièces qui ont du caractère.",
+    "paletteHex": ["#2B2723", "#5C4B3C", "#A18671"],
+    "materials": ["métal noir mat", "noyer foncé", "cuir brun", "béton lisse"],
+    "mood": "contrasté, industriel doux, masculin sobre",
+    "moodboardUrl": "/moodboards/brut.svg"
   },
   {
-    "id": "boheme",
-    "name": "Bohème",
-    "description": "Textiles superposés, plantes et tons terreux pour un cocon chaleureux et vivant.",
-    "paletteHex": ["#E8D8C3", "#C58E6A", "#8A5A3B", "#6B8E6F"],
-    "materials": ["rotin", "jute", "macramé", "terre cuite"],
-    "mood": "Chaleureux, foisonnant, nomade",
-    "moodboardUrl": "/moodboards/boheme.jpg"
+    "id": "bois-clair",
+    "name": "Bois clair",
+    "description": "Chêne blanc, blanc cassé, tons crayeux. L'épure scandinave revisitée.",
+    "paletteHex": ["#FFFFFF", "#E8DFD0", "#C9B89A"],
+    "materials": ["chêne blanc", "lin blanc", "céramique écrue", "laiton brossé"],
+    "mood": "épuré, lumineux, matériaux naturels clairs, scandinave moderne",
+    "moodboardUrl": "/moodboards/bois-clair.svg"
   },
   {
-    "id": "mid-century",
-    "name": "Mid-century",
-    "description": "Mobilier des années 50-60, bois teinté, formes graphiques et couleurs franches.",
-    "paletteHex": ["#E5DDD0", "#C89B6A", "#C0664A", "#3A4A42"],
-    "materials": ["noyer", "cuir", "laiton", "velours"],
-    "mood": "Rétro, graphique, élégant",
-    "moodboardUrl": "/moodboards/mid-century.jpg"
-  },
-  {
-    "id": "minimaliste",
-    "name": "Minimaliste",
-    "description": "Le strict nécessaire, palette neutre et lignes nettes pour respirer.",
-    "paletteHex": ["#FFFFFF", "#EDEAE3", "#B8B2A6", "#1F1B16"],
-    "materials": ["béton ciré", "acier mat", "lin écru", "verre"],
-    "mood": "Épuré, serein, intemporel",
-    "moodboardUrl": "/moodboards/minimaliste.jpg"
-  },
-  {
-    "id": "industriel",
-    "name": "Industriel",
-    "description": "Métal noir, bois brut et matières patinées, esprit atelier réinventé.",
-    "paletteHex": ["#D8D2C8", "#8C8478", "#4A453E", "#1F1B16"],
-    "materials": ["acier noir", "bois recyclé", "cuir vieilli", "béton"],
-    "mood": "Brut, urbain, authentique",
-    "moodboardUrl": "/moodboards/industriel.jpg"
-  },
-  {
-    "id": "campagne-chic",
-    "name": "Campagne chic",
-    "description": "Lin lavé, bois patiné et tons crème pour une douceur champêtre raffinée.",
-    "paletteHex": ["#FAF6F0", "#E5DDD0", "#A5B8A0", "#6B645A"],
-    "materials": ["chêne patiné", "lin lavé", "osier", "céramique émaillée"],
-    "mood": "Doux, naturel, intemporel",
-    "moodboardUrl": "/moodboards/campagne-chic.jpg"
-  },
-  {
-    "id": "contemporain",
-    "name": "Contemporain",
-    "description": "Lignes actuelles, contrastes maîtrisés et matières nobles pour un rendu net.",
-    "paletteHex": ["#F2EEE7", "#C2BAAD", "#5A5247", "#1F1B16"],
-    "materials": ["marbre", "chêne fumé", "métal brossé", "velours"],
-    "mood": "Net, sophistiqué, équilibré",
-    "moodboardUrl": "/moodboards/contemporain.jpg"
+    "id": "vintage",
+    "name": "Vintage",
+    "description": "Mid-century, couleurs saturées, courbes douces. L'élégance des années 60.",
+    "paletteHex": ["#C9853E", "#3D6B7C", "#F4E8D8"],
+    "materials": ["noyer", "velours moutarde", "laiton", "verre fumé"],
+    "mood": "mid-century, rétro chic, courbes, contrastes colorés",
+    "moodboardUrl": "/moodboards/vintage.svg"
   },
   {
     "id": "mediterraneen",
     "name": "Méditerranéen",
-    "description": "Enduits à la chaux, terre cuite et bleus doux, lumière du Sud.",
-    "paletteHex": ["#F5EDE1", "#D9A066", "#A5B8A0", "#3C5A57"],
-    "materials": ["chaux", "terre cuite", "bois flotté", "céramique artisanale"],
-    "mood": "Solaire, apaisant, vivant",
-    "moodboardUrl": "/moodboards/mediterraneen.jpg"
+    "description": "Blanc cassé, terre cuite, lin froissé. La douceur du Sud.",
+    "paletteHex": ["#F4EDE0", "#C6855C", "#7A8B6F"],
+    "materials": ["terre cuite", "lin brut", "bois peint", "céramique émaillée"],
+    "mood": "lumineux, salin, matériaux bruts, simplicité chaleureuse",
+    "moodboardUrl": "/moodboards/mediterraneen.svg"
   },
   {
-    "id": "art-deco",
-    "name": "Art déco",
-    "description": "Géométries dorées, velours profonds et matières précieuses, glamour assumé.",
-    "paletteHex": ["#EDE3D2", "#C89B6A", "#3C5A57", "#1F1B16"],
-    "materials": ["laiton", "velours", "marbre veiné", "verre fumé"],
-    "mood": "Glamour, graphique, opulent",
-    "moodboardUrl": "/moodboards/art-deco.jpg"
+    "id": "bohemian",
+    "name": "Bohemian",
+    "description": "Rotin, ocre, motifs ethniques. Pour les pièces qui racontent un voyage.",
+    "paletteHex": ["#C8703A", "#E8C896", "#5C4632"],
+    "materials": ["rotin", "lin brut", "jute", "céramique artisanale"],
+    "mood": "chaleureux, chargé, voyage, matériaux artisanaux",
+    "moodboardUrl": "/moodboards/bohemian.svg"
   }
 ]

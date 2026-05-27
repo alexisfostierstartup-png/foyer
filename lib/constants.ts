@@ -24,3 +24,7 @@ export const DECISION_COLORS: Record<FurnitureDecision, string> = {
 
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
 export const UPLOAD_MAX_DIMENSION = 1600; // px, longest edge after resize
+
+// Free-tier limits before auth / paywall.
+export const MAX_FREE_GENERATIONS = 1;
+export const MAX_FREE_EDITS = 2;
