@@ -111,7 +111,7 @@ export function UploadForm() {
                   className={cn(
                     "flex-1 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors",
                     selected
-                      ? "bg-foyer-terra text-white shadow-sm"
+                      ? "bg-foyer-terra-deep text-white shadow-sm"
                       : "text-foyer-muted hover:text-foyer-ink",
                   )}
                 >
@@ -155,7 +155,7 @@ export function UploadForm() {
                   type="button"
                   size="lg"
                   onClick={() => cameraInputRef.current?.click()}
-                  className="h-12 w-full bg-foyer-terra text-white hover:bg-foyer-terra/90"
+                  className="h-12 w-full bg-foyer-terra-deep text-white hover:bg-foyer-terra-deep/90"
                 >
                   <Camera className="size-5" aria-hidden />
                   Prendre une photo
