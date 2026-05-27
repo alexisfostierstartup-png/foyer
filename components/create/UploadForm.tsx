@@ -1,10 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Camera, ImagePlus, Frame, Sun, UserRoundX, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { ProgressBar } from "@/components/create/ProgressBar";
 import { MAX_UPLOAD_BYTES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -25,8 +25,6 @@ const TIPS = [
 
 export function UploadForm() {
   const router = useRouter();
-  const cameraInputRef = useRef<HTMLInputElement>(null);
-  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const [roomType, setRoomType] = useState<RoomType | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -151,50 +149,46 @@ export function UploadForm() {
               </p>
             ) : (
               <div className="flex w-full flex-col gap-3">
-                <Button
-                  type="button"
-                  size="lg"
-                  onClick={() => cameraInputRef.current?.click()}
-                  className="h-12 w-full bg-foyer-terra-deep text-white hover:bg-foyer-terra-deep/90"
+                <label
+                  className={cn(
+                    buttonVariants({ size: "lg" }),
+                    "h-12 w-full cursor-pointer bg-foyer-terra-deep text-white hover:bg-foyer-terra-deep/90",
+                  )}
                 >
                   <Camera className="size-5" aria-hidden />
                   Prendre une photo
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="lg"
-                  onClick={() => galleryInputRef.current?.click()}
-                  className="h-12 w-full text-foyer-ink"
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="sr-only"
+                    onChange={(e) => {
+                      handleFileSelect(e.target.files?.[0]);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+                <label
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "lg" }),
+                    "h-12 w-full cursor-pointer text-foyer-ink",
+                  )}
                 >
                   <ImagePlus className="size-5" aria-hidden />
                   Importer depuis la galerie
-                </Button>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={(e) => {
+                      handleFileSelect(e.target.files?.[0]);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
               </div>
             )}
           </div>
-
-          <input
-            ref={cameraInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            onChange={(e) => {
-              handleFileSelect(e.target.files?.[0]);
-              e.target.value = "";
-            }}
-          />
-          <input
-            ref={galleryInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              handleFileSelect(e.target.files?.[0]);
-              e.target.value = "";
-            }}
-          />
         </div>
 
         <ul className="mt-8 space-y-3">
