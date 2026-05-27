@@ -1,10 +1,28 @@
-export default function StylePage() {
+import { redirect } from "next/navigation";
+import { getProject } from "@/lib/storage/projects";
+import { StyleSelector } from "@/components/create/StyleSelector";
+import stylesData from "@/data/styles.json";
+import type { Style } from "@/lib/types";
+
+const STYLES = stylesData as Style[];
+
+export default async function StylePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ projectId?: string }>;
+}) {
+  const { projectId } = await searchParams;
+  if (!projectId) redirect("/create");
+
+  const project = await getProject(projectId);
+  if (!project) redirect("/create");
+
   return (
-    <main className="flex flex-1 flex-col items-center justify-center px-6 py-24 text-center">
-      <h1 className="font-serif text-3xl text-foyer-ink">Étape 2 — Le style</h1>
-      <p className="mt-4 max-w-md text-foyer-muted">
-        Choix du style et de l&apos;ambiance (placeholder).
-      </p>
-    </main>
+    <StyleSelector
+      projectId={project.id}
+      roomType={project.roomType}
+      basePhotoUrl={project.basePhotoUrl}
+      styles={STYLES}
+    />
   );
 }
