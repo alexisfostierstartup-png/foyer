@@ -12,5 +12,7 @@ si un fichier manque, la carte affiche un bloc de couleur avec une icône et le 
 | `armchair.jpg` | Fauteuil en lin sable |
 | `paint.jpg` | Peinture mate blanc cassé (2,5 L) |
 | `tvstand.jpg` | Meuble TV bois clair |
+| `molding.jpg` | Moulures décoratives MDF |
+| `floor.jpg` | Parquet stratifié chêne clair |
 
 Format conseillé : carré ~400×400, JPEG.

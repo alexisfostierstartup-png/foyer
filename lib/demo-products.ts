@@ -1,3 +1,5 @@
+export const ORDER_STORAGE_KEY = "foyer-demo-order";
+
 export type DemoSource = "secondhand" | "eco_new";
 
 export type DemoProductKind =
@@ -7,7 +9,16 @@ export type DemoProductKind =
   | "lamp"
   | "armchair"
   | "paint"
-  | "tvstand";
+  | "tvstand"
+  | "molding"
+  | "floor";
+
+export type ProductOption = {
+  merchant: string;
+  price: string;
+  source: DemoSource;
+  url?: string;
+};
 
 export type DemoProduct = {
   id: number;
@@ -17,6 +28,7 @@ export type DemoProduct = {
   price: string;
   img: string;
   kind: DemoProductKind;
+  alternatives: ProductOption[];
 };
 
 export const demoProducts: DemoProduct[] = [
@@ -28,6 +40,16 @@ export const demoProducts: DemoProduct[] = [
     price: "320 €",
     img: "/demo/products/sofa.jpg",
     kind: "sofa",
+    alternatives: [
+      { merchant: "Maisons du Monde", price: "599 €", source: "eco_new" },
+      {
+        merchant: "IKEA",
+        price: "589 €",
+        source: "eco_new",
+        url: "https://www.ikea.com/fr/fr/p/hyltarp-canape-2-places-hallarp-blanc-s49489616/",
+      },
+      { merchant: "Leboncoin", price: "250 €", source: "secondhand" },
+    ],
   },
   {
     id: 2,
@@ -37,6 +59,11 @@ export const demoProducts: DemoProduct[] = [
     price: "75 €",
     img: "/demo/products/table.jpg",
     kind: "table",
+    alternatives: [
+      { merchant: "La Redoute", price: "149 €", source: "eco_new" },
+      { merchant: "IKEA", price: "89 €", source: "eco_new" },
+      { merchant: "Selency", price: "110 €", source: "secondhand" },
+    ],
   },
   {
     id: 3,
@@ -46,6 +73,11 @@ export const demoProducts: DemoProduct[] = [
     price: "89 €",
     img: "/demo/products/rug.jpg",
     kind: "rug",
+    alternatives: [
+      { merchant: "Maisons du Monde", price: "119 €", source: "eco_new" },
+      { merchant: "IKEA", price: "69 €", source: "eco_new" },
+      { merchant: "Leboncoin", price: "40 €", source: "secondhand" },
+    ],
   },
   {
     id: 4,
@@ -55,6 +87,11 @@ export const demoProducts: DemoProduct[] = [
     price: "69 €",
     img: "/demo/products/lamp.jpg",
     kind: "lamp",
+    alternatives: [
+      { merchant: "La Redoute", price: "89 €", source: "eco_new" },
+      { merchant: "IKEA", price: "49 €", source: "eco_new" },
+      { merchant: "Selency", price: "60 €", source: "secondhand" },
+    ],
   },
   {
     id: 5,
@@ -64,6 +101,11 @@ export const demoProducts: DemoProduct[] = [
     price: "180 €",
     img: "/demo/products/armchair.jpg",
     kind: "armchair",
+    alternatives: [
+      { merchant: "Maisons du Monde", price: "299 €", source: "eco_new" },
+      { merchant: "IKEA", price: "199 €", source: "eco_new" },
+      { merchant: "Leboncoin", price: "140 €", source: "secondhand" },
+    ],
   },
   {
     id: 6,
@@ -73,6 +115,11 @@ export const demoProducts: DemoProduct[] = [
     price: "34 €",
     img: "/demo/products/paint.jpg",
     kind: "paint",
+    alternatives: [
+      { merchant: "Castorama", price: "29 €", source: "eco_new" },
+      { merchant: "ManoMano", price: "32 €", source: "eco_new" },
+      { merchant: "Leroy Merlin", price: "34 €", source: "eco_new" },
+    ],
   },
   {
     id: 7,
@@ -82,6 +129,39 @@ export const demoProducts: DemoProduct[] = [
     price: "159 €",
     img: "/demo/products/tvstand.jpg",
     kind: "tvstand",
+    alternatives: [
+      { merchant: "Maisons du Monde", price: "199 €", source: "eco_new" },
+      { merchant: "IKEA", price: "129 €", source: "eco_new" },
+      { merchant: "Leboncoin", price: "80 €", source: "secondhand" },
+    ],
+  },
+  {
+    id: 8,
+    name: "Moulures décoratives MDF",
+    source: "eco_new",
+    merchant: "Leroy Merlin",
+    price: "45 €",
+    img: "/demo/products/molding.jpg",
+    kind: "molding",
+    alternatives: [
+      { merchant: "Castorama", price: "39 €", source: "eco_new" },
+      { merchant: "ManoMano", price: "42 €", source: "eco_new" },
+      { merchant: "Leroy Merlin", price: "45 €", source: "eco_new" },
+    ],
+  },
+  {
+    id: 9,
+    name: "Parquet stratifié chêne clair",
+    source: "eco_new",
+    merchant: "Leroy Merlin",
+    price: "240 €",
+    img: "/demo/products/floor.jpg",
+    kind: "floor",
+    alternatives: [
+      { merchant: "Castorama", price: "199 €", source: "eco_new" },
+      { merchant: "ManoMano", price: "220 €", source: "eco_new" },
+      { merchant: "Leroy Merlin", price: "240 €", source: "eco_new" },
+    ],
   },
 ];
 

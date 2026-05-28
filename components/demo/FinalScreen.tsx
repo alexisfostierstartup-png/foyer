@@ -1,23 +1,42 @@
 "use client";
 
-import { useMemo } from "react";
-import { ArrowRight } from "lucide-react";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { PrimaryButton, DemoImage } from "@/components/demo/primitives";
 import { ProductCard } from "@/components/demo/ProductCard";
-import { demoProducts } from "@/lib/demo-products";
+import { ScoreDonut } from "@/components/demo/ScoreDonut";
+import {
+  demoProducts,
+  ORDER_STORAGE_KEY,
+  type ProductOption,
+} from "@/lib/demo-products";
 
 export function FinalScreen({ onRestart }: { onRestart: () => void }) {
-  const { secondhand, ecoNew, total } = useMemo(() => {
-    let sh = 0;
-    let en = 0;
-    let sum = 0;
-    for (const p of demoProducts) {
-      if (p.source === "secondhand") sh += 1;
-      else en += 1;
-      sum += Number(p.price.replace(/[^\d]/g, ""));
-    }
-    return { secondhand: sh, ecoNew: en, total: sum };
-  }, []);
+  const router = useRouter();
+  const [items, setItems] = useState(() =>
+    demoProducts.map((p) => ({ ...p })),
+  );
+
+  function order() {
+    localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(items));
+    router.push("/order");
+  }
+
+  function selectOption(index: number, opt: ProductOption) {
+    setItems((prev) =>
+      prev.map((it, i) =>
+        i === index
+          ? { ...it, merchant: opt.merchant, price: opt.price, source: opt.source }
+          : it,
+      ),
+    );
+  }
+
+  const total = useMemo(
+    () =>
+      items.reduce((sum, p) => sum + Number(p.price.replace(/[^\d]/g, "")), 0),
+    [items],
+  );
 
   return (
     <div className="flex flex-1 flex-col">
@@ -36,24 +55,15 @@ export function FinalScreen({ onRestart }: { onRestart: () => void }) {
       </p>
 
       <ul className="mt-5 flex flex-col gap-3">
-        {demoProducts.map((p) => (
+        {items.map((p, i) => (
           <li key={p.id}>
-            <ProductCard product={p} />
+            <ProductCard product={p} onSelect={(opt) => selectOption(i, opt)} />
           </li>
         ))}
       </ul>
 
-      <div className="mt-6 rounded-2xl border border-foyer-border bg-white p-4">
-        <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-foyer-muted">
-          Score Foyer
-        </p>
-        <p className="mt-2 text-[15px] text-foyer-ink">
-          {secondhand} pièces chinées · {ecoNew} neuves responsables · ~48 kg
-          CO₂ évités
-        </p>
-        <p className="mt-1 text-[12px] text-foyer-muted">
-          Base ADEME, calcul indicatif.
-        </p>
+      <div className="mt-6">
+        <ScoreDonut />
       </div>
 
       <div className="mt-5 flex items-center justify-between">
@@ -64,10 +74,7 @@ export function FinalScreen({ onRestart }: { onRestart: () => void }) {
       </div>
 
       <div className="mt-5">
-        <PrimaryButton>
-          Tout ouvrir
-          <ArrowRight className="size-4" aria-hidden />
-        </PrimaryButton>
+        <PrimaryButton onClick={order}>Commander</PrimaryButton>
       </div>
 
       <button
