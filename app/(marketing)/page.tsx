@@ -191,7 +191,7 @@ export default function LandingPage() {
             >
               Partenaires
             </Link>
-            <Link href="/create" className="font-medium text-foyer-ink">
+            <Link href="/demo" className="font-medium text-foyer-ink">
               Lancer
             </Link>
           </nav>
@@ -212,7 +212,7 @@ export default function LandingPage() {
             </p>
             <div className="mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
               <Button
-                render={<Link href="/create" />}
+                render={<Link href="/demo" />}
                 size="lg"
                 className="h-12 w-full rounded-full bg-foyer-terra-deep px-6 text-white hover:bg-foyer-terra-deep/90 sm:w-auto"
               >
