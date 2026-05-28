@@ -1,10 +1,19 @@
-export default function GeneratingPage() {
-  return (
-    <main className="flex flex-1 flex-col items-center justify-center px-6 py-24 text-center">
-      <h1 className="font-serif text-3xl text-foyer-ink">Étape 3 — Génération</h1>
-      <p className="mt-4 max-w-md text-foyer-muted">
-        Loader pendant la génération du rendu (placeholder).
-      </p>
-    </main>
-  );
+import { redirect } from "next/navigation";
+import { getProject } from "@/lib/storage/projects";
+import { GeneratingScreen } from "@/components/create/GeneratingScreen";
+
+export default async function GeneratingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ projectId?: string }>;
+}) {
+  const { projectId } = await searchParams;
+  if (!projectId) redirect("/create");
+
+  const project = await getProject(projectId);
+  if (!project) redirect("/create");
+  if (!project.selectedStyleId) redirect(`/create/style?projectId=${projectId}`);
+  if (project.generatedRenderUrl) redirect(`/create/${projectId}`);
+
+  return <GeneratingScreen projectId={projectId} />;
 }
