@@ -123,7 +123,7 @@ export function IterateScreen({ onApply }: { onApply: () => void }) {
                       setNotes((prev) => ({ ...prev, [cat.id]: e.target.value }))
                     }
                     placeholder={`Précisez pour ${cat.label.toLowerCase()}…`}
-                    className="mt-3 w-full rounded-xl border border-foyer-border bg-white px-3 py-2 text-sm text-foyer-ink outline-none placeholder:text-foyer-muted focus:border-foyer-terra"
+                    className="mt-3 w-full rounded-xl border border-foyer-border bg-white px-3 py-2 text-base text-foyer-ink outline-none placeholder:text-foyer-muted focus:border-foyer-terra"
                   />
                 </div>
               )}
