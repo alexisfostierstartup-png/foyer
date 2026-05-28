@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { MoveHorizontal } from "lucide-react";
+import { ChevronsLeftRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type BeforeAfterSliderProps = {
@@ -92,7 +92,7 @@ export function BeforeAfterSlider({
       {/* After (base layer) */}
       <div className="absolute inset-0">
         <SliderImage src={afterUrl} alt="Pièce transformée" placeholder="after.jpg" />
-        <span className="absolute right-3 top-3 rounded-full bg-foyer-ink/70 px-2.5 py-1 text-xs font-medium text-foyer-cream">
+        <span className="absolute right-3 top-3 rounded-full border border-foyer-border bg-white px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-foyer-ink">
           {afterLabel}
         </span>
       </div>
@@ -103,7 +103,7 @@ export function BeforeAfterSlider({
         style={{ clipPath: `inset(0 ${100 - position}% 0 0)` }}
       >
         <SliderImage src={beforeUrl} alt="Pièce avant" placeholder="before.jpg" />
-        <span className="absolute left-3 top-3 rounded-full bg-foyer-ink/70 px-2.5 py-1 text-xs font-medium text-foyer-cream">
+        <span className="absolute left-3 top-3 rounded-full bg-foyer-ink px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-foyer-cream">
           {beforeLabel}
         </span>
       </div>
@@ -114,8 +114,8 @@ export function BeforeAfterSlider({
         style={{ left: `${position}%`, transform: "translateX(-50%)" }}
       >
         <div className="absolute inset-y-0 w-0.5 -translate-x-1/2 bg-white/90 shadow-sm" />
-        <div className="absolute top-1/2 flex size-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-foyer-border bg-white text-foyer-ink shadow-sm">
-          <MoveHorizontal className="size-4" aria-hidden />
+        <div className="absolute top-1/2 flex size-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-foyer-border bg-white text-foyer-ink shadow-md">
+          <ChevronsLeftRight className="size-4" aria-hidden />
         </div>
       </div>
 
