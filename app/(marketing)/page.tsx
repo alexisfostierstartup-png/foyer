@@ -13,6 +13,7 @@ import { DiffCard } from "@/components/landing/DiffCard";
 import { SourcedItem } from "@/components/landing/SourcedItem";
 import { PartnerCard } from "@/components/landing/PartnerCard";
 import { FaqAccordion } from "@/components/landing/FaqAccordion";
+import { Reveal } from "@/components/landing/Reveal";
 
 const PROCESS_STEPS = [
   {
@@ -199,73 +200,115 @@ export default function LandingPage() {
       </header>
 
       {/* Section 1 — Hero */}
-      <section className="mx-auto w-full max-w-6xl px-6 py-12 md:py-20">
-        <div className="grid items-center gap-10 md:grid-cols-2">
+      <section className="relative overflow-hidden">
+        {/* halos décoratifs */}
+        <div
+          className="pointer-events-none absolute -right-24 -top-24 size-72 rounded-full bg-foyer-water/20 blur-3xl"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute -left-20 top-40 size-64 rounded-full bg-foyer-ochre/15 blur-3xl"
+          aria-hidden
+        />
+        <div className="relative mx-auto grid w-full max-w-6xl items-center gap-10 px-6 py-14 md:grid-cols-[1.05fr_1fr] md:py-24">
           <div>
-            <h1 className="font-serif text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-foyer-ink md:text-[56px]">
-              Une pièce transformée. Une empreinte préservée.
-            </h1>
-            <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-foyer-muted">
-              Un bel intérieur, sans que cela soit aux dépens de la planète.
-            </p>
-            <div className="mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-              <Button
-                render={<Link href="/demo" />}
-                size="lg"
-                className="h-12 w-full rounded-full bg-foyer-terra-deep px-6 text-white hover:bg-foyer-terra-deep/90 sm:w-auto"
-              >
-                Lancer ma transformation
-              </Button>
-              <Link
-                href="#process"
-                className="text-[15px] text-foyer-ink underline underline-offset-4 hover:text-foyer-terra-deep"
-              >
-                Voir comment ça marche
-              </Link>
-            </div>
-            <ul className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] text-foyer-muted">
-              <li className="flex items-center gap-2">
-                <span className="size-1.5 rounded-full bg-foyer-terra" aria-hidden />
-                1 premier rendu offert
-              </li>
-              <li className="flex items-center gap-2">
+            <Reveal>
+              <span className="inline-flex items-center gap-2 rounded-full border border-foyer-border bg-white/60 px-3 py-1 text-[12px] font-medium uppercase tracking-[0.12em] text-foyer-muted">
                 <span className="size-1.5 rounded-full bg-foyer-sage" aria-hidden />
-                Sans abonnement
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="size-1.5 rounded-full bg-foyer-water" aria-hidden />
-                Conçu en France
-              </li>
-            </ul>
+                Conception déco · sourcing éco
+              </span>
+            </Reveal>
+            <Reveal delay={80}>
+              <h1 className="mt-5 font-serif text-[38px] font-medium leading-[1.04] tracking-[-0.02em] text-foyer-ink md:text-[60px]">
+                Une pièce transformée.{" "}
+                <span className="text-foyer-terra-deep">Une empreinte préservée.</span>
+              </h1>
+            </Reveal>
+            <Reveal delay={160}>
+              <p className="mt-5 max-w-md text-[18px] leading-relaxed text-foyer-muted">
+                Un bel intérieur, sans que cela soit aux dépens de la planète.
+              </p>
+            </Reveal>
+            <Reveal delay={240}>
+              <div className="mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+                <Button
+                  render={<Link href="/demo" />}
+                  size="lg"
+                  className="h-12 w-full rounded-full bg-foyer-terra-deep px-6 text-white transition-transform hover:-translate-y-0.5 hover:bg-foyer-terra-deep/90 sm:w-auto"
+                >
+                  Lancer ma transformation
+                </Button>
+                <Link
+                  href="#process"
+                  className="group inline-flex items-center gap-1.5 text-[15px] text-foyer-ink"
+                >
+                  Voir comment ça marche
+                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                </Link>
+              </div>
+            </Reveal>
+            <Reveal delay={320}>
+              <ul className="mt-9 flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] text-foyer-muted">
+                <li className="flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-foyer-terra" aria-hidden />
+                  1 premier rendu offert
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-foyer-sage" aria-hidden />
+                  Sans abonnement
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-foyer-water" aria-hidden />
+                  Conçu en France
+                </li>
+              </ul>
+            </Reveal>
           </div>
-          <BeforeAfterSlider
-            beforeUrl="/landing/before.jpg"
-            afterUrl="/landing/after.jpg"
-          />
+
+          <Reveal delay={200} className="relative">
+            {/* cadre décalé derrière le slider */}
+            <div
+              className="absolute inset-0 -rotate-2 rounded-[28px] border border-foyer-border bg-white/50"
+              aria-hidden
+            />
+            <div className="relative rotate-1 transition-transform duration-500 hover:rotate-0">
+              <BeforeAfterSlider
+                beforeUrl="/landing/before.jpg"
+                afterUrl="/landing/after.jpg"
+              />
+            </div>
+          </Reveal>
         </div>
       </section>
 
       {/* Manifeste éco — remonté sous le hero (cœur de la proposition de valeur) */}
       <section className="border-t border-foyer-border bg-white/40">
         <div className="mx-auto w-full max-w-6xl px-6 py-16 md:py-24">
-          <h2 className="font-serif text-2xl font-medium text-foyer-ink md:text-4xl">
-            Avant de proposer du neuf, on regarde ce que vous avez déjà.
-          </h2>
-          <p className="mt-3 max-w-3xl text-[17px] leading-relaxed text-foyer-muted">
-            Un canapé peut être recouvert. Une commode repeinte. Quand il faut
-            acheter, on commence par la seconde main. Et si on doit prendre du
-            neuf, on vous oriente vers ce qui dure.
-          </p>
+          <Reveal>
+            <SectionEyebrow index="01" label="Notre parti pris" />
+            <h2 className="mt-4 max-w-3xl font-serif text-[26px] font-medium leading-tight text-foyer-ink md:text-4xl">
+              Avant de proposer du neuf, on regarde ce que vous avez déjà.
+            </h2>
+            <p className="mt-3 max-w-2xl text-[17px] leading-relaxed text-foyer-muted">
+              Un canapé peut être recouvert. Une commode repeinte. Quand il faut
+              acheter, on commence par la seconde main. Et si on doit prendre du
+              neuf, on vous oriente vers ce qui dure.
+            </p>
+          </Reveal>
           <div className="mt-10 flex flex-col gap-4 md:flex-row">
-            {ECO_STEPS.map((step) => (
-              <StepCard key={step.number} withDot {...step} />
+            {ECO_STEPS.map((step, i) => (
+              <Reveal key={step.number} delay={i * 100} className="flex md:flex-1">
+                <StepCard withDot {...step} />
+              </Reveal>
             ))}
           </div>
-          <p className="mt-6 text-[13px] leading-relaxed text-foyer-muted">
-            Score Foyer — chaque projet est mesuré selon sa part de mobilier
-            conservé, occasion et neuf, et son équivalent CO₂ évité. Méthodologie
-            sourcée ADEME.
-          </p>
+          <Reveal delay={120}>
+            <p className="mt-6 text-[13px] leading-relaxed text-foyer-muted">
+              Score Foyer — chaque projet est mesuré selon sa part de mobilier
+              conservé, occasion et neuf, et son équivalent CO₂ évité. Méthodologie
+              sourcée ADEME.
+            </p>
+          </Reveal>
         </div>
       </section>
 
@@ -275,15 +318,20 @@ export default function LandingPage() {
         className="scroll-mt-20 border-t border-foyer-border bg-white/40"
       >
         <div className="mx-auto w-full max-w-6xl px-6 py-16 md:py-24">
-          <h2 className="font-serif text-2xl font-medium text-foyer-ink md:text-4xl">
-            On vous accompagne de la photo au montage.
-          </h2>
-          <p className="mt-3 text-[17px] text-foyer-muted">
-            4 étapes simples. Pas de logiciel à maîtriser.
-          </p>
+          <Reveal>
+            <SectionEyebrow index="02" label="Comment ça marche" />
+            <h2 className="mt-4 font-serif text-[26px] font-medium leading-tight text-foyer-ink md:text-4xl">
+              On vous accompagne de la photo au montage.
+            </h2>
+            <p className="mt-3 text-[17px] text-foyer-muted">
+              4 étapes simples. Pas de logiciel à maîtriser.
+            </p>
+          </Reveal>
           <div className="mt-10 flex flex-col gap-4 md:flex-row">
-            {PROCESS_STEPS.map((step) => (
-              <StepCard key={step.number} {...step} />
+            {PROCESS_STEPS.map((step, i) => (
+              <Reveal key={step.number} delay={i * 100} className="flex md:flex-1">
+                <StepCard {...step} />
+              </Reveal>
             ))}
           </div>
         </div>
@@ -291,15 +339,20 @@ export default function LandingPage() {
 
       {/* Section 3 — La différence Foyer */}
       <section className="mx-auto w-full max-w-6xl px-6 py-16 md:py-24">
-        <h2 className="font-serif text-2xl font-medium text-foyer-ink md:text-4xl">
-          On ne fait pas que générer des rendus.
-        </h2>
-        <p className="mt-3 text-[17px] text-foyer-muted">
-          Tout ce que vous voyez existe. Et on vous dit où le trouver.
-        </p>
+        <Reveal>
+          <SectionEyebrow index="03" label="La différence Foyer" />
+          <h2 className="mt-4 font-serif text-[26px] font-medium leading-tight text-foyer-ink md:text-4xl">
+            On ne fait pas que générer des rendus.
+          </h2>
+          <p className="mt-3 text-[17px] text-foyer-muted">
+            Tout ce que vous voyez existe. Et on vous dit où le trouver.
+          </p>
+        </Reveal>
         <div className="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {DIFFERENCES.map((diff) => (
-            <DiffCard key={diff.title} {...diff} />
+          {DIFFERENCES.map((diff, i) => (
+            <Reveal key={diff.title} delay={i * 90} className="flex">
+              <DiffCard {...diff} />
+            </Reveal>
           ))}
         </div>
       </section>
@@ -307,13 +360,22 @@ export default function LandingPage() {
       {/* Section 4 — Before/after détaillé */}
       <section className="border-t border-foyer-border bg-white/40">
         <div className="mx-auto w-full max-w-6xl px-6 py-16 md:py-24">
-          <div className="grid items-start gap-10 md:grid-cols-2">
-            <BeforeAfterSlider
-              beforeUrl="/landing/before.jpg"
-              afterUrl="/landing/after.jpg"
-            />
-            <div>
-              <h2 className="font-serif text-2xl font-medium text-foyer-ink md:text-4xl">
+          <div className="grid items-center gap-10 md:grid-cols-2">
+            <Reveal className="relative">
+              <div
+                className="absolute inset-0 rotate-2 rounded-[28px] border border-foyer-border bg-white/50"
+                aria-hidden
+              />
+              <div className="relative">
+                <BeforeAfterSlider
+                  beforeUrl="/landing/before.jpg"
+                  afterUrl="/landing/after.jpg"
+                />
+              </div>
+            </Reveal>
+            <Reveal delay={120}>
+              <SectionEyebrow index="04" label="Du rendu à l'achat" />
+              <h2 className="mt-4 font-serif text-[26px] font-medium leading-tight text-foyer-ink md:text-4xl">
                 Ce que vous voyez dans le rendu
               </h2>
               <ul className="mt-6">
@@ -325,7 +387,7 @@ export default function LandingPage() {
                 Chaque élément est sourcé. Vous savez exactement où acheter, et à
                 quel prix.
               </p>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -333,17 +395,22 @@ export default function LandingPage() {
       {/* Section 6 — Transparence IA */}
       <section className="border-t border-foyer-border bg-white/40">
         <div className="mx-auto w-full max-w-3xl px-6 py-16 md:py-24">
-          <h2 className="font-serif text-2xl font-medium text-foyer-ink md:text-4xl">
-            On utilise l&apos;IA. Mais ce n&apos;est qu&apos;un outil.
-          </h2>
-          <p className="mt-5 text-[17px] leading-relaxed text-foyer-muted">
-            L&apos;intelligence artificielle nous sert à générer des rendus de
-            votre pièce transformée, et à retrouver des meubles d&apos;occasion qui
-            correspondent visuellement à ce qu&apos;on vous propose. Le reste — la
-            sélection des partenaires, le choix des matériaux, la préparation des
-            listes — est pensé par notre équipe. L&apos;IA pour aller vite,
-            l&apos;humain pour aller juste.
-          </p>
+          <Reveal>
+            <SectionEyebrow index="05" label="Transparence" />
+            <h2 className="mt-4 font-serif text-[26px] font-medium leading-tight text-foyer-ink md:text-4xl">
+              On utilise l&apos;IA. Mais ce n&apos;est qu&apos;un outil.
+            </h2>
+            <p className="mt-5 text-[18px] leading-relaxed text-foyer-muted">
+              L&apos;intelligence artificielle nous sert à générer des rendus de
+              votre pièce transformée, et à retrouver des meubles d&apos;occasion
+              qui correspondent visuellement à ce qu&apos;on vous propose. Le reste
+              — la sélection des partenaires, le choix des matériaux, la
+              préparation des listes — est pensé par notre équipe.{" "}
+              <span className="text-foyer-ink">
+                L&apos;IA pour aller vite, l&apos;humain pour aller juste.
+              </span>
+            </p>
+          </Reveal>
         </div>
       </section>
 
@@ -352,40 +419,52 @@ export default function LandingPage() {
         id="partenaires"
         className="mx-auto w-full max-w-6xl scroll-mt-20 px-6 py-16 md:py-24"
       >
-        <h2 className="font-serif text-2xl font-medium text-foyer-ink md:text-4xl">
-          Partenaires : et si Foyer devenait votre canal d&apos;acquisition ?
-        </h2>
-        <p className="mt-3 max-w-3xl text-[17px] leading-relaxed text-foyer-muted">
-          Un nouveau front-end IA pour les enseignes déco, fournitures et seconde
-          main qui veulent capter le flux IA-design avant qu&apos;il ne devienne
-          dominant.
-        </p>
+        <Reveal>
+          <SectionEyebrow index="06" label="Partenaires" />
+          <h2 className="mt-4 font-serif text-[26px] font-medium leading-tight text-foyer-ink md:text-4xl">
+            Partenaires : et si Foyer devenait votre canal d&apos;acquisition ?
+          </h2>
+          <p className="mt-3 max-w-3xl text-[17px] leading-relaxed text-foyer-muted">
+            Un nouveau front-end IA pour les enseignes déco, fournitures et seconde
+            main qui veulent capter le flux IA-design avant qu&apos;il ne devienne
+            dominant.
+          </p>
+        </Reveal>
         <div className="mt-10 grid gap-4 md:grid-cols-3">
-          {PARTNERS.map((partner) => (
-            <PartnerCard key={partner.title} {...partner} />
+          {PARTNERS.map((partner, i) => (
+            <Reveal key={partner.title} delay={i * 100} className="flex">
+              <PartnerCard {...partner} />
+            </Reveal>
           ))}
         </div>
-        <div className="mt-8">
-          <Button
-            render={<Link href="mailto:contact@foyer.app" />}
-            size="lg"
-            className="h-12 rounded-full border border-foyer-border bg-white px-6 text-foyer-ink hover:bg-foyer-cream"
-          >
-            Discuter d&apos;un partenariat
-            <ArrowRight className="size-4" aria-hidden />
-          </Button>
-        </div>
+        <Reveal delay={120}>
+          <div className="mt-8">
+            <Button
+              render={<Link href="mailto:contact@foyer.app" />}
+              size="lg"
+              className="h-12 rounded-full border border-foyer-border bg-white px-6 text-foyer-ink transition-transform hover:-translate-y-0.5 hover:bg-foyer-cream"
+            >
+              Discuter d&apos;un partenariat
+              <ArrowRight className="size-4" aria-hidden />
+            </Button>
+          </div>
+        </Reveal>
       </section>
 
       {/* Section 8 — FAQ */}
       <section className="border-t border-foyer-border bg-white/40">
         <div className="mx-auto w-full max-w-3xl px-6 py-16 md:py-24">
-          <h2 className="font-serif text-2xl font-medium text-foyer-ink md:text-4xl">
-            Questions fréquentes
-          </h2>
-          <div className="mt-8">
-            <FaqAccordion items={FAQ} />
-          </div>
+          <Reveal>
+            <SectionEyebrow index="07" label="FAQ" />
+            <h2 className="mt-4 font-serif text-[26px] font-medium leading-tight text-foyer-ink md:text-4xl">
+              Questions fréquentes
+            </h2>
+          </Reveal>
+          <Reveal delay={100}>
+            <div className="mt-8">
+              <FaqAccordion items={FAQ} />
+            </div>
+          </Reveal>
         </div>
       </section>
 
@@ -425,6 +504,18 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+function SectionEyebrow({ index, label }: { index: string; label: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="font-serif text-sm text-foyer-terra-deep">{index}</span>
+      <span className="h-px w-8 bg-foyer-border" aria-hidden />
+      <span className="text-[12px] font-medium uppercase tracking-[0.14em] text-foyer-muted">
+        {label}
+      </span>
     </div>
   );
 }

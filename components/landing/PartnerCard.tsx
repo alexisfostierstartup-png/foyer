@@ -6,7 +6,7 @@ type PartnerCardProps = {
 
 export function PartnerCard({ title, promise, examples }: PartnerCardProps) {
   return (
-    <div className="flex flex-1 flex-col rounded-2xl border border-foyer-border bg-white p-6">
+    <div className="flex flex-1 flex-col rounded-2xl border border-foyer-border bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:border-foyer-ink/15">
       <h3 className="font-sans text-lg font-semibold text-foyer-ink">{title}</h3>
       <p className="mt-2 flex-1 text-[15px] leading-relaxed text-foyer-muted">
         {promise}
