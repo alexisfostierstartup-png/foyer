@@ -1,15 +1,17 @@
 "use client";
 
 import { BeforeAfterSlider } from "@/components/landing/BeforeAfterSlider";
-import { PrimaryButton } from "@/components/demo/primitives";
+import { PrimaryButton, SecondaryButton } from "@/components/demo/primitives";
 import type { RoomType } from "@/lib/types";
 
 export function RenderScreen({
   roomType,
   onRefine,
+  onLove,
 }: {
   roomType: RoomType | null;
   onRefine: () => void;
+  onLove: () => void;
 }) {
   const roomLabel = roomType === "chambre" ? "chambre" : "salon";
 
@@ -27,8 +29,9 @@ export function RenderScreen({
       <p className="mt-4 text-center text-sm text-foyer-muted">
         Pas tout à fait ça ? Affinez.
       </p>
-      <div className="mt-6">
-        <PrimaryButton onClick={onRefine}>Affiner le rendu</PrimaryButton>
+      <div className="mt-6 flex flex-col gap-3">
+        <PrimaryButton onClick={onLove}>J&apos;adore&nbsp;!</PrimaryButton>
+        <SecondaryButton onClick={onRefine}>Affiner le rendu</SecondaryButton>
       </div>
     </div>
   );

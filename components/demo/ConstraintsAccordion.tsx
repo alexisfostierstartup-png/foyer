@@ -7,10 +7,10 @@ import { SectionLabel } from "@/components/demo/primitives";
 import {
   FURNITURE_ITEMS,
   FLOOR_PRESETS,
-  PAINT_COLORS,
   MOLDING_STYLES,
   type UserChoices,
 } from "@/components/demo/demo-types";
+import { FloorPattern } from "@/components/demo/FloorPattern";
 import type { FurnitureDecision } from "@/lib/types";
 
 type Props = {
@@ -124,10 +124,12 @@ export function ConstraintsAccordion({ choices, setChoices }: Props) {
                           key={d.id}
                           type="button"
                           onClick={() =>
-                            setChoices((c) => ({
-                              ...c,
-                              furniture: { ...c.furniture, [item]: d.id },
-                            }))
+                            setChoices((c) => {
+                              const next = { ...c.furniture };
+                              if (next[item] === d.id) delete next[item];
+                              else next[item] = d.id;
+                              return { ...c, furniture: next };
+                            })
                           }
                           className={cn(
                             "rounded-full px-2.5 py-1 text-[12px] font-medium transition-colors",
@@ -165,21 +167,35 @@ export function ConstraintsAccordion({ choices, setChoices }: Props) {
               />
               {choices.floor.change && (
                 <div className="mt-2">
-                  <div className="flex flex-wrap gap-2">
-                    {FLOOR_PRESETS.map((p) => (
-                      <Chip
-                        key={p}
-                        active={choices.floor.preset === p}
-                        onClick={() =>
-                          setChoices((c) => ({
-                            ...c,
-                            floor: { ...c.floor, preset: p },
-                          }))
-                        }
-                      >
-                        {p}
-                      </Chip>
-                    ))}
+                  <div className="grid grid-cols-3 gap-2">
+                    {FLOOR_PRESETS.map((p) => {
+                      const active = choices.floor.preset === p.label;
+                      return (
+                        <button
+                          key={p.label}
+                          type="button"
+                          onClick={() =>
+                            setChoices((c) => ({
+                              ...c,
+                              floor: { ...c.floor, preset: p.label },
+                            }))
+                          }
+                          className={cn(
+                            "overflow-hidden rounded-xl bg-white text-left transition-all",
+                            active
+                              ? "border-2 border-foyer-ink"
+                              : "border border-foyer-border",
+                          )}
+                        >
+                          <div className="h-10 w-full">
+                            <FloorPattern pattern={p.pattern} />
+                          </div>
+                          <span className="block px-2 py-1 text-[12px] leading-tight text-foyer-ink">
+                            {p.label}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                   <input
                     type="text"
@@ -215,28 +231,10 @@ export function ConstraintsAccordion({ choices, setChoices }: Props) {
                 label="Repeindre"
               />
               {choices.walls.repaint && (
-                <div className="flex gap-2 pl-1">
-                  {PAINT_COLORS.map((col) => (
-                    <button
-                      key={col.name}
-                      type="button"
-                      aria-label={col.name}
-                      onClick={() =>
-                        setChoices((c) => ({
-                          ...c,
-                          walls: { ...c.walls, paintColor: col.hex },
-                        }))
-                      }
-                      className={cn(
-                        "size-7 rounded-full border transition-all",
-                        choices.walls.paintColor === col.hex
-                          ? "border-2 border-foyer-ink"
-                          : "border-foyer-border",
-                      )}
-                      style={{ backgroundColor: col.hex }}
-                    />
-                  ))}
-                </div>
+                <p className="pl-1 text-[12px] text-foyer-muted">
+                  La teinte s&apos;adaptera à l&apos;ambiance choisie à
+                  l&apos;étape suivante.
+                </p>
               )}
 
               <Checkbox

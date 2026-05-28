@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { RotateCcw } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { DemoLoader } from "@/components/demo/primitives";
 import { HomeScreen } from "@/components/demo/HomeScreen";
 import { StyleScreen } from "@/components/demo/StyleScreen";
@@ -19,6 +20,45 @@ type Step =
   | "retouching"
   | "final";
 
+const PROGRESS_LABELS = ["Photo", "Ambiance", "Rendu", "Affiner", "Projet"];
+
+const STEP_TO_PROGRESS: Record<Step, number> = {
+  home: 1,
+  style: 2,
+  generating: 2,
+  render1: 3,
+  iterate: 4,
+  retouching: 4,
+  final: 5,
+};
+
+function ProgressBar({ current }: { current: number }) {
+  return (
+    <div className="px-5 pb-3">
+      <div className="flex items-center gap-1.5">
+        {PROGRESS_LABELS.map((label, i) => {
+          const n = i + 1;
+          return (
+            <span
+              key={label}
+              className={cn(
+                "h-1.5 flex-1 rounded-full transition-colors",
+                n === current && "bg-foyer-terra-deep",
+                n < current && "bg-foyer-water",
+                n > current && "bg-foyer-border",
+              )}
+            />
+          );
+        })}
+      </div>
+      <p className="mt-1.5 text-[12px] text-foyer-muted">
+        Étape {current} sur {PROGRESS_LABELS.length} —{" "}
+        {PROGRESS_LABELS[current - 1]}
+      </p>
+    </div>
+  );
+}
+
 export function DemoFlow() {
   const [step, setStep] = useState<Step>("home");
   const [choices, setChoices] = useState<UserChoices>(initialChoices);
@@ -30,20 +70,23 @@ export function DemoFlow() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-foyer-cream">
-      <header className="flex items-center justify-between border-b border-foyer-border px-5 py-3">
-        <span className="font-serif text-xl tracking-tight text-foyer-ink">
-          Foyer
-        </span>
-        {step !== "home" && (
-          <button
-            type="button"
-            onClick={restart}
-            className="flex items-center gap-1.5 text-[13px] text-foyer-muted hover:text-foyer-ink"
-          >
-            <RotateCcw className="size-3.5" aria-hidden />
-            Recommencer
-          </button>
-        )}
+      <header className="sticky top-0 z-10 border-b border-foyer-border bg-foyer-cream/95 backdrop-blur">
+        <div className="flex items-center justify-between px-5 py-3">
+          <span className="font-serif text-xl tracking-tight text-foyer-ink">
+            Foyer
+          </span>
+          {step !== "home" && (
+            <button
+              type="button"
+              onClick={restart}
+              className="flex items-center gap-1.5 text-[13px] text-foyer-muted hover:text-foyer-ink"
+            >
+              <RotateCcw className="size-3.5" aria-hidden />
+              Recommencer
+            </button>
+          )}
+        </div>
+        <ProgressBar current={STEP_TO_PROGRESS[step]} />
       </header>
 
       <main
@@ -83,6 +126,7 @@ export function DemoFlow() {
           <RenderScreen
             roomType={choices.roomType}
             onRefine={() => setStep("iterate")}
+            onLove={() => setStep("final")}
           />
         )}
 

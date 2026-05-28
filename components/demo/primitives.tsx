@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /** Carte "écran téléphone" : fond blanc, coins très arrondis, poignée grise en haut. */
@@ -157,9 +158,37 @@ export function DemoLoader({
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-foyer-border bg-foyer-border/40">
         <div className="absolute inset-0 animate-[shimmer_1.6s_infinite] bg-gradient-to-r from-transparent via-white/50 to-transparent" />
       </div>
-      <p className="mt-8 text-center font-serif text-xl text-foyer-ink">
-        {messages[i]}
-      </p>
+      <ul className="mx-auto mt-8 flex w-full max-w-xs flex-col gap-3">
+        {messages.map((m, idx) => {
+          const state = idx < i ? "done" : idx === i ? "current" : "todo";
+          return (
+            <li key={m} className="flex items-center gap-3">
+              <span
+                className={cn(
+                  "flex size-5 shrink-0 items-center justify-center rounded-full border",
+                  state === "done" && "border-foyer-sage bg-foyer-sage text-white",
+                  state === "current" && "border-foyer-terra text-foyer-terra",
+                  state === "todo" && "border-foyer-border text-foyer-border",
+                )}
+              >
+                {state === "done" && <Check className="size-3" aria-hidden />}
+                {state === "current" && (
+                  <Loader2 className="size-3 animate-spin" aria-hidden />
+                )}
+              </span>
+              <span
+                className={cn(
+                  "text-[15px]",
+                  state === "todo" ? "text-foyer-muted/60" : "text-foyer-ink",
+                  state === "current" && "font-medium",
+                )}
+              >
+                {m}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }
