@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Store, RotateCcw } from "lucide-react";
 import {
@@ -58,9 +59,12 @@ export function OrderScreen() {
   return (
     <div className="flex min-h-dvh flex-col bg-foyer-cream">
       <header className="sticky top-0 z-10 flex items-center justify-between border-b border-foyer-border bg-foyer-cream/95 px-5 py-3 backdrop-blur">
-        <span className="font-serif text-xl tracking-tight text-foyer-ink">
+        <Link
+          href="/"
+          className="font-serif text-xl tracking-tight text-foyer-ink"
+        >
           Foyer
-        </span>
+        </Link>
         <button
           type="button"
           onClick={restart}

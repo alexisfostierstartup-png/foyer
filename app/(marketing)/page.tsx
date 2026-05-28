@@ -173,7 +173,7 @@ export default function LandingPage() {
   return (
     <div className="flex flex-1 flex-col">
       {/* Header */}
-      <header className="border-b border-foyer-border">
+      <header className="sticky top-0 z-20 border-b border-foyer-border bg-foyer-cream/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link
             href="/"
@@ -203,12 +203,10 @@ export default function LandingPage() {
         <div className="grid items-center gap-10 md:grid-cols-2">
           <div>
             <h1 className="font-serif text-[32px] font-medium leading-[1.1] tracking-[-0.02em] text-foyer-ink md:text-[56px]">
-              Votre pièce, transformée. Réellement.
+              Une pièce transformée. Une empreinte préservée.
             </h1>
             <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-foyer-muted">
-              De la photo aux commandes prêtes, on pense le projet avec vous. On
-              garde ce qui peut l&apos;être, on chine le reste, on sélectionne le
-              neuf qui dure.
+              Un bel intérieur, sans que cela soit aux dépens de la planète.
             </p>
             <div className="mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
               <Button
@@ -244,6 +242,30 @@ export default function LandingPage() {
             beforeUrl="/landing/before.jpg"
             afterUrl="/landing/after.jpg"
           />
+        </div>
+      </section>
+
+      {/* Manifeste éco — remonté sous le hero (cœur de la proposition de valeur) */}
+      <section className="border-t border-foyer-border bg-white/40">
+        <div className="mx-auto w-full max-w-6xl px-6 py-16 md:py-24">
+          <h2 className="font-serif text-2xl font-medium text-foyer-ink md:text-4xl">
+            Avant de proposer du neuf, on regarde ce que vous avez déjà.
+          </h2>
+          <p className="mt-3 max-w-3xl text-[17px] leading-relaxed text-foyer-muted">
+            Un canapé peut être recouvert. Une commode repeinte. Quand il faut
+            acheter, on commence par la seconde main. Et si on doit prendre du
+            neuf, on vous oriente vers ce qui dure.
+          </p>
+          <div className="mt-10 flex flex-col gap-4 md:flex-row">
+            {ECO_STEPS.map((step) => (
+              <StepCard key={step.number} withDot {...step} />
+            ))}
+          </div>
+          <p className="mt-6 text-[13px] leading-relaxed text-foyer-muted">
+            Score Foyer — chaque projet est mesuré selon sa part de mobilier
+            conservé, occasion et neuf, et son équivalent CO₂ évité. Méthodologie
+            sourcée ADEME.
+          </p>
         </div>
       </section>
 
@@ -306,28 +328,6 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-      </section>
-
-      {/* Section 5 — Manifeste éco */}
-      <section className="mx-auto w-full max-w-6xl px-6 py-16 md:py-24">
-        <h2 className="font-serif text-2xl font-medium text-foyer-ink md:text-4xl">
-          Avant de proposer du neuf, on regarde ce que vous avez déjà.
-        </h2>
-        <p className="mt-3 max-w-3xl text-[17px] leading-relaxed text-foyer-muted">
-          Un canapé peut être recouvert. Une commode repeinte. Quand il faut
-          acheter, on commence par la seconde main. Et si on doit prendre du neuf,
-          on vous oriente vers ce qui dure.
-        </p>
-        <div className="mt-10 flex flex-col gap-4 md:flex-row">
-          {ECO_STEPS.map((step) => (
-            <StepCard key={step.number} withDot {...step} />
-          ))}
-        </div>
-        <p className="mt-6 text-[13px] leading-relaxed text-foyer-muted">
-          Score Foyer — chaque projet est mesuré selon sa part de mobilier
-          conservé, occasion et neuf, et son équivalent CO₂ évité. Méthodologie
-          sourcée ADEME.
-        </p>
       </section>
 
       {/* Section 6 — Transparence IA */}

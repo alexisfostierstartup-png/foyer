@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DemoLoader } from "@/components/demo/primitives";
@@ -72,9 +73,12 @@ export function DemoFlow() {
     <div className="flex min-h-dvh flex-col bg-foyer-cream">
       <header className="sticky top-0 z-10 border-b border-foyer-border bg-foyer-cream/95 backdrop-blur">
         <div className="flex items-center justify-between px-5 py-3">
-          <span className="font-serif text-xl tracking-tight text-foyer-ink">
+          <Link
+            href="/"
+            className="font-serif text-xl tracking-tight text-foyer-ink"
+          >
             Foyer
-          </span>
+          </Link>
           {step !== "home" && (
             <button
               type="button"
