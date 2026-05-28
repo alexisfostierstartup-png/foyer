@@ -3,7 +3,7 @@
 import { useState, type Dispatch, type SetStateAction, type ReactNode } from "react";
 import { SlidersHorizontal, ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { SectionLabel } from "@/components/demo/primitives";
+import { SectionLabel, DictateInput } from "@/components/demo/primitives";
 import {
   FURNITURE_ITEMS,
   FLOOR_PRESETS,
@@ -197,17 +197,17 @@ export function ConstraintsAccordion({ choices, setChoices }: Props) {
                       );
                     })}
                   </div>
-                  <input
-                    type="text"
+                  <DictateInput
+                    className="mt-2"
                     value={choices.floor.note}
-                    onChange={(e) =>
+                    onChange={(v) =>
                       setChoices((c) => ({
                         ...c,
-                        floor: { ...c.floor, note: e.target.value },
+                        floor: { ...c.floor, note: v },
                       }))
                     }
                     placeholder="Autre précision…"
-                    className="mt-2 w-full rounded-xl border border-foyer-border bg-white px-3 py-2 text-base text-foyer-ink outline-none placeholder:text-foyer-muted focus:border-foyer-terra"
+                    mockText="Parquet chêne clair, finition mate"
                   />
                   {choices.floor.preset === "Carrelage" && (
                     <p className="mt-2 text-[12px] text-foyer-muted">

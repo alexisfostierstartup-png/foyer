@@ -3,7 +3,20 @@
 import { useState } from "react";
 import { Sparkles, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PrimaryButton, DemoImage } from "@/components/demo/primitives";
+import {
+  PrimaryButton,
+  DemoImage,
+  DictateInput,
+} from "@/components/demo/primitives";
+
+const MOCK_DICTATION: Record<string, string> = {
+  meubles: "Un canapé d'angle en velours côtelé beige",
+  sol: "Sol stratifié en chevrons, bois clair",
+  murs: "Sol stratifié en chevrons, bois clair",
+  plafond: "Plafond blanc mat avec corniche discrète",
+  eclairage: "Une suspension en rotin au-dessus de la table",
+  accessoires: "Quelques plantes vertes et un grand miroir",
+};
 
 type Category = { id: string; label: string; options: string[] };
 
@@ -116,14 +129,16 @@ export function IterateScreen({ onApply }: { onApply: () => void }) {
                       );
                     })}
                   </div>
-                  <input
-                    type="text"
+                  <DictateInput
+                    className="mt-3"
                     value={notes[cat.id] ?? ""}
-                    onChange={(e) =>
-                      setNotes((prev) => ({ ...prev, [cat.id]: e.target.value }))
+                    onChange={(v) =>
+                      setNotes((prev) => ({ ...prev, [cat.id]: v }))
                     }
                     placeholder={`Précisez pour ${cat.label.toLowerCase()}…`}
-                    className="mt-3 w-full rounded-xl border border-foyer-border bg-white px-3 py-2 text-base text-foyer-ink outline-none placeholder:text-foyer-muted focus:border-foyer-terra"
+                    mockText={
+                      MOCK_DICTATION[cat.id] ?? "Quelques ajustements de finition"
+                    }
                   />
                 </div>
               )}

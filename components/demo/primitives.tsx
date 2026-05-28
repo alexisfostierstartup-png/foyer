@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import { Check, Loader2 } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Check, Loader2, Mic } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /** Carte "écran téléphone" : fond blanc, coins très arrondis, poignée grise en haut. */
@@ -125,6 +125,71 @@ export function DemoImage({
           </span>
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * Champ texte avec bouton micro. Le micro est un mock (Wizard of Oz) :
+ * un court état "à l'écoute" puis le champ se remplit avec `mockText`.
+ */
+export function DictateInput({
+  value,
+  onChange,
+  placeholder,
+  mockText,
+  className,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  mockText: string;
+  className?: string;
+}) {
+  const [listening, setListening] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, []);
+
+  function dictate() {
+    if (listening) return;
+    setListening(true);
+    timer.current = setTimeout(() => {
+      onChange(mockText);
+      setListening(false);
+    }, 1300);
+  }
+
+  return (
+    <div className={cn("relative", className)}>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={listening ? "À l'écoute…" : placeholder}
+        className="w-full rounded-xl border border-foyer-border bg-white py-2 pl-3 pr-11 text-base text-foyer-ink outline-none placeholder:text-foyer-muted focus:border-foyer-terra"
+      />
+      <button
+        type="button"
+        onClick={dictate}
+        aria-label="Dicter"
+        className={cn(
+          "absolute right-1.5 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full transition-colors",
+          listening ? "bg-foyer-terra/10" : "hover:bg-foyer-cream",
+        )}
+      >
+        <Mic
+          className={cn(
+            "size-4",
+            listening ? "animate-pulse text-foyer-terra" : "text-foyer-muted",
+          )}
+          aria-hidden
+        />
+      </button>
     </div>
   );
 }
