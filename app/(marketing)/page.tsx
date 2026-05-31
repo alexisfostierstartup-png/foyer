@@ -223,6 +223,14 @@ export default function LandingPage() {
             <div className="mt-14 grid items-center gap-10 md:grid-cols-[auto_1fr] md:gap-16">
               <div className="relative mx-auto">
                 <EcoDonutLarge />
+                {/* Badge ADEME qui déborde du donut */}
+                <div className="absolute -top-2 right-0 rounded-full bg-foyer-ink px-3 py-1.5 shadow-[0_8px_20px_rgba(31,27,22,0.20)] ring-4 ring-foyer-cream md:-top-1 md:right-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-foyer-cream">
+                    Base ADEME
+                  </p>
+                </div>
+                {/* Petit dot sage flottant en bas-gauche */}
+                <span aria-hidden className="absolute bottom-3 left-0 size-4 rounded-full bg-foyer-sage shadow-md ring-4 ring-foyer-cream" />
               </div>
               <ul className="space-y-5">
                 {ECO_SEGMENTS.map((seg, i) => (
@@ -284,11 +292,15 @@ export default function LandingPage() {
                   <div className="group flex flex-col items-center">
                     <div
                       className={cn(
-                        "w-full transition-transform duration-500 group-hover:-translate-y-1",
+                        "relative w-full transition-transform duration-500 group-hover:-translate-y-1",
                         i % 2 === 1 ? "lg:translate-y-3" : "",
                       )}
                     >
                       <Mockup variant={step.mockup} />
+                      {/* Numéro qui déborde du téléphone */}
+                      <span className="absolute -right-3 -top-3 inline-flex size-10 items-center justify-center rounded-full bg-foyer-ink text-foyer-cream shadow-[0_6px_16px_rgba(31,27,22,0.25)] ring-4 ring-white">
+                        <span className="font-serif text-[13px] font-medium leading-none">{step.num}</span>
+                      </span>
                     </div>
                     <p className="mt-6 font-serif text-[14px] text-foyer-muted">Étape {step.num}</p>
                     <h3 className="mt-1.5 text-center font-serif text-[19px] leading-snug text-foyer-ink">{step.title}</h3>
@@ -349,7 +361,14 @@ export default function LandingPage() {
             </Reveal>
           </div>
 
-          <div className="mt-14 grid items-start gap-5 md:grid-cols-[1fr_1.1fr] md:items-stretch md:gap-6">
+          <div className="relative mt-14 grid items-start gap-5 md:grid-cols-[1fr_1.1fr] md:items-stretch md:gap-6">
+            {/* VS badge centré, overlap des 2 cards (desktop) */}
+            <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 z-20 hidden -translate-x-1/2 -translate-y-1/2 md:block">
+              <div className="flex size-14 items-center justify-center rounded-full bg-foyer-ink text-foyer-cream shadow-[0_8px_24px_rgba(31,27,22,0.25)] ring-4 ring-foyer-cream">
+                <span className="font-serif text-[15px] font-medium tracking-tight">vs</span>
+              </div>
+            </div>
+
             {/* Générateurs IA — card en retrait */}
             <Reveal>
               <div className="h-full rounded-3xl bg-white/70 p-7 ring-1 ring-foyer-border/40 md:p-9">
