@@ -2,19 +2,15 @@ import { Fragment } from "react";
 import Link from "next/link";
 import {
   Camera,
-  Sparkles,
-  Ruler,
-  ShoppingBag,
-  Recycle,
-  Search,
   Leaf,
   Store,
   Tag,
   Building2,
   Check,
-  Minus,
+  X as XIcon,
   ArrowRight,
   ArrowUpRight,
+  ChevronsLeftRight,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -47,27 +43,28 @@ const SOLID_BG: Record<"sage" | "terra" | "water", string> = {
   water: "bg-foyer-water",
 };
 
-const ECO_STEPS: { number: string; title: string; description: string; icon: LucideIcon; tone: Tone }[] = [
-  { number: "01", title: "D'abord, on réutilise", description: "Homestaging et customisation de vos meubles.", icon: Recycle, tone: "sage" },
-  { number: "02", title: "Ensuite, on cherche d'occasion", description: "Sourcing seconde main depuis les plateformes que vous utilisez déjà.", icon: Search, tone: "mousse" },
-  { number: "03", title: "En dernier, du neuf qui dure", description: "Conseil matériaux et marques. Ce qui tient dix ans, pas trois.", icon: Leaf, tone: "water" },
+const ECO_SEGMENTS = [
+  { value: 60, color: "#6B8E6F", dotClass: "bg-foyer-sage", title: "Conservé", description: "Homestaging, customisation : on garde d'abord ce qui peut l'être." },
+  { value: 15, color: "#6E8B6B", dotClass: "bg-foyer-mousse", title: "Occasion", description: "Sourcing seconde main depuis Leboncoin, Selency, Vinted." },
+  { value: 25, color: "#A5B8A0", dotClass: "bg-foyer-water", title: "Neuf durable", description: "Matériaux et marques qui tiennent dix ans, pas trois." },
 ];
 
-const PROCESS_STEPS: { number: string; title: string; description: string; icon: LucideIcon; tone: Tone }[] = [
-  { number: "01", title: "Vous photographiez", description: "Une photo suffit. Pas besoin de mesurer.", icon: Camera, tone: "ink" },
-  { number: "02", title: "On imagine avec vous", description: "Choisissez un style, on génère, vous ajustez.", icon: Sparkles, tone: "terra" },
-  { number: "03", title: "On vérifie les dimensions", description: "Une mesure rapide, on adapte aux vraies cotes.", icon: Ruler, tone: "sage" },
-  { number: "04", title: "On dit où tout acheter", description: "Chaque élément est sourcé, marchand et prix.", icon: ShoppingBag, tone: "mousse" },
+const COMPARE_GENERATORS = [
+  { ok: true, label: "Rendu visuel agréable" },
+  { ok: false, label: "Préserve votre mobilier existant" },
+  { ok: false, label: "Liste d'achat sourcée et chiffrée" },
+  { ok: false, label: "Priorité seconde main et conservation" },
+  { ok: false, label: "Conception guidée étape par étape" },
+  { ok: false, label: "Bilan carbone du projet (ADEME)" },
 ];
 
-const COMPARE_ROWS: { criterion: string; ia: boolean; foyer: boolean }[] = [
-  { criterion: "Rendu réaliste de votre pièce", ia: true, foyer: true },
-  { criterion: "Préserve votre mobilier existant", ia: false, foyer: true },
-  { criterion: "Liste d'achat sourcée et chiffrée", ia: false, foyer: true },
-  { criterion: "Priorité seconde main", ia: false, foyer: true },
-  { criterion: "Conception guidée étape par étape", ia: false, foyer: true },
-  { criterion: "Bilan carbone du projet (ADEME)", ia: false, foyer: true },
-  { criterion: "Achat consolidé chez peu d'enseignes", ia: false, foyer: true },
+const COMPARE_FOYER = [
+  { label: "Rendu réaliste qui tient compte de votre pièce" },
+  { label: "Préserve votre mobilier existant" },
+  { label: "Liste d'achat sourcée et chiffrée" },
+  { label: "Priorité seconde main et conservation" },
+  { label: "Conception guidée étape par étape" },
+  { label: "Bilan carbone du projet (ADEME)" },
 ];
 
 const PARTNERS: { icon: LucideIcon; tone: Tone; title: string; promise: string; examples: string }[] = [
@@ -85,11 +82,18 @@ const FAQ = [
   { question: "C'est dispo où ?", answer: "France pour le moment. Europe à venir." },
 ];
 
+const FLOW_STEPS = [
+  { mockup: "camera" as const, num: "01", title: "Vous photographiez", description: "Une photo de votre pièce, choix du salon ou de la chambre." },
+  { mockup: "styles" as const, num: "02", title: "Vous choisissez l'ambiance", description: "Six ambiances proposées. Une suffit pour démarrer." },
+  { mockup: "render" as const, num: "03", title: "On génère votre projet", description: "Mobilier conservé, customisé, ajouté. Vous validez." },
+  { mockup: "shopping" as const, num: "04", title: "Vous achetez, groupé", description: "Liste sourcée, total estimé, peu d'enseignes." },
+];
+
 export default function LandingPage() {
   return (
     <div className="flex flex-1 flex-col bg-foyer-cream">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b border-foyer-border/40 bg-foyer-cream/85 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-foyer-border/40 bg-foyer-cream/85 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
           <Link href="/" className="font-serif text-xl tracking-tight text-foyer-ink">Foyer</Link>
           <nav className="flex items-center gap-6 text-[14px] text-foyer-muted">
@@ -100,10 +104,10 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* HERO */}
-      <section className="relative overflow-hidden">
+      {/* HERO — slider stylé + callout flottant */}
+      <section className="relative overflow-hidden pb-32 md:pb-44">
         <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_55%_at_85%_15%,rgba(165,184,160,0.22),transparent_60%)]" />
-        <div className="relative mx-auto w-full max-w-6xl px-6 pt-14 pb-16 md:pt-20 md:pb-20">
+        <div className="relative mx-auto w-full max-w-6xl px-6 pt-14 md:pt-20">
           <div className="grid items-center gap-12 md:grid-cols-12 md:gap-10">
             <div className="md:col-span-5">
               <Reveal>
@@ -113,17 +117,20 @@ export default function LandingPage() {
                 </p>
               </Reveal>
               <Reveal delay={70}>
-                <h1 className="mt-5 font-serif text-[42px] font-medium leading-[0.96] tracking-[-0.03em] text-foyer-ink md:text-[60px] lg:text-[72px]">
-                  Une pièce transformée. Une empreinte préservée.
-                </h1>
+                <div className="mt-5 flex gap-5">
+                  <span aria-hidden className="mt-1 hidden w-[3px] shrink-0 rounded-full bg-gradient-to-b from-foyer-sage via-foyer-mousse to-foyer-water md:block" />
+                  <h1 className="font-serif text-[42px] font-medium leading-[0.96] tracking-[-0.03em] text-foyer-ink md:text-[60px] lg:text-[72px]">
+                    Une pièce transformée. Une empreinte préservée.
+                  </h1>
+                </div>
               </Reveal>
               <Reveal delay={140}>
-                <p className="mt-6 max-w-md text-[18px] leading-[1.55] text-foyer-muted">
+                <p className="mt-6 max-w-md text-[18px] leading-[1.55] text-foyer-muted md:ml-8">
                   Un bel intérieur, sans que cela soit aux dépens de la planète.
                 </p>
               </Reveal>
               <Reveal delay={210}>
-                <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+                <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center md:ml-8">
                   <Button render={<Link href="/demo" />} size="lg" className="h-12 w-full rounded-full bg-foyer-terra-deep px-7 text-white transition-transform hover:-translate-y-0.5 hover:bg-foyer-terra-deep/90 sm:w-auto">
                     Lancer ma transformation
                   </Button>
@@ -135,19 +142,37 @@ export default function LandingPage() {
               </Reveal>
             </div>
             <Reveal delay={160} className="md:col-span-7">
-              <div className="overflow-hidden rounded-3xl shadow-[0_24px_60px_rgba(31,27,22,0.10),0_0_0_1px_rgba(31,27,22,0.04)]">
-                <BeforeAfterSlider beforeUrl="/landing/before.jpg" afterUrl="/landing/after.jpg" />
+              <div className="relative">
+                <div aria-hidden className="absolute inset-0 translate-x-3 translate-y-3 rounded-3xl bg-foyer-sage/25 md:translate-x-5 md:translate-y-5" />
+                <div className="relative overflow-hidden rounded-3xl bg-white p-2 shadow-[0_24px_60px_rgba(31,27,22,0.14),0_0_0_1px_rgba(31,27,22,0.04)]">
+                  <div className="overflow-hidden rounded-2xl">
+                    <BeforeAfterSlider beforeUrl="/landing/before.jpg" afterUrl="/landing/after.jpg" />
+                  </div>
+                </div>
+                <div className="absolute -top-3 left-6 hidden items-center gap-1.5 rounded-full bg-foyer-ink px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-foyer-cream shadow-lg md:inline-flex">
+                  <ChevronsLeftRight className="size-3.5" aria-hidden />
+                  Avant / Après
+                </div>
+                <div className="absolute -bottom-5 left-4 right-4 md:-bottom-6 md:left-auto md:right-6 md:w-64">
+                  <div className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-[0_16px_36px_rgba(31,27,22,0.18)] ring-1 ring-foyer-border/40 backdrop-blur">
+                    <MiniDonut />
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-foyer-sage">Score Foyer</p>
+                      <p className="mt-0.5 text-[12px] leading-snug text-foyer-muted">60% conservé · 15% chiné · 25% neuf</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </Reveal>
           </div>
         </div>
       </section>
 
-      {/* STATS — card asymétrique */}
-      <section className="bg-foyer-cream">
-        <div className="mx-auto w-full max-w-6xl px-6 pb-16 md:pb-20">
+      {/* STATS — overlap UP vers le hero */}
+      <section className="relative z-10 bg-foyer-cream">
+        <div className="mx-auto w-full max-w-6xl px-6">
           <Reveal>
-            <div className="overflow-hidden rounded-3xl bg-white ring-1 ring-foyer-border/50 shadow-[0_8px_40px_rgba(31,27,22,0.06)]">
+            <div className="-mt-20 overflow-hidden rounded-3xl bg-white ring-1 ring-foyer-border/50 shadow-[0_20px_60px_rgba(31,27,22,0.10)] md:-mt-28">
               <div className="grid divide-foyer-border/40 md:grid-cols-[1.4fr_1fr_1fr] md:divide-x">
                 <div className="px-7 py-8 md:px-10 md:py-10">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foyer-sage">Empreinte</p>
@@ -172,197 +197,218 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* MANIFESTE — DONUT + steps verticaux (pas de photo, c'est la proposition éco) */}
-      <section className="bg-white">
-        <div className="mx-auto w-full max-w-6xl px-6 py-16 md:py-20">
-          <div className="grid gap-14 md:grid-cols-12 md:items-center md:gap-16">
-            <div className="md:col-span-7">
-              <Reveal>
-                <p className="inline-flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-foyer-sage">
-                  <Leaf className="size-3.5" strokeWidth={2.2} aria-hidden />
-                  Notre parti pris
-                </p>
-              </Reveal>
-              <Reveal delay={70}>
-                <h2 className="mt-4 font-serif text-[32px] font-medium leading-[1.02] tracking-[-0.02em] text-foyer-ink md:text-[48px]">
-                  Avant de proposer du neuf, on regarde ce que vous avez déjà.
-                </h2>
-              </Reveal>
-              <Reveal delay={140}>
-                <p className="mt-5 text-[17px] leading-[1.6] text-foyer-muted">
-                  Un canapé recouvert. Une commode repeinte. Quand il faut acheter, on commence par la seconde main.
-                </p>
-              </Reveal>
-              <div className="mt-10 flex gap-6">
-                <div aria-hidden className="relative w-[2px] shrink-0">
-                  <span className="absolute inset-y-0 left-0 w-full bg-gradient-to-b from-foyer-sage via-foyer-sage to-foyer-sage/30" />
+      {/* SECTION ÉCO — donut + 3 steps mappés couleur:segment */}
+      <section className="bg-foyer-cream">
+        <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-28">
+          <div className="mx-auto max-w-2xl text-center md:text-left">
+            <Reveal>
+              <p className="inline-flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-foyer-sage">
+                <Leaf className="size-3.5" strokeWidth={2.2} aria-hidden />
+                Notre parti pris
+              </p>
+            </Reveal>
+            <Reveal delay={70}>
+              <h2 className="mt-4 font-serif text-[32px] font-medium leading-[1.02] tracking-[-0.02em] text-foyer-ink md:text-[48px]">
+                Garder, chiner, et n&apos;acheter neuf qu&apos;en dernier.
+              </h2>
+            </Reveal>
+            <Reveal delay={140}>
+              <p className="mt-5 text-[17px] leading-[1.6] text-foyer-muted">
+                Sur un projet Foyer moyen, 60 % du mobilier reste, 15 % vient d&apos;occasion, 25 % est neuf, durable et bien sourcé.
+              </p>
+            </Reveal>
+          </div>
+
+          <Reveal delay={200}>
+            <div className="mt-14 grid items-center gap-10 md:grid-cols-[auto_1fr] md:gap-16">
+              <div className="relative mx-auto">
+                <EcoDonutLarge />
+              </div>
+              <ul className="space-y-5">
+                {ECO_SEGMENTS.map((seg, i) => (
+                  <Reveal key={seg.title} delay={i * 100}>
+                    <li className="flex items-start gap-5 rounded-2xl bg-white/60 p-5 ring-1 ring-foyer-border/40 transition-all hover:bg-white hover:ring-foyer-border">
+                      <div className="shrink-0 pt-1">
+                        <span className={cn("block size-3.5 rounded-full", seg.dotClass)} aria-hidden />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-baseline gap-3">
+                          <p className="font-serif text-[32px] font-medium leading-none tracking-[-0.03em] text-foyer-ink">
+                            {seg.value}<span className="text-foyer-muted/60">%</span>
+                          </p>
+                          <h3 className="font-serif text-[19px] text-foyer-ink">{seg.title}</h3>
+                        </div>
+                        <p className="mt-2 text-[14px] leading-relaxed text-foyer-muted">{seg.description}</p>
+                      </div>
+                    </li>
+                  </Reveal>
+                ))}
+              </ul>
+            </div>
+          </Reveal>
+          <Reveal delay={400}>
+            <p className="mt-10 text-center text-[12px] leading-relaxed text-foyer-muted/80 md:text-left">
+              Méthodologie sourcée ADEME, par rapport à un projet 100 % neuf équivalent.
+            </p>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* PROCESS — infographie 4 phones */}
+      <section id="process" className="scroll-mt-24 bg-white">
+        <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-28">
+          <div className="mx-auto max-w-2xl text-center">
+            <Reveal>
+              <p className="inline-flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-foyer-terra-deep">
+                <span className="size-1.5 rounded-full bg-foyer-terra-deep" aria-hidden />
+                Comment ça se passe
+              </p>
+            </Reveal>
+            <Reveal delay={70}>
+              <h2 className="mt-4 font-serif text-[32px] font-medium leading-[1.02] tracking-[-0.02em] text-foyer-ink md:text-[48px]">
+                De la photo à la commande, en 4 écrans.
+              </h2>
+            </Reveal>
+            <Reveal delay={140}>
+              <p className="mt-5 text-[17px] leading-[1.55] text-foyer-muted">
+                Pas de logiciel. Pas de plan. Quatre écrans, et votre projet est prêt à être commandé.
+              </p>
+            </Reveal>
+          </div>
+
+          {/* Desktop — flux horizontal avec phones */}
+          <div className="mt-16 hidden md:flex md:items-end md:justify-between md:gap-2 lg:gap-4">
+            {FLOW_STEPS.map((step, i) => (
+              <Fragment key={step.num}>
+                <Reveal delay={i * 100} className="w-[22%]">
+                  <div className="group flex flex-col items-center">
+                    <div
+                      className={cn(
+                        "w-full transition-transform duration-500 group-hover:-translate-y-1",
+                        i % 2 === 1 ? "lg:translate-y-3" : "",
+                      )}
+                    >
+                      <Mockup variant={step.mockup} />
+                    </div>
+                    <p className="mt-6 font-serif text-[14px] text-foyer-muted">Étape {step.num}</p>
+                    <h3 className="mt-1.5 text-center font-serif text-[19px] leading-snug text-foyer-ink">{step.title}</h3>
+                    <p className="mt-2 text-center text-[13px] leading-relaxed text-foyer-muted">{step.description}</p>
+                  </div>
+                </Reveal>
+                {i < FLOW_STEPS.length - 1 && (
+                  <div aria-hidden className="flex shrink-0 items-center self-center pb-32">
+                    <ArrowRight className="size-5 text-foyer-border" strokeWidth={1.5} />
+                  </div>
+                )}
+              </Fragment>
+            ))}
+          </div>
+
+          {/* Mobile — stack vertical */}
+          <ol className="mt-12 space-y-8 md:hidden">
+            {FLOW_STEPS.map((step, i) => (
+              <li key={step.num} className="relative">
+                <div className="flex gap-5">
+                  <div className="shrink-0">
+                    <Mockup variant={step.mockup} mini />
+                  </div>
+                  <div>
+                    <p className="font-serif text-[13px] text-foyer-muted">Étape {step.num}</p>
+                    <h3 className="mt-1 font-serif text-[18px] leading-tight text-foyer-ink">{step.title}</h3>
+                    <p className="mt-1.5 text-[14px] leading-relaxed text-foyer-muted">{step.description}</p>
+                  </div>
                 </div>
-                <ul className="space-y-7">
-                  {ECO_STEPS.map((step, i) => {
-                    const Icon = step.icon;
-                    return (
-                      <Reveal key={step.number} delay={180 + i * 80}>
-                        <li className="flex gap-4">
-                          <div className={cn("inline-flex size-10 shrink-0 items-center justify-center rounded-xl", ICON_BG[step.tone])}>
-                            <Icon className={cn("size-5", ICON_COLOR[step.tone])} strokeWidth={1.6} aria-hidden />
-                          </div>
-                          <div>
-                            <p className="font-serif text-[13px] text-foyer-muted">{step.number}</p>
-                            <h3 className="font-serif text-[19px] leading-snug text-foyer-ink">{step.title}</h3>
-                            <p className="mt-1 text-[14px] leading-relaxed text-foyer-muted">{step.description}</p>
-                          </div>
-                        </li>
-                      </Reveal>
-                    );
-                  })}
+                {i < FLOW_STEPS.length - 1 && (
+                  <span aria-hidden className="absolute left-[32px] top-[120px] h-4 w-px bg-foyer-border" />
+                )}
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* DIFFÉRENCIATEURS — 2 grosses cards comparatives */}
+      <section className="bg-foyer-cream">
+        <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-28">
+          <div className="mx-auto max-w-2xl text-center">
+            <Reveal>
+              <p className="inline-flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-foyer-ink">
+                <span className="size-1.5 rounded-full bg-foyer-ink" aria-hidden />
+                La différence Foyer
+              </p>
+            </Reveal>
+            <Reveal delay={70}>
+              <h2 className="mt-4 font-serif text-[32px] font-medium leading-[1.02] tracking-[-0.02em] text-foyer-ink md:text-[48px]">
+                On ne fait pas que générer des rendus.
+              </h2>
+            </Reveal>
+            <Reveal delay={140}>
+              <p className="mt-5 text-[17px] leading-[1.55] text-foyer-muted">
+                Comparé à ce que font les autres générateurs IA.
+              </p>
+            </Reveal>
+          </div>
+
+          <div className="mt-14 grid items-start gap-5 md:grid-cols-[1fr_1.1fr] md:items-stretch md:gap-6">
+            {/* Générateurs IA — card en retrait */}
+            <Reveal>
+              <div className="h-full rounded-3xl bg-white/70 p-7 ring-1 ring-foyer-border/40 md:p-9">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foyer-muted">Sans Foyer</p>
+                <h3 className="mt-3 font-serif text-[24px] font-medium leading-tight tracking-[-0.01em] text-foyer-ink/70 md:text-[28px]">
+                  Générateurs IA classiques
+                </h3>
+                <p className="mt-3 text-[14px] leading-relaxed text-foyer-muted">
+                  Un joli rendu et puis… c&apos;est tout. À vous de trouver les meubles, de mesurer, de chiner.
+                </p>
+                <ul className="mt-7 space-y-3.5">
+                  {COMPARE_GENERATORS.map((row) => (
+                    <li key={row.label} className="flex items-start gap-3">
+                      {row.ok ? (
+                        <Check className="mt-0.5 size-4 shrink-0 text-foyer-muted/70" strokeWidth={2.2} aria-hidden />
+                      ) : (
+                        <XIcon className="mt-0.5 size-4 shrink-0 text-foyer-muted/40" strokeWidth={2.2} aria-hidden />
+                      )}
+                      <span className={cn("text-[14px] leading-snug", row.ok ? "text-foyer-ink/75" : "text-foyer-muted/60 line-through")}>{row.label}</span>
+                    </li>
+                  ))}
                 </ul>
               </div>
-            </div>
-            <Reveal delay={200} className="md:col-span-5">
-              <EcoDonut />
+            </Reveal>
+
+            {/* Foyer — card proéminente */}
+            <Reveal delay={120}>
+              <div className="relative h-full overflow-hidden rounded-3xl bg-white p-7 ring-2 ring-foyer-sage shadow-[0_20px_60px_rgba(31,27,22,0.12)] md:p-9">
+                <div aria-hidden className="absolute -right-12 -top-12 size-40 rounded-full bg-foyer-sage/15 blur-2xl" />
+                <div className="relative">
+                  <p className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-foyer-sage">
+                    <span className="size-1.5 rounded-full bg-foyer-sage" aria-hidden />
+                    Avec Foyer
+                  </p>
+                  <h3 className="mt-3 font-serif text-[28px] font-medium leading-tight tracking-[-0.015em] text-foyer-ink md:text-[34px]">
+                    Foyer
+                  </h3>
+                  <p className="mt-3 text-[14px] leading-relaxed text-foyer-muted">
+                    Un rendu, une liste sourcée, une logique éco, un montage. Tout ce qu&apos;il faut pour passer à l&apos;achat.
+                  </p>
+                  <ul className="mt-7 space-y-3.5">
+                    {COMPARE_FOYER.map((row) => (
+                      <li key={row.label} className="flex items-start gap-3">
+                        <span className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-foyer-sage/15">
+                          <Check className="size-3 text-foyer-sage" strokeWidth={3} aria-hidden />
+                        </span>
+                        <span className="text-[14px] leading-snug text-foyer-ink">{row.label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
             </Reveal>
           </div>
         </div>
       </section>
 
-      {/* PROCESS — flow horizontal avec flèches (pas de grid de cartes) */}
-      <section id="process" className="scroll-mt-24 bg-foyer-cream">
-        <div className="mx-auto w-full max-w-6xl px-6 py-16 md:py-20">
-          <Reveal>
-            <p className="inline-flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-foyer-terra-deep">
-              <span className="size-1.5 rounded-full bg-foyer-terra-deep" aria-hidden />
-              Comment ça marche
-            </p>
-          </Reveal>
-          <Reveal delay={70}>
-            <h2 className="mt-4 max-w-2xl font-serif text-[32px] font-medium leading-[1.02] tracking-[-0.02em] text-foyer-ink md:text-[44px]">
-              De la photo au montage, en 4 étapes.
-            </h2>
-          </Reveal>
-          <Reveal delay={140}>
-            <p className="mt-4 max-w-xl text-[17px] leading-[1.55] text-foyer-muted">
-              Pas de logiciel à maîtriser. On fait le travail, vous validez à chaque étape.
-            </p>
-          </Reveal>
-
-          {/* Desktop : flow horizontal */}
-          <div className="mt-12 hidden md:flex md:items-stretch md:gap-3 lg:gap-5">
-            {PROCESS_STEPS.map((step, i) => {
-              const Icon = step.icon;
-              return (
-                <Fragment key={step.number}>
-                  <Reveal delay={i * 80} className="flex-1">
-                    <div className="group flex h-full flex-col p-5">
-                      <div className={cn("inline-flex size-12 items-center justify-center rounded-xl transition-transform group-hover:scale-105", ICON_BG[step.tone])}>
-                        <Icon className={cn("size-6", ICON_COLOR[step.tone])} strokeWidth={1.6} aria-hidden />
-                      </div>
-                      <p className="mt-5 font-serif text-[13px] text-foyer-muted">Étape {step.number}</p>
-                      <h3 className="mt-1 font-serif text-[19px] leading-tight text-foyer-ink">{step.title}</h3>
-                      <p className="mt-2 text-[14px] leading-relaxed text-foyer-muted">{step.description}</p>
-                    </div>
-                  </Reveal>
-                  {i < PROCESS_STEPS.length - 1 && (
-                    <div aria-hidden className="flex shrink-0 items-center pt-8">
-                      <span className="inline-block h-px w-6 bg-foyer-border lg:w-10" />
-                      <ArrowRight className="size-4 text-foyer-border" />
-                    </div>
-                  )}
-                </Fragment>
-              );
-            })}
-          </div>
-
-          {/* Mobile : stack vertical avec connecteurs */}
-          <ol className="mt-10 space-y-5 md:hidden">
-            {PROCESS_STEPS.map((step, i) => {
-              const Icon = step.icon;
-              return (
-                <li key={step.number} className="relative">
-                  <div className="flex gap-4">
-                    <div className={cn("inline-flex size-12 shrink-0 items-center justify-center rounded-xl", ICON_BG[step.tone])}>
-                      <Icon className={cn("size-6", ICON_COLOR[step.tone])} strokeWidth={1.6} aria-hidden />
-                    </div>
-                    <div>
-                      <p className="font-serif text-[13px] text-foyer-muted">Étape {step.number}</p>
-                      <h3 className="mt-1 font-serif text-[19px] leading-tight text-foyer-ink">{step.title}</h3>
-                      <p className="mt-1.5 text-[14px] leading-relaxed text-foyer-muted">{step.description}</p>
-                    </div>
-                  </div>
-                  {i < PROCESS_STEPS.length - 1 && (
-                    <span aria-hidden className="absolute left-6 top-12 h-5 w-px bg-foyer-border" />
-                  )}
-                </li>
-              );
-            })}
-          </ol>
-        </div>
-      </section>
-
-      {/* DIFFÉRENCIATEURS — TABLEAU COMPARATIF (pas de cards en grid) */}
+      {/* PRODUCT MOMENT — image annotée */}
       <section className="bg-white">
-        <div className="mx-auto w-full max-w-6xl px-6 py-16 md:py-20">
-          <Reveal>
-            <p className="inline-flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-foyer-ink">
-              <span className="size-1.5 rounded-full bg-foyer-ink" aria-hidden />
-              La différence Foyer
-            </p>
-          </Reveal>
-          <Reveal delay={70}>
-            <h2 className="mt-4 max-w-3xl font-serif text-[32px] font-medium leading-[1.02] tracking-[-0.02em] text-foyer-ink md:text-[44px]">
-              On ne fait pas que générer des rendus.
-            </h2>
-          </Reveal>
-          <Reveal delay={140}>
-            <p className="mt-4 max-w-xl text-[17px] leading-[1.55] text-foyer-muted">
-              Tout ce que vous voyez existe. Et on vous dit où le trouver.
-            </p>
-          </Reveal>
-
-          <Reveal delay={200}>
-            <div className="mt-12 overflow-hidden rounded-2xl bg-white ring-1 ring-foyer-border/60 shadow-[0_10px_40px_rgba(31,27,22,0.06)]">
-              <div className="grid grid-cols-[1.4fr_1fr_1fr] border-b border-foyer-border/60 text-[12px] font-semibold uppercase tracking-[0.12em]">
-                <div className="px-5 py-4 text-foyer-muted md:px-7 md:py-5">Capacité</div>
-                <div className="border-l border-foyer-border/60 px-5 py-4 text-center text-foyer-muted md:px-7 md:py-5">
-                  Générateurs IA
-                </div>
-                <div className="border-l border-foyer-border/60 bg-foyer-sage/8 px-5 py-4 text-center text-foyer-sage md:px-7 md:py-5">
-                  Foyer
-                </div>
-              </div>
-              {COMPARE_ROWS.map((row, i) => (
-                <div
-                  key={row.criterion}
-                  className={cn(
-                    "grid grid-cols-[1.4fr_1fr_1fr] items-center text-[14px]",
-                    i < COMPARE_ROWS.length - 1 && "border-b border-foyer-border/40",
-                  )}
-                >
-                  <div className="px-5 py-4 text-foyer-ink md:px-7 md:py-5 md:text-[15px]">
-                    {row.criterion}
-                  </div>
-                  <div className="border-l border-foyer-border/60 px-5 py-4 text-center md:px-7 md:py-5">
-                    {row.ia ? (
-                      <Check className="mx-auto size-4 text-foyer-muted/70" strokeWidth={2.2} aria-hidden />
-                    ) : (
-                      <Minus className="mx-auto size-4 text-foyer-muted/40" strokeWidth={2} aria-hidden />
-                    )}
-                  </div>
-                  <div className="border-l border-foyer-border/60 bg-foyer-sage/[0.04] px-5 py-4 text-center md:px-7 md:py-5">
-                    {row.foyer ? (
-                      <Check className="mx-auto size-5 text-foyer-sage" strokeWidth={2.4} aria-hidden />
-                    ) : (
-                      <Minus className="mx-auto size-4 text-foyer-muted/40" strokeWidth={2} aria-hidden />
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* PRODUCT MOMENT — image annotée + carte flottante Total/Score */}
-      <section className="bg-foyer-cream">
         <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-24">
           <div className="max-w-2xl">
             <Reveal>
@@ -387,8 +433,6 @@ export default function LandingPage() {
             <div className="relative mt-12 overflow-hidden rounded-3xl shadow-[0_30px_80px_rgba(31,27,22,0.14),0_0_0_1px_rgba(31,27,22,0.04)]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/landing/after.jpg" alt="Salon annoté" className="block w-full" />
-
-              {/* Annotations — desktop seulement */}
               <div className="hidden md:block">
                 <Annotation x="11%" y="38%" name="Bibliothèque" source="conservée, repeinte sage" price="existant" tone="sage" direction="right" />
                 <Annotation x="32%" y="62%" name="Canapé en lin écru" source="Selency · seconde main" price="320 €" tone="terra" direction="right" />
@@ -396,25 +440,17 @@ export default function LandingPage() {
                 <Annotation x="62%" y="32%" name="Plante verte" source="conservée" price="existant" tone="sage" direction="left" />
                 <Annotation x="84%" y="44%" name="Lampadaire trépied" source="Maisons du Monde · neuf éco" price="69 €" tone="water" direction="left" />
               </div>
-
-              {/* Total / Score — carte flottante */}
               <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-auto md:right-6 md:w-72">
                 <div className="rounded-2xl bg-white/95 p-4 shadow-[0_12px_30px_rgba(31,27,22,0.18)] ring-1 ring-foyer-border/40 backdrop-blur">
                   <div className="flex items-baseline justify-between">
                     <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-foyer-muted">Total du projet</p>
-                    <p className="font-serif text-[28px] font-medium leading-none tracking-[-0.02em] text-foyer-ink md:text-[32px]">
-                      ~620 €
-                    </p>
+                    <p className="font-serif text-[28px] font-medium leading-none tracking-[-0.02em] text-foyer-ink md:text-[32px]">~620 €</p>
                   </div>
                   <div className="mt-3 flex items-center gap-2.5 border-t border-foyer-border/60 pt-3">
                     <MiniDonut />
                     <div className="min-w-0 flex-1">
-                      <p className="text-[12px] font-semibold uppercase tracking-[0.1em] text-foyer-sage">
-                        Score Foyer
-                      </p>
-                      <p className="mt-0.5 text-[12px] leading-snug text-foyer-muted">
-                        60% conservé · 15% occasion · 25% neuf
-                      </p>
+                      <p className="text-[12px] font-semibold uppercase tracking-[0.1em] text-foyer-sage">Score Foyer</p>
+                      <p className="mt-0.5 text-[12px] leading-snug text-foyer-muted">60% conservé · 15% occasion · 25% neuf</p>
                     </div>
                   </div>
                 </div>
@@ -424,8 +460,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* IA — pull-quote */}
-      <section className="bg-white">
+      {/* IA */}
+      <section className="bg-foyer-cream">
         <div className="mx-auto w-full max-w-4xl px-6 py-16 md:py-20">
           <Reveal>
             <p className="inline-flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-foyer-ink">
@@ -442,13 +478,9 @@ export default function LandingPage() {
             <div className="mt-8 flex gap-6">
               <div aria-hidden className="w-[3px] shrink-0 rounded-full bg-foyer-terra-deep" />
               <p className="text-[18px] leading-[1.65] text-foyer-muted">
-                L&apos;IA nous sert à générer des rendus et à retrouver des meubles
-                d&apos;occasion qui correspondent visuellement. Le reste — sélection des
-                partenaires, choix des matériaux, préparation des listes — est pensé par
-                notre équipe.{" "}
-                <span className="font-medium text-foyer-ink">
-                  L&apos;IA pour aller vite, l&apos;humain pour aller juste.
-                </span>
+                L&apos;IA nous sert à générer des rendus et à retrouver des meubles d&apos;occasion qui correspondent visuellement.
+                Le reste — sélection des partenaires, choix des matériaux, préparation des listes — est pensé par notre équipe.{" "}
+                <span className="font-medium text-foyer-ink">L&apos;IA pour aller vite, l&apos;humain pour aller juste.</span>
               </p>
             </div>
           </Reveal>
@@ -456,8 +488,8 @@ export default function LandingPage() {
       </section>
 
       {/* B2B */}
-      <section id="partenaires" className="scroll-mt-24 bg-foyer-cream">
-        <div className="mx-auto w-full max-w-6xl px-6 py-16 md:py-20">
+      <section id="partenaires" className="scroll-mt-24 bg-white">
+        <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-24">
           <Reveal>
             <p className="inline-flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-foyer-mousse">
               <span className="size-1.5 rounded-full bg-foyer-mousse" aria-hidden />
@@ -475,9 +507,8 @@ export default function LandingPage() {
             </p>
           </Reveal>
 
-          {/* 3 partenaires en flow horizontal divisé par hairlines (pas en cards) */}
           <Reveal delay={200}>
-            <div className="mt-12 overflow-hidden rounded-2xl bg-white ring-1 ring-foyer-border/50 shadow-[0_8px_30px_rgba(31,27,22,0.05)]">
+            <div className="mt-12 overflow-hidden rounded-2xl bg-foyer-cream/50 ring-1 ring-foyer-border/50 shadow-[0_8px_30px_rgba(31,27,22,0.05)]">
               <div className="grid divide-foyer-border/40 md:grid-cols-3 md:divide-x">
                 {PARTNERS.map((p) => {
                   const Icon = p.icon;
@@ -507,7 +538,7 @@ export default function LandingPage() {
       </section>
 
       {/* FAQ */}
-      <section className="bg-white">
+      <section className="bg-foyer-cream">
         <div className="mx-auto w-full max-w-4xl px-6 py-16 md:py-20">
           <Reveal>
             <p className="inline-flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-foyer-ink">
@@ -528,7 +559,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* FOOTER — cream */}
+      {/* FOOTER */}
       <footer className="border-t border-foyer-border/60 bg-foyer-cream">
         <div className="mx-auto w-full max-w-6xl px-6 py-12">
           <div className="grid gap-10 md:grid-cols-4">
@@ -554,109 +585,149 @@ export default function LandingPage() {
   );
 }
 
-/* ---------- composants visuels ---------- */
+/* ----- VISUELS ----- */
 
-function EcoDonut() {
-  // 60% conservé (sage) · 15% occasion (mousse) · 25% neuf durable (water)
-  const SEG = [
-    { v: 60, c: "#6B8E6F", label: "conservé", dot: "bg-foyer-sage" },
-    { v: 15, c: "#C89B6A", label: "occasion", dot: "bg-foyer-mousse" },
-    { v: 25, c: "#A5B8A0", label: "neuf durable", dot: "bg-foyer-water" },
-  ];
+function EcoDonutLarge() {
   let acc = 0;
   return (
-    <div className="rounded-3xl bg-foyer-cream/60 p-6 ring-1 ring-foyer-border/50 md:p-8">
-      <div className="flex items-center gap-6">
-        <div className="relative size-44 shrink-0 md:size-52">
-          <svg viewBox="0 0 42 42" className="size-full">
-            <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#E5DDD0" strokeWidth="4" />
-            <g transform="rotate(-90 21 21)">
-              {SEG.map((s) => {
-                const offset = -acc;
-                acc += s.v;
-                return (
-                  <circle
-                    key={s.label}
-                    cx="21"
-                    cy="21"
-                    r="15.9155"
-                    fill="none"
-                    stroke={s.c}
-                    strokeWidth="4"
-                    strokeDasharray={`${s.v} ${100 - s.v}`}
-                    strokeDashoffset={offset}
-                    strokeLinecap="butt"
-                  />
-                );
-              })}
-            </g>
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <p className="font-serif text-[44px] font-medium leading-none tracking-[-0.03em] text-foyer-ink md:text-[52px]">
-              60<span className="text-foyer-sage">%</span>
-            </p>
-            <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-foyer-muted">
-              Conservé
-            </p>
-          </div>
-        </div>
-        <div className="flex-1">
-          <ul className="space-y-2.5">
-            {SEG.map((s) => (
-              <li key={s.label} className="flex items-center gap-2.5">
-                <span className={cn("size-2.5 rounded-full", s.dot)} aria-hidden />
-                <span className="text-[14px] text-foyer-ink">
-                  <span className="font-medium">{s.v}%</span>{" "}
-                  <span className="text-foyer-muted">{s.label}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-      <div className="mt-6 border-t border-foyer-border/50 pt-5">
-        <p className="font-serif text-[20px] text-foyer-ink">
-          42 kg CO<sub>2</sub>{" "}
-          <span className="text-[14px] font-sans text-foyer-muted">évités par projet</span>
+    <div className="relative size-72 md:size-80">
+      <svg viewBox="0 0 42 42" className="size-full">
+        <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#E5DDD0" strokeWidth="4.5" />
+        <g transform="rotate(-90 21 21)">
+          {ECO_SEGMENTS.map((s) => {
+            const offset = -acc;
+            acc += s.value;
+            return (
+              <circle key={s.title} cx="21" cy="21" r="15.9155" fill="none" stroke={s.color} strokeWidth="4.5" strokeDasharray={`${s.value} ${100 - s.value}`} strokeDashoffset={offset} />
+            );
+          })}
+        </g>
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <p className="font-serif text-[64px] font-medium leading-none tracking-[-0.04em] text-foyer-ink md:text-[80px]">
+          60<span className="text-foyer-sage">%</span>
         </p>
-        <p className="mt-2 text-[12px] text-foyer-muted">
-          Méthodologie sourcée ADEME, par rapport à un projet 100% neuf équivalent.
-        </p>
+        <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-foyer-muted">de mobilier conservé</p>
+        <p className="mt-4 font-serif text-[20px] text-foyer-ink">42 kg CO<sub>2</sub></p>
+        <p className="text-[11px] text-foyer-muted">évités par projet</p>
       </div>
     </div>
   );
 }
 
 function MiniDonut() {
-  const SEG = [
-    { v: 60, c: "#6B8E6F" },
-    { v: 15, c: "#C89B6A" },
-    { v: 25, c: "#A5B8A0" },
-  ];
   let acc = 0;
   return (
     <svg viewBox="0 0 42 42" className="size-9 shrink-0">
       <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#E5DDD0" strokeWidth="6" />
       <g transform="rotate(-90 21 21)">
-        {SEG.map((s, i) => {
+        {ECO_SEGMENTS.map((s, i) => {
           const offset = -acc;
-          acc += s.v;
+          acc += s.value;
           return (
-            <circle
-              key={i}
-              cx="21"
-              cy="21"
-              r="15.9155"
-              fill="none"
-              stroke={s.c}
-              strokeWidth="6"
-              strokeDasharray={`${s.v} ${100 - s.v}`}
-              strokeDashoffset={offset}
-            />
+            <circle key={i} cx="21" cy="21" r="15.9155" fill="none" stroke={s.color} strokeWidth="6" strokeDasharray={`${s.value} ${100 - s.value}`} strokeDashoffset={offset} />
           );
         })}
       </g>
     </svg>
+  );
+}
+
+/* ----- MOCKUPS ----- */
+
+function PhoneFrame({ children, mini = false }: { children: React.ReactNode; mini?: boolean }) {
+  return (
+    <div
+      className={cn(
+        "relative aspect-[9/16] overflow-hidden rounded-[24px] bg-foyer-cream ring-1 ring-foyer-border shadow-[0_18px_40px_rgba(31,27,22,0.15)]",
+        mini ? "w-16" : "w-full",
+      )}
+    >
+      <span aria-hidden className="absolute left-1/2 top-1.5 z-10 h-1 w-8 -translate-x-1/2 rounded-full bg-foyer-ink/15" />
+      <div className={cn("absolute inset-0", mini ? "p-1.5 pt-3" : "p-2.5 pt-4")}>{children}</div>
+    </div>
+  );
+}
+
+function Mockup({ variant, mini = false }: { variant: "camera" | "styles" | "render" | "shopping"; mini?: boolean }) {
+  if (variant === "camera") {
+    return (
+      <PhoneFrame mini={mini}>
+        <div className={cn("flex h-full flex-col", mini && "gap-1")}>
+          <p className={cn("text-center font-serif text-foyer-ink", mini ? "text-[6px]" : "text-[10px]")}>Votre pièce</p>
+          <div className="mt-2 flex flex-1 items-center justify-center rounded-lg border border-dashed border-foyer-border bg-white">
+            <Camera className={cn("text-foyer-muted/60", mini ? "size-4" : "size-7")} strokeWidth={1.4} aria-hidden />
+          </div>
+          <div className={cn("mt-2 rounded-full bg-foyer-terra-deep text-center text-white", mini ? "py-0.5 text-[5px]" : "py-1.5 text-[8px]")}>
+            Prendre une photo
+          </div>
+        </div>
+      </PhoneFrame>
+    );
+  }
+  if (variant === "styles") {
+    const swatches = [
+      "linear-gradient(135deg,#F5EFE6,#A8957A)",
+      "linear-gradient(135deg,#2B2723,#A18671)",
+      "linear-gradient(135deg,#FFFFFF,#C9B89A)",
+      "linear-gradient(135deg,#C9853E,#3D6B7C)",
+      "linear-gradient(135deg,#F4EDE0,#7A8B6F)",
+      "linear-gradient(135deg,#C8703A,#5C4632)",
+    ];
+    return (
+      <PhoneFrame mini={mini}>
+        <div className={cn("flex h-full flex-col", mini && "gap-1")}>
+          <p className={cn("text-center font-serif text-foyer-ink", mini ? "text-[6px]" : "text-[10px]")}>Ambiance</p>
+          <div className={cn("mt-2 grid flex-1 grid-cols-2", mini ? "gap-0.5" : "gap-1.5")}>
+            {swatches.map((bg, i) => (
+              <div key={i} className={cn("rounded-md ring-1 ring-foyer-border", i === 0 && "ring-2 ring-foyer-ink")} style={{ background: bg }} />
+            ))}
+          </div>
+        </div>
+      </PhoneFrame>
+    );
+  }
+  if (variant === "render") {
+    return (
+      <PhoneFrame mini={mini}>
+        <div className={cn("flex h-full flex-col", mini && "gap-1")}>
+          <p className={cn("text-center font-serif text-foyer-ink", mini ? "text-[6px]" : "text-[10px]")}>Votre projet</p>
+          <div className="relative mt-2 flex-1 overflow-hidden rounded-md">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/landing/after.jpg" alt="" className="absolute inset-0 size-full object-cover" />
+            <span className={cn("absolute right-1 top-1 rounded-full bg-white/90 font-semibold uppercase tracking-wider text-foyer-ink", mini ? "px-1 py-0 text-[4px]" : "px-1.5 py-0.5 text-[6px]")}>
+              Doux
+            </span>
+          </div>
+        </div>
+      </PhoneFrame>
+    );
+  }
+  // shopping
+  const items: { dot: "sage" | "terra" | "water"; name: string; price: string }[] = [
+    { dot: "sage", name: "Bibliothèque", price: "—" },
+    { dot: "terra", name: "Canapé", price: "320" },
+    { dot: "terra", name: "Table basse", price: "75" },
+    { dot: "water", name: "Lampadaire", price: "69" },
+  ];
+  return (
+    <PhoneFrame mini={mini}>
+      <div className={cn("flex h-full flex-col", mini && "gap-1")}>
+        <p className={cn("text-center font-serif text-foyer-ink", mini ? "text-[6px]" : "text-[10px]")}>Votre liste</p>
+        <ul className={cn("mt-2 flex-1 space-y-1", mini && "space-y-0.5")}>
+          {items.map((item) => (
+            <li key={item.name} className={cn("flex items-center gap-1 rounded-md bg-white", mini ? "px-1 py-0.5" : "px-1.5 py-1")}>
+              <span className={cn("shrink-0 rounded-full", SOLID_BG[item.dot], mini ? "size-1" : "size-1.5")} />
+              <span className={cn("flex-1 truncate text-foyer-ink", mini ? "text-[4px]" : "text-[7px]")}>{item.name}</span>
+              <span className={cn("font-medium text-foyer-ink", mini ? "text-[4px]" : "text-[7px]")}>{item.price}</span>
+            </li>
+          ))}
+        </ul>
+        <div className={cn("mt-1 rounded-md bg-foyer-ink text-center font-medium text-foyer-cream", mini ? "py-0.5 text-[5px]" : "py-1.5 text-[8px]")}>
+          Commander
+        </div>
+      </div>
+    </PhoneFrame>
   );
 }
 
