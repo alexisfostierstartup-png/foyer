@@ -3,6 +3,8 @@ import Link from "next/link";
 import {
   Camera,
   Leaf,
+  Recycle,
+  Search,
   Store,
   Tag,
   Building2,
@@ -10,7 +12,6 @@ import {
   X as XIcon,
   ArrowRight,
   ArrowUpRight,
-  ChevronsLeftRight,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -43,10 +44,19 @@ const SOLID_BG: Record<"sage" | "terra" | "water", string> = {
   water: "bg-foyer-water",
 };
 
-const ECO_SEGMENTS = [
-  { value: 60, color: "#6B8E6F", dotClass: "bg-foyer-sage", title: "Conservé", description: "Homestaging, customisation : on garde d'abord ce qui peut l'être." },
-  { value: 15, color: "#6E8B6B", dotClass: "bg-foyer-mousse", title: "Occasion", description: "Sourcing seconde main depuis Leboncoin, Selency, Vinted." },
-  { value: 25, color: "#A5B8A0", dotClass: "bg-foyer-water", title: "Neuf durable", description: "Matériaux et marques qui tiennent dix ans, pas trois." },
+const ECO_SEGMENTS: {
+  value: number;
+  color: string;
+  dotClass: string;
+  iconBg: string;
+  iconColor: string;
+  icon: LucideIcon;
+  title: string;
+  description: string;
+}[] = [
+  { value: 60, color: "#6B8E6F", dotClass: "bg-foyer-sage", iconBg: "bg-foyer-sage/15", iconColor: "text-foyer-sage", icon: Recycle, title: "Conservé", description: "Homestaging et customisation : on garde d'abord ce qui peut l'être." },
+  { value: 15, color: "#6E8B6B", dotClass: "bg-foyer-mousse", iconBg: "bg-foyer-mousse/15", iconColor: "text-foyer-mousse", icon: Search, title: "Occasion", description: "Sourcing seconde main : Leboncoin, Selency, Vinted." },
+  { value: 25, color: "#A5B8A0", dotClass: "bg-foyer-water", iconBg: "bg-foyer-water/30", iconColor: "text-foyer-sage", icon: Leaf, title: "Neuf durable", description: "Matériaux et marques qui tiennent dix ans, pas trois." },
 ];
 
 const COMPARE_GENERATORS = [
@@ -96,10 +106,10 @@ export default function LandingPage() {
       <header className="sticky top-0 z-40 border-b border-foyer-border/40 bg-foyer-cream/85 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
           <Link href="/" className="font-serif text-xl tracking-tight text-foyer-ink">Foyer</Link>
-          <nav className="flex items-center gap-6 text-[14px] text-foyer-muted">
-            <Link href="#process" className="hidden hover:text-foyer-ink sm:inline">Comment ça marche</Link>
-            <Link href="#partenaires" className="hidden hover:text-foyer-ink sm:inline">Partenaires</Link>
-            <Link href="/demo" className="rounded-full bg-foyer-ink px-4 py-1.5 font-medium text-foyer-cream transition-colors hover:bg-foyer-ink/85">Lancer</Link>
+          <nav className="flex items-center gap-6 text-[14px] font-medium text-foyer-ink/75">
+            <Link href="#process" className="hidden transition-colors hover:text-foyer-sage sm:inline">Comment ça marche</Link>
+            <Link href="#partenaires" className="hidden transition-colors hover:text-foyer-sage sm:inline">Partenaires</Link>
+            <Link href="/demo" className="rounded-full bg-foyer-sage px-4 py-1.5 font-medium text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:-translate-y-0.5 hover:bg-foyer-sage/90 hover:shadow-[0_4px_14px_rgba(107,142,111,0.45)]">Lancer</Link>
           </nav>
         </div>
       </header>
@@ -130,14 +140,16 @@ export default function LandingPage() {
                 </p>
               </Reveal>
               <Reveal delay={210}>
-                <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center md:ml-8">
-                  <Button render={<Link href="/demo" />} size="lg" className="h-12 w-full rounded-full bg-foyer-terra-deep px-7 text-white transition-transform hover:-translate-y-0.5 hover:bg-foyer-terra-deep/90 sm:w-auto">
+                <div className="mt-8 md:ml-8">
+                  <Button render={<Link href="/demo" />} size="lg" className="h-12 w-full rounded-full bg-foyer-sage px-7 text-white shadow-[0_4px_16px_rgba(107,142,111,0.35)] transition-all hover:-translate-y-0.5 hover:bg-foyer-sage/90 hover:shadow-[0_8px_24px_rgba(107,142,111,0.45)] sm:w-auto">
                     Lancer ma transformation
                   </Button>
-                  <Link href="#process" className="group inline-flex h-12 items-center gap-1.5 rounded-full border border-foyer-border bg-white px-5 text-[15px] font-medium text-foyer-ink transition-colors hover:border-foyer-ink/30">
-                    Comment ça marche
-                    <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
-                  </Link>
+                  <div className="mt-4">
+                    <Link href="#process" className="group inline-flex items-center gap-1.5 text-[14px] text-foyer-muted underline-offset-4 transition-colors hover:text-foyer-ink hover:underline">
+                      Ou voir comment ça marche
+                      <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                    </Link>
+                  </div>
                 </div>
               </Reveal>
             </div>
@@ -149,16 +161,20 @@ export default function LandingPage() {
                     <BeforeAfterSlider beforeUrl="/landing/before.jpg" afterUrl="/landing/after.jpg" />
                   </div>
                 </div>
-                <div className="absolute -top-3 left-6 hidden items-center gap-1.5 rounded-full bg-foyer-ink px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-foyer-cream shadow-lg md:inline-flex">
-                  <ChevronsLeftRight className="size-3.5" aria-hidden />
-                  Avant / Après
-                </div>
-                <div className="absolute -bottom-5 left-4 right-4 md:-bottom-6 md:left-auto md:right-6 md:w-64">
-                  <div className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-[0_16px_36px_rgba(31,27,22,0.18)] ring-1 ring-foyer-border/40 backdrop-blur">
-                    <MiniDonut />
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-foyer-sage">Score Foyer</p>
-                      <p className="mt-0.5 text-[12px] leading-snug text-foyer-muted">60% conservé · 15% chiné · 25% neuf</p>
+                <div className="absolute -bottom-6 left-4 right-4 md:-bottom-8 md:left-auto md:right-6 md:w-72">
+                  <div className="rounded-2xl bg-white p-3.5 shadow-[0_16px_36px_rgba(31,27,22,0.18)] ring-1 ring-foyer-border/40 backdrop-blur">
+                    <div className="flex items-center gap-3">
+                      <MiniDonut />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-foyer-sage">Score Foyer</p>
+                        <p className="mt-0.5 text-[12px] leading-snug text-foyer-muted">60% conservé · 15% chiné · 25% neuf</p>
+                      </div>
+                    </div>
+                    <div className="mt-2.5 flex items-baseline justify-between border-t border-foyer-border/60 pt-2.5">
+                      <p className="text-[11px] font-medium text-foyer-muted">CO₂ évités</p>
+                      <p className="font-serif text-[18px] font-medium leading-none tracking-[-0.02em] text-foyer-ink">
+                        42 kg
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -232,25 +248,30 @@ export default function LandingPage() {
                 {/* Petit dot sage flottant en bas-gauche */}
                 <span aria-hidden className="absolute bottom-3 left-0 size-4 rounded-full bg-foyer-sage shadow-md ring-4 ring-foyer-cream" />
               </div>
-              <ul className="space-y-5">
-                {ECO_SEGMENTS.map((seg, i) => (
-                  <Reveal key={seg.title} delay={i * 100}>
-                    <li className="flex items-start gap-5 rounded-2xl bg-white/60 p-5 ring-1 ring-foyer-border/40 transition-all hover:bg-white hover:ring-foyer-border">
-                      <div className="shrink-0 pt-1">
-                        <span className={cn("block size-3.5 rounded-full", seg.dotClass)} aria-hidden />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-baseline gap-3">
-                          <p className="font-serif text-[32px] font-medium leading-none tracking-[-0.03em] text-foyer-ink">
-                            {seg.value}<span className="text-foyer-muted/60">%</span>
-                          </p>
-                          <h3 className="font-serif text-[19px] text-foyer-ink">{seg.title}</h3>
+              <ul className="grid gap-4">
+                {ECO_SEGMENTS.map((seg, i) => {
+                  const Icon = seg.icon;
+                  return (
+                    <Reveal key={seg.title} delay={i * 100}>
+                      <li className="relative flex h-full items-start gap-5 overflow-hidden rounded-2xl bg-white p-6 ring-1 ring-foyer-border/50 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(31,27,22,0.07)] hover:ring-foyer-border">
+                        {/* Liseré coloré vertical à gauche (signature segment) */}
+                        <span aria-hidden className={cn("absolute inset-y-4 left-0 w-1 rounded-r-full", seg.dotClass)} />
+                        <div className={cn("inline-flex size-12 shrink-0 items-center justify-center rounded-xl", seg.iconBg)}>
+                          <Icon className={cn("size-6", seg.iconColor)} strokeWidth={1.6} aria-hidden />
                         </div>
-                        <p className="mt-2 text-[14px] leading-relaxed text-foyer-muted">{seg.description}</p>
-                      </div>
-                    </li>
-                  </Reveal>
-                ))}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-baseline gap-2.5">
+                            <p className="font-serif text-[30px] font-medium leading-none tracking-[-0.03em] text-foyer-ink">
+                              {seg.value}<span className="text-foyer-muted/50">%</span>
+                            </p>
+                            <h3 className="font-serif text-[18px] leading-none text-foyer-ink">{seg.title}</h3>
+                          </div>
+                          <p className="mt-3 text-[14px] leading-relaxed text-foyer-muted">{seg.description}</p>
+                        </div>
+                      </li>
+                    </Reveal>
+                  );
+                })}
               </ul>
             </div>
           </Reveal>
