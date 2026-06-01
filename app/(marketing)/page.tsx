@@ -9,7 +9,6 @@ import {
   Tag,
   Building2,
   Check,
-  X as XIcon,
   ArrowRight,
   ArrowUpRight,
   type LucideIcon,
@@ -60,12 +59,9 @@ const ECO_SEGMENTS: {
 ];
 
 const COMPARE_GENERATORS = [
-  { ok: true, label: "Rendu visuel agréable" },
-  { ok: false, label: "Préserve votre mobilier existant" },
-  { ok: false, label: "Liste d'achat sourcée et chiffrée" },
-  { ok: false, label: "Priorité seconde main et conservation" },
-  { ok: false, label: "Conception guidée étape par étape" },
-  { ok: false, label: "Bilan carbone du projet (ADEME)" },
+  "Un rendu visuel agréable",
+  "Plusieurs ambiances à essayer",
+  "Quelques itérations de style",
 ];
 
 const COMPARE_FOYER = [
@@ -298,25 +294,15 @@ export default function LandingPage() {
                 De la photo à la commande, en 4 écrans.
               </h2>
             </Reveal>
-            <Reveal delay={140}>
-              <p className="mt-5 text-[17px] leading-[1.55] text-foyer-muted">
-                Pas de logiciel. Pas de plan. Quatre écrans, et votre projet est prêt à être commandé.
-              </p>
-            </Reveal>
           </div>
 
-          {/* Desktop — flux horizontal avec phones */}
-          <div className="mt-16 hidden md:flex md:items-end md:justify-between md:gap-2 lg:gap-4">
+          {/* Desktop — 4 phones alignés (même hauteur) */}
+          <div className="mt-16 hidden md:flex md:items-start md:justify-between md:gap-2 lg:gap-4">
             {FLOW_STEPS.map((step, i) => (
               <Fragment key={step.num}>
                 <Reveal delay={i * 100} className="w-[22%]">
                   <div className="group flex flex-col items-center">
-                    <div
-                      className={cn(
-                        "relative w-full transition-transform duration-500 group-hover:-translate-y-1",
-                        i % 2 === 1 ? "lg:translate-y-3" : "",
-                      )}
-                    >
+                    <div className="relative w-full transition-transform duration-500 group-hover:-translate-y-1">
                       <Mockup variant={step.mockup} />
                       {/* Numéro qui déborde du téléphone */}
                       <span className="absolute -right-3 -top-3 inline-flex size-10 items-center justify-center rounded-full bg-foyer-ink text-foyer-cream shadow-[0_6px_16px_rgba(31,27,22,0.25)] ring-4 ring-white">
@@ -329,7 +315,7 @@ export default function LandingPage() {
                   </div>
                 </Reveal>
                 {i < FLOW_STEPS.length - 1 && (
-                  <div aria-hidden className="flex shrink-0 items-center self-center pb-32">
+                  <div aria-hidden className="flex shrink-0 items-center pt-44 lg:pt-52">
                     <ArrowRight className="size-5 text-foyer-border" strokeWidth={1.5} />
                   </div>
                 )}
@@ -382,36 +368,27 @@ export default function LandingPage() {
             </Reveal>
           </div>
 
-          <div className="relative mt-14 grid items-start gap-5 md:grid-cols-[1fr_1.1fr] md:items-stretch md:gap-6">
-            {/* VS badge centré, overlap des 2 cards (desktop) */}
-            <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 z-20 hidden -translate-x-1/2 -translate-y-1/2 md:block">
-              <div className="flex size-14 items-center justify-center rounded-full bg-foyer-ink text-foyer-cream shadow-[0_8px_24px_rgba(31,27,22,0.25)] ring-4 ring-foyer-cream">
-                <span className="font-serif text-[15px] font-medium tracking-tight">vs</span>
-              </div>
-            </div>
-
+          <div className="mt-14 grid items-start gap-5 md:grid-cols-[1fr_1.1fr] md:items-stretch md:gap-6">
             {/* Générateurs IA — card en retrait */}
             <Reveal>
               <div className="h-full rounded-3xl bg-white/70 p-7 ring-1 ring-foyer-border/40 md:p-9">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foyer-muted">Sans Foyer</p>
-                <h3 className="mt-3 font-serif text-[24px] font-medium leading-tight tracking-[-0.01em] text-foyer-ink/70 md:text-[28px]">
+                <h3 className="font-serif text-[24px] font-medium leading-tight tracking-[-0.01em] text-foyer-ink/70 md:text-[28px]">
                   Générateurs IA classiques
                 </h3>
                 <p className="mt-3 text-[14px] leading-relaxed text-foyer-muted">
-                  Un joli rendu et puis… c&apos;est tout. À vous de trouver les meubles, de mesurer, de chiner.
+                  Un joli rendu. Et puis à vous de jouer.
                 </p>
                 <ul className="mt-7 space-y-3.5">
-                  {COMPARE_GENERATORS.map((row) => (
-                    <li key={row.label} className="flex items-start gap-3">
-                      {row.ok ? (
-                        <Check className="mt-0.5 size-4 shrink-0 text-foyer-muted/70" strokeWidth={2.2} aria-hidden />
-                      ) : (
-                        <XIcon className="mt-0.5 size-4 shrink-0 text-foyer-muted/40" strokeWidth={2.2} aria-hidden />
-                      )}
-                      <span className={cn("text-[14px] leading-snug", row.ok ? "text-foyer-ink/75" : "text-foyer-muted/60 line-through")}>{row.label}</span>
+                  {COMPARE_GENERATORS.map((label) => (
+                    <li key={label} className="flex items-start gap-3">
+                      <Check className="mt-0.5 size-4 shrink-0 text-foyer-muted/60" strokeWidth={2.2} aria-hidden />
+                      <span className="text-[14px] leading-snug text-foyer-ink/70">{label}</span>
                     </li>
                   ))}
                 </ul>
+                <p className="mt-8 text-[13px] italic text-foyer-muted">
+                  À vous de trouver les meubles, de mesurer, de chiner, d&apos;orchestrer les livraisons.
+                </p>
               </div>
             </Reveal>
 
@@ -420,11 +397,7 @@ export default function LandingPage() {
               <div className="relative h-full overflow-hidden rounded-3xl bg-white p-7 ring-2 ring-foyer-sage shadow-[0_20px_60px_rgba(31,27,22,0.12)] md:p-9">
                 <div aria-hidden className="absolute -right-12 -top-12 size-40 rounded-full bg-foyer-sage/15 blur-2xl" />
                 <div className="relative">
-                  <p className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-foyer-sage">
-                    <span className="size-1.5 rounded-full bg-foyer-sage" aria-hidden />
-                    Avec Foyer
-                  </p>
-                  <h3 className="mt-3 font-serif text-[28px] font-medium leading-tight tracking-[-0.015em] text-foyer-ink md:text-[34px]">
+                  <h3 className="font-serif text-[28px] font-medium leading-tight tracking-[-0.015em] text-foyer-ink md:text-[34px]">
                     Foyer
                   </h3>
                   <p className="mt-3 text-[14px] leading-relaxed text-foyer-muted">
@@ -743,28 +716,38 @@ function Mockup({ variant, mini = false }: { variant: "camera" | "styles" | "ren
       </PhoneFrame>
     );
   }
-  // shopping
-  const items: { dot: "sage" | "terra" | "water"; name: string; price: string }[] = [
-    { dot: "sage", name: "Bibliothèque", price: "—" },
-    { dot: "terra", name: "Canapé", price: "320" },
-    { dot: "terra", name: "Table basse", price: "75" },
-    { dot: "water", name: "Lampadaire", price: "69" },
+  // shopping — commande groupée par enseigne
+  const groups: { merchant: string; count: number; total: string }[] = [
+    { merchant: "Selency", count: 2, total: "395" },
+    { merchant: "Leboncoin", count: 1, total: "75" },
+    { merchant: "La Redoute", count: 1, total: "89" },
   ];
   return (
     <PhoneFrame mini={mini}>
       <div className={cn("flex h-full flex-col", mini && "gap-1")}>
-        <p className={cn("text-center font-serif text-foyer-ink", mini ? "text-[6px]" : "text-[10px]")}>Votre liste</p>
-        <ul className={cn("mt-2 flex-1 space-y-1", mini && "space-y-0.5")}>
-          {items.map((item) => (
-            <li key={item.name} className={cn("flex items-center gap-1 rounded-md bg-white", mini ? "px-1 py-0.5" : "px-1.5 py-1")}>
-              <span className={cn("shrink-0 rounded-full", SOLID_BG[item.dot], mini ? "size-1" : "size-1.5")} />
-              <span className={cn("flex-1 truncate text-foyer-ink", mini ? "text-[4px]" : "text-[7px]")}>{item.name}</span>
-              <span className={cn("font-medium text-foyer-ink", mini ? "text-[4px]" : "text-[7px]")}>{item.price}</span>
+        <p className={cn("text-center font-serif text-foyer-ink", mini ? "text-[6px]" : "text-[10px]")}>Votre commande</p>
+        <p className={cn("text-center text-foyer-muted", mini ? "text-[4px]" : "text-[6px]")}>{groups.length} enseignes</p>
+        <ul className={cn("mt-2 flex-1", mini ? "space-y-0.5" : "space-y-1")}>
+          {groups.map((g) => (
+            <li
+              key={g.merchant}
+              className={cn(
+                "rounded-md bg-white ring-1 ring-foyer-border/60",
+                mini ? "px-1 py-0.5" : "px-1.5 py-1",
+              )}
+            >
+              <div className="flex items-baseline justify-between">
+                <span className={cn("font-medium text-foyer-ink", mini ? "text-[4.5px]" : "text-[7px]")}>{g.merchant}</span>
+                <span className={cn("font-medium text-foyer-ink", mini ? "text-[4.5px]" : "text-[7px]")}>{g.total} €</span>
+              </div>
+              <p className={cn("text-foyer-muted", mini ? "text-[3.5px]" : "text-[5.5px]")}>
+                {g.count} article{g.count > 1 ? "s" : ""} · livraison groupée
+              </p>
             </li>
           ))}
         </ul>
         <div className={cn("mt-1 rounded-md bg-foyer-ink text-center font-medium text-foyer-cream", mini ? "py-0.5 text-[5px]" : "py-1.5 text-[8px]")}>
-          Commander
+          Tout commander
         </div>
       </div>
     </PhoneFrame>
