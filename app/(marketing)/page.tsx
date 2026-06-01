@@ -123,7 +123,7 @@ export default function LandingPage() {
                 </p>
               </Reveal>
               <Reveal delay={70}>
-                <h1 className="mt-5 font-serif text-[42px] font-medium leading-[0.96] tracking-[-0.03em] text-foyer-ink md:text-[60px] lg:text-[72px]">
+                <h1 className="mt-5 font-serif text-[36px] font-medium leading-[0.96] tracking-[-0.03em] text-foyer-ink md:text-[50px] lg:text-[58px]">
                   Une pièce{" "}
                   <span className="[background:linear-gradient(transparent_55%,rgba(107,142,111,0.22)_55%)]">transformée</span>
                   .{" "}Une empreinte{" "}
@@ -132,12 +132,12 @@ export default function LandingPage() {
                 </h1>
               </Reveal>
               <Reveal delay={140}>
-                <p className="mt-6 max-w-md text-[18px] leading-[1.55] text-foyer-muted md:ml-8">
+                <p className="mt-6 max-w-md text-[18px] leading-[1.55] text-foyer-muted">
                   Un bel intérieur, sans que cela soit aux dépens de la planète.
                 </p>
               </Reveal>
               <Reveal delay={210}>
-                <div className="mt-8 md:ml-8">
+                <div className="mt-8">
                   <Button render={<Link href="/demo" />} size="lg" className="h-12 w-full rounded-full bg-foyer-sage px-7 text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:bg-foyer-sage/90 hover:shadow-[0_4px_14px_rgba(107,142,111,0.45)] sm:w-auto">
                     Lancer ma transformation
                   </Button>
@@ -281,7 +281,7 @@ export default function LandingPage() {
       </section>
 
       {/* PROCESS — infographie 4 phones */}
-      <section id="process" className="scroll-mt-24 bg-white">
+      <section id="process" className="scroll-mt-24 rounded-t-[32px] rounded-b-[32px] bg-white">
         <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-28">
           <div className="mx-auto max-w-2xl text-center">
             <Reveal>
@@ -372,7 +372,7 @@ export default function LandingPage() {
           <div className="mt-14 grid items-start gap-5 md:grid-cols-[1fr_1.1fr] md:items-stretch md:gap-6">
             {/* Générateurs IA — card en retrait */}
             <Reveal>
-              <div className="h-full rounded-3xl bg-foyer-cream p-7 ring-1 ring-foyer-border/60 md:p-9">
+              <div className="h-full rounded-3xl bg-white p-7 ring-1 ring-foyer-border/60 md:p-9">
                 <h3 className="font-serif text-[24px] font-medium leading-tight tracking-[-0.01em] text-foyer-ink/75 md:text-[28px]">
                   Générateurs IA classiques
                 </h3>
@@ -422,7 +422,7 @@ export default function LandingPage() {
       </section>
 
       {/* PRODUCT MOMENT — image annotée */}
-      <section className="bg-white">
+      <section className="rounded-t-[32px] rounded-b-[32px] bg-white">
         <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-24">
           <div className="max-w-2xl">
             <Reveal>
@@ -502,7 +502,7 @@ export default function LandingPage() {
       </section>
 
       {/* B2B */}
-      <section id="partenaires" className="scroll-mt-24 bg-white">
+      <section id="partenaires" className="scroll-mt-24 rounded-t-[32px] rounded-b-[32px] bg-white">
         <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-24">
           <Reveal>
             <p className="inline-flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-foyer-mousse">
