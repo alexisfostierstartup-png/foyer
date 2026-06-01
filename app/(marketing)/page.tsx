@@ -105,10 +105,12 @@ export default function LandingPage() {
       <header className="sticky top-0 z-40 bg-foyer-sage shadow-[0_2px_16px_rgba(31,27,22,0.12)]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
           <Link href="/" className="font-serif text-xl tracking-tight text-white">Foyer</Link>
-          <nav className="flex items-center gap-6 text-[14px] font-semibold">
+          <div className="flex flex-1 items-center gap-6 text-[14px] font-semibold">
             <Link href="#process" className="hidden text-white transition-colors hover:text-white/75 sm:inline">Comment ça marche</Link>
             <Link href="#partenaires" className="hidden text-white transition-colors hover:text-white/75 sm:inline">Partenaires</Link>
-            <Link href="/auth" className="hidden text-white/85 transition-colors hover:text-white sm:inline">Se connecter</Link>
+          </div>
+          <nav className="flex items-center gap-4 text-[14px] font-semibold">
+            <Link href="/auth" className="hidden text-white transition-colors hover:text-white/75 sm:inline">Se connecter</Link>
             <Link href="/auth?tab=signup" className="rounded-full bg-white px-4 py-1.5 font-semibold text-foyer-sage shadow-[0_2px_8px_rgba(31,27,22,0.15)] transition-all hover:bg-white/90">S&apos;inscrire</Link>
           </nav>
         </div>
@@ -343,8 +345,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <StrokeDivider dir="white-to-cream" />
-
       {/* DIFFÉRENCIATEURS — 2 grosses cards comparatives */}
       <section className="bg-foyer-cream">
         <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-28">
@@ -463,8 +463,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <StrokeDivider dir="white-to-cream" />
-
       {/* IA */}
       <section className="bg-foyer-cream">
         <div className="mx-auto w-full max-w-4xl px-6 py-16 md:py-20">
@@ -544,11 +542,9 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <StrokeDivider dir="white-to-cream" />
-
-      {/* FAQ */}
-      <section className="bg-foyer-cream">
-        <div className="mx-auto w-full max-w-4xl px-6 py-16 md:py-20">
+      {/* FAQ — remonte légèrement dans le B2B */}
+      <section className="-mt-6 bg-foyer-cream">
+        <div className="mx-auto w-full max-w-4xl px-6 pb-16 pt-10 md:pb-20 md:pt-14">
           <Reveal>
             <p className="inline-flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-foyer-ink">
               <span className="size-1.5 rounded-full bg-foyer-ink" aria-hidden />
