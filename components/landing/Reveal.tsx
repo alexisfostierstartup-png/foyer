@@ -3,10 +3,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-/**
- * Révèle son contenu (fondu + léger glissement) quand il entre dans le viewport.
- * `delay` permet d'échelonner plusieurs éléments (effet de cascade).
- */
 export function Reveal({
   children,
   className,
@@ -26,6 +22,8 @@ export function Reveal({
       setShown(true);
       return;
     }
+    // Observe the parent <section> so every Reveal inside fires together
+    const target = el.closest("section") ?? el;
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -33,9 +31,9 @@ export function Reveal({
           io.disconnect();
         }
       },
-      { threshold: 0.15, rootMargin: "0px 0px -8% 0px" },
+      { threshold: 0.08, rootMargin: "0px 0px -4% 0px" },
     );
-    io.observe(el);
+    io.observe(target);
     return () => io.disconnect();
   }, []);
 

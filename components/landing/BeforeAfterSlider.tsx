@@ -53,7 +53,7 @@ export function BeforeAfterSlider({
   className,
 }: BeforeAfterSliderProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState(25);
+  const [position, setPosition] = useState(35);
 
   const updateFromClientX = useCallback((clientX: number) => {
     const el = containerRef.current;
