@@ -18,6 +18,8 @@ import { cn } from "@/lib/utils";
 import { BeforeAfterSlider } from "@/components/landing/BeforeAfterSlider";
 import { FaqAccordion } from "@/components/landing/FaqAccordion";
 import { Reveal } from "@/components/landing/Reveal";
+import { StrokeDivider } from "@/components/landing/StrokeDivider";
+import { FloatingCTA } from "@/components/landing/FloatingCTA";
 
 type Tone = "sage" | "terra" | "ink" | "water" | "mousse";
 
@@ -98,6 +100,7 @@ const FLOW_STEPS = [
 export default function LandingPage() {
   return (
     <div className="flex flex-1 flex-col bg-foyer-cream">
+      <FloatingCTA />
       {/* Header */}
       <header className="sticky top-0 z-40 bg-foyer-sage shadow-[0_2px_16px_rgba(31,27,22,0.12)]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
@@ -105,7 +108,8 @@ export default function LandingPage() {
           <nav className="flex items-center gap-6 text-[14px] font-semibold">
             <Link href="#process" className="hidden text-white transition-colors hover:text-white/75 sm:inline">Comment ça marche</Link>
             <Link href="#partenaires" className="hidden text-white transition-colors hover:text-white/75 sm:inline">Partenaires</Link>
-            <Link href="/demo" className="rounded-full bg-white px-4 py-1.5 font-semibold text-foyer-sage shadow-[0_2px_8px_rgba(31,27,22,0.15)] transition-all hover:bg-white/90">Lancer</Link>
+            <Link href="/auth" className="hidden text-white/85 transition-colors hover:text-white sm:inline">Se connecter</Link>
+            <Link href="/auth?tab=signup" className="rounded-full bg-white px-4 py-1.5 font-semibold text-foyer-sage shadow-[0_2px_8px_rgba(31,27,22,0.15)] transition-all hover:bg-white/90">S&apos;inscrire</Link>
           </nav>
         </div>
       </header>
@@ -142,6 +146,7 @@ export default function LandingPage() {
                   <Button render={<Link href="/demo" />} size="lg" className="h-12 w-full rounded-full bg-foyer-sage px-7 text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:bg-foyer-sage/90 hover:shadow-[0_4px_14px_rgba(107,142,111,0.45)] sm:w-auto">
                     Lancer ma transformation
                   </Button>
+                  <div id="hero-cta-sentinel" aria-hidden />
                 </div>
               </Reveal>
             </div>
@@ -275,6 +280,8 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <StrokeDivider dir="cream-to-white" />
+
       {/* PROCESS — infographie 4 phones */}
       <section id="process" className="scroll-mt-24 bg-white">
         <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-28">
@@ -335,6 +342,8 @@ export default function LandingPage() {
           </ol>
         </div>
       </section>
+
+      <StrokeDivider dir="white-to-cream" />
 
       {/* DIFFÉRENCIATEURS — 2 grosses cards comparatives */}
       <section className="bg-foyer-cream">
@@ -399,6 +408,8 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <StrokeDivider dir="cream-to-white" />
+
       {/* PRODUCT MOMENT — image annotée */}
       <section className="bg-white">
         <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-24">
@@ -452,6 +463,8 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <StrokeDivider dir="white-to-cream" />
+
       {/* IA */}
       <section className="bg-foyer-cream">
         <div className="mx-auto w-full max-w-4xl px-6 py-16 md:py-20">
@@ -478,6 +491,8 @@ export default function LandingPage() {
           </Reveal>
         </div>
       </section>
+
+      <StrokeDivider dir="cream-to-white" />
 
       {/* B2B */}
       <section id="partenaires" className="scroll-mt-24 bg-white">
@@ -528,6 +543,8 @@ export default function LandingPage() {
           </Reveal>
         </div>
       </section>
+
+      <StrokeDivider dir="white-to-cream" />
 
       {/* FAQ */}
       <section className="bg-foyer-cream">
