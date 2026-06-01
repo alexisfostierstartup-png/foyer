@@ -142,12 +142,6 @@ export default function LandingPage() {
                   <Button render={<Link href="/demo" />} size="lg" className="h-12 w-full rounded-full bg-foyer-sage px-7 text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:bg-foyer-sage/90 hover:shadow-[0_4px_14px_rgba(107,142,111,0.45)] sm:w-auto">
                     Lancer ma transformation
                   </Button>
-                  <div className="mt-4">
-                    <Link href="#process" className="group inline-flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.1em] text-foyer-muted transition-colors hover:text-foyer-ink">
-                      Comment ça marche
-                      <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" aria-hidden />
-                    </Link>
-                  </div>
                 </div>
               </Reveal>
             </div>
@@ -281,8 +275,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <SectionDivider from="cream" to="white" />
-
       {/* PROCESS — infographie 4 phones */}
       <section id="process" className="scroll-mt-24 bg-white">
         <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-28">
@@ -349,8 +341,6 @@ export default function LandingPage() {
           </ol>
         </div>
       </section>
-
-      <SectionDivider from="white" to="cream" />
 
       {/* DIFFÉRENCIATEURS — 2 grosses cards comparatives */}
       <section className="bg-foyer-cream">
@@ -426,8 +416,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <SectionDivider from="cream" to="white" />
-
       {/* PRODUCT MOMENT — image annotée */}
       <section className="bg-white">
         <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-24">
@@ -481,8 +469,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <SectionDivider from="white" to="cream" />
-
       {/* IA */}
       <section className="bg-foyer-cream">
         <div className="mx-auto w-full max-w-4xl px-6 py-16 md:py-20">
@@ -509,8 +495,6 @@ export default function LandingPage() {
           </Reveal>
         </div>
       </section>
-
-      <SectionDivider from="cream" to="white" />
 
       {/* B2B */}
       <section id="partenaires" className="scroll-mt-24 bg-white">
@@ -561,8 +545,6 @@ export default function LandingPage() {
           </Reveal>
         </div>
       </section>
-
-      <SectionDivider from="white" to="cream" />
 
       {/* FAQ */}
       <section className="bg-foyer-cream">
@@ -798,18 +780,6 @@ function Annotation({
           {source} · <span className="font-medium text-foyer-ink">{price}</span>
         </p>
       </div>
-    </div>
-  );
-}
-
-function SectionDivider({ from, to }: { from: "cream" | "white"; to: "cream" | "white" }) {
-  const fromHex = from === "cream" ? "#faf6f0" : "#ffffff";
-  const toHex = to === "cream" ? "#faf6f0" : "#ffffff";
-  return (
-    <div aria-hidden style={{ background: toHex }} className="pointer-events-none -mt-px w-full leading-[0]">
-      <svg viewBox="0 0 1440 56" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="block w-full" style={{ height: 56 }}>
-        <path d="M0,0 Q240,80 480,0 Q720,80 960,0 Q1200,80 1440,0 L1440,56 L0,56 Z" fill={fromHex} />
-      </svg>
     </div>
   );
 }
