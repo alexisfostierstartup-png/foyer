@@ -278,15 +278,9 @@ export default function LandingPage() {
       {/* PROCESS — infographie 4 phones */}
       <section id="process" className="scroll-mt-24 bg-white">
         <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-28">
-          <div className="mx-auto max-w-2xl text-center">
+          <div className="text-center">
             <Reveal>
-              <p className="inline-flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-foyer-terra-deep">
-                <span className="size-1.5 rounded-full bg-foyer-terra-deep" aria-hidden />
-                Comment ça se passe
-              </p>
-            </Reveal>
-            <Reveal delay={70}>
-              <h2 className="mt-4 font-serif text-[32px] font-medium leading-[1.02] tracking-[-0.02em] text-foyer-ink md:text-[48px]">
+              <h2 className="font-serif text-[28px] font-medium leading-[1.02] tracking-[-0.02em] text-foyer-ink md:text-[40px] md:whitespace-nowrap">
                 De la photo à la commande, en 4 écrans.
               </h2>
             </Reveal>
@@ -305,9 +299,9 @@ export default function LandingPage() {
                         <span className="font-serif text-[13px] font-medium leading-none">{step.num}</span>
                       </span>
                     </div>
-                    <p className="mt-6 font-serif text-[14px] text-foyer-muted">Étape {step.num}</p>
-                    <h3 className="mt-1.5 text-center font-serif text-[19px] leading-snug text-foyer-ink">{step.title}</h3>
-                    <p className="mt-2 text-center text-[13px] leading-relaxed text-foyer-muted">{step.description}</p>
+                    <p className="mt-6 font-serif text-[13px] text-foyer-muted">Étape {step.num}</p>
+                    <h3 className="mt-2 block text-center font-serif text-[18px] leading-snug text-foyer-ink">{step.title}</h3>
+                    <p className="mt-4 block text-center text-[13px] leading-relaxed text-foyer-muted">{step.description}</p>
                   </div>
                 </Reveal>
                 {i < FLOW_STEPS.length - 1 && (
