@@ -276,8 +276,8 @@ export default function LandingPage() {
       </section>
 
       {/* PROCESS — infographie 4 phones */}
-      <section id="process" className="scroll-mt-24 bg-white">
-        <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-28">
+      <section id="process" className="scroll-mt-24 bg-foyer-cream">
+        <div className="mx-auto w-full max-w-6xl px-6 pb-20 pt-12 md:pb-28 md:pt-16">
           <div className="mx-auto max-w-2xl text-center">
             <Reveal>
               <p className="inline-flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-foyer-terra-deep">
@@ -301,7 +301,7 @@ export default function LandingPage() {
                     <div className="relative w-full transition-transform duration-500 group-hover:-translate-y-1">
                       <Mockup variant={step.mockup} />
                       {/* Numéro qui déborde du téléphone */}
-                      <span className="absolute -right-3 -top-3 inline-flex size-10 items-center justify-center rounded-full bg-foyer-ink text-foyer-cream shadow-[0_6px_16px_rgba(31,27,22,0.25)] ring-4 ring-white">
+                      <span className="absolute -right-3 -top-3 inline-flex size-10 items-center justify-center rounded-full bg-foyer-ink text-foyer-cream shadow-[0_6px_16px_rgba(31,27,22,0.25)] ring-4 ring-foyer-cream">
                         <span className="font-serif text-[13px] font-medium leading-none">{step.num}</span>
                       </span>
                     </div>
@@ -417,7 +417,7 @@ export default function LandingPage() {
       </section>
 
       {/* PRODUCT MOMENT — image annotée */}
-      <section className="bg-white">
+      <section className="bg-foyer-cream">
         <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-24">
           <div className="max-w-2xl">
             <Reveal>
@@ -497,7 +497,7 @@ export default function LandingPage() {
       </section>
 
       {/* B2B */}
-      <section id="partenaires" className="scroll-mt-24 bg-white">
+      <section id="partenaires" className="scroll-mt-24 bg-foyer-cream">
         <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-24">
           <Reveal>
             <p className="inline-flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-foyer-mousse">
@@ -517,7 +517,7 @@ export default function LandingPage() {
           </Reveal>
 
           <Reveal delay={200}>
-            <div className="mt-12 overflow-hidden rounded-2xl bg-foyer-cream/50 ring-1 ring-foyer-border/50 shadow-[0_8px_30px_rgba(31,27,22,0.05)]">
+            <div className="mt-12 overflow-hidden rounded-2xl bg-white ring-1 ring-foyer-border/50 shadow-[0_8px_30px_rgba(31,27,22,0.07)]">
               <div className="grid divide-foyer-border/40 md:grid-cols-3 md:divide-x">
                 {PARTNERS.map((p) => {
                   const Icon = p.icon;
