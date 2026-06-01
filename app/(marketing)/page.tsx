@@ -177,7 +177,7 @@ export default function LandingPage() {
       </section>
 
       {/* STATS — overlap UP vers le hero */}
-      <section className="relative z-10 bg-foyer-cream">
+      <section className="relative z-10 bg-white">
         <div className="mx-auto w-full max-w-6xl px-6">
           <Reveal>
             <div className="-mt-20 overflow-hidden rounded-3xl bg-white ring-1 ring-foyer-border/50 shadow-[0_20px_60px_rgba(31,27,22,0.10)] md:-mt-28">
@@ -341,20 +341,9 @@ export default function LandingPage() {
         <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-28">
           <div className="mx-auto max-w-2xl text-center">
             <Reveal>
-              <p className="inline-flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-foyer-ink">
-                <span className="size-1.5 rounded-full bg-foyer-ink" aria-hidden />
-                La différence Foyer
-              </p>
-            </Reveal>
-            <Reveal delay={70}>
-              <h2 className="mt-4 font-serif text-[32px] font-medium leading-[1.02] tracking-[-0.02em] text-foyer-ink md:text-[48px]">
-                On ne fait pas que générer des rendus.
+              <h2 className="font-serif text-[32px] font-medium leading-[1.02] tracking-[-0.02em] text-foyer-ink md:text-[48px]">
+                Nous faisons plus que générer des rendus.
               </h2>
-            </Reveal>
-            <Reveal delay={140}>
-              <p className="mt-5 text-[17px] leading-[1.55] text-foyer-muted">
-                Comparé à ce que font les autres générateurs IA.
-              </p>
             </Reveal>
           </div>
 
