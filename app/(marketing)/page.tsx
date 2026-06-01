@@ -101,11 +101,11 @@ export default function LandingPage() {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-foyer-sage shadow-[0_2px_16px_rgba(31,27,22,0.12)]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
-          <Link href="/" className="font-serif text-xl tracking-tight text-foyer-cream">Foyer</Link>
-          <nav className="flex items-center gap-6 text-[14px] font-medium">
-            <Link href="#process" className="hidden text-foyer-cream/75 transition-colors hover:text-foyer-cream sm:inline">Comment ça marche</Link>
-            <Link href="#partenaires" className="hidden text-foyer-cream/75 transition-colors hover:text-foyer-cream sm:inline">Partenaires</Link>
-            <Link href="/demo" className="rounded-full bg-foyer-cream px-4 py-1.5 font-medium text-foyer-ink shadow-[0_2px_8px_rgba(31,27,22,0.15)] transition-all hover:bg-foyer-cream/90">Lancer</Link>
+          <Link href="/" className="font-serif text-xl tracking-tight text-white">Foyer</Link>
+          <nav className="flex items-center gap-6 text-[14px] font-semibold">
+            <Link href="#process" className="hidden text-white transition-colors hover:text-white/75 sm:inline">Comment ça marche</Link>
+            <Link href="#partenaires" className="hidden text-white transition-colors hover:text-white/75 sm:inline">Partenaires</Link>
+            <Link href="/demo" className="rounded-full bg-white px-4 py-1.5 font-semibold text-foyer-sage shadow-[0_2px_8px_rgba(31,27,22,0.15)] transition-all hover:bg-white/90">Lancer</Link>
           </nav>
         </div>
       </header>
@@ -113,7 +113,7 @@ export default function LandingPage() {
       {/* HERO — slider stylé + callout flottant */}
       <section className="relative overflow-hidden pb-32 md:pb-44">
         <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_55%_at_85%_15%,rgba(165,184,160,0.22),transparent_60%)]" />
-        <div className="relative mx-auto w-full max-w-6xl px-6 pt-14 md:pt-20">
+        <div className="relative mx-auto w-full max-w-6xl px-6 pt-8 md:pt-12">
           <div className="grid items-center gap-12 md:grid-cols-12 md:gap-10">
             <div className="md:col-span-5">
               <Reveal>
@@ -276,8 +276,8 @@ export default function LandingPage() {
       </section>
 
       {/* PROCESS — infographie 4 phones */}
-      <section id="process" className="scroll-mt-24 bg-foyer-cream">
-        <div className="mx-auto w-full max-w-6xl px-6 pb-20 pt-12 md:pb-28 md:pt-16">
+      <section id="process" className="scroll-mt-24 bg-white">
+        <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-28">
           <div className="mx-auto max-w-2xl text-center">
             <Reveal>
               <p className="inline-flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-foyer-terra-deep">
@@ -301,7 +301,7 @@ export default function LandingPage() {
                     <div className="relative w-full transition-transform duration-500 group-hover:-translate-y-1">
                       <Mockup variant={step.mockup} />
                       {/* Numéro qui déborde du téléphone */}
-                      <span className="absolute -right-3 -top-3 inline-flex size-10 items-center justify-center rounded-full bg-foyer-ink text-foyer-cream shadow-[0_6px_16px_rgba(31,27,22,0.25)] ring-4 ring-foyer-cream">
+                      <span className="absolute -right-3 -top-3 inline-flex size-10 items-center justify-center rounded-full bg-foyer-ink text-foyer-cream shadow-[0_6px_16px_rgba(31,27,22,0.25)] ring-4 ring-white">
                         <span className="font-serif text-[13px] font-medium leading-none">{step.num}</span>
                       </span>
                     </div>
@@ -417,7 +417,7 @@ export default function LandingPage() {
       </section>
 
       {/* PRODUCT MOMENT — image annotée */}
-      <section className="bg-foyer-cream">
+      <section className="bg-white">
         <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-24">
           <div className="max-w-2xl">
             <Reveal>
@@ -497,7 +497,7 @@ export default function LandingPage() {
       </section>
 
       {/* B2B */}
-      <section id="partenaires" className="scroll-mt-24 bg-foyer-cream">
+      <section id="partenaires" className="scroll-mt-24 bg-white">
         <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-24">
           <Reveal>
             <p className="inline-flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-foyer-mousse">
@@ -517,7 +517,7 @@ export default function LandingPage() {
           </Reveal>
 
           <Reveal delay={200}>
-            <div className="mt-12 overflow-hidden rounded-2xl bg-white ring-1 ring-foyer-border/50 shadow-[0_8px_30px_rgba(31,27,22,0.07)]">
+            <div className="mt-12 overflow-hidden rounded-2xl bg-foyer-cream/50 ring-1 ring-foyer-border/50 shadow-[0_8px_30px_rgba(31,27,22,0.05)]">
               <div className="grid divide-foyer-border/40 md:grid-cols-3 md:divide-x">
                 {PARTNERS.map((p) => {
                   const Icon = p.icon;
