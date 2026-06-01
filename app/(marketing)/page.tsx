@@ -99,13 +99,13 @@ export default function LandingPage() {
   return (
     <div className="flex flex-1 flex-col bg-foyer-cream">
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-foyer-border/40 bg-foyer-cream/85 backdrop-blur">
+      <header className="sticky top-0 z-40 bg-foyer-sage shadow-[0_2px_16px_rgba(31,27,22,0.12)]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
-          <Link href="/" className="font-serif text-xl tracking-tight text-foyer-ink">Foyer</Link>
-          <nav className="flex items-center gap-6 text-[14px] font-medium text-foyer-ink/75">
-            <Link href="#process" className="hidden transition-colors hover:text-foyer-sage sm:inline">Comment ça marche</Link>
-            <Link href="#partenaires" className="hidden transition-colors hover:text-foyer-sage sm:inline">Partenaires</Link>
-            <Link href="/demo" className="rounded-full bg-foyer-sage px-4 py-1.5 font-medium text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:bg-foyer-sage/90 hover:shadow-[0_4px_14px_rgba(107,142,111,0.45)]">Lancer</Link>
+          <Link href="/" className="font-serif text-xl tracking-tight text-foyer-cream">Foyer</Link>
+          <nav className="flex items-center gap-6 text-[14px] font-medium">
+            <Link href="#process" className="hidden text-foyer-cream/75 transition-colors hover:text-foyer-cream sm:inline">Comment ça marche</Link>
+            <Link href="#partenaires" className="hidden text-foyer-cream/75 transition-colors hover:text-foyer-cream sm:inline">Partenaires</Link>
+            <Link href="/demo" className="rounded-full bg-foyer-cream px-4 py-1.5 font-medium text-foyer-ink shadow-[0_2px_8px_rgba(31,27,22,0.15)] transition-all hover:bg-foyer-cream/90">Lancer</Link>
           </nav>
         </div>
       </header>
@@ -123,12 +123,13 @@ export default function LandingPage() {
                 </p>
               </Reveal>
               <Reveal delay={70}>
-                <h1 className="mt-5 font-serif text-[36px] font-medium leading-[0.96] tracking-[-0.03em] text-foyer-ink md:text-[50px] lg:text-[58px]">
-                  Une pièce{" "}
+                <h1 className="mt-5 font-serif text-[36px] font-medium leading-[1.08] tracking-[-0.03em] text-foyer-ink md:text-[50px] lg:text-[58px]">
+                  <span className="block">Une pièce{" "}
                   <span className="[background:linear-gradient(transparent_55%,rgba(107,142,111,0.22)_55%)]">transformée</span>
-                  .{" "}Une empreinte{" "}
+                  .</span>
+                  <span className="block">Une empreinte{" "}
                   <span className="[background:linear-gradient(transparent_55%,rgba(107,142,111,0.22)_55%)]">préservée</span>
-                  .
+                  .</span>
                 </h1>
               </Reveal>
               <Reveal delay={140}>
@@ -142,9 +143,9 @@ export default function LandingPage() {
                     Lancer ma transformation
                   </Button>
                   <div className="mt-4">
-                    <Link href="#process" className="group inline-flex items-center gap-1.5 text-[14px] text-foyer-muted underline-offset-4 transition-colors hover:text-foyer-ink hover:underline">
-                      Ou voir comment ça marche
-                      <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                    <Link href="#process" className="group inline-flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.1em] text-foyer-muted transition-colors hover:text-foyer-ink">
+                      Comment ça marche
+                      <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" aria-hidden />
                     </Link>
                   </div>
                 </div>
@@ -280,8 +281,10 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <SectionDivider from="cream" to="white" />
+
       {/* PROCESS — infographie 4 phones */}
-      <section id="process" className="scroll-mt-24 rounded-t-[32px] rounded-b-[32px] bg-white">
+      <section id="process" className="scroll-mt-24 bg-white">
         <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-28">
           <div className="mx-auto max-w-2xl text-center">
             <Reveal>
@@ -347,6 +350,8 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <SectionDivider from="white" to="cream" />
+
       {/* DIFFÉRENCIATEURS — 2 grosses cards comparatives */}
       <section className="bg-foyer-cream">
         <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-28">
@@ -373,7 +378,7 @@ export default function LandingPage() {
             {/* Générateurs IA — card en retrait */}
             <Reveal>
               <div className="h-full rounded-3xl bg-white p-7 ring-1 ring-foyer-border/60 md:p-9">
-                <h3 className="font-serif text-[24px] font-medium leading-tight tracking-[-0.01em] text-foyer-ink/75 md:text-[28px]">
+                <h3 className="font-serif text-[24px] font-medium leading-tight tracking-[-0.01em] text-foyer-ink md:text-[28px]">
                   Générateurs IA classiques
                 </h3>
                 <p className="mt-3 text-[14px] leading-relaxed text-foyer-muted">
@@ -382,8 +387,8 @@ export default function LandingPage() {
                 <ul className="mt-7 space-y-3.5">
                   {COMPARE_GENERATORS.map((label) => (
                     <li key={label} className="flex items-start gap-3">
-                      <Check className="mt-0.5 size-4 shrink-0 text-foyer-muted/70" strokeWidth={2.2} aria-hidden />
-                      <span className="text-[14px] leading-snug text-foyer-ink/80">{label}</span>
+                      <Check className="mt-0.5 size-4 shrink-0 text-foyer-muted" strokeWidth={2.2} aria-hidden />
+                      <span className="text-[14px] leading-snug text-foyer-ink">{label}</span>
                     </li>
                   ))}
                 </ul>
@@ -421,8 +426,10 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <SectionDivider from="cream" to="white" />
+
       {/* PRODUCT MOMENT — image annotée */}
-      <section className="rounded-t-[32px] rounded-b-[32px] bg-white">
+      <section className="bg-white">
         <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-24">
           <div className="max-w-2xl">
             <Reveal>
@@ -474,6 +481,8 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <SectionDivider from="white" to="cream" />
+
       {/* IA */}
       <section className="bg-foyer-cream">
         <div className="mx-auto w-full max-w-4xl px-6 py-16 md:py-20">
@@ -501,8 +510,10 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <SectionDivider from="cream" to="white" />
+
       {/* B2B */}
-      <section id="partenaires" className="scroll-mt-24 rounded-t-[32px] rounded-b-[32px] bg-white">
+      <section id="partenaires" className="scroll-mt-24 bg-white">
         <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-24">
           <Reveal>
             <p className="inline-flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-foyer-mousse">
@@ -550,6 +561,8 @@ export default function LandingPage() {
           </Reveal>
         </div>
       </section>
+
+      <SectionDivider from="white" to="cream" />
 
       {/* FAQ */}
       <section className="bg-foyer-cream">
@@ -785,6 +798,18 @@ function Annotation({
           {source} · <span className="font-medium text-foyer-ink">{price}</span>
         </p>
       </div>
+    </div>
+  );
+}
+
+function SectionDivider({ from, to }: { from: "cream" | "white"; to: "cream" | "white" }) {
+  const fromHex = from === "cream" ? "#faf6f0" : "#ffffff";
+  const toHex = to === "cream" ? "#faf6f0" : "#ffffff";
+  return (
+    <div aria-hidden style={{ background: toHex }} className="pointer-events-none -mt-px w-full leading-[0]">
+      <svg viewBox="0 0 1440 56" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="block w-full" style={{ height: 56 }}>
+        <path d="M0,0 Q240,80 480,0 Q720,80 960,0 Q1200,80 1440,0 L1440,56 L0,56 Z" fill={fromHex} />
+      </svg>
     </div>
   );
 }
