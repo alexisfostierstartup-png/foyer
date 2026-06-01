@@ -27,15 +27,12 @@ export function FloatingCTA() {
           : "pointer-events-none translate-y-3 opacity-0",
       )}
     >
-      {/* Halo blanc */}
-      <div className="rounded-full p-1.5 shadow-[0_0_0_6px_rgba(255,255,255,0.7),0_8px_24px_rgba(107,142,111,0.35)]">
-        <Link
-          href="/demo"
-          className="flex items-center gap-2 rounded-full bg-foyer-sage px-5 py-3 text-[14px] font-semibold text-white transition-all hover:bg-foyer-sage/90"
-        >
-          Lancer ma transformation
-        </Link>
-      </div>
+      <Link
+        href="/demo"
+        className="flex items-center gap-2 rounded-full bg-foyer-sage px-5 py-3 text-[14px] font-semibold text-white shadow-[0_0_4px_4px_rgba(255,255,255,0.85),0_8px_24px_rgba(107,142,111,0.35)] transition-all hover:bg-foyer-sage/90"
+      >
+        Lancer ma transformation
+      </Link>
     </div>
   );
 }
