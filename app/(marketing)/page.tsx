@@ -105,7 +105,7 @@ export default function LandingPage() {
           <nav className="flex items-center gap-6 text-[14px] font-medium text-foyer-ink/75">
             <Link href="#process" className="hidden transition-colors hover:text-foyer-sage sm:inline">Comment ça marche</Link>
             <Link href="#partenaires" className="hidden transition-colors hover:text-foyer-sage sm:inline">Partenaires</Link>
-            <Link href="/demo" className="rounded-full bg-foyer-sage px-4 py-1.5 font-medium text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:-translate-y-0.5 hover:bg-foyer-sage/90 hover:shadow-[0_4px_14px_rgba(107,142,111,0.45)]">Lancer</Link>
+            <Link href="/demo" className="rounded-full bg-foyer-sage px-4 py-1.5 font-medium text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:bg-foyer-sage/90 hover:shadow-[0_4px_14px_rgba(107,142,111,0.45)]">Lancer</Link>
           </nav>
         </div>
       </header>
@@ -123,12 +123,13 @@ export default function LandingPage() {
                 </p>
               </Reveal>
               <Reveal delay={70}>
-                <div className="mt-5 flex gap-5">
-                  <span aria-hidden className="mt-1 hidden w-[3px] shrink-0 rounded-full bg-gradient-to-b from-foyer-sage via-foyer-mousse to-foyer-water md:block" />
-                  <h1 className="font-serif text-[42px] font-medium leading-[0.96] tracking-[-0.03em] text-foyer-ink md:text-[60px] lg:text-[72px]">
-                    Une pièce transformée. Une empreinte préservée.
-                  </h1>
-                </div>
+                <h1 className="mt-5 font-serif text-[42px] font-medium leading-[0.96] tracking-[-0.03em] text-foyer-ink md:text-[60px] lg:text-[72px]">
+                  Une pièce{" "}
+                  <span className="[background:linear-gradient(transparent_55%,rgba(107,142,111,0.22)_55%)]">transformée</span>
+                  .{" "}Une empreinte{" "}
+                  <span className="[background:linear-gradient(transparent_55%,rgba(107,142,111,0.22)_55%)]">préservée</span>
+                  .
+                </h1>
               </Reveal>
               <Reveal delay={140}>
                 <p className="mt-6 max-w-md text-[18px] leading-[1.55] text-foyer-muted md:ml-8">
@@ -137,7 +138,7 @@ export default function LandingPage() {
               </Reveal>
               <Reveal delay={210}>
                 <div className="mt-8 md:ml-8">
-                  <Button render={<Link href="/demo" />} size="lg" className="h-12 w-full rounded-full bg-foyer-sage px-7 text-white shadow-[0_4px_16px_rgba(107,142,111,0.35)] transition-all hover:-translate-y-0.5 hover:bg-foyer-sage/90 hover:shadow-[0_8px_24px_rgba(107,142,111,0.45)] sm:w-auto">
+                  <Button render={<Link href="/demo" />} size="lg" className="h-12 w-full rounded-full bg-foyer-sage px-7 text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:bg-foyer-sage/90 hover:shadow-[0_4px_14px_rgba(107,142,111,0.45)] sm:w-auto">
                     Lancer ma transformation
                   </Button>
                   <div className="mt-4">
@@ -371,8 +372,8 @@ export default function LandingPage() {
           <div className="mt-14 grid items-start gap-5 md:grid-cols-[1fr_1.1fr] md:items-stretch md:gap-6">
             {/* Générateurs IA — card en retrait */}
             <Reveal>
-              <div className="h-full rounded-3xl bg-white/70 p-7 ring-1 ring-foyer-border/40 md:p-9">
-                <h3 className="font-serif text-[24px] font-medium leading-tight tracking-[-0.01em] text-foyer-ink/70 md:text-[28px]">
+              <div className="h-full rounded-3xl bg-foyer-cream p-7 ring-1 ring-foyer-border/60 md:p-9">
+                <h3 className="font-serif text-[24px] font-medium leading-tight tracking-[-0.01em] text-foyer-ink/75 md:text-[28px]">
                   Générateurs IA classiques
                 </h3>
                 <p className="mt-3 text-[14px] leading-relaxed text-foyer-muted">
@@ -381,8 +382,8 @@ export default function LandingPage() {
                 <ul className="mt-7 space-y-3.5">
                   {COMPARE_GENERATORS.map((label) => (
                     <li key={label} className="flex items-start gap-3">
-                      <Check className="mt-0.5 size-4 shrink-0 text-foyer-muted/60" strokeWidth={2.2} aria-hidden />
-                      <span className="text-[14px] leading-snug text-foyer-ink/70">{label}</span>
+                      <Check className="mt-0.5 size-4 shrink-0 text-foyer-muted/70" strokeWidth={2.2} aria-hidden />
+                      <span className="text-[14px] leading-snug text-foyer-ink/80">{label}</span>
                     </li>
                   ))}
                 </ul>
