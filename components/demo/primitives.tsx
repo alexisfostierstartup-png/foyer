@@ -35,7 +35,7 @@ export function PhoneCard({
 
 export function SectionLabel({ children }: { children: ReactNode }) {
   return (
-    <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-foyer-muted">
+    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-foyer-sage">
       {children}
     </p>
   );
@@ -61,7 +61,7 @@ export function PrimaryButton({
         "flex h-[52px] w-full items-center justify-center gap-2 rounded-full font-medium transition-colors",
         disabled
           ? "cursor-not-allowed bg-foyer-border text-foyer-muted"
-          : "bg-foyer-terra-deep text-white hover:bg-foyer-terra-deep/90",
+          : "bg-foyer-sage text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] hover:-translate-y-0.5 hover:bg-foyer-sage/90 hover:shadow-[0_4px_14px_rgba(107,142,111,0.45)]",
       )}
     >
       {children}
@@ -171,7 +171,7 @@ export function DictateInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={listening ? "À l'écoute…" : placeholder}
-        className="w-full rounded-xl border border-foyer-border bg-white py-2 pl-3 pr-11 text-base text-foyer-ink outline-none placeholder:text-foyer-muted focus:border-foyer-terra"
+        className="w-full rounded-xl border border-foyer-border bg-white py-2 pl-3 pr-11 text-base text-foyer-ink outline-none placeholder:text-foyer-muted focus:border-foyer-sage"
       />
       <button
         type="button"
@@ -179,13 +179,13 @@ export function DictateInput({
         aria-label="Dicter"
         className={cn(
           "absolute right-1.5 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-full transition-colors",
-          listening ? "bg-foyer-terra/10" : "hover:bg-foyer-cream",
+          listening ? "bg-foyer-sage/10" : "hover:bg-foyer-cream",
         )}
       >
         <Mic
           className={cn(
             "size-4",
-            listening ? "animate-pulse text-foyer-terra" : "text-foyer-muted",
+            listening ? "animate-pulse text-foyer-sage" : "text-foyer-muted",
           )}
           aria-hidden
         />
@@ -232,7 +232,7 @@ export function DemoLoader({
                 className={cn(
                   "flex size-5 shrink-0 items-center justify-center rounded-full border",
                   state === "done" && "border-foyer-sage bg-foyer-sage text-white",
-                  state === "current" && "border-foyer-terra text-foyer-terra",
+                  state === "current" && "border-foyer-sage text-foyer-sage",
                   state === "todo" && "border-foyer-border text-foyer-border",
                 )}
               >

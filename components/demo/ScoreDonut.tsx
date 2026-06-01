@@ -1,7 +1,7 @@
 const SEGMENTS = [
   { value: 60, label: "conservé", color: "#6B8E6F", dot: "bg-foyer-sage" },
-  { value: 15, label: "occasion", color: "#C89B6A", dot: "bg-foyer-ochre" },
-  { value: 25, label: "neuf durable", color: "#C0664A", dot: "bg-foyer-terra" },
+  { value: 15, label: "occasion", color: "#6E8B6B", dot: "bg-foyer-mousse" },
+  { value: 25, label: "neuf durable", color: "#A5B8A0", dot: "bg-foyer-water" },
 ];
 
 const CO2_KG = 42;

@@ -89,7 +89,7 @@ export function HomeScreen({
             )}
 
             <div className="mt-4 flex flex-col gap-3">
-              <label className="flex h-[52px] w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-foyer-terra-deep font-medium text-white hover:bg-foyer-terra-deep/90">
+              <label className="flex h-[52px] w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-foyer-sage font-medium text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:-translate-y-0.5 hover:bg-foyer-sage/90 hover:shadow-[0_4px_14px_rgba(107,142,111,0.45)]">
                 <Camera className="size-5" aria-hidden />
                 Prendre une photo
                 <input

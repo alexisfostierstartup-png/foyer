@@ -93,7 +93,7 @@ export function IterateScreen({ onApply }: { onApply: () => void }) {
                 <span className="flex items-center gap-2">
                   <span className="font-medium text-foyer-ink">{cat.label}</span>
                   {count > 0 && (
-                    <span className="flex size-5 items-center justify-center rounded-full bg-foyer-terra text-[11px] font-medium text-white">
+                    <span className="flex size-5 items-center justify-center rounded-full bg-foyer-sage text-[11px] font-medium text-white">
                       {count}
                     </span>
                   )}

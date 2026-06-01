@@ -44,8 +44,8 @@ function ProgressBar({ current }: { current: number }) {
               key={label}
               className={cn(
                 "h-1.5 flex-1 rounded-full transition-colors",
-                n === current && "bg-foyer-terra-deep",
-                n < current && "bg-foyer-water",
+                n === current && "bg-foyer-sage",
+                n < current && "bg-foyer-mousse",
                 n > current && "bg-foyer-border",
               )}
             />

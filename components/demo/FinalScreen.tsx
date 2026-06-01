@@ -42,7 +42,7 @@ export function FinalScreen({ onRestart }: { onRestart: () => void }) {
     <div className="flex flex-1 flex-col">
       <div className="relative">
         <DemoImage src="/demo/final.png" alt="Votre projet" label="final" />
-        <span className="absolute left-3 top-3 rounded-full border border-foyer-border bg-white px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-foyer-ink">
+        <span className="absolute left-3 top-3 rounded-full border border-foyer-border bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-foyer-ink">
           Votre projet
         </span>
       </div>

@@ -151,7 +151,7 @@ export function ProductCard({
                         "flex items-center gap-1 rounded-full px-3 py-1 text-[13px] font-medium transition-colors",
                         current
                           ? "cursor-default bg-foyer-sage/15 text-foyer-sage"
-                          : "bg-foyer-terra-deep text-white hover:bg-foyer-terra-deep/90",
+                          : "bg-foyer-sage text-white hover:bg-foyer-sage/90",
                       )}
                     >
                       {current ? (
