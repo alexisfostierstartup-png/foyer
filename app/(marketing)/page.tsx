@@ -105,7 +105,7 @@ export default function LandingPage() {
       <header className="sticky top-0 z-40 bg-foyer-sage shadow-[0_2px_16px_rgba(31,27,22,0.12)]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
           <Link href="/" className="font-serif text-xl tracking-tight text-white">Foyer</Link>
-          <div className="flex flex-1 items-center gap-6 text-[14px] font-semibold">
+          <div className="flex flex-1 items-center gap-6 pl-10 text-[14px] font-semibold">
             <Link href="#process" className="hidden text-white transition-colors hover:text-white/75 sm:inline">Comment ça marche</Link>
             <Link href="#partenaires" className="hidden text-white transition-colors hover:text-white/75 sm:inline">Partenaires</Link>
           </div>
