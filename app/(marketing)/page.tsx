@@ -127,7 +127,7 @@ export default function LandingPage() {
           </div>
           <nav className="flex items-center gap-4 text-[14px] font-semibold">
             <Link href="/auth" className="hidden text-white transition-colors hover:text-white/75 sm:inline">Se connecter</Link>
-            <Link href="/auth?tab=signup" className="rounded-full bg-white px-4 py-1.5 font-semibold text-foyer-sage shadow-[0_2px_8px_rgba(31,27,22,0.15)] transition-all hover:bg-white/90">S&apos;inscrire</Link>
+            <Link href="/demo" className="rounded-full bg-white px-4 py-1.5 font-semibold text-foyer-sage shadow-[0_2px_8px_rgba(31,27,22,0.15)] transition-all hover:bg-white/90">Lancer mon rendu</Link>
           </nav>
         </div>
       </header>
@@ -595,7 +595,7 @@ export default function LandingPage() {
       </section>
 
       {/* FAQ — remonte légèrement dans le B2B */}
-      <section className="-mt-6 bg-foyer-cream">
+      <section id="faq" className="-mt-6 bg-foyer-cream">
         <div className="mx-auto w-full max-w-4xl px-6 pb-10 pt-8 md:pb-14 md:pt-10">
           <Reveal>
             <div className="flex flex-col items-center text-center">
@@ -613,6 +613,41 @@ export default function LandingPage() {
               <FaqAccordion items={FAQ} />
             </div>
           </Reveal>
+        </div>
+      </section>
+
+      {/* CTA FINAL */}
+      <section className="bg-foyer-cream px-6 pb-16">
+        <div className="mx-auto max-w-4xl overflow-hidden rounded-3xl bg-foyer-ink px-8 py-16 text-center md:px-16 md:py-20">
+          {/* Pill */}
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-[13px] font-semibold text-foyer-cream/90">
+            <span className="size-1.5 rounded-full bg-foyer-sage" aria-hidden />
+            Prêt en 2 min
+          </span>
+          {/* Title */}
+          <h2 className="mt-8 font-serif text-[36px] font-medium leading-[1.0] tracking-[-0.03em] text-foyer-cream md:text-[52px]">
+            Une photo.<br />Un projet. Livré.
+          </h2>
+          {/* CTAs */}
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href="/demo"
+              className="inline-flex items-center gap-2 rounded-full bg-foyer-sage px-8 py-3.5 text-[15px] font-semibold text-white shadow-[0_4px_20px_rgba(107,142,111,0.45)] transition-all hover:bg-foyer-sage/90"
+            >
+              Lancer ma transformation
+              <ArrowRight className="size-4" aria-hidden />
+            </Link>
+            <Link
+              href="#faq"
+              className="inline-flex items-center rounded-full bg-white/10 px-8 py-3.5 text-[15px] font-semibold text-foyer-cream transition-all hover:bg-white/15"
+            >
+              Voir la FAQ
+            </Link>
+          </div>
+          {/* Footnote */}
+          <p className="mt-6 text-[13px] text-foyer-cream/50">
+            10 premiers rendus offerts · sans abonnement
+          </p>
         </div>
       </section>
 
