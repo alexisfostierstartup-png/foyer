@@ -281,8 +281,6 @@ export default function LandingPage() {
                     Base ADEME
                   </p>
                 </div>
-                {/* Petit dot sage flottant en bas-gauche */}
-                <span aria-hidden className="absolute bottom-3 left-0 size-4 rounded-full bg-foyer-sage shadow-md ring-4 ring-foyer-cream" />
               </div>
               <ul className="grid gap-4">
                 {ECO_SEGMENTS.map((seg, i) => {
@@ -315,7 +313,7 @@ export default function LandingPage() {
           </Reveal>
           <Reveal delay={400}>
             <p className="mt-10 text-center text-[12px] leading-relaxed text-foyer-muted/80 md:text-left">
-              Méthodologie sourcée ADEME, par rapport à un projet 100 % neuf équivalent.
+              Chaque projet est mesuré selon sa part de mobilier conservé, chiné et neuf, et son équivalent CO₂ évité. Méthodologie sourcée ADEME.
             </p>
           </Reveal>
         </div>
