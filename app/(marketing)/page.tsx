@@ -273,7 +273,7 @@ export default function LandingPage() {
 
           <Reveal delay={200}>
             <div className="mt-14 grid items-center gap-10 md:grid-cols-[auto_1fr] md:gap-16">
-              <div className="relative mx-auto">
+              <div className="relative mx-auto flex flex-col items-center">
                 <EcoDonutLarge />
                 {/* Badge ADEME qui déborde du donut */}
                 <div className="absolute -top-2 right-0 rounded-full bg-foyer-ink px-3 py-1.5 shadow-[0_8px_20px_rgba(31,27,22,0.20)] ring-4 ring-foyer-cream md:-top-1 md:right-2">
@@ -281,25 +281,28 @@ export default function LandingPage() {
                     Base ADEME
                   </p>
                 </div>
+                <p className="mt-4 max-w-[260px] text-center text-[11px] leading-relaxed text-foyer-muted/70">
+                  Chaque projet est mesuré selon sa part de mobilier conservé, chiné et neuf, et son équivalent CO₂ évité. Méthodologie sourcée ADEME.
+                </p>
               </div>
               <ul className="grid gap-4">
                 {ECO_SEGMENTS.map((seg, i) => {
                   const Icon = seg.icon;
                   return (
                     <Reveal key={seg.heading} delay={i * 100}>
-                      <li className="relative overflow-hidden rounded-2xl bg-white p-6 ring-1 ring-foyer-border/50 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(31,27,22,0.07)] hover:ring-foyer-border">
-                        <span aria-hidden className={cn("absolute inset-y-4 left-0 w-1 rounded-r-full", seg.dotClass)} />
-                        <div className="flex items-start gap-4">
-                          <div className={cn("inline-flex size-10 shrink-0 items-center justify-center rounded-xl", seg.iconBg)}>
-                            <Icon className={cn("size-5", seg.iconColor)} strokeWidth={1.6} aria-hidden />
+                      <li className="relative overflow-hidden rounded-2xl bg-white p-4 ring-1 ring-foyer-border/50 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(31,27,22,0.07)] hover:ring-foyer-border">
+                        <span aria-hidden className={cn("absolute inset-y-3 left-0 w-1 rounded-r-full", seg.dotClass)} />
+                        <div className="flex items-start gap-3">
+                          <div className={cn("inline-flex size-9 shrink-0 items-center justify-center rounded-lg", seg.iconBg)}>
+                            <Icon className={cn("size-4", seg.iconColor)} strokeWidth={1.6} aria-hidden />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <h3 className="font-serif text-[18px] font-medium leading-snug tracking-[-0.01em] text-foyer-ink">
+                            <h3 className="font-serif text-[17px] font-medium leading-snug tracking-[-0.01em] text-foyer-ink">
                               {seg.heading}
                             </h3>
-                            <p className="mt-2 text-[13px] leading-relaxed text-foyer-muted">{seg.subtitle}</p>
-                            <p className="mt-4 border-t border-foyer-border/50 pt-3">
-                              <span className="font-serif text-[20px] font-medium tracking-[-0.02em] text-foyer-ink">{seg.stat}</span>
+                            <p className="mt-1.5 text-[13px] leading-relaxed text-foyer-muted">{seg.subtitle}</p>
+                            <p className="mt-3 border-t border-foyer-border/50 pt-2.5">
+                              <span className="font-serif text-[18px] font-medium tracking-[-0.02em] text-foyer-ink">{seg.stat}</span>
                               {" "}<span className="text-[12px] text-foyer-muted">{seg.statLabel}</span>
                             </p>
                           </div>
@@ -310,11 +313,6 @@ export default function LandingPage() {
                 })}
               </ul>
             </div>
-          </Reveal>
-          <Reveal delay={400}>
-            <p className="mt-10 text-center text-[12px] leading-relaxed text-foyer-muted/80 md:text-left">
-              Chaque projet est mesuré selon sa part de mobilier conservé, chiné et neuf, et son équivalent CO₂ évité. Méthodologie sourcée ADEME.
-            </p>
           </Reveal>
         </div>
       </section>
