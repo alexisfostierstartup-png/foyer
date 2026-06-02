@@ -52,12 +52,32 @@ const ECO_SEGMENTS: {
   iconBg: string;
   iconColor: string;
   icon: LucideIcon;
-  title: string;
-  description: string;
+  heading: string;
+  subtitle: string;
+  stat: string;
+  statLabel: string;
 }[] = [
-  { value: 60, color: "#6B8E6F", dotClass: "bg-foyer-sage", iconBg: "bg-foyer-sage/15", iconColor: "text-foyer-sage", icon: Recycle, title: "Conservé", description: "Homestaging et customisation : on garde d'abord ce qui peut l'être." },
-  { value: 15, color: "#6E8B6B", dotClass: "bg-foyer-mousse", iconBg: "bg-foyer-mousse/15", iconColor: "text-foyer-mousse", icon: Search, title: "Occasion", description: "Sourcing seconde main : Leboncoin, Selency, Vinted." },
-  { value: 25, color: "#A5B8A0", dotClass: "bg-foyer-water", iconBg: "bg-foyer-water/30", iconColor: "text-foyer-sage", icon: Leaf, title: "Neuf durable", description: "Matériaux et marques qui tiennent dix ans, pas trois." },
+  {
+    value: 60, color: "#6B8E6F", dotClass: "bg-foyer-sage", iconBg: "bg-foyer-sage/15", iconColor: "text-foyer-sage", icon: Recycle,
+    heading: "D'abord, on réutilise",
+    subtitle: "Un canapé peut être recouvert. Une commode peut être repeinte. Une table peut changer de pièce.",
+    stat: "~ 70 %",
+    statLabel: "du mobilier conservé en moyenne",
+  },
+  {
+    value: 15, color: "#6E8B6B", dotClass: "bg-foyer-mousse", iconBg: "bg-foyer-mousse/15", iconColor: "text-foyer-mousse", icon: Search,
+    heading: "Ensuite, on chine",
+    subtitle: "Sourcing seconde main intégré, depuis les plateformes que vous utilisez déjà.",
+    stat: "~ 22 %",
+    statLabel: "des nouvelles pièces sont chinées",
+  },
+  {
+    value: 25, color: "#A5B8A0", dotClass: "bg-foyer-water", iconBg: "bg-foyer-water/30", iconColor: "text-foyer-sage", icon: Leaf,
+    heading: "En dernier, du neuf éco-sourcé qui dure",
+    subtitle: "Conseil matériaux et marques. On vous oriente vers ce qui tient dix ans, pas trois.",
+    stat: "~ 8 %",
+    statLabel: "neuf, choisi pour durer",
+  },
 ];
 
 const COMPARE_GENERATORS = [
@@ -245,8 +265,8 @@ export default function LandingPage() {
               </h2>
             </Reveal>
             <Reveal delay={140}>
-              <p className="mt-5 text-[17px] leading-[1.6] text-foyer-muted">
-                Sur un projet Foyer moyen, 60 % du mobilier reste, 15 % vient d&apos;occasion, 25 % est neuf, durable et bien sourcé.
+              <p className="mt-5 font-serif text-[20px] leading-[1.4] tracking-[-0.01em] text-foyer-ink md:text-[24px]">
+                La déco la plus écologique, c&apos;est celle qu&apos;on ne rachète pas.
               </p>
             </Reveal>
           </div>
@@ -268,21 +288,23 @@ export default function LandingPage() {
                 {ECO_SEGMENTS.map((seg, i) => {
                   const Icon = seg.icon;
                   return (
-                    <Reveal key={seg.title} delay={i * 100}>
-                      <li className="relative flex h-full items-start gap-5 overflow-hidden rounded-2xl bg-white p-6 ring-1 ring-foyer-border/50 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(31,27,22,0.07)] hover:ring-foyer-border">
-                        {/* Liseré coloré vertical à gauche (signature segment) */}
+                    <Reveal key={seg.heading} delay={i * 100}>
+                      <li className="relative overflow-hidden rounded-2xl bg-white p-6 ring-1 ring-foyer-border/50 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(31,27,22,0.07)] hover:ring-foyer-border">
                         <span aria-hidden className={cn("absolute inset-y-4 left-0 w-1 rounded-r-full", seg.dotClass)} />
-                        <div className={cn("inline-flex size-12 shrink-0 items-center justify-center rounded-xl", seg.iconBg)}>
-                          <Icon className={cn("size-6", seg.iconColor)} strokeWidth={1.6} aria-hidden />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-baseline gap-2.5">
-                            <p className="font-serif text-[30px] font-medium leading-none tracking-[-0.03em] text-foyer-ink">
-                              {seg.value}<span className="text-foyer-muted/50">%</span>
-                            </p>
-                            <h3 className="font-serif text-[18px] leading-none text-foyer-ink">{seg.title}</h3>
+                        <div className="flex items-start gap-4">
+                          <div className={cn("inline-flex size-10 shrink-0 items-center justify-center rounded-xl", seg.iconBg)}>
+                            <Icon className={cn("size-5", seg.iconColor)} strokeWidth={1.6} aria-hidden />
                           </div>
-                          <p className="mt-3 text-[14px] leading-relaxed text-foyer-muted">{seg.description}</p>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-serif text-[18px] font-medium leading-snug tracking-[-0.01em] text-foyer-ink">
+                              {seg.heading}
+                            </h3>
+                            <p className="mt-2 text-[13px] leading-relaxed text-foyer-muted">{seg.subtitle}</p>
+                            <p className="mt-4 border-t border-foyer-border/50 pt-3">
+                              <span className="font-serif text-[20px] font-medium tracking-[-0.02em] text-foyer-ink">{seg.stat}</span>
+                              {" "}<span className="text-[12px] text-foyer-muted">{seg.statLabel}</span>
+                            </p>
+                          </div>
                         </div>
                       </li>
                     </Reveal>
@@ -634,7 +656,7 @@ function EcoDonutLarge() {
             const offset = -acc;
             acc += s.value;
             return (
-              <circle key={s.title} cx="21" cy="21" r="15.9155" fill="none" stroke={s.color} strokeWidth="4.5" strokeDasharray={`${s.value} ${100 - s.value}`} strokeDashoffset={offset} />
+              <circle key={s.heading} cx="21" cy="21" r="15.9155" fill="none" stroke={s.color} strokeWidth="4.5" strokeDasharray={`${s.value} ${100 - s.value}`} strokeDashoffset={offset} />
             );
           })}
         </g>
