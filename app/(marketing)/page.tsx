@@ -618,7 +618,7 @@ export default function LandingPage() {
 
       {/* CTA FINAL */}
       <section className="bg-foyer-cream px-6 pb-16">
-        <div className="mx-auto max-w-2xl overflow-hidden rounded-3xl bg-foyer-ink px-8 py-6 text-center md:px-12 md:py-8">
+        <div className="mx-auto max-w-2xl overflow-hidden rounded-3xl bg-foyer-ink px-8 py-5 text-center md:px-12 md:py-6">
           {/* Pill */}
           <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-[13px] font-semibold text-foyer-cream/90">
             <span className="size-1.5 rounded-full bg-foyer-sage" aria-hidden />
