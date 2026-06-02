@@ -137,7 +137,7 @@ export default function LandingPage() {
         <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_55%_at_85%_15%,rgba(165,184,160,0.22),transparent_60%)]" />
         <div className="relative mx-auto w-full max-w-6xl px-6 pt-8 md:pt-12">
           <div className="grid items-center gap-12 md:grid-cols-12 md:gap-10">
-            <div className="md:col-span-5">
+            <div className="md:col-span-6">
               <Reveal>
                 <p className="inline-flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-foyer-sage">
                   <Leaf className="size-3.5" strokeWidth={2.2} aria-hidden />
@@ -162,10 +162,10 @@ export default function LandingPage() {
               <Reveal delay={210}>
                 <div className="mt-8">
                   <div className="flex items-center gap-3">
-                    <Link href="/demo" className="inline-flex h-12 items-center rounded-full bg-foyer-sage px-7 text-[15px] font-semibold text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:bg-foyer-sage/90 hover:shadow-[0_4px_14px_rgba(107,142,111,0.45)]">
+                    <Link href="/demo" className="inline-flex h-11 shrink-0 items-center rounded-full bg-foyer-sage px-6 text-[14px] font-semibold text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:bg-foyer-sage/90 hover:shadow-[0_4px_14px_rgba(107,142,111,0.45)]">
                       Lancer ma transformation
                     </Link>
-                    <Link href="#process" className="flex h-12 items-center rounded-full border border-foyer-border px-6 text-[14px] font-medium text-foyer-ink transition-colors hover:border-foyer-ink">
+                    <Link href="#process" className="flex h-11 shrink-0 items-center rounded-full border border-foyer-border px-5 text-[13px] font-medium text-foyer-ink transition-colors hover:border-foyer-ink">
                       Voir nos réalisations
                     </Link>
                   </div>
@@ -184,7 +184,7 @@ export default function LandingPage() {
                 </div>
               </Reveal>
             </div>
-            <Reveal delay={160} className="md:col-span-7">
+            <Reveal delay={160} className="md:col-span-6">
               <div className="relative">
                 <div aria-hidden className="absolute inset-0 translate-x-3 translate-y-3 rounded-3xl bg-foyer-sage/25 md:translate-x-5 md:translate-y-5" />
                 <div className="relative overflow-hidden rounded-3xl bg-white p-2 shadow-[0_24px_60px_rgba(31,27,22,0.14),0_0_0_1px_rgba(31,27,22,0.04)]">
@@ -221,26 +221,26 @@ export default function LandingPage() {
           <Reveal>
             <div className="-mt-20 overflow-hidden rounded-3xl bg-foyer-cream ring-1 ring-foyer-border/40 shadow-[0_20px_60px_rgba(110,139,107,0.22),0_4px_16px_rgba(110,139,107,0.14)] md:-mt-28">
               <div className="grid divide-foyer-border/40 md:grid-cols-4 md:divide-x">
-                <div className="px-6 py-7 md:px-7 md:py-9">
+                <div className="px-5 py-5 md:px-6 md:py-7">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foyer-sage">Empreinte</p>
-                  <p className="mt-3 font-serif text-[52px] font-medium leading-[0.9] tracking-[-0.04em] text-foyer-ink md:text-[64px]">
+                  <p className="mt-3 font-serif text-[40px] font-medium leading-[0.9] tracking-[-0.04em] text-foyer-ink md:text-[50px]">
                     60<span className="text-foyer-sage">%</span>
                   </p>
                   <p className="mt-3 text-[13px] leading-snug text-foyer-muted">mobilier conservé en moyenne sur un projet Foyer</p>
                 </div>
                 <div className="border-t border-foyer-border/40 px-6 py-7 md:border-t-0 md:px-7 md:py-9">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foyer-muted">Budget moyen</p>
-                  <p className="mt-3 font-serif text-[52px] font-medium leading-[0.9] tracking-[-0.04em] text-foyer-ink md:text-[64px]">−38<span className="text-foyer-muted/50">%</span></p>
+                  <p className="mt-3 font-serif text-[40px] font-medium leading-[0.9] tracking-[-0.04em] text-foyer-ink md:text-[50px]">−38<span className="text-foyer-muted/50">%</span></p>
                   <p className="mt-3 text-[13px] leading-snug text-foyer-muted">vs déco traditionnelle</p>
                 </div>
                 <div className="border-t border-foyer-border/40 px-6 py-7 md:border-t-0 md:px-7 md:py-9">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foyer-muted">Bilan carbone</p>
-                  <p className="mt-3 font-serif text-[52px] font-medium leading-[0.9] tracking-[-0.03em] text-foyer-ink md:text-[64px]">42 kg</p>
+                  <p className="mt-3 font-serif text-[40px] font-medium leading-[0.9] tracking-[-0.03em] text-foyer-ink md:text-[50px]">42 kg</p>
                   <p className="mt-3 text-[13px] leading-snug text-foyer-muted">CO₂ évités par projet, base ADEME</p>
                 </div>
                 <div className="border-t border-foyer-border/40 px-6 py-7 md:border-t-0 md:px-7 md:py-9">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foyer-muted">Logistique</p>
-                  <p className="mt-3 font-serif text-[52px] font-medium leading-[0.9] tracking-[-0.03em] text-foyer-ink md:text-[64px]">5 max</p>
+                  <p className="mt-3 font-serif text-[40px] font-medium leading-[0.9] tracking-[-0.03em] text-foyer-ink md:text-[50px]">5 max</p>
                   <p className="mt-3 text-[13px] leading-snug text-foyer-muted">enseignes par projet, livraisons groupées</p>
                 </div>
               </div>
