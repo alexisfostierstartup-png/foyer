@@ -595,7 +595,7 @@ export default function LandingPage() {
       </section>
 
       {/* FAQ — remonte légèrement dans le B2B */}
-      <section id="faq" className="-mt-6 bg-foyer-cream">
+      <section id="faq" className="-mt-6 bg-white">
         <div className="mx-auto w-full max-w-4xl px-6 pb-10 pt-8 md:pb-14 md:pt-10">
           <Reveal>
             <div className="flex flex-col items-center text-center">
@@ -618,7 +618,7 @@ export default function LandingPage() {
 
       {/* CTA FINAL */}
       <section className="bg-foyer-cream px-6 pb-16">
-        <div className="mx-auto max-w-4xl overflow-hidden rounded-3xl bg-foyer-ink px-8 py-16 text-center md:px-16 md:py-20">
+        <div className="mx-auto max-w-4xl overflow-hidden rounded-3xl bg-foyer-ink px-8 py-10 text-center md:px-16 md:py-14">
           {/* Pill */}
           <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-[13px] font-semibold text-foyer-cream/90">
             <span className="size-1.5 rounded-full bg-foyer-sage" aria-hidden />
