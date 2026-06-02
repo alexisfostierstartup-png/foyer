@@ -225,22 +225,27 @@ export default function LandingPage() {
         <div className="mx-auto w-full max-w-6xl px-6">
           <Reveal>
             <div className="-mt-20 overflow-hidden rounded-3xl bg-white ring-1 ring-foyer-border/50 shadow-[0_20px_60px_rgba(31,27,22,0.10)] md:-mt-28">
-              <div className="grid divide-foyer-border/40 md:grid-cols-[1.4fr_1fr_1fr] md:divide-x">
-                <div className="px-7 py-8 md:px-10 md:py-10">
+              <div className="grid divide-foyer-border/40 md:grid-cols-4 md:divide-x">
+                <div className="px-6 py-7 md:px-7 md:py-9">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foyer-sage">Empreinte</p>
-                  <p className="mt-3 font-serif text-[68px] font-medium leading-[0.9] tracking-[-0.04em] text-foyer-ink md:text-[88px]">
+                  <p className="mt-3 font-serif text-[52px] font-medium leading-[0.9] tracking-[-0.04em] text-foyer-ink md:text-[64px]">
                     60<span className="text-foyer-sage">%</span>
                   </p>
-                  <p className="mt-3 text-[14px] leading-snug text-foyer-muted">mobilier conservé en moyenne sur un projet Foyer</p>
+                  <p className="mt-3 text-[13px] leading-snug text-foyer-muted">mobilier conservé en moyenne sur un projet Foyer</p>
                 </div>
-                <div className="border-t border-foyer-border/40 px-7 py-8 md:border-t-0 md:px-8 md:py-10">
+                <div className="border-t border-foyer-border/40 px-6 py-7 md:border-t-0 md:px-7 md:py-9">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foyer-muted">Budget moyen</p>
+                  <p className="mt-3 font-serif text-[52px] font-medium leading-[0.9] tracking-[-0.04em] text-foyer-ink md:text-[64px]">−38<span className="text-foyer-muted/50">%</span></p>
+                  <p className="mt-3 text-[13px] leading-snug text-foyer-muted">vs déco traditionnelle</p>
+                </div>
+                <div className="border-t border-foyer-border/40 px-6 py-7 md:border-t-0 md:px-7 md:py-9">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foyer-muted">Bilan carbone</p>
-                  <p className="mt-3 font-serif text-[44px] font-medium leading-[0.9] tracking-[-0.03em] text-foyer-ink md:text-[56px]">42 kg</p>
+                  <p className="mt-3 font-serif text-[52px] font-medium leading-[0.9] tracking-[-0.03em] text-foyer-ink md:text-[64px]">42 kg</p>
                   <p className="mt-3 text-[13px] leading-snug text-foyer-muted">CO₂ évités par projet, base ADEME</p>
                 </div>
-                <div className="border-t border-foyer-border/40 px-7 py-8 md:border-t-0 md:px-8 md:py-10">
+                <div className="border-t border-foyer-border/40 px-6 py-7 md:border-t-0 md:px-7 md:py-9">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foyer-muted">Logistique</p>
-                  <p className="mt-3 font-serif text-[44px] font-medium leading-[0.9] tracking-[-0.03em] text-foyer-ink md:text-[56px]">5 max</p>
+                  <p className="mt-3 font-serif text-[52px] font-medium leading-[0.9] tracking-[-0.03em] text-foyer-ink md:text-[64px]">5 max</p>
                   <p className="mt-3 text-[13px] leading-snug text-foyer-muted">enseignes par projet, livraisons groupées</p>
                 </div>
               </div>
@@ -281,7 +286,7 @@ export default function LandingPage() {
                     Base ADEME
                   </p>
                 </div>
-                <p className="mt-4 max-w-[260px] text-center text-[11px] leading-relaxed text-foyer-muted/70">
+                <p className="mt-4 max-w-xs text-center text-[11px] leading-relaxed text-foyer-muted/70">
                   Chaque projet est mesuré selon sa part de mobilier conservé, chiné et neuf, et son équivalent CO₂ évité. Méthodologie sourcée ADEME.
                 </p>
               </div>
