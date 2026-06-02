@@ -13,7 +13,6 @@ import {
   ArrowUpRight,
   type LucideIcon,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { BeforeAfterSlider } from "@/components/landing/BeforeAfterSlider";
 import { FaqAccordion } from "@/components/landing/FaqAccordion";
@@ -163,9 +162,9 @@ export default function LandingPage() {
               <Reveal delay={210}>
                 <div className="mt-8">
                   <div className="flex flex-wrap items-center gap-3">
-                    <Button render={<Link href="/demo" />} size="lg" className="h-12 rounded-full bg-foyer-sage px-7 text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:bg-foyer-sage/90 hover:shadow-[0_4px_14px_rgba(107,142,111,0.45)]">
+                    <Link href="/demo" className="inline-flex h-12 items-center rounded-full bg-foyer-sage px-7 text-[15px] font-semibold text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:bg-foyer-sage/90 hover:shadow-[0_4px_14px_rgba(107,142,111,0.45)]">
                       Lancer ma transformation
-                    </Button>
+                    </Link>
                     <Link href="#process" className="flex h-12 items-center rounded-full border border-foyer-border px-6 text-[14px] font-medium text-foyer-ink transition-colors hover:border-foyer-ink">
                       Voir nos réalisations
                     </Link>
