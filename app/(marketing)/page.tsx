@@ -116,7 +116,7 @@ const FLOW_STEPS = [
 
 export default function LandingPage() {
   return (
-    <div className="flex flex-1 flex-col bg-white">
+    <div className="flex flex-1 flex-col bg-foyer-cream">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-foyer-sage shadow-[0_2px_16px_rgba(31,27,22,0.12)]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
@@ -216,31 +216,31 @@ export default function LandingPage() {
       </section>
 
       {/* STATS — overlap UP vers le hero */}
-      <section className="relative z-10 bg-white pb-[18px]">
+      <section className="relative z-10 bg-foyer-cream pb-[18px]">
         <div className="mx-auto w-full max-w-6xl px-6">
           <Reveal>
-            <div className="-mt-20 overflow-hidden rounded-3xl bg-foyer-cream ring-1 ring-foyer-border/40 shadow-[0_20px_60px_rgba(110,139,107,0.22),0_4px_16px_rgba(110,139,107,0.14)] md:-mt-28">
+            <div className="-mt-20 overflow-hidden rounded-3xl bg-white ring-1 ring-foyer-border/40 shadow-[0_20px_60px_rgba(110,139,107,0.22),0_4px_16px_rgba(110,139,107,0.14)] md:-mt-28">
               <div className="grid divide-foyer-border/40 md:grid-cols-4 md:divide-x">
                 <div className="px-5 py-5 md:px-6 md:py-7">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foyer-sage">Empreinte</p>
-                  <p className="mt-3 font-serif text-[40px] font-medium leading-[0.9] tracking-[-0.04em] text-foyer-ink md:text-[50px]">
+                  <p className="mt-3 font-serif text-[32px] font-medium leading-[0.9] tracking-[-0.04em] text-foyer-ink md:text-[40px]">
                     60<span className="text-foyer-sage">%</span>
                   </p>
                   <p className="mt-3 text-[13px] leading-snug text-foyer-muted">mobilier conservé en moyenne sur un projet Foyer</p>
                 </div>
                 <div className="border-t border-foyer-border/40 px-6 py-7 md:border-t-0 md:px-7 md:py-9">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foyer-muted">Budget moyen</p>
-                  <p className="mt-3 font-serif text-[40px] font-medium leading-[0.9] tracking-[-0.04em] text-foyer-ink md:text-[50px]">−38<span className="text-foyer-muted/50">%</span></p>
+                  <p className="mt-3 font-serif text-[32px] font-medium leading-[0.9] tracking-[-0.04em] text-foyer-ink md:text-[40px]">−38<span className="text-foyer-muted/50">%</span></p>
                   <p className="mt-3 text-[13px] leading-snug text-foyer-muted">vs déco traditionnelle</p>
                 </div>
                 <div className="border-t border-foyer-border/40 px-6 py-7 md:border-t-0 md:px-7 md:py-9">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foyer-muted">Bilan carbone</p>
-                  <p className="mt-3 font-serif text-[40px] font-medium leading-[0.9] tracking-[-0.03em] text-foyer-ink md:text-[50px]">42 kg</p>
+                  <p className="mt-3 font-serif text-[32px] font-medium leading-[0.9] tracking-[-0.03em] text-foyer-ink md:text-[40px]">42 kg</p>
                   <p className="mt-3 text-[13px] leading-snug text-foyer-muted">CO₂ évités par projet, base ADEME</p>
                 </div>
                 <div className="border-t border-foyer-border/40 px-6 py-7 md:border-t-0 md:px-7 md:py-9">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foyer-muted">Logistique</p>
-                  <p className="mt-3 font-serif text-[40px] font-medium leading-[0.9] tracking-[-0.03em] text-foyer-ink md:text-[50px]">5 max</p>
+                  <p className="mt-3 font-serif text-[32px] font-medium leading-[0.9] tracking-[-0.03em] text-foyer-ink md:text-[40px]">5 max</p>
                   <p className="mt-3 text-[13px] leading-snug text-foyer-muted">enseignes par projet, livraisons groupées</p>
                 </div>
               </div>
