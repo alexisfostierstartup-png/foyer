@@ -9,34 +9,36 @@ export function FaqAccordion({ items }: { items: FaqItem[] }) {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <ul className="divide-y divide-foyer-border border-y border-foyer-border">
+    <div className="overflow-hidden rounded-2xl border border-foyer-border">
       {items.map((item, i) => {
         const isOpen = open === i;
         return (
-          <li key={item.question}>
+          <div key={item.question} className={i > 0 ? "border-t border-foyer-border" : ""}>
             <button
               type="button"
               aria-expanded={isOpen}
               onClick={() => setOpen(isOpen ? null : i)}
-              className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
+              className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
             >
-              <span className="font-sans text-[16px] font-medium text-foyer-ink">
+              <span className="text-[16px] font-semibold text-foyer-ink">
                 {item.question}
               </span>
-              {isOpen ? (
-                <Minus className="size-5 shrink-0 text-foyer-muted" aria-hidden />
-              ) : (
-                <Plus className="size-5 shrink-0 text-foyer-muted" aria-hidden />
-              )}
+              <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-foyer-border/60 text-foyer-muted">
+                {isOpen ? (
+                  <Minus className="size-3.5" aria-hidden />
+                ) : (
+                  <Plus className="size-3.5" aria-hidden />
+                )}
+              </span>
             </button>
             {isOpen && (
-              <p className="px-5 pb-5 text-[15px] leading-relaxed text-foyer-muted">
+              <p className="px-6 pb-6 text-[15px] leading-relaxed text-foyer-muted">
                 {item.answer}
               </p>
             )}
-          </li>
+          </div>
         );
       })}
-    </ul>
+    </div>
   );
 }

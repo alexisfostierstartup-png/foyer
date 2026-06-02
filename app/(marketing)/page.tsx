@@ -19,7 +19,6 @@ import { BeforeAfterSlider } from "@/components/landing/BeforeAfterSlider";
 import { FaqAccordion } from "@/components/landing/FaqAccordion";
 import { Reveal } from "@/components/landing/Reveal";
 import { StrokeDivider } from "@/components/landing/StrokeDivider";
-import { FloatingCTA } from "@/components/landing/FloatingCTA";
 
 type Tone = "sage" | "terra" | "ink" | "water" | "mousse";
 
@@ -102,12 +101,11 @@ const PARTNERS: { icon: LucideIcon; tone: Tone; title: string; promise: string; 
 ];
 
 const FAQ = [
-  { question: "Combien ça coûte ?", answer: "Le premier rendu est offert. Ensuite des crédits à partir de 4,99 €. Pas d'abonnement." },
-  { question: "Est-ce que vous remplacez tout mon mobilier ?", answer: "Non, on propose systématiquement de garder ce qui peut l'être. C'est notre angle de départ." },
-  { question: "Comment trouvez-vous les meubles d'occasion ?", answer: "On scanne Leboncoin et Vinted Maison, et on propose ce qui correspond visuellement au rendu." },
-  { question: "Et si je ne suis pas content du rendu ?", answer: "Vous pouvez itérer (changer de style, ajuster). Si vraiment ça ne va pas, on rembourse le crédit." },
-  { question: "Comment se passe l'achat ?", answer: "On vous indique où acheter chaque élément, avec les liens. Vous achetez directement chez chaque marchand." },
-  { question: "C'est dispo où ?", answer: "France pour le moment. Europe à venir." },
+  { question: "Est-ce que c'est un générateur d'images ?", answer: "Non. Chaque rendu est sourcé : les pièces que vous voyez existent vraiment chez nos partenaires, avec dimensions et prix." },
+  { question: "Et si je veux tout changer quand même ?", answer: "Pas de problème — vous restez libre de remplacer autant de meubles que vous voulez. Notre priorité est la conservation, pas une obligation." },
+  { question: "Combien coûte un projet ?", answer: "Le premier rendu est offert. Ensuite des crédits à partir de 4,99 €. Pas d'abonnement." },
+  { question: "Vous livrez ?", answer: "Non. Foyer génère des paniers groupés par enseigne avec les liens directs. Vous achetez directement chez chaque marchand." },
+  { question: "Mes données ?", answer: "Vos photos restent confidentielles et ne sont jamais utilisées pour entraîner des modèles. Vous pouvez supprimer votre compte à tout moment." },
 ];
 
 const FLOW_STEPS = [
@@ -120,7 +118,6 @@ const FLOW_STEPS = [
 export default function LandingPage() {
   return (
     <div className="flex flex-1 flex-col bg-foyer-cream">
-      <FloatingCTA />
       {/* Header */}
       <header className="sticky top-0 z-40 bg-foyer-sage shadow-[0_2px_16px_rgba(31,27,22,0.12)]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
@@ -173,7 +170,6 @@ export default function LandingPage() {
                       Voir nos réalisations
                     </Link>
                   </div>
-                  <div id="hero-cta-sentinel" aria-hidden />
                   <ul className="mt-5 flex flex-col gap-2 sm:flex-row sm:gap-6">
                     {["Jusqu'à 10 rendus gratuitement", "Sans abonnement"].map((item) => (
                       <li key={item} className="flex items-center gap-2 text-[13px] text-foyer-muted">
@@ -467,7 +463,7 @@ export default function LandingPage() {
             </Reveal>
             <Reveal delay={140}>
               <p className="mt-5 text-[17px] leading-[1.6] text-foyer-muted">
-                Chaque élément du rendu est rattaché à un vrai produit. Cliquez, vous tombez sur le marchand.
+                Chaque élément du rendu est rattaché à un vrai produit. Foyer génère des paniers prêts à valider chez chaque partenaire.
               </p>
             </Reveal>
           </div>
@@ -496,6 +492,13 @@ export default function LandingPage() {
                       <p className="mt-0.5 text-[12px] leading-snug text-foyer-muted">60% conservé · 15% occasion · 25% neuf</p>
                     </div>
                   </div>
+                  <Link
+                    href="/demo"
+                    className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full bg-foyer-ink py-2.5 text-[13px] font-medium text-foyer-cream transition-colors hover:bg-foyer-ink/85"
+                  >
+                    Essayer sur ma pièce
+                    <ArrowUpRight className="size-3.5" aria-hidden />
+                  </Link>
                 </div>
               </div>
             </div>
@@ -572,7 +575,7 @@ export default function LandingPage() {
                 {PARTNERS.map((p) => {
                   const Icon = p.icon;
                   return (
-                    <div key={p.title} className="border-t border-foyer-border/40 px-6 py-7 first:border-t-0 md:border-t-0 md:px-8 md:py-9">
+                    <div key={p.title} className="flex flex-col items-center border-t border-foyer-border/40 px-6 py-7 text-center first:border-t-0 md:border-t-0 md:px-8 md:py-9">
                       <div className={cn("inline-flex size-11 items-center justify-center rounded-xl", ICON_BG[p.tone])}>
                         <Icon className={cn("size-5", ICON_COLOR[p.tone])} strokeWidth={1.6} aria-hidden />
                       </div>
@@ -600,18 +603,18 @@ export default function LandingPage() {
       <section className="-mt-6 bg-foyer-cream">
         <div className="mx-auto w-full max-w-4xl px-6 pb-16 pt-10 md:pb-20 md:pt-14">
           <Reveal>
-            <p className="inline-flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-foyer-ink">
-              <span className="size-1.5 rounded-full bg-foyer-ink" aria-hidden />
-              Questions fréquentes
-            </p>
+            <div className="flex flex-col items-center text-center">
+              <span className="inline-flex items-center gap-2 rounded-full bg-foyer-sage/15 px-4 py-1.5 text-[13px] font-semibold text-foyer-sage">
+                <span className="size-1.5 rounded-full bg-foyer-sage" aria-hidden />
+                FAQ
+              </span>
+              <h2 className="mt-6 font-serif text-[40px] font-medium leading-[1.0] tracking-[-0.03em] text-foyer-ink md:text-[56px]">
+                Vos questions, nos réponses.
+              </h2>
+            </div>
           </Reveal>
-          <Reveal delay={70}>
-            <h2 className="mt-4 font-serif text-[32px] font-medium leading-[1.02] tracking-[-0.02em] text-foyer-ink md:text-[44px]">
-              On répond à tout, sans détour.
-            </h2>
-          </Reveal>
-          <Reveal delay={120}>
-            <div className="mt-8">
+          <Reveal delay={100}>
+            <div className="mt-10">
               <FaqAccordion items={FAQ} />
             </div>
           </Reveal>
