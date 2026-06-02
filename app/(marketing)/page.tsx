@@ -145,10 +145,27 @@ export default function LandingPage() {
               </Reveal>
               <Reveal delay={210}>
                 <div className="mt-8">
-                  <Button render={<Link href="/demo" />} size="lg" className="h-12 w-full rounded-full bg-foyer-sage px-7 text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:bg-foyer-sage/90 hover:shadow-[0_4px_14px_rgba(107,142,111,0.45)] sm:w-auto">
-                    Lancer ma transformation
-                  </Button>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button render={<Link href="/demo" />} size="lg" className="h-12 rounded-full bg-foyer-sage px-7 text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:bg-foyer-sage/90 hover:shadow-[0_4px_14px_rgba(107,142,111,0.45)]">
+                      Lancer ma transformation
+                    </Button>
+                    <Link href="#process" className="flex h-12 items-center rounded-full border border-foyer-border px-6 text-[14px] font-medium text-foyer-ink transition-colors hover:border-foyer-ink">
+                      Voir nos réalisations
+                    </Link>
+                  </div>
                   <div id="hero-cta-sentinel" aria-hidden />
+                  <ul className="mt-5 flex flex-col gap-2 sm:flex-row sm:gap-6">
+                    {["Jusqu'à 10 rendus gratuitement", "Sans abonnement"].map((item) => (
+                      <li key={item} className="flex items-center gap-2 text-[13px] text-foyer-muted">
+                        <span className="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-foyer-sage/15">
+                          <svg width="8" height="6" viewBox="0 0 8 6" fill="none" aria-hidden>
+                            <path d="M1 3l2 2 4-4" stroke="#6B8E6F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </Reveal>
             </div>
@@ -460,6 +477,20 @@ export default function LandingPage() {
               </div>
             </div>
           </Reveal>
+
+          {/* Bandeau partenaires */}
+          <div className="mt-10 border-y border-foyer-border/50">
+            <div className="flex flex-wrap items-center gap-x-10 gap-y-3 py-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foyer-muted shrink-0">
+                Plateformes référencées
+              </p>
+              {["Selency", "Bemz", "Leroy Merlin", "La Redoute Intérieurs", "Emmaüs", "Vinted"].map((name) => (
+                <span key={name} className="text-[14px] text-foyer-muted/70">
+                  {name}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
