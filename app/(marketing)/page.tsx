@@ -116,7 +116,7 @@ const FLOW_STEPS = [
 
 export default function LandingPage() {
   return (
-    <div className="flex flex-1 flex-col bg-foyer-cream">
+    <div className="flex flex-1 flex-col bg-white">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-foyer-sage shadow-[0_2px_16px_rgba(31,27,22,0.12)]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
@@ -133,7 +133,7 @@ export default function LandingPage() {
       </header>
 
       {/* HERO — slider stylé + callout flottant */}
-      <section className="relative overflow-hidden pb-32 md:pb-44">
+      <section className="relative overflow-hidden pb-24 md:pb-36">
         <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_55%_at_85%_15%,rgba(165,184,160,0.22),transparent_60%)]" />
         <div className="relative mx-auto w-full max-w-6xl px-6 pt-8 md:pt-12">
           <div className="grid items-center gap-12 md:grid-cols-12 md:gap-10">
@@ -161,7 +161,7 @@ export default function LandingPage() {
               </Reveal>
               <Reveal delay={210}>
                 <div className="mt-8">
-                  <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-3">
                     <Link href="/demo" className="inline-flex h-12 items-center rounded-full bg-foyer-sage px-7 text-[15px] font-semibold text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:bg-foyer-sage/90 hover:shadow-[0_4px_14px_rgba(107,142,111,0.45)]">
                       Lancer ma transformation
                     </Link>
@@ -219,7 +219,7 @@ export default function LandingPage() {
       <section className="relative z-10 bg-white">
         <div className="mx-auto w-full max-w-6xl px-6">
           <Reveal>
-            <div className="-mt-20 overflow-hidden rounded-3xl bg-white ring-1 ring-foyer-border/50 shadow-[0_20px_60px_rgba(31,27,22,0.10)] md:-mt-28">
+            <div className="-mt-20 overflow-hidden rounded-3xl bg-foyer-mousse/10 ring-1 ring-foyer-mousse/20 shadow-[0_20px_60px_rgba(31,27,22,0.10)] md:-mt-28">
               <div className="grid divide-foyer-border/40 md:grid-cols-4 md:divide-x">
                 <div className="px-6 py-7 md:px-7 md:py-9">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foyer-sage">Empreinte</p>
@@ -251,7 +251,7 @@ export default function LandingPage() {
 
       {/* SECTION ÉCO — donut + 3 steps mappés couleur:segment */}
       <section className="bg-foyer-cream">
-        <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-28">
+        <div className="mx-auto w-full max-w-6xl px-6 py-12 md:py-16">
           <div className="mx-auto max-w-2xl text-center md:text-left">
             <Reveal>
               <p className="inline-flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-foyer-sage">
@@ -321,7 +321,7 @@ export default function LandingPage() {
 
       {/* PROCESS — infographie 4 phones */}
       <section id="process" className="scroll-mt-24 bg-white">
-        <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-28">
+        <div className="mx-auto w-full max-w-6xl px-6 py-12 md:py-16">
           <div className="text-center">
             <Reveal>
               <h2 className="font-serif text-[28px] font-medium leading-[1.02] tracking-[-0.02em] text-foyer-ink md:text-[40px] md:whitespace-nowrap">
@@ -382,7 +382,7 @@ export default function LandingPage() {
 
       {/* DIFFÉRENCIATEURS — 2 grosses cards comparatives */}
       <section className="bg-foyer-cream">
-        <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-28">
+        <div className="mx-auto w-full max-w-6xl px-6 py-12 md:py-16">
           <div className="mx-auto max-w-2xl text-center">
             <Reveal>
               <h2 className="font-serif text-[32px] font-medium leading-[1.02] tracking-[-0.02em] text-foyer-ink md:text-[48px]">
@@ -443,11 +443,9 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <StrokeDivider dir="cream-to-white" />
-
       {/* PRODUCT MOMENT — image annotée */}
       <section className="bg-white">
-        <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-24">
+        <div className="mx-auto w-full max-w-6xl px-6 py-12 md:py-16">
           <div className="max-w-2xl">
             <Reveal>
               <p className="inline-flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-foyer-sage">
@@ -461,14 +459,14 @@ export default function LandingPage() {
               </h2>
             </Reveal>
             <Reveal delay={140}>
-              <p className="mt-5 text-[17px] leading-[1.6] text-foyer-muted">
+              <p className="mt-5 text-[15px] leading-[1.6] text-foyer-muted md:whitespace-nowrap">
                 Chaque élément du rendu est rattaché à un vrai produit. Foyer génère des paniers prêts à valider chez chaque partenaire.
               </p>
             </Reveal>
           </div>
 
           <Reveal delay={200}>
-            <div className="relative mt-12 overflow-hidden rounded-3xl shadow-[0_30px_80px_rgba(31,27,22,0.14),0_0_0_1px_rgba(31,27,22,0.04)]">
+            <div className="relative mt-10 mx-auto w-[85%] overflow-hidden rounded-3xl shadow-[0_30px_80px_rgba(31,27,22,0.14),0_0_0_1px_rgba(31,27,22,0.04)]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/landing/after.jpg" alt="Salon annoté" className="block w-full" />
               <div className="hidden md:block">
@@ -546,11 +544,9 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <StrokeDivider dir="cream-to-white" />
-
       {/* B2B */}
       <section id="partenaires" className="scroll-mt-24 bg-white">
-        <div className="mx-auto w-full max-w-6xl px-6 py-20 md:py-24">
+        <div className="mx-auto w-full max-w-6xl px-6 py-12 md:py-16">
           <Reveal>
             <p className="inline-flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-foyer-mousse">
               <span className="size-1.5 rounded-full bg-foyer-mousse" aria-hidden />
@@ -600,7 +596,7 @@ export default function LandingPage() {
 
       {/* FAQ — remonte légèrement dans le B2B */}
       <section className="-mt-6 bg-foyer-cream">
-        <div className="mx-auto w-full max-w-4xl px-6 pb-16 pt-10 md:pb-20 md:pt-14">
+        <div className="mx-auto w-full max-w-4xl px-6 pb-10 pt-8 md:pb-14 md:pt-10">
           <Reveal>
             <div className="flex flex-col items-center text-center">
               <span className="inline-flex items-center gap-2 rounded-full bg-foyer-sage/15 px-4 py-1.5 text-[13px] font-semibold text-foyer-sage">
