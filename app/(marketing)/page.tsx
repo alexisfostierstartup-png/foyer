@@ -133,7 +133,7 @@ export default function LandingPage() {
       </header>
 
       {/* HERO — slider stylé + callout flottant */}
-      <section className="relative overflow-hidden pb-24 md:pb-36">
+      <section className="relative overflow-hidden pb-32 md:pb-44">
         <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_55%_at_85%_15%,rgba(165,184,160,0.22),transparent_60%)]" />
         <div className="relative mx-auto w-full max-w-6xl px-6 pt-8 md:pt-12">
           <div className="grid items-center gap-12 md:grid-cols-12 md:gap-10">
@@ -216,10 +216,10 @@ export default function LandingPage() {
       </section>
 
       {/* STATS — overlap UP vers le hero */}
-      <section className="relative z-10 bg-white">
+      <section className="relative z-10 bg-white pb-[18px]">
         <div className="mx-auto w-full max-w-6xl px-6">
           <Reveal>
-            <div className="-mt-20 overflow-hidden rounded-3xl bg-foyer-mousse/10 ring-1 ring-foyer-mousse/20 shadow-[0_20px_60px_rgba(31,27,22,0.10)] md:-mt-28">
+            <div className="-mt-20 overflow-hidden rounded-3xl bg-foyer-cream ring-1 ring-foyer-border/40 shadow-[0_20px_60px_rgba(110,139,107,0.22),0_4px_16px_rgba(110,139,107,0.14)] md:-mt-28">
               <div className="grid divide-foyer-border/40 md:grid-cols-4 md:divide-x">
                 <div className="px-6 py-7 md:px-7 md:py-9">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foyer-sage">Empreinte</p>
