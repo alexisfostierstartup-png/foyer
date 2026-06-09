@@ -20,6 +20,18 @@ export type DetectedFurniture = {
   decision: FurnitureDecision;
 };
 
+export type UserConstraints = {
+  furniture: Record<string, FurnitureDecision>;
+  floor: { change: boolean; preset: string | null; note: string };
+  walls: {
+    repaint: boolean;
+    moldings: boolean;
+    moldingStyle: string;
+    frames: boolean;
+  };
+  accessories: "cosy" | "epure";
+};
+
 export type Project = {
   id: string;
   createdAt: string;
@@ -35,4 +47,5 @@ export type Project = {
     windows: string;
     lighting: string;
   } | null;
+  userConstraints: UserConstraints | null;
 };

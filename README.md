@@ -4,13 +4,56 @@ PWA mobile-first qui transforme une photo de pièce (salon ou chambre) en projet
 
 ## Setup
 
+### 1. Dépendances
+
 ```bash
 npm install
-cp .env.local.example .env.local   # puis renseignez GEMINI_API_KEY
-npm run dev
+cp .env.local.example .env.local
 ```
 
-Ouvrez [http://localhost:3000](http://localhost:3000).
+| Variable | Description |
+|---|---|
+| `GEMINI_API_KEY` | Clé API Google AI Studio |
+| `NEXT_PUBLIC_SUPABASE_URL` | URL du projet Supabase |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Clé anon publique |
+| `SUPABASE_SERVICE_ROLE_KEY` | Clé service role (seed + server-side uniquement) |
+
+### 2. Base de données — migration
+
+**Option A — SQL Editor (plus simple) :**
+Copier-coller `supabase/migrations/0001_initial_schema.sql` dans
+[Dashboard → SQL Editor](https://supabase.com/dashboard/project/vflgjfbbkzyqeydzaaoc/sql).
+
+**Option B — Supabase CLI :**
+```bash
+supabase db push
+```
+
+### 3. Storage buckets ⚠️ étape manuelle obligatoire
+
+Créer deux buckets **publics** dans
+[Dashboard → Storage](https://supabase.com/dashboard/project/vflgjfbbkzyqeydzaaoc/storage/buckets)
+**avant le premier upload** :
+
+| Nom | Usage |
+|---|---|
+| `room-images` | Photos sources uploadées |
+| `renders` | Rendus générés par l'IA |
+
+### 4. Seed initial
+
+```bash
+npx tsx supabase/seed/seed.ts
+```
+
+Peuple `assets` (ambiances, room defaults, floor presets, wall palettes) et `prompts` (5 prompts IA).
+
+### 5. Dev
+
+```bash
+npm run dev
+# → http://localhost:3000
+```
 
 ## Stack
 

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 type ProgressBarProps = {
@@ -7,8 +8,16 @@ type ProgressBarProps = {
 
 export function ProgressBar({ currentStep, labels }: ProgressBarProps) {
   return (
-    <header className="sticky top-0 z-10 h-[60px] border-b border-foyer-border bg-foyer-cream/90 px-4 backdrop-blur">
-      <div className="mx-auto flex h-full max-w-md flex-col justify-center gap-1.5">
+    <header className="sticky top-0 z-10 border-b border-foyer-border bg-foyer-cream/95 backdrop-blur">
+      <div className="flex items-center justify-between px-5 py-3">
+        <Link
+          href="/"
+          className="font-serif text-xl tracking-tight text-foyer-ink"
+        >
+          Foyer
+        </Link>
+      </div>
+      <div className="px-5 pb-3">
         <div className="flex items-center gap-1.5">
           {labels.map((label, i) => {
             const step = i + 1;
@@ -24,15 +33,15 @@ export function ProgressBar({ currentStep, labels }: ProgressBarProps) {
                 aria-current={state === "current" ? "step" : undefined}
                 className={cn(
                   "h-1.5 flex-1 rounded-full transition-colors",
-                  state === "current" && "bg-foyer-terra",
-                  state === "done" && "bg-foyer-water",
+                  state === "current" && "bg-foyer-sage",
+                  state === "done" && "bg-foyer-mousse",
                   state === "todo" && "bg-foyer-border",
                 )}
               />
             );
           })}
         </div>
-        <p className="text-xs text-foyer-muted">
+        <p className="mt-1.5 text-[12px] text-foyer-muted">
           Étape {currentStep} sur {labels.length} — {labels[currentStep - 1]}
         </p>
       </div>

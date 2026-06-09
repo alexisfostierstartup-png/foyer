@@ -35,6 +35,7 @@ export async function createProject(
     generatedRenderUrl: null,
     detectedFurniture: [],
     architecture: null,
+    userConstraints: null,
   };
   const projects = await readAll();
   projects.push(project);

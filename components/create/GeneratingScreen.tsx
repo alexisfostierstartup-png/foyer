@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/create/ProgressBar";
+import { cn } from "@/lib/utils";
 
 const STEPS = ["Photo", "Style", "Mobilier", "Rendu", "Projet"];
 
@@ -67,7 +69,7 @@ export function GeneratingScreen({ projectId }: { projectId: string }) {
           )}
         </div>
 
-        <div className="mt-8 flex flex-1 flex-col items-center text-center">
+        <div className="mt-8 flex flex-1 flex-col items-center">
           {failed ? (
             <>
               <p className="text-foyer-ink">
@@ -83,14 +85,49 @@ export function GeneratingScreen({ projectId }: { projectId: string }) {
               </Button>
             </>
           ) : (
-            <>
-              <p className="font-serif text-xl text-foyer-ink transition-opacity duration-300">
-                {MESSAGES[messageIndex]}
-              </p>
-              <p className="mt-3 text-sm text-foyer-muted">
-                La génération peut prendre 15 à 30 secondes.
-              </p>
-            </>
+            <ul className="flex w-full max-w-xs flex-col gap-3">
+              {MESSAGES.map((m, idx) => {
+                const state =
+                  idx < messageIndex
+                    ? "done"
+                    : idx === messageIndex
+                      ? "current"
+                      : "todo";
+                return (
+                  <li key={m} className="flex items-center gap-3">
+                    <span
+                      className={cn(
+                        "flex size-5 shrink-0 items-center justify-center rounded-full border",
+                        state === "done" &&
+                          "border-foyer-sage bg-foyer-sage text-white",
+                        state === "current" &&
+                          "border-foyer-sage text-foyer-sage",
+                        state === "todo" &&
+                          "border-foyer-border text-foyer-border",
+                      )}
+                    >
+                      {state === "done" && (
+                        <Check className="size-3" aria-hidden />
+                      )}
+                      {state === "current" && (
+                        <Loader2 className="size-3 animate-spin" aria-hidden />
+                      )}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-[15px]",
+                        state === "todo"
+                          ? "text-foyer-muted/60"
+                          : "text-foyer-ink",
+                        state === "current" && "font-medium",
+                      )}
+                    >
+                      {m}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </div>
       </main>
