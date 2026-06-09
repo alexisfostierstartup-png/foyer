@@ -17,9 +17,9 @@ export function StyleCard({ style, selected, onSelect }: StyleCardProps) {
       onClick={onSelect}
       className={cn(
         "group relative flex flex-col overflow-hidden rounded-2xl border bg-white text-left transition-all duration-150",
-        "hover:scale-[1.02] active:scale-100 active:ring-2 active:ring-foyer-terra/40",
+        "hover:scale-[1.02] active:scale-100 active:ring-2 active:ring-foyer-sage/40",
         selected
-          ? "border-2 border-foyer-terra ring-2 ring-foyer-terra/20"
+          ? "border-2 border-foyer-sage ring-2 ring-foyer-sage/20"
           : "border-foyer-border",
       )}
     >
@@ -31,7 +31,7 @@ export function StyleCard({ style, selected, onSelect }: StyleCardProps) {
           className="size-full object-cover"
         />
         {selected && (
-          <span className="absolute right-2 top-2 flex size-6 items-center justify-center rounded-full bg-foyer-terra text-white shadow-sm">
+          <span className="absolute right-2 top-2 flex size-6 items-center justify-center rounded-full bg-foyer-sage text-white shadow-sm">
             <Check className="size-4" aria-hidden />
           </span>
         )}

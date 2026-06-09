@@ -75,6 +75,17 @@ function substitute(
 }
 
 /**
+ * Résout un template brut avec un contexte — utilisé par l'admin pour
+ * tester un prompt avant sauvegarde, sans passer par la DB.
+ */
+export function resolveRawTemplate(
+  template: string,
+  ctx: ResolveContext,
+): { resolved: string; missing: string[]; used: string[] } {
+  return substitute(template, ctx);
+}
+
+/**
  * Point d'entrée principal : sélectionne et résout un prompt.
  *
  * @param slug  ex: 'gen_wow_generic', 'iterate_generic'

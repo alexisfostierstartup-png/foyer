@@ -79,7 +79,7 @@ export function GeneratingScreen({ projectId }: { projectId: string }) {
                 type="button"
                 size="lg"
                 onClick={startGeneration}
-                className="mt-4 h-12 w-full max-w-xs bg-foyer-terra-deep text-white hover:bg-foyer-terra-deep/90"
+                className="mt-4 h-12 w-full max-w-xs bg-foyer-ink text-white hover:bg-foyer-ink/90"
               >
                 Réessayer
               </Button>

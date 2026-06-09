@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { getProject } from "@/lib/storage/projects";
-import { RenderScreen } from "@/components/create/RenderScreen";
+import { FinalScreen } from "@/components/create/FinalScreen";
 
-export default async function ProjectPage({
+export default async function FinalPage({
   params,
 }: {
   params: Promise<{ projectId: string }>;
@@ -11,10 +11,10 @@ export default async function ProjectPage({
 
   const project = await getProject(projectId);
   if (!project) redirect("/create");
-  if (!project.generatedRenderUrl) redirect(`/create/generating?projectId=${projectId}`);
+  if (!project.generatedRenderUrl) redirect(`/create/${projectId}`);
 
   return (
-    <RenderScreen
+    <FinalScreen
       projectId={project.id}
       beforeUrl={project.basePhotoUrl}
       afterUrl={project.generatedRenderUrl}
