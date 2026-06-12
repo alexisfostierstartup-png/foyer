@@ -9,10 +9,10 @@ import { cn } from "@/lib/utils";
 import type { ShoppingItem, ScoreFoyer } from "@/lib/types";
 
 const STEPS = ["Photo", "Style", "Mobilier", "Rendu", "Projet"];
-const TABS = ["Mes meubles", "Liste shopping", "Score Foyer"] as const;
+const TABS = ["Liste shopping", "Score Foyer"] as const;
 type Tab = (typeof TABS)[number];
 
-// ── Alteration shape (from extract_alterations) ───────────────────────────────
+// ── Alteration shape ──────────────────────────────────────────────────────────
 type Alteration = {
   element: string;
   action: string;
@@ -21,14 +21,7 @@ type Alteration = {
   shoppingImpact: "none" | "to_buy" | "to_buy_secondhand" | "diy_material";
 };
 
-type DetectedElement = {
-  element?: string;
-  type?: string;
-  description?: string;
-  movable?: boolean;
-};
-
-// ── RSE eco-advice (mirrors matcher.ts) ───────────────────────────────────────
+// ── RSE eco-advice ────────────────────────────────────────────────────────────
 const RSE_ADVICE: Record<string, string> = {
   floor_material:
     "Alternative durable : béton ciré sur chape existante = moins de déchets de chantier.",
@@ -38,110 +31,12 @@ const RSE_ADVICE: Record<string, string> = {
     "Les moulures en MDF recyclé sont plus légères et génèrent moins de déchets que le bois massif.",
 };
 
-// ── Status chip helpers ───────────────────────────────────────────────────────
-type StatusKey = "kept" | "modified" | "replaced" | "added" | "removed";
-
-const STATUS: Record<StatusKey, { label: string; className: string }> = {
-  kept:     { label: "Conservé",   className: "bg-foyer-sage/15 text-foyer-sage" },
-  modified: { label: "Modifié",    className: "bg-foyer-ochre/20 text-amber-700" },
-  replaced: { label: "Remplacé",   className: "bg-foyer-ink/10 text-foyer-ink" },
-  added:    { label: "Ajouté",     className: "bg-foyer-water/20 text-sky-700" },
-  removed:  { label: "Retiré",     className: "bg-foyer-terra/15 text-foyer-terra" },
-};
-
-function statusFromAction(action: string): StatusKey {
-  if (action === "added") return "added";
-  if (action === "removed") return "removed";
-  if (action === "replaced") return "replaced";
-  if (action === "restyled" || action === "painted" || action === "floor_changed") return "modified";
-  return "kept";
-}
-
-function StatusChip({ status }: { status: StatusKey }) {
-  const s = STATUS[status];
-  return (
-    <span className={cn("rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide", s.className)}>
-      {s.label}
-    </span>
-  );
-}
-
-// ── Section header ────────────────────────────────────────────────────────────
+// ── Section label ─────────────────────────────────────────────────────────────
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-foyer-muted">
       {children}
     </p>
-  );
-}
-
-// ── Tab: Mes meubles ─────────────────────────────────────────────────────────
-function MesMeublesTab({
-  detectedElements,
-  alterations,
-}: {
-  detectedElements: DetectedElement[];
-  alterations: Alteration[];
-}) {
-  // Build list: detected elements + any "added" alterations not already listed
-  const items: { name: string; description?: string; status: StatusKey }[] = [];
-  const seen = new Set<string>();
-
-  for (const el of detectedElements) {
-    const name = el.element ?? el.type ?? "Élément";
-    seen.add(name.toLowerCase());
-
-    const match = alterations.find(
-      (a) =>
-        a.element.toLowerCase() === name.toLowerCase() ||
-        a.category.toLowerCase() === (el.type ?? "").toLowerCase(),
-    );
-
-    items.push({
-      name,
-      description: el.description,
-      status: match ? statusFromAction(match.action) : "kept",
-    });
-  }
-
-  // Add alterations not already shown (added / replaced items not in original)
-  for (const alt of alterations) {
-    if (!seen.has(alt.element.toLowerCase()) && (alt.action === "added" || alt.action === "replaced")) {
-      items.push({ name: alt.element, description: alt.detail, status: statusFromAction(alt.action) });
-    }
-  }
-
-  if (items.length === 0) {
-    return (
-      <div className="mt-6 rounded-2xl border border-foyer-border bg-white px-5 py-8 text-center">
-        <p className="text-foyer-muted text-[15px]">
-          Analyse de la pièce non disponible.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <ul className="mt-4 flex flex-col gap-2">
-      {items.map((item, i) => (
-        <li
-          key={`${item.name}-${i}`}
-          className="flex items-center justify-between gap-3 rounded-2xl border border-foyer-border bg-white px-4 py-3"
-        >
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[15px] font-medium capitalize text-foyer-ink">
-              {item.name}
-            </span>
-            {item.description && (
-              <span className="text-[13px] text-foyer-muted line-clamp-1">
-                {item.description}
-              </span>
-            )}
-          </div>
-          <StatusChip status={item.status} />
-        </li>
-      ))}
-    </ul>
   );
 }
 
@@ -158,22 +53,18 @@ function ListeShoppingTab({
   const ecoNew = shoppingList.filter((i) => i.source !== "secondhand" && i.merchants.length > 0);
   const unmatched = shoppingList.filter((i) => i.merchants.length === 0);
 
-  // Collect all merchant URLs for "Tout ouvrir"
   const allUrls = shoppingList
     .flatMap((i) => i.merchants.map((m) => m.url).filter(Boolean))
-    .slice(0, 20);
+    .slice(0, 20) as string[];
 
   function openAll() {
-    for (const url of allUrls) {
-      if (url) window.open(url, "_blank");
-    }
+    for (const url of allUrls) window.open(url, "_blank");
   }
 
   const hasItems = secondhand.length > 0 || ecoNew.length > 0;
 
   return (
-    <div className="mt-4 space-y-6">
-      {/* Conservé */}
+    <div className="space-y-6">
       {kept.length > 0 && (
         <section>
           <SectionLabel>Conservé ({kept.length})</SectionLabel>
@@ -194,7 +85,6 @@ function ListeShoppingTab({
         </section>
       )}
 
-      {/* Seconde main */}
       {secondhand.length > 0 && (
         <section>
           <SectionLabel>Seconde main ({secondhand.length})</SectionLabel>
@@ -208,7 +98,6 @@ function ListeShoppingTab({
         </section>
       )}
 
-      {/* Neuf responsable */}
       {ecoNew.length > 0 && (
         <section>
           <SectionLabel>Neuf responsable ({ecoNew.length})</SectionLabel>
@@ -219,7 +108,7 @@ function ListeShoppingTab({
                 <li key={item.id}>
                   <ShoppingCard item={item} />
                   {advice && (
-                    <p className="mt-1.5 rounded-xl bg-foyer-sage/8 px-3 py-2 text-[12px] leading-relaxed text-foyer-sage">
+                    <p className="mt-1.5 rounded-xl bg-foyer-sage/10 px-3 py-2 text-[12px] leading-relaxed text-foyer-sage">
                       {advice}
                     </p>
                   )}
@@ -230,7 +119,6 @@ function ListeShoppingTab({
         </section>
       )}
 
-      {/* Unmatched */}
       {unmatched.length > 0 && (
         <section>
           <SectionLabel>À sourcer ({unmatched.length})</SectionLabel>
@@ -250,13 +138,10 @@ function ListeShoppingTab({
 
       {!hasItems && unmatched.length === 0 && (
         <div className="rounded-2xl border border-foyer-border bg-white px-5 py-8 text-center">
-          <p className="text-[15px] text-foyer-muted">
-            La liste de courses se prépare…
-          </p>
+          <p className="text-[15px] text-foyer-muted">La liste de courses se prépare…</p>
         </div>
       )}
 
-      {/* Tout ouvrir */}
       {allUrls.length > 0 && (
         <button
           type="button"
@@ -295,10 +180,9 @@ function ScoreFoyerTab({
   let acc = 0;
 
   return (
-    <div className="mt-4 space-y-4">
+    <div className="space-y-4">
       <div className="rounded-2xl border border-foyer-border bg-white p-5">
         <div className="flex items-center gap-6">
-          {/* Donut */}
           <div className="size-32 shrink-0">
             <svg viewBox="0 0 42 42" className="size-full -rotate-90">
               <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#E5DDD0" strokeWidth="4" />
@@ -321,23 +205,17 @@ function ScoreFoyerTab({
               })}
             </svg>
           </div>
-
-          {/* Légende */}
           <div className="flex-1">
             <ul className="flex flex-col gap-1.5">
               {segments.map((s) => (
                 <li key={s.label} className="flex items-center gap-2">
                   <span className={cn("size-2.5 shrink-0 rounded-full", s.dot)} aria-hidden />
-                  <span className="text-[14px] text-foyer-ink">
-                    {s.value}% {s.label}
-                  </span>
+                  <span className="text-[14px] text-foyer-ink">{s.value}% {s.label}</span>
                 </li>
               ))}
             </ul>
           </div>
         </div>
-
-        {/* CO2 */}
         <div className="mt-4 border-t border-foyer-border pt-4">
           <p className="font-serif text-3xl text-foyer-ink">
             ~{co2}&nbsp;kg CO<sub>2</sub>
@@ -348,7 +226,6 @@ function ScoreFoyerTab({
         </div>
       </div>
 
-      {/* Budget */}
       <div className="rounded-2xl border border-foyer-border bg-white px-5 py-4">
         <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-foyer-muted">
           Budget estimé
@@ -361,28 +238,27 @@ function ScoreFoyerTab({
         </p>
       </div>
 
-      {/* Détail */}
-      <div className="rounded-2xl border border-foyer-border bg-white px-5 py-4 space-y-3">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-foyer-muted">
+      <div className="rounded-2xl border border-foyer-border bg-white px-5 py-4">
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-foyer-muted">
           Détail impact
         </p>
         <div className="grid grid-cols-3 gap-3 text-center">
           <div>
             <p className="font-serif text-2xl text-foyer-ink">{kept}</p>
-            <p className="text-[12px] text-foyer-muted">éléments conservés</p>
+            <p className="text-[12px] text-foyer-muted">conservés</p>
           </div>
           <div>
             <p className="font-serif text-2xl text-foyer-ink">{secondhand}</p>
-            <p className="text-[12px] text-foyer-muted">seconde main</p>
+            <p className="text-[12px] text-foyer-muted">occasion</p>
           </div>
           <div>
             <p className="font-serif text-2xl text-foyer-ink">{ecoNew}</p>
-            <p className="text-[12px] text-foyer-muted">neuf responsable</p>
+            <p className="text-[12px] text-foyer-muted">neuf éco</p>
           </div>
         </div>
       </div>
 
-      <p className="text-[11px] text-center text-foyer-muted leading-relaxed">
+      <p className="text-center text-[11px] leading-relaxed text-foyer-muted">
         Base ADEME : 30 kg CO₂ / meuble conservé · 20 kg / occasion · 5 kg / neuf éco.
         Calcul indicatif.
       </p>
@@ -405,13 +281,9 @@ export function FinalScreen({
   afterUrl,
   shoppingList,
   scoreFoyer,
-  visionOutput,
   alterations,
 }: Props) {
-  const [tab, setTab] = useState<Tab>("Mes meubles");
-
-  const detectedElements = ((visionOutput as { detectedElements?: DetectedElement[] } | null)
-    ?.detectedElements ?? []) as DetectedElement[];
+  const [tabIdx, setTabIdx] = useState(0);
 
   const alterationsList = ((alterations as { alterations?: Alteration[] } | null)
     ?.alterations ?? []) as Alteration[];
@@ -421,7 +293,7 @@ export function FinalScreen({
       <ProgressBar currentStep={5} labels={STEPS} />
 
       <main className="mx-auto w-full max-w-[480px] flex-1 px-5 pb-24 pt-6">
-        {/* Final render */}
+        {/* Render image */}
         <div className="relative overflow-hidden rounded-2xl">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={afterUrl} alt="Votre projet" className="w-full object-cover" />
@@ -430,18 +302,26 @@ export function FinalScreen({
           </span>
         </div>
 
-        {/* Tabs */}
-        <div className="mt-5 flex gap-1.5 overflow-x-auto pb-0.5">
-          {TABS.map((t) => (
+        {/* Segmented tab control */}
+        <div className="relative mt-5 flex rounded-full border border-foyer-border bg-foyer-cream p-1">
+          {/* sliding pill */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-y-1 rounded-full bg-white shadow-sm transition-transform duration-200 ease-out"
+            style={{
+              width: "calc(50% - 4px)",
+              left: 4,
+              transform: `translateX(${tabIdx * 100}%)`,
+            }}
+          />
+          {TABS.map((t, i) => (
             <button
               key={t}
               type="button"
-              onClick={() => setTab(t)}
+              onClick={() => setTabIdx(i)}
               className={cn(
-                "shrink-0 rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors",
-                tab === t
-                  ? "bg-foyer-ink text-foyer-cream"
-                  : "border border-foyer-border text-foyer-muted hover:text-foyer-ink",
+                "relative z-10 flex-1 rounded-full py-1.5 text-[13px] font-medium transition-colors duration-150",
+                tabIdx === i ? "text-foyer-ink" : "text-foyer-muted",
               )}
             >
               {t}
@@ -449,27 +329,28 @@ export function FinalScreen({
           ))}
         </div>
 
-        {/* Tab content */}
-        {tab === "Mes meubles" && (
-          <MesMeublesTab
-            detectedElements={detectedElements}
-            alterations={alterationsList}
-          />
-        )}
-
-        {tab === "Liste shopping" && (
-          <ListeShoppingTab
-            shoppingList={shoppingList}
-            alterations={alterationsList}
-          />
-        )}
-
-        {tab === "Score Foyer" && (
-          <ScoreFoyerTab
-            score={scoreFoyer}
-            shoppingList={shoppingList}
-          />
-        )}
+        {/* Sliding content */}
+        <div className="mt-5 overflow-hidden">
+          <div
+            className="flex transition-transform duration-300 ease-out"
+            style={{ transform: `translateX(-${tabIdx * 100}%)` }}
+          >
+            {/* Slide 0 — Liste shopping */}
+            <div className="min-w-full">
+              <ListeShoppingTab
+                shoppingList={shoppingList}
+                alterations={alterationsList}
+              />
+            </div>
+            {/* Slide 1 — Score Foyer */}
+            <div className="min-w-full">
+              <ScoreFoyerTab
+                score={scoreFoyer}
+                shoppingList={shoppingList}
+              />
+            </div>
+          </div>
+        </div>
 
         {/* Actions */}
         <div className="mt-8 flex flex-col gap-3">
