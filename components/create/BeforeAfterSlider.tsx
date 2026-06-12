@@ -7,6 +7,7 @@ type Props = {
   after: string;
   alt?: string;
   className?: string;
+  initialPos?: number;
 };
 
 export function BeforeAfterSlider({
@@ -14,8 +15,9 @@ export function BeforeAfterSlider({
   after,
   alt = "Avant / Après",
   className = "",
+  initialPos = 52,
 }: Props) {
-  const [pos, setPos] = useState(52);
+  const [pos, setPos] = useState(initialPos);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { ExternalLink } from "lucide-react";
 import { ProgressBar } from "@/components/create/ProgressBar";
+import { BeforeAfterSlider } from "@/components/create/BeforeAfterSlider";
 import { ShoppingCard } from "@/components/create/ShoppingCard";
 import { cn } from "@/lib/utils";
 import type { ShoppingItem, ScoreFoyer } from "@/lib/types";
@@ -269,6 +270,7 @@ function ScoreFoyerTab({
 // ── Main component ────────────────────────────────────────────────────────────
 type Props = {
   projectId: string;
+  beforeUrl: string;
   afterUrl: string;
   shoppingList: ShoppingItem[];
   scoreFoyer?: ScoreFoyer;
@@ -278,6 +280,7 @@ type Props = {
 
 export function FinalScreen({
   projectId,
+  beforeUrl,
   afterUrl,
   shoppingList,
   scoreFoyer,
@@ -293,14 +296,13 @@ export function FinalScreen({
       <ProgressBar currentStep={5} labels={STEPS} />
 
       <main className="mx-auto w-full max-w-[480px] flex-1 px-5 pb-24 pt-6">
-        {/* Render image */}
-        <div className="relative overflow-hidden rounded-2xl">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={afterUrl} alt="Votre projet" className="w-full object-cover" />
-          <span className="absolute left-3 top-3 rounded-full border border-foyer-border bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-foyer-ink">
-            Votre projet
-          </span>
-        </div>
+        {/* Before / After slider */}
+        <BeforeAfterSlider
+          before={beforeUrl}
+          after={afterUrl}
+          initialPos={20}
+          className="rounded-2xl"
+        />
 
         {/* Segmented tab control */}
         <div className="relative mt-5 flex rounded-full border border-foyer-border bg-foyer-cream p-1">
