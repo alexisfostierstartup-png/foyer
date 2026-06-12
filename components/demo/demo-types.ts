@@ -2,29 +2,6 @@ import type { RoomType, FurnitureDecision } from "@/lib/types";
 
 export type Accessories = "cosy" | "epure";
 export type MoldingStyle = "discret" | "classique" | "marque";
-export type FloorPatternId =
-  | "droit"
-  | "anglaise"
-  | "chevron"
-  | "beton"
-  | "carrelage";
-
-export const FURNITURE_ITEMS = [
-  "Canapé",
-  "Table basse",
-  "Meuble TV",
-  "Tapis",
-  "Fauteuil",
-  "Lampe",
-] as const;
-
-export const FLOOR_PRESETS: { label: string; pattern: FloorPatternId }[] = [
-  { label: "Parquet droit", pattern: "droit" },
-  { label: "Parquet pose anglaise", pattern: "anglaise" },
-  { label: "Parquet chevron", pattern: "chevron" },
-  { label: "Béton ciré", pattern: "beton" },
-  { label: "Carrelage", pattern: "carrelage" },
-];
 
 export const MOLDING_STYLES: { id: MoldingStyle; label: string }[] = [
   { id: "discret", label: "Discret" },
@@ -50,7 +27,7 @@ export type UserChoices = {
 export const initialChoices: UserChoices = {
   roomType: null,
   furniture: {},
-  floor: { change: false, preset: "Parquet droit", note: "" },
+  floor: { change: false, preset: null, note: "" },
   walls: {
     repaint: false,
     moldings: false,

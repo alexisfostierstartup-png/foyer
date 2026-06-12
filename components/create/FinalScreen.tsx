@@ -1,195 +1,167 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo } from "react";
 import { ProgressBar } from "@/components/create/ProgressBar";
-import { BeforeAfterSlider } from "@/components/create/BeforeAfterSlider";
-import { cn } from "@/lib/utils";
-import type { DetectedFurniture } from "@/lib/types";
+import { ShoppingCard } from "@/components/create/ShoppingCard";
+import type { ShoppingItem } from "@/lib/types";
 
 const STEPS = ["Photo", "Style", "Mobilier", "Rendu", "Projet"];
-
-type Tab = "furniture" | "cart" | "score";
-
-function ScoreBadge({
-  kept,
-  customized,
-  replaced,
-}: {
-  kept: number;
-  customized: number;
-  replaced: number;
-}) {
-  const total = kept + customized + replaced || 1;
-  const kDeg = (kept / total) * 360;
-  const cDeg = (customized / total) * 360;
-  const bg = `conic-gradient(
-    #6b8e6f 0deg ${kDeg}deg,
-    #c89b6a ${kDeg}deg ${kDeg + cDeg}deg,
-    #1f1b16 ${kDeg + cDeg}deg 360deg
-  )`;
-  const co2 = Math.round(kept * 3.5 + customized * 1.2);
-
-  return (
-    <div className="flex items-center gap-5 py-2">
-      <div className="relative h-24 w-24 shrink-0 rounded-full" style={{ background: bg }}>
-        <div
-          className="absolute grid place-items-center rounded-full bg-white text-center"
-          style={{ inset: 8 }}
-        >
-          <div>
-            <p className="font-serif text-lg leading-none text-foyer-ink">
-              {kept}
-              <span className="text-xs">/{customized}/{replaced}</span>
-            </p>
-            <p className="mt-0.5 text-[10px] uppercase tracking-wide text-foyer-muted">
-              Score
-            </p>
-          </div>
-        </div>
-      </div>
-      <div className="space-y-1.5 text-sm">
-        <p className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-foyer-sage" />
-          {kept} conservé{kept > 1 ? "s" : ""}
-        </p>
-        <p className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-foyer-ochre" />
-          {customized} customisé{customized > 1 ? "s" : ""}
-        </p>
-        <p className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-foyer-ink" />
-          {replaced} remplacé{replaced > 1 ? "s" : ""}
-        </p>
-        <p className="pt-1 font-serif text-lg text-foyer-ink">
-          ~{co2} kg CO₂{" "}
-          <span className="text-xs font-sans text-foyer-muted">évités</span>
-        </p>
-      </div>
-    </div>
-  );
-}
 
 type Props = {
   projectId: string;
   beforeUrl: string;
   afterUrl: string;
-  furniture: DetectedFurniture[];
+  shoppingList: ShoppingItem[];
 };
 
-export function FinalScreen({ projectId, beforeUrl, afterUrl, furniture }: Props) {
-  const [activeTab, setActiveTab] = useState<Tab>("furniture");
+function ScoreBlock({ list }: { list: ShoppingItem[] }) {
+  const total = list.length || 1;
+  const sh = list.filter((i) => i.source === "secondhand").length;
+  const diy = list.filter((i) => i.source === "diy").length;
+  const eco = total - sh - diy;
 
-  const kept = furniture.filter((f) => f.decision === "keep").length;
-  const customized = furniture.filter((f) => f.decision === "customize").length;
-  const replaced = furniture.filter((f) => f.decision === "replace").length;
+  const shPct = Math.round((sh / total) * 100);
+  const diyCo2 = Math.round(diy * 4);
+  const shCo2 = Math.round(sh * 18);
+  const ecoCo2 = Math.round(eco * 8);
+  const co2 = shCo2 + diyCo2 + ecoCo2;
 
-  const TABS: { id: Tab; label: string }[] = [
-    { id: "furniture", label: "Mes meubles" },
-    { id: "cart", label: "Liste shopping" },
-    { id: "score", label: "Score Foyer" },
+  const SEGMENTS = [
+    { value: shPct, label: "occasion", color: "#6B8E6F", dot: "bg-foyer-sage" },
+    { value: Math.round((eco / total) * 100), label: "neuf durable", color: "#A5B8A0", dot: "bg-foyer-water" },
+    { value: Math.round((diy / total) * 100), label: "DIY / matériaux", color: "#C89B6A", dot: "bg-foyer-ochre" },
   ];
+
+  let acc = 0;
+
+  return (
+    <div className="rounded-2xl border border-foyer-border bg-white p-4">
+      <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.08em] text-foyer-muted">
+        Score Foyer
+      </p>
+      <div className="flex items-center gap-5">
+        <div className="size-28 shrink-0">
+          <svg viewBox="0 0 42 42" className="size-full">
+            <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#E5DDD0" strokeWidth="4" />
+            <g transform="rotate(-90 21 21)">
+              {SEGMENTS.map((s) => {
+                const offset = -acc;
+                acc += s.value;
+                return (
+                  <circle
+                    key={s.label}
+                    cx="21"
+                    cy="21"
+                    r="15.9155"
+                    fill="none"
+                    stroke={s.color}
+                    strokeWidth="4"
+                    strokeDasharray={`${s.value} ${100 - s.value}`}
+                    strokeDashoffset={offset}
+                  />
+                );
+              })}
+            </g>
+          </svg>
+        </div>
+
+        <div className="flex-1">
+          <ul className="flex flex-col gap-1.5">
+            {SEGMENTS.map((s) => (
+              <li key={s.label} className="flex items-center gap-2 text-[15px]">
+                <span className={`size-2.5 rounded-full ${s.dot}`} aria-hidden />
+                <span className="text-foyer-ink">{s.value}% {s.label}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 font-serif text-xl text-foyer-ink">
+            ~{co2}&nbsp;kg CO<sub>2</sub>{" "}
+            <span className="font-sans text-sm text-foyer-muted">évités</span>
+          </p>
+        </div>
+      </div>
+      <p className="mt-4 text-[12px] leading-relaxed text-foyer-muted">
+        Base ADEME, calcul indicatif. Par rapport à un projet tout-neuf équivalent.
+      </p>
+    </div>
+  );
+}
+
+export function FinalScreen({ projectId, beforeUrl: _beforeUrl, afterUrl, shoppingList }: Props) {
+  const totalMin = useMemo(() => shoppingList.reduce((s, i) => s + i.priceMin, 0), [shoppingList]);
+  const totalMax = useMemo(() => shoppingList.reduce((s, i) => s + i.priceMax, 0), [shoppingList]);
 
   return (
     <div className="flex flex-1 flex-col">
       <ProgressBar currentStep={5} labels={STEPS} />
 
-      <main className="flex-1 overflow-y-auto pb-12">
-        <div className="px-5 py-4">
-          <h1 className="font-serif text-2xl text-foyer-ink">Voici votre projet.</h1>
-          <p className="mt-1 text-sm text-foyer-muted">
-            Glissez le curseur pour comparer avec l&apos;original.
-          </p>
+      <main className="mx-auto w-full max-w-[480px] flex-1 px-5 pb-24 pt-6">
+        {/* Final render image — like demo */}
+        <div className="relative overflow-hidden rounded-2xl">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={afterUrl}
+            alt="Votre projet"
+            className="w-full object-cover"
+          />
+          <span className="absolute left-3 top-3 rounded-full border border-foyer-border bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-foyer-ink">
+            Votre projet
+          </span>
         </div>
 
-        {/* Slider */}
-        <div className="px-5">
-          <div className="mx-auto max-w-3xl">
-            <BeforeAfterSlider before={beforeUrl} after={afterUrl} />
-          </div>
-        </div>
+        {shoppingList.length > 0 ? (
+          <>
+            <h2 className="mt-6 font-serif text-[24px] font-medium leading-tight text-foyer-ink">
+              Tout ce qu&apos;on voit, vous pouvez l&apos;avoir.
+            </h2>
+            <p className="mt-2 text-[15px] text-foyer-muted">
+              On privilégie la seconde main, puis le neuf responsable.
+            </p>
 
-        {/* Tabs card */}
-        <div className="mx-auto mt-5 max-w-3xl px-5">
-          <div className="overflow-hidden rounded-3xl border border-foyer-border bg-white">
-            {/* Tab nav */}
-            <div className="grid grid-cols-3 border-b border-foyer-border text-sm">
-              {TABS.map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveTab(tab.id)}
-                  className={cn(
-                    "py-3 font-medium transition-colors",
-                    activeTab === tab.id
-                      ? "text-foyer-ink border-b-2 border-foyer-ink -mb-px"
-                      : "text-foyer-muted hover:text-foyer-ink",
-                  )}
-                >
-                  {tab.label}
-                </button>
+            <ul className="mt-5 flex flex-col gap-3">
+              {shoppingList.map((item) => (
+                <li key={item.id}>
+                  <ShoppingCard item={item} />
+                </li>
               ))}
+            </ul>
+
+            <div className="mt-6">
+              <ScoreBlock list={shoppingList} />
             </div>
 
-            <div className="p-5">
-              {activeTab === "furniture" && (
-                <div className="space-y-2">
-                  {[
-                    { label: "Conservés", items: furniture.filter((f) => f.decision === "keep"), color: "bg-foyer-sage" },
-                    { label: "À customiser", items: furniture.filter((f) => f.decision === "customize"), color: "bg-foyer-ochre" },
-                    { label: "À remplacer", items: furniture.filter((f) => f.decision === "replace"), color: "bg-foyer-ink" },
-                  ].map(({ label, items, color }) =>
-                    items.length > 0 ? (
-                      <div key={label} className="mb-4 last:mb-0">
-                        <p className="mb-2 flex items-center gap-2 text-xs uppercase tracking-wide text-foyer-muted">
-                          <span className={`h-2 w-2 rounded-full ${color}`} />
-                          {label}
-                        </p>
-                        <ul className="space-y-1 text-sm">
-                          {items.map((f) => (
-                            <li key={f.id} className="text-foyer-ink/80">
-                              • {f.description}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ) : null,
-                  )}
-                  {furniture.length === 0 && (
-                    <p className="text-sm text-foyer-muted italic">Aucun meuble détecté.</p>
-                  )}
-                </div>
-              )}
-
-              {activeTab === "cart" && (
-                <div className="py-6 text-center">
-                  <p className="font-serif text-lg text-foyer-ink">
-                    Liste de courses en cours de préparation…
-                  </p>
-                  <p className="mt-2 text-sm text-foyer-muted">
-                    La sélection de produits sera disponible prochainement.
-                  </p>
-                </div>
-              )}
-
-              {activeTab === "score" && (
-                <ScoreBadge kept={kept} customized={customized} replaced={replaced} />
-              )}
+            <div className="mt-5 flex items-center justify-between">
+              <span className="text-[15px] font-medium text-foyer-ink">
+                Total du projet
+              </span>
+              <span className="font-serif text-2xl text-foyer-ink">
+                ~{totalMin}–{totalMax}&nbsp;€
+              </span>
             </div>
+          </>
+        ) : (
+          <div className="mt-8 rounded-2xl border border-foyer-border bg-white px-5 py-8 text-center">
+            <p className="font-serif text-lg text-foyer-ink">
+              Liste de courses en préparation…
+            </p>
+            <p className="mt-2 text-sm text-foyer-muted">
+              Rechargez la page dans quelques instants.
+            </p>
           </div>
-        </div>
+        )}
 
         {/* Actions */}
-        <div className="mx-auto mt-6 max-w-3xl px-5 space-y-3">
+        <div className="mt-6 flex flex-col gap-3">
           <Link
             href={`/create/${projectId}/iterate`}
-            className="flex h-[52px] w-full items-center justify-center gap-2 rounded-full border border-foyer-border font-medium text-foyer-ink hover:bg-foyer-border/30 transition-colors"
+            className="flex h-[52px] w-full items-center justify-center rounded-full border border-foyer-border font-medium text-foyer-ink transition-colors hover:bg-foyer-border/30"
           >
             Affiner encore
           </Link>
           <Link
             href="/"
-            className="flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-foyer-sage text-white font-medium shadow-[0_2px_8px_rgba(107,142,111,0.35)] hover:-translate-y-0.5 transition-all"
+            className="flex h-[52px] w-full items-center justify-center rounded-full bg-foyer-sage font-medium text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:-translate-y-0.5"
           >
             Terminer
           </Link>

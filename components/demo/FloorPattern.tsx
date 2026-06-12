@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import type { FloorPatternId } from "@/components/demo/demo-types";
 
 const BG = "#F0EBE2";
 const STROKE = "#6B645A";
@@ -20,8 +19,9 @@ function Frame({ children }: { children: ReactNode }) {
   );
 }
 
-export function FloorPattern({ pattern }: { pattern: FloorPatternId }) {
+export function FloorPattern({ pattern }: { pattern: string }) {
   switch (pattern) {
+    case "parquet-droit":
     case "droit":
       return (
         <Frame>
@@ -30,6 +30,7 @@ export function FloorPattern({ pattern }: { pattern: FloorPatternId }) {
           <line x1="32" y1="0" x2="32" y2="40" />
         </Frame>
       );
+    case "pose-anglaise":
     case "anglaise":
       return (
         <Frame>
@@ -50,6 +51,17 @@ export function FloorPattern({ pattern }: { pattern: FloorPatternId }) {
           <line x1="32" y1="0" x2="32" y2="40" strokeOpacity={0.35} />
         </Frame>
       );
+    case "point-hongrie":
+      return (
+        <Frame>
+          <line x1="0" y1="0" x2="32" y2="40" />
+          <line x1="32" y1="0" x2="64" y2="40" />
+          <line x1="0" y1="40" x2="32" y2="0" />
+          <line x1="32" y1="40" x2="64" y2="0" />
+          <line x1="32" y1="0" x2="32" y2="40" strokeOpacity={0.25} />
+        </Frame>
+      );
+    case "beton-cire":
     case "beton":
       return (
         <Frame>
@@ -65,6 +77,28 @@ export function FloorPattern({ pattern }: { pattern: FloorPatternId }) {
           <line x1="48" y1="0" x2="48" y2="40" />
           <line x1="0" y1="13.3" x2="64" y2="13.3" />
           <line x1="0" y1="26.6" x2="64" y2="26.6" />
+        </Frame>
+      );
+    case "carreaux-ciment":
+      return (
+        <Frame>
+          <line x1="0" y1="20" x2="64" y2="20" />
+          <line x1="32" y1="0" x2="32" y2="40" />
+          <line x1="16" y1="0" x2="16" y2="20" strokeOpacity={0.4} />
+          <line x1="48" y1="0" x2="48" y2="20" strokeOpacity={0.4} />
+          <line x1="16" y1="20" x2="16" y2="40" strokeOpacity={0.4} />
+          <line x1="48" y1="20" x2="48" y2="40" strokeOpacity={0.4} />
+          <line x1="0" y1="10" x2="16" y2="10" strokeOpacity={0.25} />
+          <line x1="8" y1="0" x2="8" y2="10" strokeOpacity={0.25} />
+          <line x1="48" y1="30" x2="64" y2="30" strokeOpacity={0.25} />
+          <line x1="56" y1="30" x2="56" y2="40" strokeOpacity={0.25} />
+        </Frame>
+      );
+    default:
+      return (
+        <Frame>
+          <line x1="0" y1="20" x2="64" y2="20" strokeOpacity={0.3} />
+          <line x1="32" y1="0" x2="32" y2="40" strokeOpacity={0.3} />
         </Frame>
       );
   }

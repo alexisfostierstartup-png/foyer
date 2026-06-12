@@ -13,5 +13,10 @@ export default async function IteratePage({
   if (!project) redirect("/create");
   if (!project.generatedRenderUrl) redirect(`/create/${projectId}`);
 
-  return <IterateScreen projectId={projectId} />;
+  return (
+    <IterateScreen
+      projectId={projectId}
+      currentRenderUrl={project.generatedRenderUrl}
+    />
+  );
 }

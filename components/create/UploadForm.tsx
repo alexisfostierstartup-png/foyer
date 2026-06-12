@@ -27,7 +27,12 @@ const TIPS = [
   { icon: UserRoundX, text: "Sans être dans la pièce vous-même" },
 ];
 
-export function UploadForm() {
+type Props = {
+  floorPresets: { slug: string; label: string }[];
+  roomDefaults: Record<string, string[]>;
+};
+
+export function UploadForm({ floorPresets, roomDefaults }: Props) {
   const router = useRouter();
   const [roomType, setRoomType] = useState<RoomType | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -248,7 +253,12 @@ export function UploadForm() {
         {/* Constraints — revealed after photo uploaded */}
         {projectId && (
           <div className="mt-6 duration-300 animate-in fade-in">
-            <ConstraintsAccordion choices={choices} setChoices={setChoices} />
+            <ConstraintsAccordion
+              choices={choices}
+              setChoices={setChoices}
+              floorPresets={floorPresets}
+              furnitureItems={roomType ? (roomDefaults[roomType] ?? []) : []}
+            />
           </div>
         )}
       </main>

@@ -1,10 +1,7 @@
 import { redirect } from "next/navigation";
 import { getProject } from "@/lib/storage/projects";
 import { StyleSelector } from "@/components/create/StyleSelector";
-import stylesData from "@/data/styles.json";
-import type { Style } from "@/lib/types";
-
-const STYLES = stylesData as Style[];
+import { getAmbiances } from "@/lib/db/assets";
 
 export default async function StylePage({
   searchParams,
@@ -17,12 +14,14 @@ export default async function StylePage({
   const project = await getProject(projectId);
   if (!project) redirect("/create");
 
+  const styles = await getAmbiances();
+
   return (
     <StyleSelector
       projectId={project.id}
       roomType={project.roomType}
       basePhotoUrl={project.basePhotoUrl}
-      styles={STYLES}
+      styles={styles}
     />
   );
 }

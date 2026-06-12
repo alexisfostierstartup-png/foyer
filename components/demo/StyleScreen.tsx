@@ -49,7 +49,7 @@ export function StyleScreen({
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-3">
-        {AMBIANCES.map((a) => {
+        {AMBIANCES.map((a: { id: string; name: string; palette: string[] }) => {
           const selected = choices.ambiance === a.id;
           return (
             <button

@@ -5,8 +5,6 @@ import { SlidersHorizontal, ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SectionLabel, DictateInput } from "@/components/demo/primitives";
 import {
-  FURNITURE_ITEMS,
-  FLOOR_PRESETS,
   MOLDING_STYLES,
   type UserChoices,
 } from "@/components/demo/demo-types";
@@ -16,6 +14,8 @@ import type { FurnitureDecision } from "@/lib/types";
 type Props = {
   choices: UserChoices;
   setChoices: Dispatch<SetStateAction<UserChoices>>;
+  floorPresets?: { slug: string; label: string }[];
+  furnitureItems?: string[];
 };
 
 const DECISIONS: { id: FurnitureDecision; label: string; active: string }[] = [
@@ -79,7 +79,7 @@ function Chip({
   );
 }
 
-export function ConstraintsAccordion({ choices, setChoices }: Props) {
+export function ConstraintsAccordion({ choices, setChoices, floorPresets = [], furnitureItems = [] }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -113,7 +113,7 @@ export function ConstraintsAccordion({ choices, setChoices }: Props) {
           {/* D.1 — Meubles */}
           <SubSection label="Instructions meubles">
             <ul className="flex flex-col gap-3">
-              {FURNITURE_ITEMS.map((item) => (
+              {furnitureItems.map((item) => (
                 <li key={item} className="flex items-center justify-between gap-2">
                   <span className="text-[15px] text-foyer-ink">{item}</span>
                   <div className="flex gap-1">
@@ -168,16 +168,16 @@ export function ConstraintsAccordion({ choices, setChoices }: Props) {
               {choices.floor.change && (
                 <div className="mt-2">
                   <div className="grid grid-cols-3 gap-2">
-                    {FLOOR_PRESETS.map((p) => {
-                      const active = choices.floor.preset === p.label;
+                    {floorPresets.map((p) => {
+                      const active = choices.floor.preset === p.slug;
                       return (
                         <button
-                          key={p.label}
+                          key={p.slug}
                           type="button"
                           onClick={() =>
                             setChoices((c) => ({
                               ...c,
-                              floor: { ...c.floor, preset: p.label },
+                              floor: { ...c.floor, preset: p.slug },
                             }))
                           }
                           className={cn(
@@ -188,7 +188,7 @@ export function ConstraintsAccordion({ choices, setChoices }: Props) {
                           )}
                         >
                           <div className="h-10 w-full">
-                            <FloorPattern pattern={p.pattern} />
+                            <FloorPattern pattern={p.slug} />
                           </div>
                           <span className="block px-2 py-1 text-[12px] leading-tight text-foyer-ink">
                             {p.label}
@@ -209,12 +209,6 @@ export function ConstraintsAccordion({ choices, setChoices }: Props) {
                     placeholder="Autre précision…"
                     mockText="Parquet chêne clair, finition mate"
                   />
-                  {choices.floor.preset === "Carrelage" && (
-                    <p className="mt-2 text-[12px] text-foyer-muted">
-                      On vous proposera des options durables dans la liste
-                      d&apos;achat.
-                    </p>
-                  )}
                 </div>
               )}
             </div>

@@ -10,7 +10,7 @@ import { TestDrawer } from "./TestDrawer";
 import type { PromptInput } from "@/lib/admin/actions";
 import { createPrompt, updatePrompt, togglePromptActive } from "@/lib/admin/actions";
 
-const PURPOSES = ["generation", "iteration", "vision", "detection", "audit"] as const;
+const PURPOSES = ["generation", "iteration", "vision", "detection", "audit", "alterations", "shopping"] as const;
 
 const PROVIDERS_BY_PURPOSE: Record<string, string[]> = {
   generation: ["nano_banana", "flux_kontext"],
@@ -18,6 +18,8 @@ const PROVIDERS_BY_PURPOSE: Record<string, string[]> = {
   vision: ["gemini_vision"],
   detection: ["gemini_vision"],
   audit: ["gemini_vision"],
+  alterations: ["gemini_vision"],
+  shopping: ["gemini_vision"],
 };
 
 type Props = {

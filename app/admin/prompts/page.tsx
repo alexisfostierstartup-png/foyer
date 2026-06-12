@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { Plus } from "lucide-react";
 
-const PURPOSES = ["generation", "iteration", "vision", "detection", "audit"] as const;
+const PURPOSES = ["generation", "iteration", "vision", "detection", "audit", "alterations", "shopping"] as const;
 
 export default async function AdminPromptsPage() {
   const { data: prompts } = await createSupabaseAdmin()

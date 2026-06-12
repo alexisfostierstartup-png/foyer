@@ -64,7 +64,7 @@ export async function formatUserInstructions(
   const lines: string[] = [];
   const supabase = createSupabaseAdmin();
 
-  // Floor
+  // Floor — always explicit: either change with detail, or hard preserve
   if (choices.floor?.action === "change") {
     let detail = choices.floor.custom;
     if (choices.floor.preset) {
@@ -77,7 +77,11 @@ export async function formatUserInstructions(
       if (data) detail = (data.data as FloorPresetData).description;
     }
     lines.push(
-      `- Floor: ${detail ?? "change it (no detail given — choose what best suits the style)"}`,
+      `- Floor: CHANGE the floor to: ${detail ?? "choose what best suits the style"}`,
+    );
+  } else {
+    lines.push(
+      "- Floor: DO NOT change the floor. Preserve its material, color, texture, and pattern EXACTLY as seen in the source image.",
     );
   }
 

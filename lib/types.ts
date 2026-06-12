@@ -32,6 +32,25 @@ export type UserConstraints = {
   accessories: "cosy" | "epure";
 };
 
+export type ShoppingSource = "reuse" | "secondhand" | "new" | "diy";
+
+export type ShoppingMerchant = {
+  name: string;
+  source: ShoppingSource;
+  url?: string;
+};
+
+export type ShoppingItem = {
+  id: string;
+  name: string;
+  category: string;
+  detail: string;
+  priceMin: number;
+  priceMax: number;
+  source: ShoppingSource;
+  merchants: ShoppingMerchant[];
+};
+
 export type Project = {
   id: string;
   createdAt: string;
@@ -39,6 +58,8 @@ export type Project = {
   basePhotoUrl: string;
   selectedStyleId: string | null;
   generatedRenderUrl: string | null;
+  firstRenderUrl?: string;
+  iterationCount?: number;
   detectedFurniture: DetectedFurniture[];
   architecture: {
     floor: string;
@@ -47,5 +68,8 @@ export type Project = {
     windows: string;
     lighting: string;
   } | null;
+  visionOutput?: unknown;
+  alterations?: unknown;
+  shoppingList?: ShoppingItem[];
   userConstraints: UserConstraints | null;
 };

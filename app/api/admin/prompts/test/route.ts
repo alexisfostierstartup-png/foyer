@@ -73,9 +73,16 @@ export async function POST(req: NextRequest) {
       ctx.userRequest = context.userRequest;
     }
 
+    if (context.alterationsJson !== undefined) {
+      ctx.alterationsJson =
+        typeof context.alterationsJson === "string"
+          ? context.alterationsJson
+          : JSON.stringify(context.alterationsJson, null, 2);
+    }
+
     // Pass through other free-form keys
     for (const [k, v] of Object.entries(context)) {
-      if (!["styleId", "roomType", "visionJsonOverride", "choices", "userRequest"].includes(k)) {
+      if (!["styleId", "roomType", "visionJsonOverride", "choices", "userRequest", "alterationsJson"].includes(k)) {
         ctx[k] = v;
       }
     }

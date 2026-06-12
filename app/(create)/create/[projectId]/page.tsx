@@ -18,7 +18,7 @@ export default async function ProjectPage({
       projectId={project.id}
       beforeUrl={project.basePhotoUrl}
       afterUrl={project.generatedRenderUrl}
-      furniture={project.detectedFurniture}
+      roomType={project.roomType}
     />
   );
 }

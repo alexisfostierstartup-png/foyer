@@ -5,6 +5,12 @@ import { X, Play, Loader2, AlertCircle, ImageIcon, ChevronDown, CheckCircle2 } f
 
 const IMAGE_PROVIDERS = ["nano_banana", "flux_kontext"];
 
+const SAMPLE_ALTERATIONS = [
+  { element: "sofa", action: "replaced", category: "sofa", detail: "3-seat beige velvet", shoppingImpact: "to_buy" },
+  { element: "coffee table", action: "added", category: "coffee_table", detail: "round oak", shoppingImpact: "to_buy" },
+  { element: "walls", action: "painted", category: "paint", detail: "warm white", shoppingImpact: "diy_material" },
+];
+
 const CONTEXT_DEFAULTS: Record<string, string> = {
   generation: JSON.stringify({ styleId: "doux", roomType: "salon" }, null, 2),
   iteration: JSON.stringify(
@@ -15,6 +21,12 @@ const CONTEXT_DEFAULTS: Record<string, string> = {
   vision: "{}",
   detection: "{}",
   audit: "{}",
+  alterations: "{}",
+  shopping: JSON.stringify(
+    { styleId: "doux", alterationsJson: JSON.stringify({ alterations: SAMPLE_ALTERATIONS }, null, 2) },
+    null,
+    2,
+  ),
 };
 
 type UploadedImage = { dataUrl: string; base64: string; mimeType: string; name: string };
