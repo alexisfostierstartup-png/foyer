@@ -18,7 +18,7 @@ type LogEntry = {
   audit_pass?: boolean;
   audit_scores?: AuditScores;
   audit_issues?: string[];
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, unknown> | null;
 };
 
 export async function logPipelineEvent(entry: LogEntry): Promise<void> {
@@ -26,9 +26,12 @@ export async function logPipelineEvent(entry: LogEntry): Promise<void> {
     const supabase = createSupabaseAdmin();
     await supabase.from("pipeline_logs").insert({
       ...entry,
-      audit_scores: entry.audit_scores ?? null,
-      audit_issues: entry.audit_issues ?? null,
-      metadata: entry.metadata ?? null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      audit_scores: (entry.audit_scores ?? null) as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      audit_issues: (entry.audit_issues ?? null) as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      metadata: (entry.metadata ?? null) as any,
     });
   } catch (err) {
     // Never crash the pipeline over a logging failure
