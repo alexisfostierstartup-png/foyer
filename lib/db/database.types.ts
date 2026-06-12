@@ -399,6 +399,48 @@ export type Database = {
         }
         Relationships: []
       }
+      pro_properties: {
+        Row: { id: string; owner_id: string; address: string; property_type: string; surface_m2: number | null; notes: string | null; status: string; created_at: string; updated_at: string }
+        Insert: { id?: string; owner_id: string; address: string; property_type: string; surface_m2?: number | null; notes?: string | null; status?: string; created_at?: string; updated_at?: string }
+        Update: { id?: string; owner_id?: string; address?: string; property_type?: string; surface_m2?: number | null; notes?: string | null; status?: string; updated_at?: string }
+        Relationships: []
+      }
+      pro_property_rooms: {
+        Row: { id: string; property_id: string; name: string; room_type: string; photo_urls: string[]; primary_photo_url: string | null; sort_order: number; created_at: string }
+        Insert: { id?: string; property_id: string; name: string; room_type: string; photo_urls?: string[]; primary_photo_url?: string | null; sort_order?: number; created_at?: string }
+        Update: { id?: string; property_id?: string; name?: string; room_type?: string; photo_urls?: string[]; primary_photo_url?: string | null; sort_order?: number }
+        Relationships: []
+      }
+      pro_generation_jobs: {
+        Row: { id: string; property_id: string; user_id: string; mode: string; rooms_selected: string[]; ambiances_selected: string[]; global_constraints: string | null; status: string; total_renders: number; completed_renders: number; failed_renders: number; started_at: string | null; completed_at: string | null; created_at: string }
+        Insert: { id?: string; property_id: string; user_id: string; mode?: string; rooms_selected: string[]; ambiances_selected: string[]; global_constraints?: string | null; status?: string; total_renders: number; completed_renders?: number; failed_renders?: number; started_at?: string | null; completed_at?: string | null; created_at?: string }
+        Update: { status?: string; completed_renders?: number; failed_renders?: number; started_at?: string | null; completed_at?: string | null }
+        Relationships: []
+      }
+      pro_renders: {
+        Row: { id: string; job_id: string; room_id: string; ambiance_slug: string; source_photo_url: string; render_url: string | null; status: string; error_message: string | null; is_favorite: boolean; alterations: unknown; created_at: string; completed_at: string | null }
+        Insert: { id?: string; job_id: string; room_id: string; ambiance_slug: string; source_photo_url: string; render_url?: string | null; status?: string; error_message?: string | null; is_favorite?: boolean; alterations?: unknown; created_at?: string; completed_at?: string | null }
+        Update: { render_url?: string | null; status?: string; error_message?: string | null; is_favorite?: boolean; alterations?: unknown; completed_at?: string | null }
+        Relationships: []
+      }
+      pro_templates: {
+        Row: { id: string; owner_id: string; name: string; description: string | null; ambiance_slugs: string[]; custom_constraints: unknown; created_at: string }
+        Insert: { id?: string; owner_id: string; name: string; description?: string | null; ambiance_slugs: string[]; custom_constraints?: unknown; created_at?: string }
+        Update: { name?: string; description?: string | null; ambiance_slugs?: string[]; custom_constraints?: unknown }
+        Relationships: []
+      }
+      pro_clients: {
+        Row: { id: string; owner_id: string; name: string; email: string | null; phone: string | null; notes: string | null; created_at: string }
+        Insert: { id?: string; owner_id: string; name: string; email?: string | null; phone?: string | null; notes?: string | null; created_at?: string }
+        Update: { name?: string; email?: string | null; phone?: string | null; notes?: string | null }
+        Relationships: []
+      }
+      pro_share_links: {
+        Row: { id: string; job_id: string; slug: string; client_id: string | null; view_count: number; expires_at: string | null; created_at: string }
+        Insert: { id?: string; job_id: string; slug: string; client_id?: string | null; view_count?: number; expires_at?: string | null; created_at?: string }
+        Update: { view_count?: number; expires_at?: string | null }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
