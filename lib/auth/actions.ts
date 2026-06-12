@@ -4,21 +4,31 @@ import { getProject, updateProject, listProjects } from "@/lib/storage/projects"
 import { cookies } from "next/headers";
 
 export async function signUp(email: string, password: string, displayName?: string) {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp({
+  // Use admin.createUser with email_confirm: true to skip confirmation email entirely.
+  // Avoids Supabase free-tier SMTP rate limits; safe for demo/testing.
+  const admin = createSupabaseAdmin();
+  const { data: created, error } = await admin.auth.admin.createUser({
     email,
     password,
-    options: { data: { display_name: displayName ?? "" } },
+    email_confirm: true,
+    user_metadata: { display_name: displayName ?? "" },
   });
   if (error) return { error: error.message };
+
+  // Update profile display_name if provided
+  if (created.user && displayName) {
+    await admin
+      .from("profiles")
+      .update({ display_name: displayName })
+      .eq("id", created.user.id);
+  }
+
+  // Sign in immediately to establish the SSR session cookie
+  const supabase = await createClient();
+  const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+  if (signInError) return { error: signInError.message };
+
   if (data.user) {
-    if (displayName) {
-      const admin = createSupabaseAdmin();
-      await admin
-        .from("profiles")
-        .update({ display_name: displayName })
-        .eq("id", data.user.id);
-    }
     await claimAnonProjects(data.user.id);
   }
   return { user: data.user };
