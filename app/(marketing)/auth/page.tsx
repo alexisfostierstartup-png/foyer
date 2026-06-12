@@ -18,21 +18,31 @@ function AuthForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const next = params.get("next") ?? "/create";
+  const next = params.get("next");
+  const planParam = params.get("plan") ?? undefined;
+
+  function resolveRedirect(plan: string) {
+    if (next) return next;
+    if (plan === "pro") return "/pro/dashboard";
+    return "/create";
+  }
 
   async function handleSubmit() {
     if (!email || !password) return;
     setLoading(true);
     setError("");
     try {
+      let plan = "neophyte";
       if (mode === "signup") {
-        const result = await signUp(email, password, name || undefined);
+        const result = await signUp(email, password, name || undefined, planParam);
         if (result.error) { setError(result.error); setLoading(false); return; }
+        plan = result.plan ?? "neophyte";
       } else {
         const result = await signIn(email, password);
         if (result.error) { setError(result.error); setLoading(false); return; }
+        plan = result.plan ?? "neophyte";
       }
-      router.push(next);
+      router.push(resolveRedirect(plan));
       router.refresh();
     } catch {
       setError("Une erreur inattendue est survenue. Réessayez.");

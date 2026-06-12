@@ -3,7 +3,7 @@ import { createClient, createSupabaseAdmin } from "@/lib/supabase/server";
 import { getProject, updateProject, listProjects } from "@/lib/storage/projects";
 import { cookies } from "next/headers";
 
-export async function signUp(email: string, password: string, displayName?: string) {
+export async function signUp(email: string, password: string, displayName?: string, plan?: string) {
   // Use admin.createUser with email_confirm: true to skip confirmation email entirely.
   // Avoids Supabase free-tier SMTP rate limits; safe for demo/testing.
   const admin = createSupabaseAdmin();
@@ -15,11 +15,17 @@ export async function signUp(email: string, password: string, displayName?: stri
   });
   if (error) return { error: error.message };
 
-  // Update profile display_name if provided
-  if (created.user && displayName) {
+  // Set plan and display_name on the profile
+  if (created.user) {
+    const validPlan = plan && ["expert", "pro"].includes(plan)
+      ? (plan as "expert" | "pro")
+      : undefined;
     await admin
       .from("profiles")
-      .update({ display_name: displayName })
+      .update({
+        ...(displayName ? { display_name: displayName } : {}),
+        ...(validPlan ? { plan: validPlan } : {}),
+      })
       .eq("id", created.user.id);
   }
 
@@ -31,7 +37,9 @@ export async function signUp(email: string, password: string, displayName?: stri
   if (data.user) {
     await claimAnonProjects(data.user.id);
   }
-  return { user: data.user };
+
+  const profile = created.user ? await getProfile(created.user.id) : null;
+  return { user: data.user, plan: profile?.plan ?? "neophyte" };
 }
 
 export async function signIn(email: string, password: string) {
@@ -41,7 +49,8 @@ export async function signIn(email: string, password: string) {
   if (data.user) {
     await claimAnonProjects(data.user.id);
   }
-  return { user: data.user };
+  const profile = data.user ? await getProfile(data.user.id) : null;
+  return { user: data.user, plan: profile?.plan ?? "neophyte" };
 }
 
 export async function claimAnonProjects(userId: string) {
