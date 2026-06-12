@@ -63,8 +63,10 @@ const SEARCH_URL: Record<string, (q: string) => string> = {
   "La Redoute":     q => `https://www.laredoute.fr/ppdp/cat-croisee.aspx?search=${encodeURIComponent(q)}`,
   "Maisons du Monde": q => `https://www.maisonsdumonde.com/FR/fr/search?searchTerm=${encodeURIComponent(q)}`,
   "Alinéa":         q => `https://www.alinea.com/fr-fr/search/?q=${encodeURIComponent(q)}`,
+  "But":            q => `https://www.but.fr/recherche.html?q=${encodeURIComponent(q)}`,
   "BUT":            q => `https://www.but.fr/recherche.html?q=${encodeURIComponent(q)}`,
   "Leroy Merlin":   q => `https://www.leroymerlin.fr/recherche/${encodeURIComponent(q)}.html`,
+  "Jardineries Truffaut": q => `https://www.truffaut.com/recherche?q=${encodeURIComponent(q)}`,
   "Castorama":      q => `https://www.castorama.fr/store/search?q=${encodeURIComponent(q)}`,
   "ManoMano":       q => `https://www.manomano.fr/search/${encodeURIComponent(q)}`,
 };
@@ -83,17 +85,21 @@ function normalizeMerchant(m: ShoppingMerchant | string): ShoppingMerchant {
 }
 
 // ── Price display ─────────────────────────────────────────────────────────────
-function displayPrice(item: ShoppingItem & { price?: number }): string {
-  const single = item.price ?? (item.priceMin && item.priceMax
+function displayPrice(item: ShoppingItem): string {
+  if (item.priceMin > 0 && item.priceMin === item.priceMax) {
+    return `${item.priceMin} €`;
+  }
+  const mid = item.priceMin && item.priceMax
     ? Math.round((item.priceMin + item.priceMax) / 2)
-    : item.priceMin ?? item.priceMax);
-  return single ? `~${single} €` : "–";
+    : item.priceMin || item.priceMax;
+  return mid ? `~${mid} €` : "–";
 }
 
 // ── Card ──────────────────────────────────────────────────────────────────────
 export function ShoppingCard({ item }: { item: ShoppingItem }) {
   const [open, setOpen] = useState(false);
   const [selectedIdx, setSelectedIdx] = useState(0);
+  const [imgError, setImgError] = useState(false);
 
   const Icon = CATEGORY_ICON[item.category] ?? Package;
   const merchants = (item.merchants ?? []).map(normalizeMerchant);
@@ -105,7 +111,17 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
     <div className="rounded-2xl border border-foyer-border bg-white p-3">
       <div className="flex items-center gap-4">
         <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-foyer-border bg-foyer-cream">
-          <Icon className="size-7 text-foyer-muted" strokeWidth={1.5} aria-hidden />
+          {item.imgUrl && !imgError ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={item.imgUrl}
+              alt={item.name}
+              className="size-full object-cover"
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <Icon className="size-7 text-foyer-muted" strokeWidth={1.5} aria-hidden />
+          )}
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -117,7 +133,7 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
         </div>
 
         <div className="flex shrink-0 flex-col items-end gap-1.5">
-          <span className="font-serif text-[17px] text-foyer-ink">{displayPrice(item as ShoppingItem & { price?: number })}</span>
+          <span className="font-serif text-[17px] text-foyer-ink">{displayPrice(item)}</span>
           <button
             type="button"
             onClick={() => setOpen((o) => !o)}

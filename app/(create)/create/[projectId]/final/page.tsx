@@ -23,9 +23,11 @@ export default async function FinalPage({
   return (
     <FinalScreen
       projectId={projectId}
-      beforeUrl={updated!.basePhotoUrl}
       afterUrl={updated!.generatedRenderUrl!}
       shoppingList={updated?.shoppingList ?? []}
+      scoreFoyer={updated?.scoreFoyer}
+      visionOutput={updated?.visionOutput}
+      alterations={updated?.alterations}
     />
   );
 }

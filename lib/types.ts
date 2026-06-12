@@ -49,6 +49,15 @@ export type ShoppingItem = {
   priceMax: number;
   source: ShoppingSource;
   merchants: ShoppingMerchant[];
+  imgUrl?: string;
+};
+
+export type ScoreFoyer = {
+  kept: number;
+  secondhand: number;
+  ecoNew: number;
+  co2SavedKg: number;
+  totalEstimated: number;
 };
 
 export type Project = {
@@ -71,5 +80,6 @@ export type Project = {
   visionOutput?: unknown;
   alterations?: unknown;
   shoppingList?: ShoppingItem[];
+  scoreFoyer?: ScoreFoyer;
   userConstraints: UserConstraints | null;
 };

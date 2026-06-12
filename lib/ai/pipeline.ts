@@ -6,7 +6,8 @@ import { loadStyleContext, loadRoomDefaults, formatUserInstructions } from "@/li
 import { getImageProvider, getVisionProvider } from "./provider";
 import { saveRender } from "./saveRender";
 import { getProject, updateProject } from "@/lib/storage/projects";
-import type { DetectedFurniture, ShoppingItem, UserConstraints } from "@/lib/types";
+import type { DetectedFurniture, UserConstraints } from "@/lib/types";
+import { matchAlterationsToCatalog, computeScoreFoyer, type Alteration } from "@/lib/shopping/matcher";
 import type { ImageInput } from "./types";
 
 async function loadImage(url: string): Promise<ImageInput> {
@@ -213,30 +214,20 @@ export async function extractAlterations(projectId: string): Promise<void> {
   await updateProject(projectId, { alterations: result.parsed });
 }
 
-export async function runShoppingListPipeline(projectId: string): Promise<void> {
+export async function matchAndSaveShoppingList(projectId: string): Promise<void> {
   const project = await getProject(projectId);
-  if (!project?.generatedRenderUrl || !project.alterations || !project.selectedStyleId) return;
+  if (!project?.alterations) return;
   if (project.shoppingList) return;
 
-  const finalImage = await loadImage(project.generatedRenderUrl);
-  const { styleName, styleMood } = await loadStyleContext(project.selectedStyleId);
-
-  const ctx = {
-    styleName,
-    styleMood,
-    alterationsJson: JSON.stringify(project.alterations, null, 2),
-  };
+  const raw = project.alterations as { alterations?: unknown[] } | null;
+  const alterations = (raw?.alterations ?? []) as Alteration[];
 
   const t1 = Date.now();
-  const shopPrompt = await resolvePrompt("gen_shopping_list", ctx, { strict: false });
-  const result = await getVisionProvider(shopPrompt.prompt.provider).analyze(
-    shopPrompt.resolvedTemplate,
-    [finalImage],
-  );
-  console.log(`[pipeline:shopping] generation: ${Date.now() - t1}ms`);
+  const shoppingList = matchAlterationsToCatalog(alterations, project.selectedStyleId);
+  const scoreFoyer = computeScoreFoyer(alterations, shoppingList);
+  console.log(`[pipeline:shopping] catalog match: ${Date.now() - t1}ms, ${shoppingList.length} items`);
 
-  const parsed = result.parsed as { shoppingList?: ShoppingItem[] } | null;
-  await updateProject(projectId, { shoppingList: parsed?.shoppingList ?? [] });
+  await updateProject(projectId, { shoppingList, scoreFoyer });
 }
 
 export async function ensureFinalAssets(projectId: string): Promise<void> {
@@ -249,6 +240,6 @@ export async function ensureFinalAssets(projectId: string): Promise<void> {
   }
 
   if (!project?.shoppingList && project?.alterations) {
-    await runShoppingListPipeline(projectId);
+    await matchAndSaveShoppingList(projectId);
   }
 }
