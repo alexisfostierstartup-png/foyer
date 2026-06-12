@@ -24,6 +24,7 @@ function AuthForm() {
   function resolveRedirect(plan: string) {
     if (next) return next;
     if (plan === "pro") return "/pro/dashboard";
+    if (plan === "expert" || plan === "neophyte") return "/dashboard/rendus";
     return "/create";
   }
 

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ExternalLink, Pencil, Link2, Star } from "lucide-react";
+import { ExternalLink, Pencil, Link2, Star, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { ProgressBar } from "@/components/create/ProgressBar";
 import { BeforeAfterSlider } from "@/components/create/BeforeAfterSlider";
@@ -235,8 +235,8 @@ export function FinalScreen({
   projectId,
   beforeUrl,
   afterUrl,
-  shoppingList,
-  scoreFoyer,
+  shoppingList: initialShoppingList,
+  scoreFoyer: initialScoreFoyer,
   alterations,
   liveEditsUsed = 0,
 }: Props) {
@@ -246,6 +246,9 @@ export function FinalScreen({
   const [paywallTrigger, setPaywallTrigger] = useState<PaywallTrigger | null>(null);
   const [liveEditBanner, setLiveEditBanner] = useState(false);
   const [localLiveEditsUsed, setLocalLiveEditsUsed] = useState(liveEditsUsed);
+  const [shoppingList, setShoppingList] = useState<ShoppingItem[]>(initialShoppingList);
+  const [scoreFoyer, setScoreFoyer] = useState<ScoreFoyer | undefined>(initialScoreFoyer);
+  const [refreshing, setRefreshing] = useState(false);
 
   const alterationsList = ((alterations as { alterations?: Alteration[] } | null)
     ?.alterations ?? []) as Alteration[];
@@ -274,6 +277,22 @@ export function FinalScreen({
       return;
     }
     setPaywallTrigger("product_url");
+  }
+
+  async function handleRefreshShopping() {
+    setRefreshing(true);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/refresh-shopping`, { method: "POST" });
+      if (!res.ok) throw new Error();
+      const data = (await res.json()) as { shoppingList: ShoppingItem[]; scoreFoyer?: ScoreFoyer };
+      setShoppingList(data.shoppingList);
+      if (data.scoreFoyer) setScoreFoyer(data.scoreFoyer);
+      toast.success("Liste de courses actualisée !");
+    } catch {
+      toast.error("Erreur lors du rafraîchissement. Réessayez.");
+    } finally {
+      setRefreshing(false);
+    }
   }
 
   function handleRestart() {
@@ -359,6 +378,19 @@ export function FinalScreen({
               </button>
             ))}
           </div>
+
+          {/* Refresh button — expert only, visible on shopping tab */}
+          {isExpert && tabIdx === 0 && (
+            <button
+              type="button"
+              onClick={handleRefreshShopping}
+              disabled={refreshing}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-foyer-border bg-white px-4 py-2.5 text-[13px] font-medium text-foyer-muted transition-colors hover:border-foyer-sage/50 hover:text-foyer-sage disabled:opacity-50"
+            >
+              <RefreshCw className={cn("size-3.5", refreshing && "animate-spin")} />
+              {refreshing ? "Rafraîchissement…" : "Rafraichir la liste"}
+            </button>
+          )}
 
           {/* Sliding content */}
           <div className="mt-5 overflow-hidden">
