@@ -41,6 +41,37 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
+// ── Family grouping ───────────────────────────────────────────────────────────
+type Family = "Mobilier" | "Décoration" | "Accessoires" | "Fournitures";
+
+const FAMILIES: Family[] = ["Mobilier", "Décoration", "Accessoires", "Fournitures"];
+
+const CATEGORY_FAMILY: Record<string, Family> = {
+  sofa: "Mobilier",
+  armchair: "Mobilier",
+  coffee_table: "Mobilier",
+  side_table: "Mobilier",
+  tv_stand: "Mobilier",
+  bookshelf: "Mobilier",
+  bed: "Mobilier",
+  nightstand: "Mobilier",
+  dresser: "Mobilier",
+  rug: "Décoration",
+  lamp: "Décoration",
+  floor_lamp: "Décoration",
+  curtains: "Décoration",
+  cushion: "Accessoires",
+  plant: "Accessoires",
+  other: "Accessoires",
+  paint: "Fournitures",
+  mouldings: "Fournitures",
+  floor_material: "Fournitures",
+};
+
+function toFamily(category: string): Family {
+  return CATEGORY_FAMILY[category] ?? "Accessoires";
+}
+
 // ── Tab: Liste shopping ───────────────────────────────────────────────────────
 function ListeShoppingTab({
   shoppingList,
@@ -49,10 +80,25 @@ function ListeShoppingTab({
   shoppingList: ShoppingItem[];
   alterations: Alteration[];
 }) {
-  const kept = alterations.filter((a) => a.shoppingImpact === "none");
-  const secondhand = shoppingList.filter((i) => i.source === "secondhand" && i.merchants.length > 0);
-  const ecoNew = shoppingList.filter((i) => i.source !== "secondhand" && i.merchants.length > 0);
-  const unmatched = shoppingList.filter((i) => i.merchants.length === 0);
+  // Group shopping items by family
+  const byFamily = new Map<Family, ShoppingItem[]>();
+  for (const item of shoppingList) {
+    const f = toFamily(item.category);
+    if (!byFamily.has(f)) byFamily.set(f, []);
+    byFamily.get(f)!.push(item);
+  }
+
+  // Group kept alterations by family (for inlining into family sections)
+  const keptByFamily = new Map<Family, Alteration[]>();
+  for (const a of alterations.filter((a) => a.shoppingImpact === "none")) {
+    const f = toFamily(a.category);
+    if (!keptByFamily.has(f)) keptByFamily.set(f, []);
+    keptByFamily.get(f)!.push(a);
+  }
+
+  const activeFamilies = FAMILIES.filter(
+    (f) => (byFamily.get(f)?.length ?? 0) > 0 || (keptByFamily.get(f)?.length ?? 0) > 0,
+  );
 
   const allUrls = shoppingList
     .flatMap((i) => i.merchants.map((m) => m.url).filter(Boolean))
@@ -62,86 +108,72 @@ function ListeShoppingTab({
     for (const url of allUrls) window.open(url, "_blank");
   }
 
-  const hasItems = secondhand.length > 0 || ecoNew.length > 0;
+  if (activeFamilies.length === 0) {
+    return (
+      <div className="rounded-2xl border border-foyer-border bg-white px-5 py-8 text-center">
+        <p className="text-[15px] text-foyer-muted">La liste de courses se prépare…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {kept.length > 0 && (
-        <section>
-          <SectionLabel>Conservé ({kept.length})</SectionLabel>
-          <ul className="flex flex-col gap-2">
-            {kept.map((a) => (
-              <li
-                key={a.element}
-                className="flex items-center gap-3 rounded-xl border border-foyer-border bg-white px-4 py-3"
-              >
-                <span className="size-2 shrink-0 rounded-full bg-foyer-sage" aria-hidden />
-                <span className="text-[14px] capitalize text-foyer-ink">{a.element}</span>
-                {a.detail && (
-                  <span className="ml-auto text-[12px] text-foyer-muted">{a.detail}</span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      {activeFamilies.map((family) => {
+        const items = byFamily.get(family) ?? [];
+        const kept = keptByFamily.get(family) ?? [];
+        const matched = items.filter((i) => i.merchants.length > 0);
+        const unmatched = items.filter((i) => i.merchants.length === 0);
+        const count = matched.length + kept.length;
 
-      {secondhand.length > 0 && (
-        <section>
-          <SectionLabel>Seconde main ({secondhand.length})</SectionLabel>
-          <ul className="flex flex-col gap-3">
-            {secondhand.map((item) => (
-              <li key={item.id}>
-                <ShoppingCard item={item} />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+        return (
+          <section key={family}>
+            <SectionLabel>
+              {family} {count > 0 && `(${count})`}
+            </SectionLabel>
 
-      {ecoNew.length > 0 && (
-        <section>
-          <SectionLabel>Neuf responsable ({ecoNew.length})</SectionLabel>
-          <ul className="flex flex-col gap-3">
-            {ecoNew.map((item) => {
-              const advice = RSE_ADVICE[item.category];
-              return (
-                <li key={item.id}>
-                  <ShoppingCard item={item} />
-                  {advice && (
-                    <p className="mt-1.5 rounded-xl bg-foyer-sage/10 px-3 py-2 text-[12px] leading-relaxed text-foyer-sage">
-                      {advice}
-                    </p>
-                  )}
+            <ul className="flex flex-col gap-3">
+              {/* Matched items → full ShoppingCard */}
+              {matched.map((item) => {
+                const advice = RSE_ADVICE[item.category];
+                return (
+                  <li key={item.id}>
+                    <ShoppingCard item={item} />
+                    {advice && (
+                      <p className="mt-1.5 rounded-xl bg-foyer-sage/10 px-3 py-2 text-[12px] leading-relaxed text-foyer-sage">
+                        {advice}
+                      </p>
+                    )}
+                  </li>
+                );
+              })}
+
+              {/* Unmatched → dashed row */}
+              {unmatched.map((item) => (
+                <li
+                  key={item.id}
+                  className="flex items-center gap-3 rounded-xl border border-dashed border-foyer-border bg-white px-4 py-3"
+                >
+                  <span className="size-2 shrink-0 rounded-full bg-foyer-muted/40" aria-hidden />
+                  <span className="text-[14px] capitalize text-foyer-muted">{item.name}</span>
+                  <span className="ml-auto text-[12px] text-foyer-muted">À sourcer</span>
                 </li>
-              );
-            })}
-          </ul>
-        </section>
-      )}
+              ))}
 
-      {unmatched.length > 0 && (
-        <section>
-          <SectionLabel>À sourcer ({unmatched.length})</SectionLabel>
-          <ul className="flex flex-col gap-2">
-            {unmatched.map((item) => (
-              <li
-                key={item.id}
-                className="flex items-center gap-3 rounded-xl border border-dashed border-foyer-border bg-white px-4 py-3"
-              >
-                <span className="size-2 shrink-0 rounded-full bg-foyer-muted/40" aria-hidden />
-                <span className="text-[14px] capitalize text-foyer-muted">{item.name}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {!hasItems && unmatched.length === 0 && (
-        <div className="rounded-2xl border border-foyer-border bg-white px-5 py-8 text-center">
-          <p className="text-[15px] text-foyer-muted">La liste de courses se prépare…</p>
-        </div>
-      )}
+              {/* Kept alterations → green row */}
+              {kept.map((a) => (
+                <li
+                  key={a.element}
+                  className="flex items-center gap-3 rounded-xl border border-foyer-border bg-white px-4 py-3"
+                >
+                  <span className="size-2 shrink-0 rounded-full bg-foyer-sage" aria-hidden />
+                  <span className="text-[14px] capitalize text-foyer-ink">{a.element}</span>
+                  <span className="ml-auto text-[12px] text-foyer-sage font-medium">Conservé</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })}
 
       {allUrls.length > 0 && (
         <button
