@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
 import { getProject } from "@/lib/storage/projects";
 import { StyleSelector } from "@/components/create/StyleSelector";

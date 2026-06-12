@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { Plus } from "lucide-react";
