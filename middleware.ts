@@ -29,11 +29,19 @@ export async function middleware(req: NextRequest) {
   }
 
   // Supabase session refresh for all other routes
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  // If env vars are missing (e.g. preview deployment without secrets), skip auth refresh
+  if (!supabaseUrl || !supabaseKey) {
+    return NextResponse.next({ request: req });
+  }
+
   let response = NextResponse.next({ request: req });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         getAll() {
