@@ -1,5 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { runGenerationPipeline } from "@/lib/ai/pipeline";
+import { createClient } from "@/lib/supabase/server";
+import { checkAndConsumeCredit } from "@/lib/auth/actions";
 
 export const maxDuration = 90;
 
@@ -26,14 +28,45 @@ function userMessage(err: unknown): { message: string; status: number } {
 }
 
 export async function POST(
-  _request: Request,
+  request: NextRequest,
   ctx: { params: Promise<{ id: string }> },
 ) {
   const { id } = await ctx.params;
 
+  // Credit check
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const anonId = request.cookies.get("foyer_anon_id")?.value;
+  const firstFreeUsed = request.cookies.get("foyer_free_used")?.value === "1";
+
+  if (user) {
+    const result = await checkAndConsumeCredit(id, user.id);
+    if (!result.allowed) {
+      return NextResponse.json({ error: "no_credits", paywall: "second_project" }, { status: 402 });
+    }
+  } else {
+    // Anonymous: first render is free
+    if (firstFreeUsed) {
+      return NextResponse.json({ error: "no_credits", paywall: "second_project" }, { status: 402 });
+    }
+  }
+
   try {
     await runGenerationPipeline(id);
-    return NextResponse.json({ ok: true, projectId: id });
+
+    const res = NextResponse.json({ ok: true, projectId: id });
+
+    // Mark first free as used for anonymous users
+    if (!user && !firstFreeUsed) {
+      res.cookies.set("foyer_free_used", "1", {
+        httpOnly: true,
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 365, // 1 year
+        path: "/",
+      });
+    }
+
+    return res;
   } catch (err) {
     console.error("[generate] pipeline error:", err);
     const { message, status } = userMessage(err);

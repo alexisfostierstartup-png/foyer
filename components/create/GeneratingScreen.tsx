@@ -6,7 +6,9 @@ import { toast } from "sonner";
 import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/create/ProgressBar";
+import { PaywallModal } from "@/components/paywalls/PaywallModal";
 import { cn } from "@/lib/utils";
+import type { PaywallTrigger } from "@/components/paywalls/PaywallModal";
 
 const STEPS = ["Photo", "Style", "Mobilier", "Rendu", "Projet"];
 
@@ -21,14 +23,23 @@ export function GeneratingScreen({ projectId }: { projectId: string }) {
   const router = useRouter();
   const [messageIndex, setMessageIndex] = useState(0);
   const [failed, setFailed] = useState(false);
+  const [paywallTrigger, setPaywallTrigger] = useState<PaywallTrigger | null>(null);
   const startedRef = useRef(false);
 
   const startGeneration = useCallback(async () => {
     setFailed(false);
+    setPaywallTrigger(null);
     try {
       const res = await fetch(`/api/projects/${projectId}/generate`, {
         method: "POST",
       });
+      if (res.status === 402) {
+        const data = (await res.json().catch(() => null)) as
+          | { paywall?: PaywallTrigger }
+          | null;
+        setPaywallTrigger(data?.paywall ?? "second_project");
+        return;
+      }
       if (!res.ok) {
         const data = (await res.json().catch(() => null)) as
           | { error?: string }
@@ -59,6 +70,13 @@ export function GeneratingScreen({ projectId }: { projectId: string }) {
   }, [startGeneration]);
 
   return (
+    <>
+    {paywallTrigger && (
+      <PaywallModal
+        trigger={paywallTrigger}
+        onClose={() => { setPaywallTrigger(null); setFailed(true); }}
+      />
+    )}
     <div className="flex flex-1 flex-col">
       <ProgressBar currentStep={3} labels={STEPS} />
 
@@ -132,5 +150,6 @@ export function GeneratingScreen({ projectId }: { projectId: string }) {
         </div>
       </main>
     </div>
+    </>
   );
 }

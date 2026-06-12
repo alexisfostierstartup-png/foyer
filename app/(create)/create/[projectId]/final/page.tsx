@@ -29,6 +29,7 @@ export default async function FinalPage({
       scoreFoyer={updated?.scoreFoyer}
       visionOutput={updated?.visionOutput}
       alterations={updated?.alterations}
+      liveEditsUsed={updated?.live_edits_used ?? 0}
     />
   );
 }
