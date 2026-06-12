@@ -46,33 +46,32 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-// ── Family grouping ───────────────────────────────────────────────────────────
+// ── Section routing (α-10) ───────────────────────────────────────────────────
+const DIY_CATEGORIES = new Set(["paint", "mouldings", "floor_material"]);
+
+type Section = "lbc" | "partner" | "diy" | "mock";
+
+function itemSection(item: ShoppingItem): Section {
+  if (item.matchingSource === "lbc") return "lbc";
+  if (item.matchingSource === "partner" || item.matchingSource === "mock_catalog") {
+    return DIY_CATEGORIES.has(item.category) ? "diy" : "partner";
+  }
+  // Fallback pour items sans matchingSource (mock ancien format)
+  if (DIY_CATEGORIES.has(item.category)) return "diy";
+  return "mock";
+}
+
+// Conservé pour le cas mock_catalog (groupement family legacy)
 type Family = "Mobilier" | "Décoration" | "Accessoires" | "Fournitures";
-
 const FAMILIES: Family[] = ["Mobilier", "Décoration", "Accessoires", "Fournitures"];
-
 const CATEGORY_FAMILY: Record<string, Family> = {
-  sofa: "Mobilier",
-  armchair: "Mobilier",
-  coffee_table: "Mobilier",
-  side_table: "Mobilier",
-  tv_stand: "Mobilier",
-  bookshelf: "Mobilier",
-  bed: "Mobilier",
-  nightstand: "Mobilier",
-  dresser: "Mobilier",
-  rug: "Décoration",
-  lamp: "Décoration",
-  floor_lamp: "Décoration",
-  curtains: "Décoration",
-  cushion: "Accessoires",
-  plant: "Accessoires",
-  other: "Accessoires",
-  paint: "Fournitures",
-  mouldings: "Fournitures",
-  floor_material: "Fournitures",
+  sofa: "Mobilier", armchair: "Mobilier", coffee_table: "Mobilier",
+  side_table: "Mobilier", tv_stand: "Mobilier", bookshelf: "Mobilier",
+  bed: "Mobilier", nightstand: "Mobilier", dresser: "Mobilier",
+  rug: "Décoration", lamp: "Décoration", floor_lamp: "Décoration", curtains: "Décoration",
+  cushion: "Accessoires", plant: "Accessoires", other: "Accessoires",
+  paint: "Fournitures", mouldings: "Fournitures", floor_material: "Fournitures",
 };
-
 function toFamily(category: string): Family {
   return CATEGORY_FAMILY[category] ?? "Accessoires";
 }
@@ -445,7 +444,39 @@ export function FinalScreen({
   );
 }
 
-// ── Enhanced shopping tab with product URL buttons ────────────────────────────
+// ── Section header ────────────────────────────────────────────────────────────
+function SectionHeader({ emoji, title, count }: { emoji: string; title: string; count: number }) {
+  return (
+    <div className="flex items-center gap-2 mb-3">
+      <span className="text-[15px]" aria-hidden>{emoji}</span>
+      <SectionLabel>{title} {count > 0 && `(${count})`}</SectionLabel>
+    </div>
+  );
+}
+
+// ── Ligne item non-matchée ────────────────────────────────────────────────────
+function UnmatchedRow({ item }: { item: ShoppingItem }) {
+  return (
+    <li className="flex items-center gap-3 rounded-xl border border-dashed border-foyer-border bg-white px-4 py-3">
+      <span className="size-2 shrink-0 rounded-full bg-foyer-muted/40" aria-hidden />
+      <span className="text-[14px] capitalize text-foyer-muted">{item.name}</span>
+      <span className="ml-auto text-[12px] text-foyer-muted">À sourcer</span>
+    </li>
+  );
+}
+
+// ── Ligne altération conservée ────────────────────────────────────────────────
+function KeptRow({ alteration }: { alteration: Alteration }) {
+  return (
+    <li className="flex items-center gap-3 rounded-xl border border-foyer-border bg-white px-4 py-3">
+      <span className="size-2 shrink-0 rounded-full bg-foyer-sage" aria-hidden />
+      <span className="text-[14px] capitalize text-foyer-ink">{alteration.element}</span>
+      <span className="ml-auto text-[12px] text-foyer-sage font-medium">Conservé</span>
+    </li>
+  );
+}
+
+// ── Shopping tab avec 4 sections (α-10) ──────────────────────────────────────
 function EnhancedListeShoppingTab({
   shoppingList,
   alterations,
@@ -455,7 +486,91 @@ function EnhancedListeShoppingTab({
   alterations: Alteration[];
   onProductUrl: () => void;
 }) {
-  // Group shopping items by family
+  const isHybrid = shoppingList.some(
+    (i) => i.matchingSource === "lbc" || i.matchingSource === "partner",
+  );
+
+  // ── Mode hybride : 4 sections ────────────────────────────────────────────
+  if (isHybrid) {
+    const keptAlterations = alterations.filter((a) => a.shoppingImpact === "none");
+    const lbcItems = shoppingList.filter((i) => itemSection(i) === "lbc");
+    const partnerItems = shoppingList.filter((i) => itemSection(i) === "partner");
+    const diyItems = shoppingList.filter((i) => itemSection(i) === "diy");
+    const unmatched = shoppingList.filter((i) => i.merchants.length === 0);
+
+    const hasContent =
+      keptAlterations.length > 0 || lbcItems.length > 0 ||
+      partnerItems.length > 0 || diyItems.length > 0;
+
+    if (!hasContent) {
+      return (
+        <div className="rounded-2xl border border-foyer-border bg-white px-5 py-8 text-center">
+          <p className="text-[15px] text-foyer-muted">La liste de courses se prépare…</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        {/* Section 1 — Conservé */}
+        {keptAlterations.length > 0 && (
+          <section>
+            <SectionHeader emoji="✓" title="Conservé" count={keptAlterations.length} />
+            <ul className="flex flex-col gap-3">
+              {keptAlterations.map((a) => <KeptRow key={a.element} alteration={a} />)}
+            </ul>
+          </section>
+        )}
+
+        {/* Section 2 — Seconde main LBC */}
+        {lbcItems.length > 0 && (
+          <section>
+            <SectionHeader emoji="⚐" title="Seconde main" count={lbcItems.length} />
+            <ul className="flex flex-col gap-3">
+              {lbcItems.map((item) => (
+                <ShoppingItemRow key={item.id} item={item} onProductUrl={onProductUrl} />
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* Section 3 — Neuf durable */}
+        {partnerItems.length > 0 && (
+          <section>
+            <SectionHeader emoji="🌱" title="Neuf durable" count={partnerItems.length} />
+            <ul className="flex flex-col gap-3">
+              {partnerItems.map((item) => (
+                <ShoppingItemRow key={item.id} item={item} onProductUrl={onProductUrl} />
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* Section 4 — DIY & fournitures */}
+        {diyItems.length > 0 && (
+          <section>
+            <SectionHeader emoji="🔧" title="DIY & fournitures" count={diyItems.length} />
+            <ul className="flex flex-col gap-3">
+              {diyItems.map((item) => (
+                <ShoppingItemRow key={item.id} item={item} onProductUrl={onProductUrl} />
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {unmatched.length > 0 && (
+          <section>
+            <SectionLabel>À sourcer</SectionLabel>
+            <ul className="flex flex-col gap-3">
+              {unmatched.map((item) => <UnmatchedRow key={item.id} item={item} />)}
+            </ul>
+          </section>
+        )}
+      </div>
+    );
+  }
+
+  // ── Mode mock_catalog legacy : groupement par famille ────────────────────
   const byFamily = new Map<Family, ShoppingItem[]>();
   for (const item of shoppingList) {
     const f = toFamily(item.category);
@@ -474,10 +589,6 @@ function EnhancedListeShoppingTab({
     (f) => (byFamily.get(f)?.length ?? 0) > 0 || (keptByFamily.get(f)?.length ?? 0) > 0,
   );
 
-  const allUrls = shoppingList
-    .flatMap((i) => i.merchants.map((m) => m.url).filter(Boolean))
-    .slice(0, 20) as string[];
-
   if (activeFamilies.length === 0) {
     return (
       <div className="rounded-2xl border border-foyer-border bg-white px-5 py-8 text-center">
@@ -485,6 +596,10 @@ function EnhancedListeShoppingTab({
       </div>
     );
   }
+
+  const allUrls = shoppingList
+    .flatMap((i) => i.merchants.map((m) => m.url).filter(Boolean))
+    .slice(0, 20) as string[];
 
   return (
     <div className="space-y-6">
@@ -494,48 +609,19 @@ function EnhancedListeShoppingTab({
         const matched = items.filter((i) => i.merchants.length > 0);
         const unmatched = items.filter((i) => i.merchants.length === 0);
         const count = matched.length + kept.length;
-
         return (
           <section key={family}>
-            <SectionLabel>
-              {family} {count > 0 && `(${count})`}
-            </SectionLabel>
-
+            <SectionLabel>{family} {count > 0 && `(${count})`}</SectionLabel>
             <ul className="flex flex-col gap-3">
               {matched.map((item) => (
-                <ShoppingItemRow
-                  key={item.id}
-                  item={item}
-                  onProductUrl={onProductUrl}
-                />
+                <ShoppingItemRow key={item.id} item={item} onProductUrl={onProductUrl} />
               ))}
-
-              {unmatched.map((item) => (
-                <li
-                  key={item.id}
-                  className="flex items-center gap-3 rounded-xl border border-dashed border-foyer-border bg-white px-4 py-3"
-                >
-                  <span className="size-2 shrink-0 rounded-full bg-foyer-muted/40" aria-hidden />
-                  <span className="text-[14px] capitalize text-foyer-muted">{item.name}</span>
-                  <span className="ml-auto text-[12px] text-foyer-muted">À sourcer</span>
-                </li>
-              ))}
-
-              {kept.map((a) => (
-                <li
-                  key={a.element}
-                  className="flex items-center gap-3 rounded-xl border border-foyer-border bg-white px-4 py-3"
-                >
-                  <span className="size-2 shrink-0 rounded-full bg-foyer-sage" aria-hidden />
-                  <span className="text-[14px] capitalize text-foyer-ink">{a.element}</span>
-                  <span className="ml-auto text-[12px] text-foyer-sage font-medium">Conservé</span>
-                </li>
-              ))}
+              {unmatched.map((item) => <UnmatchedRow key={item.id} item={item} />)}
+              {kept.map((a) => <KeptRow key={a.element} alteration={a} />)}
             </ul>
           </section>
         );
       })}
-
       {allUrls.length > 0 && (
         <button
           type="button"

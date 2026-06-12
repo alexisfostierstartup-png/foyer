@@ -38,10 +38,10 @@ const CATEGORY_ICON: Record<string, LucideIcon> = {
 
 // ── Tags ─────────────────────────────────────────────────────────────────────
 const SOURCE_TAG: Record<ShoppingSource, { label: string; className: string }> = {
-  reuse: { label: "Réutilisation", className: "bg-foyer-sage/15 text-foyer-sage" },
-  diy:   { label: "Réutilisation", className: "bg-foyer-sage/15 text-foyer-sage" },
-  secondhand: { label: "Seconde main", className: "bg-sky-100 text-sky-700" },
-  new:   { label: "Neuf",            className: "bg-violet-100 text-violet-700" },
+  reuse:      { label: "Réutilisation",  className: "bg-foyer-sage/15 text-foyer-sage" },
+  diy:        { label: "Réutilisation",  className: "bg-foyer-sage/15 text-foyer-sage" },
+  secondhand: { label: "Seconde main",   className: "bg-sky-100 text-sky-700" },
+  new:        { label: "Neuf durable",   className: "bg-violet-100 text-violet-700" },
 };
 
 function SourceTag({ source }: { source: ShoppingSource }) {
@@ -49,6 +49,25 @@ function SourceTag({ source }: { source: ShoppingSource }) {
   return (
     <span className={cn("rounded-full px-2 py-0.5 text-[12px] font-medium", t.className)}>
       {t.label}
+    </span>
+  );
+}
+
+// ── Similarity badge (pour items LBC hybrides) ────────────────────────────────
+function SimilarityBadge({ score }: { score: number }) {
+  const pct = Math.round(score * 100);
+  return (
+    <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-medium text-sky-600">
+      {pct}% similaire
+    </span>
+  );
+}
+
+// ── Lien partenaire badge (conformité loi Confiance 2024) ─────────────────────
+function AffiliateBadge() {
+  return (
+    <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+      lien partenaire
     </span>
   );
 }
@@ -105,6 +124,9 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
   const merchants = (item.merchants ?? []).map(normalizeMerchant);
   const selected = merchants[selectedIdx] ?? merchants[0];
 
+  const isLbc = item.matchingSource === "lbc";
+  const isPartner = item.matchingSource === "partner";
+
   if (!selected) return null;
 
   return (
@@ -126,9 +148,18 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
 
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <p className="truncate text-[15px] font-medium text-foyer-ink">{item.name}</p>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
             <SourceTag source={selected.source} />
             <span className="text-[13px] text-foyer-muted">{selected.name}</span>
+            {item.city && (
+              <span className="text-[12px] text-foyer-muted">· {item.city}</span>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {isLbc && item.similarity !== undefined && (
+              <SimilarityBadge score={item.similarity} />
+            )}
+            {isPartner && <AffiliateBadge />}
           </div>
         </div>
 

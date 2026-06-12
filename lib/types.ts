@@ -40,6 +40,8 @@ export type ShoppingMerchant = {
   url?: string;
 };
 
+export type MatchingSource = "mock_catalog" | "lbc" | "partner" | "kept";
+
 export type ShoppingItem = {
   id: string;
   name: string;
@@ -50,6 +52,12 @@ export type ShoppingItem = {
   source: ShoppingSource;
   merchants: ShoppingMerchant[];
   imgUrl?: string;
+  // Hybrid matching metadata (α-10+)
+  matchingSource?: MatchingSource;
+  similarity?: number;
+  city?: string;
+  affiliateUrl?: string;
+  postedAt?: string;
 };
 
 export type ScoreFoyer = {

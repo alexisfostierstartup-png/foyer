@@ -8,7 +8,12 @@ import { saveRender } from "./saveRender";
 import { logPipelineEvent } from "./logger";
 import { getProject, updateProject } from "@/lib/storage/projects";
 import type { DetectedFurniture, UserConstraints } from "@/lib/types";
-import { matchAlterationsToCatalog, computeScoreFoyer, type Alteration } from "@/lib/shopping/matcher";
+import {
+  matchAlterationsToCatalog,
+  matchAlterationsHybrid,
+  computeScoreFoyer,
+  type Alteration,
+} from "@/lib/shopping/matcher";
 import type { ImageInput } from "./types";
 
 async function loadImage(url: string): Promise<ImageInput> {
@@ -232,9 +237,14 @@ export async function matchAndSaveShoppingList(projectId: string): Promise<void>
   const alterations = (raw?.alterations ?? []) as Alteration[];
 
   const t1 = Date.now();
-  const shoppingList = matchAlterationsToCatalog(alterations, project.selectedStyleId);
+  const useHybrid = process.env.USE_HYBRID_MATCHING !== "false";
+  const shoppingList = useHybrid
+    ? await matchAlterationsHybrid(alterations, project.selectedStyleId, project.generatedRenderUrl ?? undefined)
+    : matchAlterationsToCatalog(alterations, project.selectedStyleId);
   const scoreFoyer = computeScoreFoyer(alterations, shoppingList);
-  console.log(`[pipeline:shopping] catalog match: ${Date.now() - t1}ms, ${shoppingList.length} items`);
+  console.log(
+    `[pipeline:shopping] ${useHybrid ? "hybrid" : "mock"} match: ${Date.now() - t1}ms, ${shoppingList.length} items`,
+  );
 
   await updateProject(projectId, { shoppingList, scoreFoyer });
 }
