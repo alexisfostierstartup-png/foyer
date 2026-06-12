@@ -2,10 +2,12 @@
 
 import { useState, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { signIn, signUp } from "@/lib/auth/actions";
 
 function AuthForm() {
+  const router = useRouter();
   const params = useSearchParams();
   const [mode, setMode] = useState<"signin" | "signup">(
     params.get("tab") === "signup" ? "signup" : "signin",
@@ -16,14 +18,26 @@ function AuthForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const next = params.get("next") ?? "/create";
+
   async function handleSubmit() {
     if (!email || !password) return;
     setLoading(true);
     setError("");
-    // TODO: brancher auth (Supabase ou autre)
-    await new Promise((r) => setTimeout(r, 800));
-    setLoading(false);
-    setError("L'authentification n'est pas encore configurée.");
+    try {
+      if (mode === "signup") {
+        const result = await signUp(email, password, name || undefined);
+        if (result.error) { setError(result.error); setLoading(false); return; }
+      } else {
+        const result = await signIn(email, password);
+        if (result.error) { setError(result.error); setLoading(false); return; }
+      }
+      router.push(next);
+      router.refresh();
+    } catch {
+      setError("Une erreur inattendue est survenue. Réessayez.");
+      setLoading(false);
+    }
   }
 
   const inputClass =

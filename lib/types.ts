@@ -64,6 +64,9 @@ export type Project = {
   id: string;
   createdAt: string;
   userId?: string;
+  anon_id?: string;
+  is_saved?: boolean;
+  live_edits_used?: number;
   storageFolder: string;
   roomType: RoomType;
   basePhotoUrl: string;

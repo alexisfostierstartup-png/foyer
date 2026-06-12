@@ -1,22 +1,20 @@
+import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
 
-const SESSION_COOKIE = "admin_session";
+const ADMIN_COOKIE = "admin_session";
 
-function isAuthenticated(req: NextRequest): boolean {
-  const cookie = req.cookies.get(SESSION_COOKIE);
+function isAdminAuthenticated(req: NextRequest): boolean {
+  const cookie = req.cookies.get(ADMIN_COOKIE);
   const token = process.env.ADMIN_SESSION_TOKEN;
   return !!token && !!cookie && cookie.value === token;
 }
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // API admin routes (except login): return 401 if unauthenticated
-  if (
-    pathname.startsWith("/api/admin/") &&
-    pathname !== "/api/admin/login"
-  ) {
-    if (!isAuthenticated(req)) {
+  // Admin API routes (except login): return 401 if unauthenticated
+  if (pathname.startsWith("/api/admin/") && pathname !== "/api/admin/login") {
+    if (!isAdminAuthenticated(req)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     return NextResponse.next();
@@ -24,14 +22,55 @@ export function middleware(req: NextRequest) {
 
   // Admin pages (except login): redirect to /admin/login
   if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
-    if (!isAuthenticated(req)) {
+    if (!isAdminAuthenticated(req)) {
       return NextResponse.redirect(new URL("/admin/login", req.url));
     }
+    return NextResponse.next();
   }
 
-  return NextResponse.next();
+  // Supabase session refresh for all other routes
+  let response = NextResponse.next({ request: req });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return req.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value));
+          response = NextResponse.next({ request: req });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options),
+          );
+        },
+      },
+    },
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Protect /account and /projects — require auth
+  if (
+    (pathname.startsWith("/account") || pathname.startsWith("/projects")) &&
+    !user
+  ) {
+    return NextResponse.redirect(new URL("/auth?tab=signin", req.url));
+  }
+
+  return response;
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/admin/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/api/admin/:path*",
+    "/account/:path*",
+    "/projects/:path*",
+    "/((?!_next/static|_next/image|favicon.ico|public/).*)",
+  ],
 };

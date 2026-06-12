@@ -2,12 +2,17 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ExternalLink } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ExternalLink, Pencil, Link2, Star } from "lucide-react";
+import { toast } from "sonner";
 import { ProgressBar } from "@/components/create/ProgressBar";
 import { BeforeAfterSlider } from "@/components/create/BeforeAfterSlider";
 import { ShoppingCard } from "@/components/create/ShoppingCard";
+import { PaywallModal } from "@/components/paywalls/PaywallModal";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/lib/auth/useUser";
 import type { ShoppingItem, ScoreFoyer } from "@/lib/types";
+import type { PaywallTrigger } from "@/components/paywalls/PaywallModal";
 
 const STEPS = ["Photo", "Style", "Mobilier", "Rendu", "Projet"];
 const TABS = ["Liste shopping", "Score Foyer"] as const;
@@ -72,122 +77,6 @@ function toFamily(category: string): Family {
   return CATEGORY_FAMILY[category] ?? "Accessoires";
 }
 
-// ── Tab: Liste shopping ───────────────────────────────────────────────────────
-function ListeShoppingTab({
-  shoppingList,
-  alterations,
-}: {
-  shoppingList: ShoppingItem[];
-  alterations: Alteration[];
-}) {
-  // Group shopping items by family
-  const byFamily = new Map<Family, ShoppingItem[]>();
-  for (const item of shoppingList) {
-    const f = toFamily(item.category);
-    if (!byFamily.has(f)) byFamily.set(f, []);
-    byFamily.get(f)!.push(item);
-  }
-
-  // Group kept alterations by family (for inlining into family sections)
-  const keptByFamily = new Map<Family, Alteration[]>();
-  for (const a of alterations.filter((a) => a.shoppingImpact === "none")) {
-    const f = toFamily(a.category);
-    if (!keptByFamily.has(f)) keptByFamily.set(f, []);
-    keptByFamily.get(f)!.push(a);
-  }
-
-  const activeFamilies = FAMILIES.filter(
-    (f) => (byFamily.get(f)?.length ?? 0) > 0 || (keptByFamily.get(f)?.length ?? 0) > 0,
-  );
-
-  const allUrls = shoppingList
-    .flatMap((i) => i.merchants.map((m) => m.url).filter(Boolean))
-    .slice(0, 20) as string[];
-
-  function openAll() {
-    for (const url of allUrls) window.open(url, "_blank");
-  }
-
-  if (activeFamilies.length === 0) {
-    return (
-      <div className="rounded-2xl border border-foyer-border bg-white px-5 py-8 text-center">
-        <p className="text-[15px] text-foyer-muted">La liste de courses se prépare…</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      {activeFamilies.map((family) => {
-        const items = byFamily.get(family) ?? [];
-        const kept = keptByFamily.get(family) ?? [];
-        const matched = items.filter((i) => i.merchants.length > 0);
-        const unmatched = items.filter((i) => i.merchants.length === 0);
-        const count = matched.length + kept.length;
-
-        return (
-          <section key={family}>
-            <SectionLabel>
-              {family} {count > 0 && `(${count})`}
-            </SectionLabel>
-
-            <ul className="flex flex-col gap-3">
-              {/* Matched items → full ShoppingCard */}
-              {matched.map((item) => {
-                const advice = RSE_ADVICE[item.category];
-                return (
-                  <li key={item.id}>
-                    <ShoppingCard item={item} />
-                    {advice && (
-                      <p className="mt-1.5 rounded-xl bg-foyer-sage/10 px-3 py-2 text-[12px] leading-relaxed text-foyer-sage">
-                        {advice}
-                      </p>
-                    )}
-                  </li>
-                );
-              })}
-
-              {/* Unmatched → dashed row */}
-              {unmatched.map((item) => (
-                <li
-                  key={item.id}
-                  className="flex items-center gap-3 rounded-xl border border-dashed border-foyer-border bg-white px-4 py-3"
-                >
-                  <span className="size-2 shrink-0 rounded-full bg-foyer-muted/40" aria-hidden />
-                  <span className="text-[14px] capitalize text-foyer-muted">{item.name}</span>
-                  <span className="ml-auto text-[12px] text-foyer-muted">À sourcer</span>
-                </li>
-              ))}
-
-              {/* Kept alterations → green row */}
-              {kept.map((a) => (
-                <li
-                  key={a.element}
-                  className="flex items-center gap-3 rounded-xl border border-foyer-border bg-white px-4 py-3"
-                >
-                  <span className="size-2 shrink-0 rounded-full bg-foyer-sage" aria-hidden />
-                  <span className="text-[14px] capitalize text-foyer-ink">{a.element}</span>
-                  <span className="ml-auto text-[12px] text-foyer-sage font-medium">Conservé</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        );
-      })}
-
-      {allUrls.length > 0 && (
-        <button
-          type="button"
-          onClick={openAll}
-          className="flex w-full items-center justify-center gap-2 rounded-full border border-foyer-border py-3 text-[14px] font-medium text-foyer-ink transition-colors hover:bg-foyer-border/30"
-        >
-          <ExternalLink className="size-4" aria-hidden />
-          Tout ouvrir ({allUrls.length} liens)
-        </button>
-      )}
-    </div>
-  );
-}
 
 // ── Tab: Score Foyer ──────────────────────────────────────────────────────────
 function ScoreFoyerTab({
@@ -299,6 +188,37 @@ function ScoreFoyerTab({
   );
 }
 
+// ── Shopping item row with "Choisir un produit précis" button ──────────────────
+function ShoppingItemRow({
+  item,
+  onProductUrl,
+}: {
+  item: ShoppingItem;
+  onProductUrl: () => void;
+}) {
+  const advice = RSE_ADVICE[item.category];
+  return (
+    <li>
+      <div className="relative">
+        <ShoppingCard item={item} />
+        <button
+          type="button"
+          onClick={onProductUrl}
+          className="mt-1 flex w-full items-center gap-1.5 rounded-xl bg-white/80 px-3 py-1.5 text-[12px] text-foyer-muted transition-colors hover:text-foyer-sage"
+        >
+          <Link2 className="size-3.5 shrink-0" />
+          Choisir un produit précis
+        </button>
+      </div>
+      {advice && (
+        <p className="mt-1.5 rounded-xl bg-foyer-sage/10 px-3 py-2 text-[12px] leading-relaxed text-foyer-sage">
+          {advice}
+        </p>
+      )}
+    </li>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 type Props = {
   projectId: string;
@@ -308,6 +228,7 @@ type Props = {
   scoreFoyer?: ScoreFoyer;
   visionOutput?: unknown;
   alterations?: unknown;
+  liveEditsUsed?: number;
 };
 
 export function FinalScreen({
@@ -317,91 +238,282 @@ export function FinalScreen({
   shoppingList,
   scoreFoyer,
   alterations,
+  liveEditsUsed = 0,
 }: Props) {
+  const router = useRouter();
+  const { user, profile, wallet } = useUser();
   const [tabIdx, setTabIdx] = useState(0);
+  const [paywallTrigger, setPaywallTrigger] = useState<PaywallTrigger | null>(null);
+  const [liveEditBanner, setLiveEditBanner] = useState(false);
+  const [localLiveEditsUsed, setLocalLiveEditsUsed] = useState(liveEditsUsed);
 
   const alterationsList = ((alterations as { alterations?: Alteration[] } | null)
     ?.alterations ?? []) as Alteration[];
 
+  const isExpert = profile?.plan === "expert" || profile?.plan === "pro";
+  const hasCredits = (wallet?.balance ?? 0) > 0;
+
+  function handleLiveEdit() {
+    if (isExpert) {
+      toast.info("Édition live Expert — sélectionnez un élément (coming soon).");
+      return;
+    }
+    if (localLiveEditsUsed === 0) {
+      // First free live edit
+      setLocalLiveEditsUsed(1);
+      setLiveEditBanner(true);
+      toast.success("1 édition live offerte utilisée !");
+      return;
+    }
+    setPaywallTrigger("live_edit");
+  }
+
+  function handleProductUrl() {
+    if (isExpert) {
+      toast.info("URL produit — fonctionnalité disponible prochainement (coming soon).");
+      return;
+    }
+    setPaywallTrigger("product_url");
+  }
+
+  function handleRestart() {
+    if (isExpert) {
+      router.push("/create");
+      return;
+    }
+    if (user && hasCredits) {
+      router.push("/create");
+      return;
+    }
+    if (!user || (!hasCredits && !isExpert)) {
+      setPaywallTrigger("second_project");
+      return;
+    }
+    router.push("/create");
+  }
+
   return (
-    <div className="flex flex-1 flex-col">
-      <ProgressBar currentStep={5} labels={STEPS} />
+    <>
+      <div className="flex flex-1 flex-col">
+        <ProgressBar currentStep={5} labels={STEPS} />
 
-      <main className="mx-auto w-full max-w-[480px] flex-1 px-5 pb-24 pt-6">
-        {/* Before / After slider */}
-        <BeforeAfterSlider
-          before={beforeUrl}
-          after={afterUrl}
-          initialPos={20}
-          className="rounded-2xl"
-        />
-
-        {/* Segmented tab control */}
-        <div className="relative mt-5 flex rounded-full border border-foyer-border bg-foyer-cream p-1">
-          {/* sliding pill */}
-          <span
-            aria-hidden
-            className="pointer-events-none absolute inset-y-1 rounded-full bg-white shadow-sm transition-transform duration-200 ease-out"
-            style={{
-              width: "calc(50% - 4px)",
-              left: 4,
-              transform: `translateX(${tabIdx * 100}%)`,
-            }}
+        <main className="mx-auto w-full max-w-[480px] flex-1 px-5 pb-24 pt-6">
+          {/* Before / After slider */}
+          <BeforeAfterSlider
+            before={beforeUrl}
+            after={afterUrl}
+            initialPos={20}
+            className="rounded-2xl"
           />
-          {TABS.map((t, i) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTabIdx(i)}
-              className={cn(
-                "relative z-10 flex-1 rounded-full py-1.5 text-[13px] font-medium transition-colors duration-150",
-                tabIdx === i ? "text-foyer-ink" : "text-foyer-muted",
-              )}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
 
-        {/* Sliding content */}
-        <div className="mt-5 overflow-hidden">
-          <div
-            className="flex transition-transform duration-300 ease-out"
-            style={{ transform: `translateX(-${tabIdx * 100}%)` }}
+          {/* Live edit button */}
+          <button
+            type="button"
+            onClick={handleLiveEdit}
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-foyer-border bg-white px-4 py-3 text-[14px] font-medium text-foyer-ink transition-all hover:border-foyer-sage/50 hover:bg-foyer-sage/5"
           >
-            {/* Slide 0 — Liste shopping */}
-            <div className="min-w-full">
-              <ListeShoppingTab
-                shoppingList={shoppingList}
-                alterations={alterationsList}
-              />
+            <Pencil className="size-4 text-foyer-sage" />
+            Édition live — changer un meuble
+            {!isExpert && (
+              <span className="ml-auto rounded-full bg-foyer-sage/15 px-2 py-0.5 text-[11px] font-semibold text-foyer-sage">
+                Expert
+              </span>
+            )}
+          </button>
+
+          {liveEditBanner && (
+            <div className="mt-2 rounded-xl bg-foyer-sage/10 px-4 py-2.5 text-[12px] leading-relaxed text-foyer-sage">
+              1 édition live offerte utilisée.{" "}
+              <button
+                type="button"
+                onClick={() => setPaywallTrigger("live_edit")}
+                className="font-semibold underline underline-offset-2"
+              >
+                Passez Expert pour en faire plus →
+              </button>
             </div>
-            {/* Slide 1 — Score Foyer */}
-            <div className="min-w-full">
-              <ScoreFoyerTab
-                score={scoreFoyer}
-                shoppingList={shoppingList}
-              />
+          )}
+
+          {/* Segmented tab control */}
+          <div className="relative mt-5 flex rounded-full border border-foyer-border bg-foyer-cream p-1">
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-y-1 rounded-full bg-white shadow-sm transition-transform duration-200 ease-out"
+              style={{
+                width: "calc(50% - 4px)",
+                left: 4,
+                transform: `translateX(${tabIdx * 100}%)`,
+              }}
+            />
+            {TABS.map((t, i) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTabIdx(i)}
+                className={cn(
+                  "relative z-10 flex-1 rounded-full py-1.5 text-[13px] font-medium transition-colors duration-150",
+                  tabIdx === i ? "text-foyer-ink" : "text-foyer-muted",
+                )}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+
+          {/* Sliding content */}
+          <div className="mt-5 overflow-hidden">
+            <div
+              className="flex transition-transform duration-300 ease-out"
+              style={{ transform: `translateX(-${tabIdx * 100}%)` }}
+            >
+              {/* Slide 0 — Liste shopping with product URL buttons */}
+              <div className="min-w-full">
+                <EnhancedListeShoppingTab
+                  shoppingList={shoppingList}
+                  alterations={alterationsList}
+                  onProductUrl={handleProductUrl}
+                />
+              </div>
+              {/* Slide 1 — Score Foyer */}
+              <div className="min-w-full">
+                <ScoreFoyerTab
+                  score={scoreFoyer}
+                  shoppingList={shoppingList}
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Actions */}
-        <div className="mt-8 flex flex-col gap-3">
-          <Link
-            href={`/create/${projectId}/iterate`}
-            className="flex h-[52px] w-full items-center justify-center rounded-full border border-foyer-border font-medium text-foyer-ink transition-colors hover:bg-foyer-border/30"
-          >
-            Affiner encore
-          </Link>
-          <Link
-            href="/create"
-            className="flex h-[52px] w-full items-center justify-center rounded-full bg-foyer-sage font-medium text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:-translate-y-0.5"
-          >
-            Recommencer un projet
-          </Link>
-        </div>
-      </main>
+          {/* Actions */}
+          <div className="mt-8 flex flex-col gap-3">
+            <Link
+              href={`/create/${projectId}/iterate`}
+              className="flex h-[52px] w-full items-center justify-center rounded-full border border-foyer-border font-medium text-foyer-ink transition-colors hover:bg-foyer-border/30"
+            >
+              Affiner encore
+            </Link>
+            <button
+              type="button"
+              onClick={handleRestart}
+              className="flex h-[52px] w-full items-center justify-center rounded-full bg-foyer-sage font-medium text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:-translate-y-0.5"
+            >
+              Recommencer un projet
+            </button>
+          </div>
+        </main>
+      </div>
+
+      {paywallTrigger && (
+        <PaywallModal
+          trigger={paywallTrigger}
+          onClose={() => setPaywallTrigger(null)}
+        />
+      )}
+    </>
+  );
+}
+
+// ── Enhanced shopping tab with product URL buttons ────────────────────────────
+function EnhancedListeShoppingTab({
+  shoppingList,
+  alterations,
+  onProductUrl,
+}: {
+  shoppingList: ShoppingItem[];
+  alterations: Alteration[];
+  onProductUrl: () => void;
+}) {
+  // Group shopping items by family
+  const byFamily = new Map<Family, ShoppingItem[]>();
+  for (const item of shoppingList) {
+    const f = toFamily(item.category);
+    if (!byFamily.has(f)) byFamily.set(f, []);
+    byFamily.get(f)!.push(item);
+  }
+
+  const keptByFamily = new Map<Family, Alteration[]>();
+  for (const a of alterations.filter((a) => a.shoppingImpact === "none")) {
+    const f = toFamily(a.category);
+    if (!keptByFamily.has(f)) keptByFamily.set(f, []);
+    keptByFamily.get(f)!.push(a);
+  }
+
+  const activeFamilies = FAMILIES.filter(
+    (f) => (byFamily.get(f)?.length ?? 0) > 0 || (keptByFamily.get(f)?.length ?? 0) > 0,
+  );
+
+  const allUrls = shoppingList
+    .flatMap((i) => i.merchants.map((m) => m.url).filter(Boolean))
+    .slice(0, 20) as string[];
+
+  if (activeFamilies.length === 0) {
+    return (
+      <div className="rounded-2xl border border-foyer-border bg-white px-5 py-8 text-center">
+        <p className="text-[15px] text-foyer-muted">La liste de courses se prépare…</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {activeFamilies.map((family) => {
+        const items = byFamily.get(family) ?? [];
+        const kept = keptByFamily.get(family) ?? [];
+        const matched = items.filter((i) => i.merchants.length > 0);
+        const unmatched = items.filter((i) => i.merchants.length === 0);
+        const count = matched.length + kept.length;
+
+        return (
+          <section key={family}>
+            <SectionLabel>
+              {family} {count > 0 && `(${count})`}
+            </SectionLabel>
+
+            <ul className="flex flex-col gap-3">
+              {matched.map((item) => (
+                <ShoppingItemRow
+                  key={item.id}
+                  item={item}
+                  onProductUrl={onProductUrl}
+                />
+              ))}
+
+              {unmatched.map((item) => (
+                <li
+                  key={item.id}
+                  className="flex items-center gap-3 rounded-xl border border-dashed border-foyer-border bg-white px-4 py-3"
+                >
+                  <span className="size-2 shrink-0 rounded-full bg-foyer-muted/40" aria-hidden />
+                  <span className="text-[14px] capitalize text-foyer-muted">{item.name}</span>
+                  <span className="ml-auto text-[12px] text-foyer-muted">À sourcer</span>
+                </li>
+              ))}
+
+              {kept.map((a) => (
+                <li
+                  key={a.element}
+                  className="flex items-center gap-3 rounded-xl border border-foyer-border bg-white px-4 py-3"
+                >
+                  <span className="size-2 shrink-0 rounded-full bg-foyer-sage" aria-hidden />
+                  <span className="text-[14px] capitalize text-foyer-ink">{a.element}</span>
+                  <span className="ml-auto text-[12px] text-foyer-sage font-medium">Conservé</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })}
+
+      {allUrls.length > 0 && (
+        <button
+          type="button"
+          onClick={() => { for (const url of allUrls) window.open(url, "_blank"); }}
+          className="flex w-full items-center justify-center gap-2 rounded-full border border-foyer-border py-3 text-[14px] font-medium text-foyer-ink transition-colors hover:bg-foyer-border/30"
+        >
+          <ExternalLink className="size-4" aria-hidden />
+          Tout ouvrir ({allUrls.length} liens)
+        </button>
+      )}
     </div>
   );
 }

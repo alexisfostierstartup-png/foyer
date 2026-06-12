@@ -39,11 +39,15 @@ export async function createProject(
   storageFolder: string,
   userId?: string,
   id?: string,
+  anonId?: string,
 ): Promise<Project> {
   const project: Project = {
     id: id ?? nanoid(),
     createdAt: new Date().toISOString(),
     userId,
+    anon_id: anonId,
+    is_saved: false,
+    live_edits_used: 0,
     storageFolder,
     roomType,
     basePhotoUrl,

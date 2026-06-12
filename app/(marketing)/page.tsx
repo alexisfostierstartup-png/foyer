@@ -660,7 +660,23 @@ export default function LandingPage() {
               <p className="mt-3 text-[13px] text-foyer-muted">Conçu en France.</p>
             </div>
             <FooterColumn title="Produit" links={["Comment ça marche", "Tarifs", "FAQ"]} />
-            <FooterColumn title="Éco" links={["Méthodologie", "Partenaires", "Sources"]} />
+            <div>
+              <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-foyer-muted">
+                Plans
+              </p>
+              <ul className="flex flex-col gap-2">
+                <li>
+                  <a href="/features" className="text-[13px] text-foyer-muted transition-colors hover:text-foyer-ink">
+                    Foyer Expert
+                  </a>
+                </li>
+                <li>
+                  <a href="/pro" className="text-[13px] text-foyer-muted transition-colors hover:text-foyer-ink">
+                    Foyer Pro
+                  </a>
+                </li>
+              </ul>
+            </div>
             <FooterColumn title="Légal" links={["CGU", "Privacy", "Mentions"]} />
           </div>
           <div className="mt-10 flex flex-col items-start justify-between gap-4 border-t border-foyer-border/60 pt-6 text-[13px] text-foyer-muted sm:flex-row sm:items-center">

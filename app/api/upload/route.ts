@@ -1,9 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
 import { nanoid } from "nanoid";
 import { createProject, buildStorageFolder, listProjects } from "@/lib/storage/projects";
 import { saveSourceImage } from "@/lib/ai/saveRender";
 import { MAX_UPLOAD_BYTES, UPLOAD_MAX_DIMENSION } from "@/lib/constants";
+import { createClient } from "@/lib/supabase/server";
 import type { RoomType } from "@/lib/types";
 
 const ACCEPTED_TYPES = new Set([
@@ -16,7 +17,7 @@ const ACCEPTED_TYPES = new Set([
 
 const ROOM_TYPES: RoomType[] = ["salon", "chambre"];
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   let formData: FormData;
   try {
     formData = await request.formData();
@@ -46,15 +47,20 @@ export async function POST(request: Request) {
   try {
     const inputBuffer = Buffer.from(await file.arrayBuffer());
 
-    // Auto-orient via EXIF, downscale, normalize to JPEG.
     const outputBuffer = await sharp(inputBuffer)
       .rotate()
       .resize({ width: UPLOAD_MAX_DIMENSION, withoutEnlargement: true })
       .jpeg({ quality: 82 })
       .toBuffer();
 
-    // userId: undefined until auth is wired up
-    const userId: string | undefined = undefined;
+    // Get authenticated user if any
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id;
+
+    // Get or create anon_id
+    const existingAnonId = request.cookies.get("foyer_anon_id")?.value;
+    const anonId = existingAnonId ?? nanoid();
 
     const allProjects = await listProjects();
     const userProjectCount = userId
@@ -64,9 +70,28 @@ export async function POST(request: Request) {
     const projectId = nanoid();
     const storageFolder = buildStorageFolder(userId, userProjectCount);
     const basePhotoUrl = await saveSourceImage(outputBuffer, storageFolder);
-    const project = await createProject(roomType as RoomType, basePhotoUrl, storageFolder, userId, projectId);
+    const project = await createProject(
+      roomType as RoomType,
+      basePhotoUrl,
+      storageFolder,
+      userId,
+      projectId,
+      userId ? undefined : anonId,
+    );
 
-    return NextResponse.json({ projectId: project.id, basePhotoUrl });
+    const res = NextResponse.json({ projectId: project.id, basePhotoUrl });
+
+    // Set anon cookie if not authenticated and not already set
+    if (!userId && !existingAnonId) {
+      res.cookies.set("foyer_anon_id", anonId, {
+        httpOnly: true,
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+        path: "/",
+      });
+    }
+
+    return res;
   } catch (err) {
     console.error("Upload failed", err);
     return NextResponse.json({ error: "Le traitement de la photo a échoué" }, { status: 500 });

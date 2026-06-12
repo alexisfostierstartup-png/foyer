@@ -303,6 +303,102 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          id: string
+          email: string
+          display_name: string | null
+          plan: "neophyte" | "expert" | "pro"
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_status: string | null
+          current_period_end: string | null
+          first_free_used: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          email: string
+          display_name?: string | null
+          plan?: "neophyte" | "expert" | "pro"
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string | null
+          current_period_end?: string | null
+          first_free_used?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          display_name?: string | null
+          plan?: "neophyte" | "expert" | "pro"
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string | null
+          current_period_end?: string | null
+          first_free_used?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      credit_wallet: {
+        Row: {
+          user_id: string
+          balance: number
+          total_purchased: number
+          total_consumed: number
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          balance?: number
+          total_purchased?: number
+          total_consumed?: number
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          balance?: number
+          total_purchased?: number
+          total_consumed?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      credit_transactions: {
+        Row: {
+          id: string
+          user_id: string
+          delta: number
+          reason: string
+          related_project_id: string | null
+          stripe_payment_intent_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          delta: number
+          reason: string
+          related_project_id?: string | null
+          stripe_payment_intent_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          delta?: number
+          reason?: string
+          related_project_id?: string | null
+          stripe_payment_intent_id?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
