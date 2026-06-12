@@ -48,6 +48,51 @@ export type Database = {
         }
         Relationships: []
       }
+      pipeline_logs: {
+        Row: {
+          id: string
+          created_at: string
+          project_id: string
+          event: string
+          step: string | null
+          provider: string | null
+          duration_ms: number | null
+          render_url: string | null
+          audit_pass: boolean | null
+          audit_scores: Json | null
+          audit_issues: Json | null
+          metadata: Json | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          project_id: string
+          event: string
+          step?: string | null
+          provider?: string | null
+          duration_ms?: number | null
+          render_url?: string | null
+          audit_pass?: boolean | null
+          audit_scores?: Json | null
+          audit_issues?: Json | null
+          metadata?: Json | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          project_id?: string
+          event?: string
+          step?: string | null
+          provider?: string | null
+          duration_ms?: number | null
+          render_url?: string | null
+          audit_pass?: boolean | null
+          audit_scores?: Json | null
+          audit_issues?: Json | null
+          metadata?: Json | null
+        }
+        Relationships: []
+      }
       iterations: {
         Row: {
           created_at: string

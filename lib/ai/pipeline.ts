@@ -5,6 +5,7 @@ import { resolvePrompt } from "@/lib/prompts/engine";
 import { loadStyleContext, loadRoomDefaults, formatUserInstructions } from "@/lib/prompts/helpers";
 import { getImageProvider, getVisionProvider } from "./provider";
 import { saveRender } from "./saveRender";
+import { logPipelineEvent } from "./logger";
 import { getProject, updateProject } from "@/lib/storage/projects";
 import type { DetectedFurniture, UserConstraints } from "@/lib/types";
 import { matchAlterationsToCatalog, computeScoreFoyer, type Alteration } from "@/lib/shopping/matcher";
@@ -85,7 +86,15 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
     visionPrompt.resolvedTemplate,
     [sourceImage],
   );
-  console.log(`[pipeline:generate] vision: ${Date.now() - t0}ms`);
+  const visionDuration = Date.now() - t0;
+  console.log(`[pipeline:generate] vision: ${visionDuration}ms`);
+  await logPipelineEvent({
+    project_id: projectId,
+    event: "detection",
+    step: "vision",
+    provider: visionPrompt.prompt.provider,
+    duration_ms: visionDuration,
+  });
 
   const visionOutput = visionResult.parsed;
   const warnings = (visionOutput as { qualityWarnings?: string[] })?.qualityWarnings ?? [];
@@ -102,56 +111,45 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
   const choices = project.userConstraints ? constraintsToChoices(project.userConstraints) : {};
   const userInstructions = await formatUserInstructions(choices);
 
-  // 3. Generation with audit loop (max 3 attempts)
-  const maxAttempts = 3;
-  let lastError: string | null = null;
+  // 3. Generation
+  const genCtx = {
+    styleName,
+    styleMood,
+    roomType: project.roomType,
+    furnitureDefaults,
+    visionJson: JSON.stringify(visionOutput, null, 2),
+    userInstructions,
+  };
 
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    const genCtx = {
-      styleName,
-      styleMood,
-      roomType: project.roomType,
-      furnitureDefaults,
-      visionJson: JSON.stringify(visionOutput, null, 2),
-      userInstructions,
-    };
+  const t1 = Date.now();
+  const genPrompt = await resolvePrompt("gen_wow_generic", genCtx, { strict: false });
+  const genResult = await getImageProvider(genPrompt.prompt.provider).generateFromText(
+    genPrompt.resolvedTemplate,
+    sourceImage,
+  );
+  console.log(`[pipeline:generate] generation: ${Date.now() - t1}ms, ${Math.round(genResult.imageBuffer.length / 1024)}KB`);
 
-    const t1 = Date.now();
-    const genPrompt = await resolvePrompt("gen_wow_generic", genCtx, { strict: false });
-    const genResult = await getImageProvider(genPrompt.prompt.provider).generateFromText(
-      genPrompt.resolvedTemplate,
-      sourceImage,
-    );
-    console.log(`[pipeline:generate] generation attempt ${attempt}: ${Date.now() - t1}ms, ${Math.round(genResult.imageBuffer.length / 1024)}KB`);
+  // NOTE: audit_quality prompt exists but is intentionally not called here.
+  // Audit belongs in a future "finalize" step triggered explicitly by the user,
+  // not at generation time where it costs a Gemini Vision call with no action taken.
 
-    const renderUrl = await saveRender(genResult.imageBuffer, projectId, genResult.mimeType);
+  const renderUrl = await saveRender(genResult.imageBuffer, project.storageFolder, genResult.mimeType, "first-render");
+  const firstRender = project.firstRenderUrl ?? renderUrl;
+  await updateProject(projectId, {
+    generatedRenderUrl: renderUrl,
+    firstRenderUrl: firstRender,
+    iterationCount: 0,
+  });
+  console.log(`[pipeline:generate] done, render: ${renderUrl}`);
 
-    // 4. Audit
-    const t2 = Date.now();
-    const auditPrompt = await resolvePrompt("audit_quality", {}, { strict: false });
-    const auditResult = await getVisionProvider(auditPrompt.prompt.provider).analyze(
-      auditPrompt.resolvedTemplate,
-      [sourceImage, genResult.imageBuffer],
-    );
-    console.log(`[pipeline:generate] audit attempt ${attempt}: ${Date.now() - t2}ms`);
-
-    const audit = auditResult.parsed as { overallPass?: boolean; issues?: string[] } | null;
-    if (!audit || audit.overallPass !== false) {
-      const firstRender = project.firstRenderUrl ?? renderUrl;
-      await updateProject(projectId, {
-        generatedRenderUrl: renderUrl,
-        firstRenderUrl: firstRender,
-        iterationCount: 0,
-      });
-      console.log(`[pipeline:generate] success on attempt ${attempt}, render: ${renderUrl}`);
-      return;
-    }
-
-    lastError = `Audit failed: ${JSON.stringify(audit.issues ?? [])}`;
-    console.warn(`[pipeline:generate] attempt ${attempt}/${maxAttempts} failed audit:`, lastError);
-  }
-
-  throw new Error(`Generation failed after ${maxAttempts} attempts. Last: ${lastError}`);
+  await logPipelineEvent({
+    project_id: projectId,
+    event: "generate",
+    step: "first-render",
+    provider: genResult.providerUsed,
+    duration_ms: genResult.durationMs,
+    render_url: renderUrl,
+  });
 }
 
 export async function runIterationPipeline(
@@ -187,12 +185,23 @@ export async function runIterationPipeline(
   );
   console.log(`[pipeline:iterate] generation: ${Date.now() - t1}ms, ${Math.round(result.imageBuffer.length / 1024)}KB`);
 
-  const resultUrl = await saveRender(result.imageBuffer, projectId, result.mimeType);
+  const step = `iterate_${iterCount + 1}`;
+  const resultUrl = await saveRender(result.imageBuffer, project.storageFolder, result.mimeType, step);
   await updateProject(projectId, {
     generatedRenderUrl: resultUrl,
     iterationCount: iterCount + 1,
   });
   console.log(`[pipeline:iterate] success, render: ${resultUrl}`);
+
+  await logPipelineEvent({
+    project_id: projectId,
+    event: "iterate",
+    step,
+    provider: result.providerUsed,
+    duration_ms: result.durationMs,
+    render_url: resultUrl,
+    metadata: { userRequest },
+  });
 }
 
 export async function extractAlterations(projectId: string): Promise<void> {

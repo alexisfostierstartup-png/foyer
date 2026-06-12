@@ -13,6 +13,17 @@ async function writeAll(projects: Project[]): Promise<void> {
   await writeJson(PROJECTS_FILE, projects);
 }
 
+export function buildStorageFolder(userId: string | undefined, projectCount: number): string {
+  const n = (projectCount + 1).toString().padStart(7, "0");
+  if (userId) {
+    return `${userId}_PR${n}`;
+  }
+  const now = new Date();
+  const date = now.toISOString().slice(0, 10);
+  const time = now.toTimeString().slice(0, 5).replace(":", "-");
+  return `${date}_${time}_UN${n}`;
+}
+
 export async function listProjects(): Promise<Project[]> {
   return readAll();
 }
@@ -25,10 +36,15 @@ export async function getProject(id: string): Promise<Project | null> {
 export async function createProject(
   roomType: RoomType,
   basePhotoUrl: string,
+  storageFolder: string,
+  userId?: string,
+  id?: string,
 ): Promise<Project> {
   const project: Project = {
-    id: nanoid(),
+    id: id ?? nanoid(),
     createdAt: new Date().toISOString(),
+    userId,
+    storageFolder,
     roomType,
     basePhotoUrl,
     selectedStyleId: null,

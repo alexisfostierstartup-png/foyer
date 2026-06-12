@@ -63,6 +63,8 @@ export type ScoreFoyer = {
 export type Project = {
   id: string;
   createdAt: string;
+  userId?: string;
+  storageFolder: string;
   roomType: RoomType;
   basePhotoUrl: string;
   selectedStyleId: string | null;
