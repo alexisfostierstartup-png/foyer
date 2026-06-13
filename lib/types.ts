@@ -52,6 +52,8 @@ export type ShoppingItem = {
   imgUrl?: string;
 };
 
+export type { ElementDecision } from "./diy/types";
+
 export type ScoreFoyer = {
   kept: number;
   secondhand: number;
@@ -87,4 +89,5 @@ export type Project = {
   shoppingList?: ShoppingItem[];
   scoreFoyer?: ScoreFoyer;
   userConstraints: UserConstraints | null;
+  element_decisions?: import("./diy/types").ElementDecision[] | null;
 };

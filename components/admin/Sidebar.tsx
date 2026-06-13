@@ -76,6 +76,11 @@ export function Sidebar() {
           label="Logs"
           onClick={() => setMobileOpen(false)}
         />
+        <NavLink
+          href="/admin/diy-actions"
+          label="Actions DIY"
+          onClick={() => setMobileOpen(false)}
+        />
 
         <div>
           <button

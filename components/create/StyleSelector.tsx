@@ -42,7 +42,7 @@ export function StyleSelector({
         setSubmitting(false);
         return;
       }
-      router.push(`/create/generating?projectId=${projectId}`);
+      router.push(`/create/${projectId}/review`);
     } catch {
       toast.error("Erreur lors de l'enregistrement de l'ambiance");
       setSubmitting(false);

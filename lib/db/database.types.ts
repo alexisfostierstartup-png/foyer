@@ -12,6 +12,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      diy_actions: {
+        Row: {
+          id: string
+          slug: string
+          label: string
+          label_en: string | null
+          applies_to_categories: string[]
+          requires: Json
+          excludes: Json
+          qty_formula: string | null
+          qty_unit: string | null
+          style_affinity: Json
+          supplies_template: Json | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          slug: string
+          label: string
+          label_en?: string | null
+          applies_to_categories?: string[]
+          requires?: Json
+          excludes?: Json
+          qty_formula?: string | null
+          qty_unit?: string | null
+          style_affinity?: Json
+          supplies_template?: Json | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          slug?: string
+          label?: string
+          label_en?: string | null
+          applies_to_categories?: string[]
+          requires?: Json
+          excludes?: Json
+          qty_formula?: string | null
+          qty_unit?: string | null
+          style_affinity?: Json
+          supplies_template?: Json | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       assets: {
         Row: {
           category: string
