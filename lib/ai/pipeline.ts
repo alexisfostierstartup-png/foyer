@@ -6,13 +6,17 @@ import { loadStyleContext, loadRoomDefaults, formatUserInstructions } from "@/li
 import { getImageProvider, getVisionProvider } from "./provider";
 import { saveRender } from "./saveRender";
 import { logPipelineEvent } from "./logger";
+import { withTracking } from "./track";
 import { getProject, updateProject } from "@/lib/storage/projects";
 import type { DetectedFurniture, UserConstraints } from "@/lib/types";
 import { matchAlterationsToCatalog, computeScoreFoyer, type Alteration } from "@/lib/shopping/matcher";
+import { reconcilePlan } from "@/lib/shopping/reconcile";
+import { buildShoppingList, builtToLegacyShoppingList } from "@/lib/shopping/build";
+import type { ApplicationAuditResult, AuditElementResult, ReconciledPlan, BuiltShoppingList } from "@/lib/shopping/types";
 import type { ImageInput } from "./types";
-import { getCandidateActions } from "@/lib/diy/rules";
+import { getAllDiyActions } from "@/lib/diy/rules";
 import { evalQtyFormula, getStandardDims } from "@/lib/diy/quantities";
-import type { ElementProfile, ElementDecision, DiyAction, VerdictsResult } from "@/lib/diy/types";
+import type { ElementProfile, ElementDecision, DiyAction } from "@/lib/diy/types";
 
 async function loadImage(url: string): Promise<ImageInput> {
   if (url.startsWith("/")) {
@@ -73,26 +77,16 @@ function constraintsToChoices(c: UserConstraints) {
   return result;
 }
 
-function parseElementProfiles(visionOutput: unknown): ElementProfile[] {
-  const v = visionOutput as { elementProfiles?: unknown[] } | null;
-  if (!v?.elementProfiles) return [];
-  return (v.elementProfiles as Array<Record<string, unknown>>)
-    .filter((e) => typeof e.element_id === "string")
-    .map((e) => ({
-      element_id: String(e.element_id),
-      element: String(e.element ?? "objet"),
-      category: String(e.category ?? "other"),
-      description: String(e.description ?? ""),
-      material_family: (e.material_family as ElementProfile["material_family"]) ?? "unknown",
-      surface_features: Array.isArray(e.surface_features) ? (e.surface_features as string[]) : [],
-      condition: (e.condition as ElementProfile["condition"]) ?? "good",
-      movable: Boolean(e.movable ?? true),
-      dims: (e.dims as ElementProfile["dims"]) ?? {},
-    }));
-}
+
+type VerdictInput = {
+  element_id: string;
+  mismatch_type: "none" | "surface" | "structural";
+  action_slug: string | null;
+  action_label: string | null;
+};
 
 async function resolveElementDecision(
-  verdict: VerdictsResult["decisions"][number],
+  verdict: VerdictInput,
   profile: ElementProfile,
   actionMap: Map<string, DiyAction>,
 ): Promise<ElementDecision> {
@@ -150,104 +144,113 @@ export async function runAnalysisPipeline(projectId: string): Promise<void> {
 
   const sourceImage = await loadImage(project.basePhotoUrl);
 
-  // 1. Extended vision detection
-  const t0 = Date.now();
-  const visionPrompt = await resolvePrompt("vision_detect_extended", {}, { strict: false });
-  const visionResult = await getVisionProvider(visionPrompt.prompt.provider).analyze(
-    visionPrompt.resolvedTemplate,
-    [sourceImage],
+  // 1. Fetch actions + style context in parallel (no Gemini)
+  const [allActions, { styleName, styleMood }] = await Promise.all([
+    getAllDiyActions(),
+    loadStyleContext(project.selectedStyleId),
+  ]);
+
+  const actionMap = new Map(allActions.map((a) => [a.slug, a]));
+  const allActionsJson = JSON.stringify(
+    allActions.map(({ slug, label, applies_to_categories }) => ({
+      slug,
+      label,
+      applies_to_categories,
+    })),
+    null,
+    2,
   );
-  console.log(`[pipeline:analyze] vision_extended: ${Date.now() - t0}ms`);
+
+  // 2. Single combined detection + verdict call
+  const t0 = Date.now();
+  const prompt = await resolvePrompt(
+    "vision_analyze_full",
+    { styleName, styleMood, allActionsJson },
+    { strict: false },
+  );
+  const result = await withTracking(
+    { step: "verdict", projectId, provider: prompt.prompt.provider },
+    () => getVisionProvider(prompt.prompt.provider).analyze(prompt.resolvedTemplate, [sourceImage]),
+  );
+  console.log(`[pipeline:analyze] vision_and_verdict: ${Date.now() - t0}ms`);
   await logPipelineEvent({
     project_id: projectId,
     event: "detection",
-    step: "vision_extended",
-    provider: visionPrompt.prompt.provider,
+    step: "vision_and_verdict",
+    provider: prompt.prompt.provider,
     duration_ms: Date.now() - t0,
   });
 
-  const profiles = parseElementProfiles(visionResult.parsed);
-  if (profiles.length === 0) {
+  type CombinedElement = {
+    element_id: string;
+    element: string;
+    category: string;
+    description: string;
+    material_family: ElementProfile["material_family"];
+    surface_features: string[];
+    condition: ElementProfile["condition"];
+    movable: boolean;
+    dims?: ElementProfile["dims"];
+    mismatch_type: "none" | "surface" | "structural";
+    action_slug: string | null;
+    action_label: string | null;
+  };
+
+  const parsed = result.parsed as { elements?: CombinedElement[] } | null;
+  const elements = (parsed?.elements ?? []).filter(
+    (e) => typeof e.element_id === "string",
+  );
+
+  if (elements.length === 0) {
     await updateProject(projectId, { element_decisions: [] });
     return;
   }
 
-  // 2. Candidate actions per element
-  const candidateMap: Record<string, DiyAction[]> = {};
-  const actionMap = new Map<string, DiyAction>();
-  await Promise.all(
-    profiles.map(async (p) => {
-      const actions = await getCandidateActions(p, project.selectedStyleId!);
-      candidateMap[p.element_id] = actions;
-      actions.forEach((a) => actionMap.set(a.slug, a));
-    }),
-  );
-
-  // 3. Grouped verdict call
-  const { styleName, styleMood } = await loadStyleContext(project.selectedStyleId);
-  const elementsJson = JSON.stringify(
-    profiles.map(({ element_id, category, description, material_family, surface_features, condition }) => ({
-      element_id, category, description, material_family, surface_features, condition,
-    })),
-    null, 2,
-  );
-  const candidateActionsJson = JSON.stringify(
-    Object.fromEntries(
-      Object.entries(candidateMap).map(([id, actions]) => [
-        id,
-        actions.map(({ slug, label, qty_formula, qty_unit }) => ({ slug, label, qty_formula, qty_unit })),
-      ]),
-    ),
-    null, 2,
-  );
-
-  const t1 = Date.now();
-  const verdictPrompt = await resolvePrompt(
-    "verdict_elements",
-    { styleName, styleMood, elementsJson, candidateActionsJson },
-    { strict: false },
-  );
-  const verdictResult = await getVisionProvider(verdictPrompt.prompt.provider).analyze(
-    verdictPrompt.resolvedTemplate,
-    [sourceImage],
-  );
-  console.log(`[pipeline:analyze] verdict: ${Date.now() - t1}ms`);
-  await logPipelineEvent({
-    project_id: projectId,
-    event: "detection",
-    step: "verdict",
-    provider: verdictPrompt.prompt.provider,
-    duration_ms: Date.now() - t1,
-  });
-
-  const verdictsRaw = verdictResult.parsed as VerdictsResult | null;
-  const verdicts = verdictsRaw?.decisions ?? [];
-
-  // 4. Resolve decisions (qty + supplies)
-  const profileMap = new Map(profiles.map((p) => [p.element_id, p]));
+  // 3. Resolve qty + supplies for surface actions
   const decisions: ElementDecision[] = await Promise.all(
-    verdicts.map(async (v) => {
-      const profile = profileMap.get(v.element_id);
-      if (!profile) {
+    elements.map(async (el) => {
+      if (!el.action_slug || el.mismatch_type !== "surface") {
         return {
-          element_id: v.element_id,
-          description: "",
-          category: "other",
-          mismatch_type: v.mismatch_type,
-          action_slug: v.action_slug,
-          action_label: v.action_label,
+          element_id: el.element_id,
+          description: el.description,
+          category: el.category,
+          mismatch_type: el.mismatch_type,
+          action_slug: el.action_slug ?? null,
+          action_label: el.action_label ?? null,
           qty: null,
           qty_unit: null,
           supply_items: null,
           override: false,
         } satisfies ElementDecision;
       }
-      return resolveElementDecision(v, profile, actionMap);
+
+      const profile: ElementProfile = {
+        element_id: el.element_id,
+        element: el.element,
+        category: el.category,
+        description: el.description,
+        material_family: el.material_family,
+        surface_features: el.surface_features ?? [],
+        condition: el.condition,
+        movable: el.movable,
+        dims: el.dims ?? {},
+      };
+
+      return resolveElementDecision(
+        {
+          element_id: el.element_id,
+          mismatch_type: el.mismatch_type,
+          action_slug: el.action_slug,
+          action_label: el.action_label,
+        },
+        profile,
+        actionMap,
+      );
     }),
   );
 
   await updateProject(projectId, { element_decisions: decisions });
-  console.log(`[pipeline:analyze] saved ${decisions.length} decisions`);
+  console.log(`[pipeline:analyze] saved ${decisions.length} decisions (1 call)`);
 }
 
 export async function runGenerationPipeline(projectId: string): Promise<void> {
@@ -262,9 +265,9 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
   // 1. Vision
   const t0 = Date.now();
   const visionPrompt = await resolvePrompt("vision_detect", {}, { strict: false });
-  const visionResult = await getVisionProvider(visionPrompt.prompt.provider).analyze(
-    visionPrompt.resolvedTemplate,
-    [sourceImage],
+  const visionResult = await withTracking(
+    { step: "vision_detection", projectId, provider: visionPrompt.prompt.provider },
+    () => getVisionProvider(visionPrompt.prompt.provider).analyze(visionPrompt.resolvedTemplate, [sourceImage]),
   );
   const visionDuration = Date.now() - t0;
   console.log(`[pipeline:generate] vision: ${visionDuration}ms`);
@@ -308,9 +311,9 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
 
   const t1 = Date.now();
   const genPrompt = await resolvePrompt("gen_wow_generic", genCtx, { strict: false });
-  const genResult = await getImageProvider(genPrompt.prompt.provider).generateFromText(
-    genPrompt.resolvedTemplate,
-    sourceImage,
+  const genResult = await withTracking(
+    { step: "generation", projectId, provider: genPrompt.prompt.provider },
+    () => getImageProvider(genPrompt.prompt.provider).generateFromText(genPrompt.resolvedTemplate, sourceImage),
   );
   console.log(`[pipeline:generate] generation: ${Date.now() - t1}ms, ${Math.round(genResult.imageBuffer.length / 1024)}KB`);
 
@@ -364,9 +367,9 @@ export async function runIterationPipeline(
     { userRequest },
     { strict: false },
   );
-  const result = await getImageProvider(iterPrompt.prompt.provider).editImage(
-    iterPrompt.resolvedTemplate,
-    parentImage,
+  const result = await withTracking(
+    { step: "iteration", projectId, provider: iterPrompt.prompt.provider },
+    () => getImageProvider(iterPrompt.prompt.provider).editImage(iterPrompt.resolvedTemplate, parentImage),
   );
   console.log(`[pipeline:iterate] generation: ${Date.now() - t1}ms, ${Math.round(result.imageBuffer.length / 1024)}KB`);
 
@@ -399,9 +402,9 @@ export async function extractAlterations(projectId: string): Promise<void> {
 
   const t1 = Date.now();
   const altPrompt = await resolvePrompt("extract_alterations", {}, { strict: false });
-  const result = await getVisionProvider(altPrompt.prompt.provider).analyze(
-    altPrompt.resolvedTemplate,
-    [sourceImage, finalImage],
+  const result = await withTracking(
+    { step: "other", projectId, provider: altPrompt.prompt.provider },
+    () => getVisionProvider(altPrompt.prompt.provider).analyze(altPrompt.resolvedTemplate, [sourceImage, finalImage]),
   );
   console.log(`[pipeline:alterations] extraction: ${Date.now() - t1}ms`);
 
@@ -424,10 +427,132 @@ export async function matchAndSaveShoppingList(projectId: string): Promise<void>
   await updateProject(projectId, { shoppingList, scoreFoyer });
 }
 
+export async function runApplicationAudit(
+  projectId: string,
+): Promise<ApplicationAuditResult | null> {
+  const project = await getProject(projectId);
+  if (!project?.basePhotoUrl || !project?.generatedRenderUrl) return null;
+
+  const auditDecisions = (project.element_decisions ?? []).filter(
+    (d) => d.mismatch_type === "none" || d.mismatch_type === "surface",
+  );
+  if (auditDecisions.length === 0) return { elements: [] };
+
+  const [sourceImage, renderImage] = await Promise.all([
+    loadImage(project.basePhotoUrl),
+    loadImage(project.generatedRenderUrl),
+  ]);
+
+  const decisionsJson = JSON.stringify(
+    auditDecisions.map(({ element_id, description, category, mismatch_type, action_slug, action_label }) => ({
+      element_id, description, category, mismatch_type, action_slug, action_label,
+    })),
+    null,
+    2,
+  );
+
+  const t0 = Date.now();
+  const prompt = await resolvePrompt("audit_application", { decisionsJson }, { strict: false });
+  const result = await withTracking(
+    { step: "audit", projectId, provider: prompt.prompt.provider },
+    () => getVisionProvider(prompt.prompt.provider).analyze(prompt.resolvedTemplate, [sourceImage, renderImage]),
+  );
+
+  await logPipelineEvent({
+    project_id: projectId,
+    event: "audit",
+    step: "application",
+    provider: prompt.prompt.provider,
+    duration_ms: Date.now() - t0,
+  });
+
+  const parsed = result.parsed as { elements?: AuditElementResult[] } | null;
+  const auditResult: ApplicationAuditResult = {
+    elements: (parsed?.elements ?? []).filter((e) => typeof e.element_id === "string"),
+  };
+
+  await updateProject(projectId, { applicationAudit: auditResult });
+  console.log(`[pipeline:audit] application: ${Date.now() - t0}ms, ${auditResult.elements.length} elements`);
+
+  return auditResult;
+}
+
+export async function runFullFinalizePipeline(projectId: string): Promise<void> {
+  let project = await getProject(projectId);
+  if (!project?.generatedRenderUrl) return;
+
+  const allDecisions = (project.element_decisions ?? []) as ElementDecision[];
+
+  // Step 1: Application audit (idempotent)
+  type ProjectExtended = typeof project & {
+    applicationAudit?: ApplicationAuditResult;
+    reconciledPlan?: ReconciledPlan;
+    builtShoppingList?: BuiltShoppingList;
+    repairApplied?: boolean;
+  };
+  let appAudit = (project as ProjectExtended).applicationAudit ?? null;
+  if (!appAudit && allDecisions.length > 0) {
+    appAudit = await runApplicationAudit(projectId);
+    project = await getProject(projectId);
+  }
+
+  // Step 2: Reconcile
+  const repairAlreadyUsed = (project as ProjectExtended).repairApplied ?? false;
+  const plan = reconcilePlan(
+    allDecisions,
+    appAudit ?? { elements: [] },
+    { repairAlreadyUsed },
+  );
+
+  // Step 3: Repair pass (FLUX Kontext — not yet implemented)
+  if (plan.repairQueue.length > 0 && !repairAlreadyUsed) {
+    console.log(
+      `[pipeline:finalize] ${plan.repairQueue.length} items need repair — FLUX Kontext pending, demoting to dropList`,
+    );
+    for (const item of plan.repairQueue) {
+      plan.dropList.push({
+        element_id: item.element_id,
+        description: item.description,
+        action_slug: item.action_slug,
+        action_label: null,
+        reason: "not_applied",
+      });
+    }
+    plan.repairQueue.length = 0;
+  }
+
+  // Step 4: Build shopping list
+  const built = buildShoppingList(plan, project!.selectedStyleId);
+  const legacyList = builtToLegacyShoppingList(built);
+
+  await updateProject(projectId, {
+    reconciledPlan: plan,
+    builtShoppingList: built,
+    shoppingList: legacyList,
+    scoreFoyer: built.score,
+  });
+
+  console.log(
+    `[pipeline:finalize] done — diy=${built.diy.length} sh=${built.secondhand.length} new=${built.ecoNew.length} dropped=${built.dropped.length}`,
+  );
+}
+
 export async function ensureFinalAssets(projectId: string): Promise<void> {
   let project = await getProject(projectId);
   if (!project?.generatedRenderUrl) return;
 
+  // New pipeline: use element_decisions when available.
+  // Also re-run if shoppingList was generated by the old matcher path
+  // (builtShoppingList absent = stale data from before α-14).
+  if (project.element_decisions?.length) {
+    const needsRegen = !project.shoppingList || !(project as { builtShoppingList?: unknown }).builtShoppingList;
+    if (needsRegen) {
+      await runFullFinalizePipeline(projectId);
+    }
+    return;
+  }
+
+  // Legacy fallback for projects without decisions
   if (!project.alterations) {
     await extractAlterations(projectId);
     project = await getProject(projectId);

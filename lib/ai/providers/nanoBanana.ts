@@ -2,6 +2,8 @@ import { getGeminiClient } from "../gemini";
 import { toInlineData } from "../imageInput";
 import type { ImageProvider, ImageInput, GenerationResult } from "../types";
 
+const MODEL = "gemini-2.5-flash-image";
+
 export class NanoBananaProvider implements ImageProvider {
   readonly name = "nano_banana";
 
@@ -11,7 +13,7 @@ export class NanoBananaProvider implements ImageProvider {
   ): Promise<GenerationResult> {
     const start = Date.now();
     const model = getGeminiClient().getGenerativeModel({
-      model: "gemini-2.5-flash-image",
+      model: MODEL,
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -43,12 +45,22 @@ export class NanoBananaProvider implements ImageProvider {
     const mimeType: string = imagePart.inlineData.mimeType;
     const imageBuffer = Buffer.from(imagePart.inlineData.data, "base64");
 
+    const meta = result.response.usageMetadata as
+      | { promptTokenCount?: number }
+      | undefined;
+
     return {
       imageBuffer,
       mimeType,
       rawResponse: result.response,
       providerUsed: this.name,
+      modelUsed: MODEL,
       durationMs: Date.now() - start,
+      usage: {
+        inputTokens: meta?.promptTokenCount,
+        imagesIn: sourceImage ? 1 : 0,
+        imagesOut: 1,
+      },
     };
   }
 

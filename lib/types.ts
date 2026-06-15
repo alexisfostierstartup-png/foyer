@@ -90,4 +90,8 @@ export type Project = {
   scoreFoyer?: ScoreFoyer;
   userConstraints: UserConstraints | null;
   element_decisions?: import("./diy/types").ElementDecision[] | null;
+  applicationAudit?: import("./shopping/types").ApplicationAuditResult;
+  reconciledPlan?: import("./shopping/types").ReconciledPlan;
+  builtShoppingList?: import("./shopping/types").BuiltShoppingList;
+  repairApplied?: boolean;
 };

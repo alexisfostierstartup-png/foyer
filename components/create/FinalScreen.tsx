@@ -455,9 +455,17 @@ function EnhancedListeShoppingTab({
   alterations: Alteration[];
   onProductUrl: () => void;
 }) {
+  // Dedup by id before grouping (guards against stale cached data with duplicate catalog products)
+  const seen = new Set<string>();
+  const dedupedList = shoppingList.filter((item) => {
+    if (seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  });
+
   // Group shopping items by family
   const byFamily = new Map<Family, ShoppingItem[]>();
-  for (const item of shoppingList) {
+  for (const item of dedupedList) {
     const f = toFamily(item.category);
     if (!byFamily.has(f)) byFamily.set(f, []);
     byFamily.get(f)!.push(item);

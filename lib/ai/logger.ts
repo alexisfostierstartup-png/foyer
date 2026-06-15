@@ -10,7 +10,7 @@ export type AuditScores = {
 
 type LogEntry = {
   project_id: string;
-  event: "detection" | "generate" | "audit" | "iterate" | "upload";
+  event: "detection" | "generate" | "audit" | "iterate" | "upload" | "error";
   step?: string;
   provider?: string;
   duration_ms?: number;
@@ -20,6 +20,21 @@ type LogEntry = {
   audit_issues?: string[];
   metadata?: Record<string, unknown> | null;
 };
+
+export async function logPipelineError(
+  projectId: string,
+  step: string,
+  err: unknown,
+): Promise<void> {
+  const error = err instanceof Error ? err.message : String(err);
+  const stack = err instanceof Error ? err.stack : undefined;
+  await logPipelineEvent({
+    project_id: projectId,
+    event: "error",
+    step,
+    metadata: { error, ...(stack ? { stack } : {}) },
+  });
+}
 
 export async function logPipelineEvent(entry: LogEntry): Promise<void> {
   try {

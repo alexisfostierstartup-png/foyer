@@ -132,6 +132,7 @@ export function matchAlterationsToCatalog(
   alterations: Alteration[],
   styleId: string | null,
 ): ShoppingItem[] {
+  const seen = new Set<string>();
   return alterations
     .filter((a) => a.shoppingImpact !== "none")
     .map((a) => {
@@ -144,6 +145,11 @@ export function matchAlterationsToCatalog(
       if (!product) return unmatchedToShoppingItem(a);
 
       return catalogToShoppingItem(product, a);
+    })
+    .filter((item) => {
+      if (seen.has(item.id)) return false;
+      seen.add(item.id);
+      return true;
     });
 }
 

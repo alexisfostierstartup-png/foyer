@@ -46,7 +46,7 @@ export async function detectArchitectureAndFurniture(
   publicImagePath: string,
 ): Promise<DetectionResult> {
   const model = getGeminiClient().getGenerativeModel({
-    model: "gemini-2.5-flash",
+    model: "gemini-2.5-flash-lite",
     generationConfig: { responseMimeType: "application/json" },
   });
 

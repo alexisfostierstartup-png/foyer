@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { runIterationPipeline } from "@/lib/ai/pipeline";
+import { logPipelineError } from "@/lib/ai/logger";
 
 export const maxDuration = 90;
 
@@ -19,6 +20,7 @@ export async function POST(
     return NextResponse.json({ ok: true, projectId: id });
   } catch (err) {
     console.error("[iterate] pipeline error:", err);
+    await logPipelineError(id, "iterate", err);
     const msg = err instanceof Error ? err.message : String(err);
 
     if (/quota|429|too many requests/i.test(msg)) {

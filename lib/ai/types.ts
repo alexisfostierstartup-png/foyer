@@ -5,12 +5,21 @@ export type ImageInput =
   | { storageUrl: string }
   | { base64: string; mimeType: string };
 
+export type UsageMetadata = {
+  inputTokens?: number;
+  outputTokens?: number;
+  imagesIn?: number;
+  imagesOut?: number;
+};
+
 export type GenerationResult = {
   imageBuffer: Buffer;
   mimeType: string;
   rawResponse: unknown;
   providerUsed: string;
+  modelUsed?: string;
   durationMs: number;
+  usage?: UsageMetadata;
 };
 
 export type VisionResult = {
@@ -18,7 +27,9 @@ export type VisionResult = {
   parsed: unknown;
   rawResponse: unknown;
   providerUsed: string;
+  modelUsed?: string;
   durationMs: number;
+  usage?: UsageMetadata;
 };
 
 export interface ImageProvider {

@@ -39,6 +39,19 @@ function matchesExcludes(
   return false;
 }
 
+export async function getAllDiyActions(): Promise<DiyAction[]> {
+  const { data, error } = await createSupabaseAdmin()
+    .from("diy_actions")
+    .select("*")
+    .eq("is_active", true);
+
+  if (error) {
+    console.error("[diy/rules] getAllDiyActions error:", error);
+    return [];
+  }
+  return (data ?? []) as DiyAction[];
+}
+
 export async function getCandidateActions(
   profile: ElementProfile,
   styleId: string,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ElementDecision } from "@/lib/diy/types";
 
@@ -37,9 +37,12 @@ export function ReviewScreen({ projectId, initialDecisions }: Props) {
   const [overrides, setOverrides] = useState<OverrideMap>({});
   const [loading, setLoading] = useState(!initialDecisions);
   const [error, setError] = useState<string | null>(null);
+  const startedRef = useRef(false);
 
   useEffect(() => {
     if (initialDecisions) return;
+    if (startedRef.current) return;
+    startedRef.current = true;
     (async () => {
       setLoading(true);
       try {

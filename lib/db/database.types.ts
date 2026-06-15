@@ -12,6 +12,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_calls: {
+        Row: {
+          id: string
+          project_id: string | null
+          iteration_id: string | null
+          step: string
+          provider: string
+          model: string | null
+          input_tokens: number | null
+          output_tokens: number | null
+          images_in: number
+          images_out: number
+          api_requests: number
+          unit_cost: number | null
+          total_cost: number
+          latency_ms: number | null
+          success: boolean
+          error: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          project_id?: string | null
+          iteration_id?: string | null
+          step: string
+          provider: string
+          model?: string | null
+          input_tokens?: number | null
+          output_tokens?: number | null
+          images_in?: number
+          images_out?: number
+          api_requests?: number
+          unit_cost?: number | null
+          total_cost?: number
+          latency_ms?: number | null
+          success?: boolean
+          error?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string | null
+          iteration_id?: string | null
+          step?: string
+          provider?: string
+          model?: string | null
+          input_tokens?: number | null
+          output_tokens?: number | null
+          images_in?: number
+          images_out?: number
+          api_requests?: number
+          unit_cost?: number | null
+          total_cost?: number
+          latency_ms?: number | null
+          success?: boolean
+          error?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       diy_actions: {
         Row: {
           id: string
