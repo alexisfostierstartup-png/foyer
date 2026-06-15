@@ -49,6 +49,9 @@ export function BarChart({ data }: { data: DayCost[] }) {
   );
 }
 
-function fmtCost(v: number) {
-  return v < 0.01 ? `$${(v * 1000).toFixed(2)}m` : `$${v.toFixed(4)}`;
+const USD_EUR = 0.92;
+
+function fmtCost(usd: number) {
+  const v = usd * USD_EUR;
+  return v < 0.001 ? `${(v * 1000).toFixed(3)} m€` : `${v.toFixed(4)} €`;
 }

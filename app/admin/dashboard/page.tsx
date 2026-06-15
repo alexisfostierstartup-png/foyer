@@ -5,8 +5,17 @@ import { RecentCallsTable } from "./_RecentCallsTable";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function fmtCost(v: number, decimals = 4) {
-  return `$${v.toFixed(decimals)}`;
+const USD_EUR = 0.92; // taux fixe — override via env NEXT_PUBLIC_USD_EUR si besoin
+
+function toEur(usd: number) {
+  return usd * (Number(process.env.NEXT_PUBLIC_USD_EUR) || USD_EUR);
+}
+
+function fmtCost(usd: number, decimals = 4) {
+  const eur = toEur(usd);
+  if (eur === 0) return "0,00 €";
+  if (eur < 0.0001) return `${(eur * 1000).toFixed(3)} m€`;
+  return `${eur.toFixed(decimals)} €`;
 }
 function fmtPct(v: number) {
   return `${v.toFixed(1)} %`;

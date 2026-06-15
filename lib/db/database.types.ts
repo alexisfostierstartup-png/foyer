@@ -546,6 +546,52 @@ export type Database = {
         Update: { name?: string; email?: string | null; phone?: string | null; notes?: string | null }
         Relationships: []
       }
+      ai_pricing: {
+        Row: {
+          id: string
+          provider: string
+          model: string | null
+          per_1m_input_tokens: number | null
+          per_1m_output_tokens: number | null
+          per_image_in: number | null
+          per_image_out: number | null
+          per_request: number | null
+          per_1k_embeddings: number | null
+          notes: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          provider: string
+          model?: string | null
+          per_1m_input_tokens?: number | null
+          per_1m_output_tokens?: number | null
+          per_image_in?: number | null
+          per_image_out?: number | null
+          per_request?: number | null
+          per_1k_embeddings?: number | null
+          notes?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          provider?: string
+          model?: string | null
+          per_1m_input_tokens?: number | null
+          per_1m_output_tokens?: number | null
+          per_image_in?: number | null
+          per_image_out?: number | null
+          per_request?: number | null
+          per_1k_embeddings?: number | null
+          notes?: string | null
+          is_active?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pro_share_links: {
         Row: { id: string; job_id: string; slug: string; client_id: string | null; view_count: number; expires_at: string | null; created_at: string }
         Insert: { id?: string; job_id: string; slug: string; client_id?: string | null; view_count?: number; expires_at?: string | null; created_at?: string }

@@ -7,8 +7,12 @@ import type { RecentCall } from "./_data";
 const STEPS = ["vision_detection","verdict","generation","iteration","audit","repair","embedding","scraping_lbc","matching","other"];
 const PROVIDERS = ["gemini_vision","nano_banana","flux_kontext","jina","piloterr"];
 
-function fmtCost(v: number) {
-  return v === 0 ? "—" : v < 0.001 ? `$${(v * 1000).toFixed(3)}m` : `$${v.toFixed(4)}`;
+const USD_EUR = 0.92;
+
+function fmtCost(usd: number) {
+  const v = usd * USD_EUR;
+  if (usd === 0) return "—";
+  return v < 0.001 ? `${(v * 1000).toFixed(3)} m€` : `${v.toFixed(4)} €`;
 }
 function fmtMs(v: number | null) {
   if (v == null) return "—";
