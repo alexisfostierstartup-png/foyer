@@ -96,9 +96,16 @@ async function resolveElementDecision(
   let supply_items: ElementDecision["supply_items"] = null;
 
   if (action) {
-    const dims: ElementProfile["dims"] = Object.keys(profile.dims).length > 0
-      ? profile.dims
-      : (await getStandardDims(profile.category)) ?? {};
+    // Toujours partir des dimensions standard de la catégorie, puis écraser avec
+    // les mesures RÉELLES estimées par la détection (on ignore null/0). Garantit
+    // un estimatif d'emblée ; l'utilisateur pourra préciser les mesures ensuite.
+    const std = (await getStandardDims(profile.category)) ?? {};
+    const real = Object.fromEntries(
+      Object.entries(profile.dims).filter(
+        ([, v]) => typeof v === "number" && Number.isFinite(v) && v > 0,
+      ),
+    );
+    const dims: ElementProfile["dims"] = { ...std, ...real };
 
     if (action.qty_formula) {
       try {

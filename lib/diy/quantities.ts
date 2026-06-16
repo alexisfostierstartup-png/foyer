@@ -53,8 +53,9 @@ function parseAtom(state: ParseState, dims: ElementDims): number {
   }
   if (t.type === "ident") {
     consume(state);
-    const val = (dims as Record<string, number | undefined>)[t.value];
-    if (val === undefined) {
+    const val = (dims as Record<string, number | null | undefined>)[t.value];
+    if (val == null) {
+      // null inclus : une dimension non estimée ne doit pas se coercer en 0
       throw new Error(`Unknown variable in formula: ${t.value}`);
     }
     return val;
