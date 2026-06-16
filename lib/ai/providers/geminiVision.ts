@@ -4,6 +4,10 @@ import type { VisionProvider, ImageInput, VisionResult } from "../types";
 
 const MODEL = "gemini-2.5-flash-lite";
 
+// Côté long max des images d'ENTRÉE vision. Défaut 0 = pas de redimensionnement
+// (comportement historique). N'affecte que les appels vision, jamais la génération.
+const INPUT_MAX_DIM = Number.parseInt(process.env.INPUT_MAX_DIM ?? "0", 10) || 0;
+
 export class GeminiVisionProvider implements VisionProvider {
   readonly name = "gemini_vision";
 
@@ -17,7 +21,7 @@ export class GeminiVisionProvider implements VisionProvider {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const parts: any[] = [prompt];
     for (const img of images) {
-      parts.push(await toInlineData(img));
+      parts.push(await toInlineData(img, { maxDim: INPUT_MAX_DIM }));
     }
 
     const result = await model.generateContent(parts);
