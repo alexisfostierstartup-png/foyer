@@ -280,20 +280,31 @@ export async function runAnalysisPipeline(projectId: string): Promise<void> {
       let actionSlug = v?.action_slug ?? null;
       let actionLabel = v?.action_label ?? null;
 
-      // Garde-fou déterministe : une action "surface" doit appartenir aux
-      // candidates de l'élément, sinon on la rejette (le modèle ne peut pas en
-      // inventer une hors filtre).
-      if (mismatch === "surface" && actionSlug) {
-        const candSlugs = new Set(
-          (candidatesByElement.get(profile.element_id) ?? []).map((a) => a.slug),
-        );
-        if (!candSlugs.has(actionSlug)) {
-          console.warn(
-            `[pipeline:analyze] verdict hors filtre rejeté: ${profile.element_id} → ${actionSlug} (candidates: ${[...candSlugs].join(",") || "∅"})`,
-          );
-          actionSlug = null;
-          actionLabel = null;
-          mismatch = "none";
+      // Garde-fou déterministe. Une "personnalisation" (surface) n'a de sens que
+      // s'il existe une action DIY applicable :
+      //  - slug valide (dans les candidates) → on garde le choix du modèle ;
+      //  - slug invalide MAIS des candidates existent → fallback sur la meilleure
+      //    candidate déterministe (le modèle voulait customiser, une action existe) ;
+      //  - AUCUNE candidate → l'élément n'est pas customisable (lampe, plante,
+      //    tapis…) : ce n'est pas "surface" mais un remplacement → structural.
+      if (mismatch === "surface") {
+        const cands = candidatesByElement.get(profile.element_id) ?? [];
+        const candSlugs = new Set(cands.map((a) => a.slug));
+        const hasValidAction = actionSlug != null && candSlugs.has(actionSlug);
+        if (!hasValidAction) {
+          if (cands.length === 0) {
+            console.warn(
+              `[pipeline:analyze] surface sans action DIY → structural: ${profile.element_id} (${profile.category})`,
+            );
+            actionSlug = null;
+            mismatch = "structural"; // action_label conservé = description du remplacement
+          } else {
+            console.warn(
+              `[pipeline:analyze] slug verdict invalide '${actionSlug ?? "∅"}' → fallback candidate '${cands[0].slug}': ${profile.element_id}`,
+            );
+            actionSlug = cands[0].slug;
+            actionLabel = actionLabel ?? cands[0].label;
+          }
         }
       }
 
