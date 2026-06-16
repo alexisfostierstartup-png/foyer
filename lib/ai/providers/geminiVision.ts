@@ -16,7 +16,9 @@ export class GeminiVisionProvider implements VisionProvider {
     const start = Date.now();
     const model = getGeminiClient().getGenerativeModel({
       model: MODEL,
-      generationConfig: { responseMimeType: "application/json" },
+      // temperature 0 : la vision (détection/verdict/diff) est analytique, pas
+      // créative → résultats plus consistants et complets (moins d'oublis).
+      generationConfig: { responseMimeType: "application/json", temperature: 0 },
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
