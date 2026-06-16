@@ -1,5 +1,6 @@
 import { getGeminiClient } from "../gemini";
 import { toInlineData } from "../imageInput";
+import { withRetry } from "../retry";
 import type { ImageProvider, ImageInput, GenerationResult } from "../types";
 
 const MODEL = "gemini-2.5-flash-image";
@@ -20,7 +21,7 @@ export class NanoBananaProvider implements ImageProvider {
     const parts: any[] = [prompt];
     if (sourceImage) parts.push(await toInlineData(sourceImage));
 
-    const result = await model.generateContent(parts);
+    const result = await withRetry(() => model.generateContent(parts), { label: `image ${MODEL}` });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const candidates = (result.response.candidates as any[]) ?? [];

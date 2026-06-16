@@ -1,5 +1,6 @@
 import { getGeminiClient } from "../gemini";
 import { toInlineData } from "../imageInput";
+import { withRetry } from "../retry";
 import type { VisionProvider, ImageInput, VisionResult } from "../types";
 
 const MODEL = "gemini-2.5-flash-lite";
@@ -24,7 +25,7 @@ export class GeminiVisionProvider implements VisionProvider {
       parts.push(await toInlineData(img, { maxDim: INPUT_MAX_DIM }));
     }
 
-    const result = await model.generateContent(parts);
+    const result = await withRetry(() => model.generateContent(parts), { label: `vision ${MODEL}` });
     const text = result.response.text();
 
     let parsed: unknown;
