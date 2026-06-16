@@ -59,11 +59,18 @@ async function insertCall(
   try {
     const usage = result?.usage;
     const model = result?.modelUsed ?? null;
+    // Les thinking tokens sont facturés au tarif OUTPUT par Google. Pas de
+    // colonne dédiée dans ai_calls → on les replie dans output_tokens pour que
+    // coût ET total enregistré restent justes (nul sur flash-lite aujourd'hui).
+    const billedOutput =
+      usage?.outputTokens != null || usage?.thinkingTokens != null
+        ? (usage?.outputTokens ?? 0) + (usage?.thinkingTokens ?? 0)
+        : null;
     const totalCost = await computeCost({
       provider: config.provider,
       model,
       inputTokens: usage?.inputTokens,
-      outputTokens: usage?.outputTokens,
+      outputTokens: billedOutput ?? undefined,
       imagesIn: usage?.imagesIn,
       imagesOut: usage?.imagesOut,
     });
@@ -75,7 +82,7 @@ async function insertCall(
       provider: config.provider,
       model,
       input_tokens: usage?.inputTokens ?? null,
-      output_tokens: usage?.outputTokens ?? null,
+      output_tokens: billedOutput,
       images_in: usage?.imagesIn ?? 0,
       images_out: usage?.imagesOut ?? 0,
       total_cost: totalCost,

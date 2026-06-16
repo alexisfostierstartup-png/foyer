@@ -35,7 +35,11 @@ export class GeminiVisionProvider implements VisionProvider {
     }
 
     const meta = result.response.usageMetadata as
-      | { promptTokenCount?: number; candidatesTokenCount?: number }
+      | {
+          promptTokenCount?: number;
+          candidatesTokenCount?: number;
+          thoughtsTokenCount?: number;
+        }
       | undefined;
 
     return {
@@ -48,6 +52,7 @@ export class GeminiVisionProvider implements VisionProvider {
       usage: {
         inputTokens: meta?.promptTokenCount,
         outputTokens: meta?.candidatesTokenCount,
+        thinkingTokens: meta?.thoughtsTokenCount,
         imagesIn: images.length,
       },
       responsePayload: parsed,

@@ -8,6 +8,10 @@ export type ImageInput =
 export type UsageMetadata = {
   inputTokens?: number;
   outputTokens?: number;
+  // Thinking/reasoning tokens (usageMetadata.thoughtsTokenCount). Facturés au
+  // tarif OUTPUT chez Google. Nul sur flash-lite sans thinkingConfig, mais
+  // capté pour ne pas sous-compter si un modèle/réglage les active.
+  thinkingTokens?: number;
   imagesIn?: number;
   imagesOut?: number;
 };
