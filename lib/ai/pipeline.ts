@@ -14,7 +14,7 @@ import { reconcilePlan } from "@/lib/shopping/reconcile";
 import { buildShoppingList, builtToLegacyShoppingList } from "@/lib/shopping/build";
 import type { ApplicationAuditResult, AuditElementResult, ReconciledPlan, BuiltShoppingList } from "@/lib/shopping/types";
 import type { ImageInput } from "./types";
-import { getAllDiyActions } from "@/lib/diy/rules";
+import { getAllDiyActions, getCandidateActions } from "@/lib/diy/rules";
 import { evalQtyFormula, getStandardDims } from "@/lib/diy/quantities";
 import type { ElementProfile, ElementDecision, DiyAction } from "@/lib/diy/types";
 
@@ -145,107 +145,160 @@ export async function runAnalysisPipeline(projectId: string): Promise<void> {
   const sourceImage = await loadImage(project.basePhotoUrl);
 
   // 1. Fetch actions + style context in parallel (no Gemini)
+  const styleId = project.selectedStyleId;
   const [allActions, { styleName, styleMood }] = await Promise.all([
     getAllDiyActions(),
-    loadStyleContext(project.selectedStyleId),
+    loadStyleContext(styleId),
   ]);
-
   const actionMap = new Map(allActions.map((a) => [a.slug, a]));
-  const allActionsJson = JSON.stringify(
-    allActions.map(({ slug, label, applies_to_categories }) => ({
-      slug,
-      label,
-      applies_to_categories,
+
+  // ── 2. APPEL 1 — DÉTECTION (profils par élément, aucun verdict) ────────────
+  const tDet = Date.now();
+  const detPrompt = await resolvePrompt("vision_detect_extended", {}, { strict: false });
+  const detResult = await withTracking(
+    {
+      step: "vision_detection",
+      projectId,
+      provider: detPrompt.prompt.provider,
+      requestPayload: { promptName: "vision_detect_extended" },
+    },
+    () => getVisionProvider(detPrompt.prompt.provider).analyze(detPrompt.resolvedTemplate, [sourceImage]),
+  );
+  console.log(`[pipeline:analyze] detection: ${Date.now() - tDet}ms`);
+  await logPipelineEvent({
+    project_id: projectId,
+    event: "detection",
+    step: "detection",
+    provider: detPrompt.prompt.provider,
+    duration_ms: Date.now() - tDet,
+  });
+
+  type RawProfile = Partial<ElementProfile> & { element_id?: string };
+  const detParsed = detResult.parsed;
+  const rawProfiles: RawProfile[] = Array.isArray(detParsed)
+    ? (detParsed as RawProfile[])
+    : ((detParsed as { elementProfiles?: RawProfile[] } | null)?.elementProfiles ?? []);
+
+  const profiles: ElementProfile[] = rawProfiles
+    .filter((p) => typeof p.element_id === "string")
+    .map((p) => ({
+      element_id: p.element_id!,
+      element: p.element ?? "",
+      category: p.category ?? "other",
+      description: p.description ?? "",
+      material_family: p.material_family ?? "unknown",
+      surface_features: p.surface_features ?? [],
+      condition: p.condition ?? "good",
+      movable: p.movable ?? true,
+      dims: p.dims ?? {},
+    }));
+
+  if (profiles.length === 0) {
+    await updateProject(projectId, { element_decisions: [] });
+    return;
+  }
+
+  // ── 3. FILTRE DÉTERMINISTE — actions candidates par élément ────────────────
+  // getCandidateActions garantit que le verdict ne pourra choisir qu'une action
+  // réellement applicable (catégorie + requires/excludes + affinité style).
+  const candidatesByElement = new Map<string, DiyAction[]>();
+  await Promise.all(
+    profiles.map(async (p) => {
+      candidatesByElement.set(p.element_id, await getCandidateActions(p, styleId));
+    }),
+  );
+
+  const elementsJson = JSON.stringify(
+    profiles.map((p) => ({
+      element_id: p.element_id,
+      element: p.element,
+      category: p.category,
+      description: p.description,
+      material_family: p.material_family,
+      surface_features: p.surface_features,
+      condition: p.condition,
+    })),
+    null,
+    2,
+  );
+  const candidateActionsJson = JSON.stringify(
+    profiles.map((p) => ({
+      element_id: p.element_id,
+      candidates: (candidatesByElement.get(p.element_id) ?? []).map((a) => ({
+        slug: a.slug,
+        label: a.label,
+      })),
     })),
     null,
     2,
   );
 
-  // 2. Single combined detection + verdict call
-  const t0 = Date.now();
-  const prompt = await resolvePrompt(
-    "vision_analyze_full",
-    { styleName, styleMood, allActionsJson },
+  // ── 4. APPEL 2 — VERDICT (keep/customize/replace, parmi les candidates) ────
+  const tVerdict = Date.now();
+  const verdictPrompt = await resolvePrompt(
+    "verdict_elements",
+    { styleName, styleMood, elementsJson, candidateActionsJson },
     { strict: false },
   );
-  const result = await withTracking(
-    { step: "verdict", projectId, provider: prompt.prompt.provider,
-      requestPayload: { promptName: "vision_analyze_full", prompt: prompt.resolvedTemplate.slice(0, 5000) } },
-    () => getVisionProvider(prompt.prompt.provider).analyze(prompt.resolvedTemplate, [sourceImage]),
+  const verdictResult = await withTracking(
+    {
+      step: "verdict",
+      projectId,
+      provider: verdictPrompt.prompt.provider,
+      requestPayload: { promptName: "verdict_elements", prompt: verdictPrompt.resolvedTemplate.slice(0, 5000) },
+    },
+    () => getVisionProvider(verdictPrompt.prompt.provider).analyze(verdictPrompt.resolvedTemplate, [sourceImage]),
   );
-  console.log(`[pipeline:analyze] vision_and_verdict: ${Date.now() - t0}ms`);
+  console.log(`[pipeline:analyze] verdict: ${Date.now() - tVerdict}ms`);
   await logPipelineEvent({
     project_id: projectId,
     event: "detection",
-    step: "vision_and_verdict",
-    provider: prompt.prompt.provider,
-    duration_ms: Date.now() - t0,
+    step: "verdict",
+    provider: verdictPrompt.prompt.provider,
+    duration_ms: Date.now() - tVerdict,
   });
 
-  type CombinedElement = {
+  type VerdictDecision = {
     element_id: string;
-    element: string;
-    category: string;
-    description: string;
-    material_family: ElementProfile["material_family"];
-    surface_features: string[];
-    condition: ElementProfile["condition"];
-    movable: boolean;
-    dims?: ElementProfile["dims"];
     mismatch_type: "none" | "surface" | "structural";
     action_slug: string | null;
     action_label: string | null;
   };
+  const vParsed = verdictResult.parsed;
+  const rawDecisions: VerdictDecision[] = Array.isArray(vParsed)
+    ? (vParsed as VerdictDecision[])
+    : ((vParsed as { decisions?: VerdictDecision[] } | null)?.decisions ?? []);
+  const verdictByElement = new Map(
+    rawDecisions.filter((d) => typeof d?.element_id === "string").map((d) => [d.element_id, d]),
+  );
 
-  // Gemini sometimes returns the array directly instead of { elements: [...] }
-  const parsed = result.parsed;
-  const rawElements: CombinedElement[] = Array.isArray(parsed)
-    ? (parsed as CombinedElement[])
-    : ((parsed as { elements?: CombinedElement[] } | null)?.elements ?? []);
-  const elements = rawElements.filter((e) => typeof e.element_id === "string");
-
-  if (elements.length === 0) {
-    await updateProject(projectId, { element_decisions: [] });
-    return;
-  }
-
-  // 3. Resolve qty + supplies for surface actions
+  // ── 5. Join profil + verdict → décision, en VALIDANT l'action vs candidates ─
   const decisions: ElementDecision[] = await Promise.all(
-    elements.map(async (el) => {
-      if (!el.action_slug || el.mismatch_type !== "surface") {
-        return {
-          element_id: el.element_id,
-          description: el.description,
-          category: el.category,
-          mismatch_type: el.mismatch_type,
-          action_slug: el.action_slug ?? null,
-          action_label: el.action_label ?? null,
-          qty: null,
-          qty_unit: null,
-          supply_items: null,
-          override: false,
-        } satisfies ElementDecision;
+    profiles.map((profile) => {
+      const v = verdictByElement.get(profile.element_id);
+      let mismatch: VerdictDecision["mismatch_type"] = v?.mismatch_type ?? "none";
+      let actionSlug = v?.action_slug ?? null;
+      let actionLabel = v?.action_label ?? null;
+
+      // Garde-fou déterministe : une action "surface" doit appartenir aux
+      // candidates de l'élément, sinon on la rejette (le modèle ne peut pas en
+      // inventer une hors filtre).
+      if (mismatch === "surface" && actionSlug) {
+        const candSlugs = new Set(
+          (candidatesByElement.get(profile.element_id) ?? []).map((a) => a.slug),
+        );
+        if (!candSlugs.has(actionSlug)) {
+          console.warn(
+            `[pipeline:analyze] verdict hors filtre rejeté: ${profile.element_id} → ${actionSlug} (candidates: ${[...candSlugs].join(",") || "∅"})`,
+          );
+          actionSlug = null;
+          actionLabel = null;
+          mismatch = "none";
+        }
       }
 
-      const profile: ElementProfile = {
-        element_id: el.element_id,
-        element: el.element,
-        category: el.category,
-        description: el.description,
-        material_family: el.material_family,
-        surface_features: el.surface_features ?? [],
-        condition: el.condition,
-        movable: el.movable,
-        dims: el.dims ?? {},
-      };
-
       return resolveElementDecision(
-        {
-          element_id: el.element_id,
-          mismatch_type: el.mismatch_type,
-          action_slug: el.action_slug,
-          action_label: el.action_label,
-        },
+        { element_id: profile.element_id, mismatch_type: mismatch, action_slug: actionSlug, action_label: actionLabel },
         profile,
         actionMap,
       );
@@ -253,7 +306,7 @@ export async function runAnalysisPipeline(projectId: string): Promise<void> {
   );
 
   await updateProject(projectId, { element_decisions: decisions });
-  console.log(`[pipeline:analyze] saved ${decisions.length} decisions (1 call)`);
+  console.log(`[pipeline:analyze] saved ${decisions.length} decisions (2 calls: detection + verdict)`);
 }
 
 export async function runGenerationPipeline(projectId: string): Promise<void> {
