@@ -8,7 +8,7 @@ import { saveRender } from "./saveRender";
 import { logPipelineEvent } from "./logger";
 import { withTracking } from "./track";
 import { getProject, updateProject } from "@/lib/storage/projects";
-import type { DetectedFurniture, UserConstraints } from "@/lib/types";
+import type { DetectedFurniture, UserConstraints, Project } from "@/lib/types";
 import { matchAlterationsToCatalog, computeScoreFoyer, type Alteration } from "@/lib/shopping/matcher";
 import { reconcilePlan } from "@/lib/shopping/reconcile";
 import { buildShoppingList, builtToLegacyShoppingList } from "@/lib/shopping/build";
@@ -17,6 +17,19 @@ import type { ImageInput } from "./types";
 import { getAllDiyActions, getCandidateActions } from "@/lib/diy/rules";
 import { evalQtyFormula, getStandardDims } from "@/lib/diy/quantities";
 import type { ElementProfile, ElementDecision, DiyAction } from "@/lib/diy/types";
+
+// Artefacts dérivés de l'audit/finalize (shopping list & co). À invalider dès
+// que le rendu ou les décisions changent, pour que la liste soit recalculée sur
+// l'état courant (sinon elle reste figée : ex. matériel DIY sur une table déjà
+// remplacée, ou liste basée sur un rendu antérieur à l'itération).
+const CLEAR_FINALIZE: Partial<Project> = {
+  applicationAudit: undefined,
+  reconciledPlan: undefined,
+  builtShoppingList: undefined,
+  shoppingList: undefined,
+  scoreFoyer: undefined,
+  alterations: undefined,
+};
 
 async function loadImage(url: string): Promise<ImageInput> {
   if (url.startsWith("/")) {
@@ -201,7 +214,7 @@ export async function runAnalysisPipeline(projectId: string): Promise<void> {
     }));
 
   if (profiles.length === 0) {
-    await updateProject(projectId, { element_decisions: [] });
+    await updateProject(projectId, { element_decisions: [], ...CLEAR_FINALIZE });
     return;
   }
 
@@ -323,7 +336,7 @@ export async function runAnalysisPipeline(projectId: string): Promise<void> {
     }),
   );
 
-  await updateProject(projectId, { element_decisions: decisions });
+  await updateProject(projectId, { element_decisions: decisions, ...CLEAR_FINALIZE });
   console.log(`[pipeline:analyze] saved ${decisions.length} decisions (2 calls: detection + verdict)`);
 }
 
@@ -403,6 +416,7 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
     generatedRenderUrl: renderUrl,
     firstRenderUrl: firstRender,
     iterationCount: 0,
+    ...CLEAR_FINALIZE,
   });
   console.log(`[pipeline:generate] done, render: ${renderUrl}`);
 
@@ -459,6 +473,7 @@ export async function runIterationPipeline(
   await updateProject(projectId, {
     generatedRenderUrl: resultUrl,
     iterationCount: iterCount + 1,
+    ...CLEAR_FINALIZE,
   });
   console.log(`[pipeline:iterate] success, render: ${resultUrl}`);
 
