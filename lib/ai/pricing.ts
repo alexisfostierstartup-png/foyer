@@ -21,14 +21,16 @@ export type PricingEntry = {
 
 // Hardcoded fallback — used only if DB is unavailable
 const DEFAULT_PRICING: Record<string, PricingEntry> = {
+  // NB: pas de per_image_in — sur Gemini 2.5 l'image d'entrée est déjà comptée
+  // dans les tokens d'entrée (promptTokenCount). L'ajouter double-comptait.
   "gemini_vision/gemini-2.5-flash-lite": {
-    per_1m_input_tokens: 0.10, per_1m_output_tokens: 0.40, per_image_in: 0.001316,
+    per_1m_input_tokens: 0.10, per_1m_output_tokens: 0.40,
   },
   "gemini_vision/gemini-2.5-flash": {
     per_1m_input_tokens: 0.30, per_1m_output_tokens: 2.50,
   },
   "nano_banana/gemini-2.5-flash-image": {
-    per_image_out: 0.039, per_image_in: 0.001316, per_1m_input_tokens: 0.10,
+    per_image_out: 0.039, per_1m_input_tokens: 0.30,
   },
   "flux_kontext/flux-kontext-pro": { per_image_out: 0.055 },
   "jina/jina-embeddings-v3": { per_1k_embeddings: 0.00002 },
