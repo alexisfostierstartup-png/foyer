@@ -131,3 +131,37 @@ export async function formatUserInstructions(
   if (lines.length === 0) return "None — use your judgment within the guidance.";
   return lines.join("\n");
 }
+
+/**
+ * Transforme les décisions par élément (après review) en un plan lisible pour
+ * les prompts image (génération + itération). On n'inclut que les éléments
+ * ACTIONNABLES (personnaliser/remplacer) ; les "garder" sont déjà couverts par
+ * la règle d'ancrage du prompt de génération. Retourne "" si rien d'actionnable.
+ */
+export function formatDesignPlan(
+  decisions: Array<{
+    description?: string;
+    category: string;
+    mismatch_type: "none" | "surface" | "structural";
+    action_label?: string | null;
+    qty?: number | null;
+    qty_unit?: string | null;
+  }> | null | undefined,
+): string {
+  if (!decisions?.length) return "";
+  const lines: string[] = [];
+  for (const d of decisions) {
+    const what = (d.description?.trim() || d.category).replace(/\s+/g, " ");
+    if (d.mismatch_type === "surface") {
+      const qty = d.qty && d.qty_unit ? ` (≈ ${d.qty} ${d.qty_unit})` : "";
+      lines.push(
+        `- RESTYLE ${what}: ${d.action_label ?? "personnaliser la finition pour s'accorder au style"}${qty}. Keep its shape, size and position.`,
+      );
+    } else if (d.mismatch_type === "structural") {
+      lines.push(
+        `- REPLACE ${what}: ${d.action_label ?? "remplacer par un équivalent compatible avec le style"}. Same footprint and position, style-matching replacement.`,
+      );
+    }
+  }
+  return lines.join("\n");
+}

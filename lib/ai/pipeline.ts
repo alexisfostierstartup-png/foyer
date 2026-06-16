@@ -2,7 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import { nanoid } from "nanoid";
 import { resolvePrompt } from "@/lib/prompts/engine";
-import { loadStyleContext, loadRoomDefaults, formatUserInstructions } from "@/lib/prompts/helpers";
+import { loadStyleContext, loadRoomDefaults, formatUserInstructions, formatDesignPlan } from "@/lib/prompts/helpers";
 import { getImageProvider, getVisionProvider } from "./provider";
 import { saveRender } from "./saveRender";
 import { logPipelineEvent } from "./logger";
@@ -363,9 +363,9 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
   const userInstructions = await formatUserInstructions(choices);
 
   // 3. Generation
-  const decisionsJson = project.element_decisions?.length
-    ? JSON.stringify(project.element_decisions, null, 2)
-    : undefined;
+  // Plan de design issu des décisions par élément (après review) → injecté dans
+  // le prompt pour que l'image reflète réellement keep/customize/replace.
+  const designPlan = formatDesignPlan(project.element_decisions);
 
   const genCtx = {
     styleName,
@@ -374,7 +374,7 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
     furnitureDefaults,
     visionJson: JSON.stringify(visionOutput, null, 2),
     userInstructions,
-    ...(decisionsJson ? { decisionsJson } : {}),
+    designPlan: designPlan || "None — restyle freely to fit the style.",
   };
 
   const t1 = Date.now();
@@ -430,10 +430,14 @@ export async function runIterationPipeline(
 
   const parentImage = await loadImage(parentUrl);
 
+  // Plan de design (review) à PRÉSERVER pendant l'édition : iterate ne doit pas
+  // défaire les choix keep/customize/replace déjà appliqués au rendu.
+  const designPlan = formatDesignPlan(project.element_decisions);
+
   const t1 = Date.now();
   const iterPrompt = await resolvePrompt(
     "iterate_generic",
-    { userRequest },
+    { userRequest, designPlan: designPlan || "None." },
     { strict: false },
   );
   const result = await withTracking(
