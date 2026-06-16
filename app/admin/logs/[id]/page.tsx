@@ -280,11 +280,29 @@ export default async function LogDetailPage({
                     <p className="text-xs font-medium text-foyer-muted uppercase tracking-wide mb-2">
                       Payload envoyé
                     </p>
-                    {c.request_payload != null ? (
-                      <pre className="text-xs bg-foyer-border/20 rounded-lg px-4 py-3 overflow-x-auto whitespace-pre-wrap break-all max-h-80 overflow-y-auto">
-                        {JSON.stringify(c.request_payload, null, 2)}
-                      </pre>
-                    ) : (
+                    {c.request_payload != null ? (() => {
+                      const p = c.request_payload as Record<string, unknown>;
+                      const { prompt, ...meta } = p;
+                      return (
+                        <div className="space-y-3">
+                          {/* Metadata fields (promptName, decisionsCount, userRequest…) */}
+                          {Object.keys(meta).length > 0 && (
+                            <pre className="text-xs bg-foyer-border/20 rounded-lg px-4 py-3 overflow-x-auto whitespace-pre-wrap break-all">
+                              {JSON.stringify(meta, null, 2)}
+                            </pre>
+                          )}
+                          {/* Prompt text rendered as plain text to avoid \n escaping */}
+                          {typeof prompt === "string" && (
+                            <div>
+                              <p className="text-xs text-foyer-muted mb-1">prompt</p>
+                              <pre className="text-xs bg-foyer-border/20 rounded-lg px-4 py-3 whitespace-pre-wrap break-all max-h-96 overflow-y-auto">
+                                {prompt}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })() : (
                       <p className="text-xs text-foyer-muted italic">
                         Aucun payload — appel antérieur à cette fonctionnalité
                       </p>
