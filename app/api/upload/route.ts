@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
 import { nanoid } from "nanoid";
-import { createProject, buildStorageFolder, listProjects } from "@/lib/storage/projects";
+import { createProject, buildStorageFolder } from "@/lib/storage/projects";
 import { saveSourceImage } from "@/lib/ai/saveRender";
 import { MAX_UPLOAD_BYTES, UPLOAD_MAX_DIMENSION } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
@@ -62,13 +62,8 @@ export async function POST(request: NextRequest) {
     const existingAnonId = request.cookies.get("foyer_anon_id")?.value;
     const anonId = existingAnonId ?? nanoid();
 
-    const allProjects = await listProjects();
-    const userProjectCount = userId
-      ? allProjects.filter((p) => p.userId === userId).length
-      : allProjects.filter((p) => !p.userId).length;
-
     const projectId = nanoid();
-    const storageFolder = buildStorageFolder(userId, userProjectCount);
+    const storageFolder = buildStorageFolder(userId, projectId);
     const basePhotoUrl = await saveSourceImage(outputBuffer, storageFolder);
     const project = await createProject(
       roomType as RoomType,

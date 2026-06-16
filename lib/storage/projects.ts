@@ -5,15 +5,12 @@ import type { Project, RoomType } from "@/lib/types";
 // ── All project state lives in foyer_projects.data (jsonb).
 // ── No filesystem writes — works on Vercel's read-only environment.
 
-export function buildStorageFolder(userId: string | undefined, projectCount: number): string {
-  const n = (projectCount + 1).toString().padStart(7, "0");
-  if (userId) {
-    return `${userId}_PR${n}`;
-  }
-  const now = new Date();
-  const date = now.toISOString().slice(0, 10);
-  const time = now.toTimeString().slice(0, 5).replace(":", "-");
-  return `${date}_${time}_UN${n}`;
+export function buildStorageFolder(userId: string | undefined, projectId: string): string {
+  // Dossier UNIQUE par projet (le projectId est un nanoid unique).
+  // Auparavant basé sur un compteur de projets, qui redescendait à la
+  // suppression d'un projet → un nouveau projet réutilisait le dossier d'un
+  // ancien et écrasait ses médias. Le projectId élimine toute collision.
+  return userId ? `${userId}/${projectId}` : `anon/${projectId}`;
 }
 
 export async function listProjects(): Promise<Project[]> {
