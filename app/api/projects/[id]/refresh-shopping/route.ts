@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getProject, updateProject } from "@/lib/storage/projects";
-import { matchAndSaveShoppingList } from "@/lib/ai/pipeline";
+import { extractAlterations, matchAndSaveShoppingList } from "@/lib/ai/pipeline";
 
 export async function POST(
   _req: Request,
@@ -17,8 +17,10 @@ export async function POST(
   if (!project) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (project.userId !== user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  // Reset existing list so matchAndSaveShoppingList will regenerate
-  await updateProject(id, { shoppingList: undefined, scoreFoyer: undefined });
+  // Reset list ET alterations → re-diff AVANT/APRÈS sur le rendu COURANT,
+  // puis re-match. Garantit une liste exacte vis-à-vis du rendu actuel.
+  await updateProject(id, { shoppingList: undefined, scoreFoyer: undefined, alterations: undefined });
+  await extractAlterations(id);
   await matchAndSaveShoppingList(id);
 
   const updated = await getProject(id);
