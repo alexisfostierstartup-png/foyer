@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { Plus, Trash2, ToggleLeft, ToggleRight, Check, X } from "lucide-react";
+import { useState, useRef } from "react";
+import { Plus, Trash2, ToggleLeft, ToggleRight, Check, X, HelpCircle } from "lucide-react";
 
 type Row = {
   id: string;
@@ -18,16 +17,82 @@ type Row = {
   is_active: boolean;
 };
 
-type EditCell = { id: string; field: string; value: string };
+// ── What each provider/model does in the pipeline ─────────────────────────────
 
-const PRICE_FIELDS: { key: keyof Row; label: string; hint: string }[] = [
-  { key: "per_1m_input_tokens",  label: "$/1M in",   hint: "tokens input" },
-  { key: "per_1m_output_tokens", label: "$/1M out",  hint: "tokens output" },
-  { key: "per_image_in",         label: "$/img in",  hint: "par image source" },
-  { key: "per_image_out",        label: "$/img out", hint: "par image générée" },
-  { key: "per_request",          label: "$/req",     hint: "par requête" },
-  { key: "per_1k_embeddings",    label: "$/1k emb",  hint: "embeddings" },
+const USAGE_MAP: Record<string, string> = {
+  "gemini_vision/gemini-2.5-flash-lite":  "Analyse photo + décisions DIY (vision_analyze_full, audit_application, extract_alterations)",
+  "gemini_vision/gemini-2.5-flash":       "Vision/texte avec thinking — modèle legacy, remplacé par flash-lite",
+  "nano_banana/gemini-2.5-flash-image":   "Génération et édition de rendus déco (première génération + itérations)",
+  "flux_kontext/flux-kontext-pro":        "Réparation ciblée de zones sur le rendu (repair pass — pas encore actif)",
+  "jina/jina-embeddings-v3":             "Embeddings sémantiques pour le matching catalogue produits",
+  "piloterr/scraper":                    "Scraping LBC / marketplaces secondhand pour sourcing produits",
+};
+
+function getUsage(provider: string, model: string | null): string {
+  const key = model ? `${provider}/${model}` : provider;
+  return USAGE_MAP[key] ?? "—";
+}
+
+// ── Pricing column definitions ─────────────────────────────────────────────────
+
+const PRICE_FIELDS: { key: keyof Row; label: string; tooltip: string }[] = [
+  {
+    key: "per_1m_input_tokens",
+    label: "$/1M in",
+    tooltip: "Coût par million de tokens en entrée (prompt texte + images converties en tokens). Ex : Gemini Flash Lite = $0,10 / 1M tokens.",
+  },
+  {
+    key: "per_1m_output_tokens",
+    label: "$/1M out",
+    tooltip: "Coût par million de tokens générés en sortie (texte ou JSON). Ex : Gemini Flash Lite = $0,40 / 1M tokens.",
+  },
+  {
+    key: "per_image_in",
+    label: "$/img in",
+    tooltip: "Coût par image envoyée au modèle (image source, rendu…). Certains APIs facturent les images séparément des tokens.",
+  },
+  {
+    key: "per_image_out",
+    label: "$/img out",
+    tooltip: "Coût par image générée. Principal levier de coût pour nano_banana (génération de rendus). Ex : Gemini Flash Image = $0,039 / image.",
+  },
+  {
+    key: "per_request",
+    label: "$/req",
+    tooltip: "Coût fixe par requête API, indépendamment du volume. Utilisé pour le scraping (Piloterr). Ex : $0,001 / page scrapée.",
+  },
+  {
+    key: "per_1k_embeddings",
+    label: "$/1k emb",
+    tooltip: "Coût par tranche de 1 000 vecteurs d'embeddings générés. Utilisé pour le matching sémantique catalogue (Jina). Ex : $0,00002 / 1k.",
+  },
 ];
+
+// ── Tooltip component ─────────────────────────────────────────────────────────
+
+function Tooltip({ text }: { text: string }) {
+  return (
+    <span className="group relative inline-flex items-center ml-1 cursor-help">
+      <HelpCircle size={11} className="text-foyer-muted/60 group-hover:text-foyer-muted transition-colors" />
+      <span
+        className="
+          pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2
+          w-64 rounded-lg border border-foyer-border bg-white px-3 py-2
+          text-xs text-foyer-ink leading-relaxed shadow-lg
+          opacity-0 group-hover:opacity-100
+          transition-opacity duration-150 z-50
+          whitespace-normal text-left
+        "
+      >
+        {/* Arrow */}
+        <span className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-foyer-border" />
+        {text}
+      </span>
+    </span>
+  );
+}
+
+// ── Numeric inline-edit cell ──────────────────────────────────────────────────
 
 function fmt(v: number | null): string {
   if (v == null) return "—";
@@ -50,27 +115,20 @@ function NumCell({
     setEditing(true);
     setTimeout(() => inputRef.current?.select(), 0);
   }
-
-  function commit() {
-    setEditing(false);
-    onSave(rowId, field, draft);
-  }
-
-  function cancel() {
-    setEditing(false);
-  }
+  function commit() { setEditing(false); onSave(rowId, field, draft); }
+  function cancel() { setEditing(false); }
 
   if (!editing) {
     return (
       <button
         onClick={startEdit}
-        className="w-full text-right font-mono text-xs text-foyer-ink hover:bg-foyer-border/30 rounded px-1 py-0.5 transition-colors"
+        title="Cliquer pour éditer"
+        className="w-full text-right font-mono text-xs text-foyer-ink hover:bg-amber-50 hover:text-amber-700 rounded px-1 py-0.5 transition-colors"
       >
         {fmt(value)}
       </button>
     );
   }
-
   return (
     <div className="flex items-center gap-0.5">
       <input
@@ -87,6 +145,8 @@ function NumCell({
   );
 }
 
+// ── Main component ────────────────────────────────────────────────────────────
+
 const EMPTY_NEW: Omit<Row, "id" | "is_active"> = {
   provider: "", model: "", notes: "",
   per_1m_input_tokens: null, per_1m_output_tokens: null,
@@ -95,16 +155,13 @@ const EMPTY_NEW: Omit<Row, "id" | "is_active"> = {
 };
 
 export function AiPricingAdmin({ rows: initial }: { rows: Row[] }) {
-  const router = useRouter();
   const [rows, setRows] = useState(initial);
-  const [, startTransition] = useTransition();
   const [adding, setAdding] = useState(false);
   const [newRow, setNewRow] = useState<typeof EMPTY_NEW>({ ...EMPTY_NEW });
 
   async function saveCell(id: string, field: string, val: string) {
     const numeric = val === "" ? null : Number(val);
     const body: Record<string, unknown> = { [field]: isNaN(numeric as number) ? null : numeric };
-
     const res = await fetch(`/api/admin/ai-pricing/${id}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -135,7 +192,6 @@ export function AiPricingAdmin({ rows: initial }: { rows: Row[] }) {
   async function createRow() {
     if (!newRow.provider) return;
     const body: Record<string, unknown> = { ...newRow, is_active: true };
-    // Convert string price fields to numbers
     for (const { key } of PRICE_FIELDS) {
       const v = body[key];
       body[key] = v === "" || v == null ? null : Number(v);
@@ -158,7 +214,8 @@ export function AiPricingAdmin({ rows: initial }: { rows: Row[] }) {
         <div>
           <h1 className="font-serif text-2xl text-foyer-ink">Pricing modèles IA</h1>
           <p className="text-sm text-foyer-muted mt-1">
-            Prix en USD — rechargés depuis la DB toutes les 5 min. Cliquer sur un prix pour l'éditer.
+            Prix en USD — rechargés depuis la DB toutes les 5 min.{" "}
+            <span className="text-foyer-ink/60">Cliquer sur un prix pour l'éditer.</span>
           </p>
         </div>
         <button
@@ -174,26 +231,37 @@ export function AiPricingAdmin({ rows: initial }: { rows: Row[] }) {
         <table className="w-full text-sm">
           <thead className="bg-foyer-border/40 text-xs text-foyer-muted">
             <tr>
+              {/* Usage column */}
+              <th className="px-4 py-2.5 text-left font-medium w-64">Usage pipeline</th>
               <th className="px-4 py-2.5 text-left font-medium">Provider</th>
               <th className="px-4 py-2.5 text-left font-medium">Modèle</th>
               {PRICE_FIELDS.map((f) => (
-                <th key={f.key} className="px-3 py-2.5 text-right font-medium" title={f.hint}>
-                  {f.label}
+                <th key={f.key} className="px-3 py-2.5 text-right font-medium whitespace-nowrap">
+                  <span className="inline-flex items-center justify-end gap-0.5">
+                    {f.label}
+                    <Tooltip text={f.tooltip} />
+                  </span>
                 </th>
               ))}
               <th className="px-4 py-2.5 text-left font-medium">Notes</th>
               <th className="px-3 py-2.5 text-center font-medium">Actif</th>
-              <th className="px-3 py-2.5" />
+              <th className="px-3 py-2.5 w-8" />
             </tr>
           </thead>
           <tbody className="divide-y divide-foyer-border/50">
             {rows.map((row) => (
               <tr
                 key={row.id}
-                className={`group transition-colors hover:bg-foyer-border/10 ${!row.is_active ? "opacity-50" : ""}`}
+                className={`group transition-colors hover:bg-foyer-border/10 ${!row.is_active ? "opacity-40" : ""}`}
               >
-                <td className="px-4 py-2 font-mono text-xs text-foyer-ink">{row.provider}</td>
-                <td className="px-4 py-2 font-mono text-xs text-foyer-muted">{row.model ?? "—"}</td>
+                {/* Usage */}
+                <td className="px-4 py-2 text-xs text-foyer-muted max-w-[260px]">
+                  <span className="line-clamp-2 leading-snug" title={getUsage(row.provider, row.model)}>
+                    {getUsage(row.provider, row.model)}
+                  </span>
+                </td>
+                <td className="px-4 py-2 font-mono text-xs text-foyer-ink whitespace-nowrap">{row.provider}</td>
+                <td className="px-4 py-2 font-mono text-xs text-foyer-muted whitespace-nowrap">{row.model ?? "—"}</td>
                 {PRICE_FIELDS.map((f) => (
                   <td key={f.key} className="px-3 py-1">
                     <NumCell
@@ -204,7 +272,7 @@ export function AiPricingAdmin({ rows: initial }: { rows: Row[] }) {
                     />
                   </td>
                 ))}
-                <td className="px-4 py-2 text-xs text-foyer-muted max-w-[180px] truncate">
+                <td className="px-4 py-2 text-xs text-foyer-muted max-w-[160px] truncate">
                   {row.notes ?? ""}
                 </td>
                 <td className="px-3 py-2 text-center">
@@ -225,9 +293,10 @@ export function AiPricingAdmin({ rows: initial }: { rows: Row[] }) {
               </tr>
             ))}
 
-            {/* Add new row */}
             {adding && (
               <tr className="bg-foyer-border/20">
+                {/* Usage — auto-filled, not editable */}
+                <td className="px-4 py-2 text-xs text-foyer-muted italic">auto</td>
                 <td className="px-4 py-2">
                   <input
                     value={newRow.provider}
@@ -249,7 +318,7 @@ export function AiPricingAdmin({ rows: initial }: { rows: Row[] }) {
                     <input
                       type="number"
                       step="any"
-                      placeholder="0"
+                      placeholder="—"
                       className="w-20 text-right font-mono text-xs border border-foyer-border rounded px-1 py-1 focus:outline-none focus:ring-1 focus:ring-foyer-ink"
                       onChange={(e) =>
                         setNewRow((p) => ({
@@ -271,10 +340,7 @@ export function AiPricingAdmin({ rows: initial }: { rows: Row[] }) {
                 <td />
                 <td className="px-3 py-2">
                   <div className="flex gap-1">
-                    <button
-                      onClick={createRow}
-                      className="text-emerald-600 hover:text-emerald-700"
-                    >
+                    <button onClick={createRow} className="text-emerald-600 hover:text-emerald-700">
                       <Check size={16} />
                     </button>
                     <button
@@ -292,7 +358,7 @@ export function AiPricingAdmin({ rows: initial }: { rows: Row[] }) {
       </div>
 
       <p className="text-xs text-foyer-muted mt-3">
-        Tous les prix sont en USD. Le cache serveur est invalidé à chaque modification.
+        Tous les prix sont en USD. Le cache serveur est invalidé à chaque modification (rechargement au prochain appel IA).
       </p>
     </div>
   );

@@ -12,6 +12,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      foyer_projects: {
+        Row: {
+          id: string
+          user_id: string | null
+          anon_id: string | null
+          created_at: string
+          updated_at: string
+          data: Json
+        }
+        Insert: {
+          id: string
+          user_id?: string | null
+          anon_id?: string | null
+          created_at?: string
+          updated_at?: string
+          data: Json
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          anon_id?: string | null
+          created_at?: string
+          updated_at?: string
+          data?: Json
+        }
+        Relationships: []
+      }
       ai_calls: {
         Row: {
           id: string
@@ -30,6 +57,8 @@ export type Database = {
           latency_ms: number | null
           success: boolean
           error: string | null
+          request_payload: Json | null
+          response_payload: Json | null
           created_at: string
         }
         Insert: {
@@ -49,6 +78,8 @@ export type Database = {
           latency_ms?: number | null
           success?: boolean
           error?: string | null
+          request_payload?: Json | null
+          response_payload?: Json | null
           created_at?: string
         }
         Update: {
@@ -68,6 +99,8 @@ export type Database = {
           latency_ms?: number | null
           success?: boolean
           error?: string | null
+          request_payload?: Json | null
+          response_payload?: Json | null
           created_at?: string
         }
         Relationships: []

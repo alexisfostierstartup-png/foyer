@@ -19,12 +19,14 @@ export type TrackingConfig = {
   projectId?: string | null;
   iterationId?: string | null;
   provider: string;
+  requestPayload?: unknown;
 };
 
 type TrackableResult = {
   durationMs: number;
   modelUsed?: string;
   usage?: UsageMetadata;
+  responsePayload?: unknown;
 };
 
 export async function withTracking<T extends TrackableResult>(
@@ -80,6 +82,10 @@ async function insertCall(
       latency_ms: result?.durationMs ?? null,
       success,
       error: error ?? null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      request_payload: config.requestPayload != null ? (config.requestPayload as any) : null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      response_payload: result?.responsePayload != null ? (result.responsePayload as any) : null,
     });
   } catch (err) {
     console.error("[track] failed to insert ai_call:", err instanceof Error ? err.message : err);

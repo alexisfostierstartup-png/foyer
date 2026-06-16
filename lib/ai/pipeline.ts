@@ -169,7 +169,8 @@ export async function runAnalysisPipeline(projectId: string): Promise<void> {
     { strict: false },
   );
   const result = await withTracking(
-    { step: "verdict", projectId, provider: prompt.prompt.provider },
+    { step: "verdict", projectId, provider: prompt.prompt.provider,
+      requestPayload: { promptName: "vision_analyze_full", prompt: prompt.resolvedTemplate.slice(0, 5000) } },
     () => getVisionProvider(prompt.prompt.provider).analyze(prompt.resolvedTemplate, [sourceImage]),
   );
   console.log(`[pipeline:analyze] vision_and_verdict: ${Date.now() - t0}ms`);
@@ -196,10 +197,12 @@ export async function runAnalysisPipeline(projectId: string): Promise<void> {
     action_label: string | null;
   };
 
-  const parsed = result.parsed as { elements?: CombinedElement[] } | null;
-  const elements = (parsed?.elements ?? []).filter(
-    (e) => typeof e.element_id === "string",
-  );
+  // Gemini sometimes returns the array directly instead of { elements: [...] }
+  const parsed = result.parsed;
+  const rawElements: CombinedElement[] = Array.isArray(parsed)
+    ? (parsed as CombinedElement[])
+    : ((parsed as { elements?: CombinedElement[] } | null)?.elements ?? []);
+  const elements = rawElements.filter((e) => typeof e.element_id === "string");
 
   if (elements.length === 0) {
     await updateProject(projectId, { element_decisions: [] });
@@ -266,7 +269,8 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
   const t0 = Date.now();
   const visionPrompt = await resolvePrompt("vision_detect", {}, { strict: false });
   const visionResult = await withTracking(
-    { step: "vision_detection", projectId, provider: visionPrompt.prompt.provider },
+    { step: "vision_detection", projectId, provider: visionPrompt.prompt.provider,
+      requestPayload: { promptName: "vision_detect", prompt: visionPrompt.resolvedTemplate.slice(0, 5000) } },
     () => getVisionProvider(visionPrompt.prompt.provider).analyze(visionPrompt.resolvedTemplate, [sourceImage]),
   );
   const visionDuration = Date.now() - t0;
@@ -312,7 +316,8 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
   const t1 = Date.now();
   const genPrompt = await resolvePrompt("gen_wow_generic", genCtx, { strict: false });
   const genResult = await withTracking(
-    { step: "generation", projectId, provider: genPrompt.prompt.provider },
+    { step: "generation", projectId, provider: genPrompt.prompt.provider,
+      requestPayload: { promptName: "gen_wow_generic", prompt: genPrompt.resolvedTemplate.slice(0, 5000) } },
     () => getImageProvider(genPrompt.prompt.provider).generateFromText(genPrompt.resolvedTemplate, sourceImage),
   );
   console.log(`[pipeline:generate] generation: ${Date.now() - t1}ms, ${Math.round(genResult.imageBuffer.length / 1024)}KB`);
@@ -368,7 +373,8 @@ export async function runIterationPipeline(
     { strict: false },
   );
   const result = await withTracking(
-    { step: "iteration", projectId, provider: iterPrompt.prompt.provider },
+    { step: "iteration", projectId, provider: iterPrompt.prompt.provider,
+      requestPayload: { promptName: "iterate_generic", userRequest, prompt: iterPrompt.resolvedTemplate.slice(0, 5000) } },
     () => getImageProvider(iterPrompt.prompt.provider).editImage(iterPrompt.resolvedTemplate, parentImage),
   );
   console.log(`[pipeline:iterate] generation: ${Date.now() - t1}ms, ${Math.round(result.imageBuffer.length / 1024)}KB`);
@@ -403,7 +409,8 @@ export async function extractAlterations(projectId: string): Promise<void> {
   const t1 = Date.now();
   const altPrompt = await resolvePrompt("extract_alterations", {}, { strict: false });
   const result = await withTracking(
-    { step: "other", projectId, provider: altPrompt.prompt.provider },
+    { step: "other", projectId, provider: altPrompt.prompt.provider,
+      requestPayload: { promptName: "extract_alterations", prompt: altPrompt.resolvedTemplate.slice(0, 5000) } },
     () => getVisionProvider(altPrompt.prompt.provider).analyze(altPrompt.resolvedTemplate, [sourceImage, finalImage]),
   );
   console.log(`[pipeline:alterations] extraction: ${Date.now() - t1}ms`);
@@ -454,7 +461,8 @@ export async function runApplicationAudit(
   const t0 = Date.now();
   const prompt = await resolvePrompt("audit_application", { decisionsJson }, { strict: false });
   const result = await withTracking(
-    { step: "audit", projectId, provider: prompt.prompt.provider },
+    { step: "audit", projectId, provider: prompt.prompt.provider,
+      requestPayload: { promptName: "audit_application", decisionsCount: auditDecisions.length, prompt: prompt.resolvedTemplate.slice(0, 5000) } },
     () => getVisionProvider(prompt.prompt.provider).analyze(prompt.resolvedTemplate, [sourceImage, renderImage]),
   );
 

@@ -30,6 +30,7 @@ export type VisionResult = {
   modelUsed?: string;
   durationMs: number;
   usage?: UsageMetadata;
+  responsePayload?: unknown;
 };
 
 export interface ImageProvider {

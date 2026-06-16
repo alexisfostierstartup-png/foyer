@@ -46,6 +46,7 @@ export class GeminiVisionProvider implements VisionProvider {
         outputTokens: meta?.candidatesTokenCount,
         imagesIn: images.length,
       },
+      responsePayload: parsed,
     };
   }
 }
