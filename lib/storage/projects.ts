@@ -6,11 +6,17 @@ import type { Project, RoomType } from "@/lib/types";
 // ── No filesystem writes — works on Vercel's read-only environment.
 
 export function buildStorageFolder(userId: string | undefined, projectId: string): string {
-  // Dossier UNIQUE par projet (le projectId est un nanoid unique).
-  // Auparavant basé sur un compteur de projets, qui redescendait à la
-  // suppression d'un projet → un nouveau projet réutilisait le dossier d'un
-  // ancien et écrasait ses médias. Le projectId élimine toute collision.
-  return userId ? `${userId}/${projectId}` : `anon/${projectId}`;
+  // Lisible (triable par date) ET unique. Le suffixe projectId (nanoid) garantit
+  // zéro collision : auparavant un compteur (UN/PR + n) redescendait à la
+  // suppression d'un projet → réutilisation du dossier d'un ancien → médias
+  // écrasés. Le projectId élimine ce risque tout en gardant un nom lisible.
+  const now = new Date();
+  const date = now.toISOString().slice(0, 10); // 2026-06-16
+  const time = now.toTimeString().slice(0, 5).replace(":", "-"); // 20-35
+  const stamp = `${date}_${time}`;
+  return userId
+    ? `${userId}/${stamp}_${projectId}`
+    : `${stamp}_UN_${projectId}`;
 }
 
 export async function listProjects(): Promise<Project[]> {
