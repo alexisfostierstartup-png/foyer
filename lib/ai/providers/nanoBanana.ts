@@ -13,11 +13,11 @@ export class NanoBananaProvider implements ImageProvider {
     sourceImage?: ImageInput,
   ): Promise<GenerationResult> {
     const start = Date.now();
-    // temperature basse → le modèle suit plus littéralement le plan (REPLACE,
-    // positions luminaires…) et disperse moins entre deux générations.
+    // temperature 0 → suivi le plus littéral possible du plan (REPLACE, positions
+    // luminaires…) et dispersion minimale entre deux générations.
     const model = getGeminiClient().getGenerativeModel({
       model: MODEL,
-      generationConfig: { temperature: 0.25 },
+      generationConfig: { temperature: 0 },
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
