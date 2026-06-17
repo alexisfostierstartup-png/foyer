@@ -515,26 +515,22 @@ export async function runIterationPipeline(
   if (!project.generatedRenderUrl) throw new Error("No render to iterate on");
 
   const iterCount = project.iterationCount ?? 0;
-  const shouldRebase = iterCount >= 2 && iterCount % 2 === 0;
-  const parentUrl =
-    shouldRebase && project.firstRenderUrl
-      ? project.firstRenderUrl
-      : project.generatedRenderUrl;
-
-  console.log(
-    `[pipeline:iterate] iter=${iterCount}, rebase=${shouldRebase}, parent=${parentUrl}`,
-  );
+  // On édite TOUJOURS le rendu courant (plus de "rebase" vers le 1er rendu, qui
+  // faisait perdre les itérations précédentes). Chaque édition part de l'image à
+  // jour → les changements déjà appliqués sont préservés.
+  const parentUrl = project.generatedRenderUrl;
+  console.log(`[pipeline:iterate] iter=${iterCount}, parent=${parentUrl}`);
 
   const parentImage = await loadImage(parentUrl);
 
-  // Plan de design (review) à PRÉSERVER pendant l'édition : iterate ne doit pas
-  // défaire les choix keep/customize/replace déjà appliqués au rendu.
-  const designPlan = formatDesignPlan(project.element_decisions);
-
   const t1 = Date.now();
+  // PAS de design plan ici : l'image rendue EST l'état établi. Le ré-injecter
+  // pousserait le modèle à RE-exécuter les REPLACE (il re-dessine le canapé
+  // d'origine, change des lampes non demandées). On préserve l'image telle quelle
+  // et on n'applique QUE userRequest.
   const iterPrompt = await resolvePrompt(
     "iterate_generic",
-    { userRequest, designPlan: designPlan || "None." },
+    { userRequest },
     { strict: false },
   );
   const result = await withTracking(
