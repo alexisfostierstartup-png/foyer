@@ -780,7 +780,7 @@ async function confirmChanges(
   projectId: string,
   candidates: ElementDecision[],
   composite: ImageInput,
-): Promise<{ appliedIds: Set<string>; additions: Alteration[]; afterById: Map<string, string> }> {
+): Promise<{ appliedIds: Set<string>; judgedIds: Set<string>; additions: Alteration[]; afterById: Map<string, string> }> {
   const candidatesJson = JSON.stringify(
     candidates.map((d) => ({
       element_id: d.element_id,
@@ -814,11 +814,13 @@ async function confirmChanges(
   } | null;
 
   const appliedIds = new Set<string>();
+  const judgedIds = new Set<string>(); // éléments explicitement jugés par l'audit
   // Description de l'APRÈS par élément → la liste de courses reflète ce que
   // l'élément est DEVENU dans le rendu (ex. tapis bleu/jaune), pas l'original.
   const afterById = new Map<string, string>();
   for (const r of parsed?.results ?? []) {
     if (typeof r.element_id !== "string") continue;
+    judgedIds.add(r.element_id);
     if (r.applied) appliedIds.add(r.element_id);
     if (r.after && r.after.trim()) afterById.set(r.element_id, r.after.trim());
   }
@@ -833,7 +835,7 @@ async function confirmChanges(
       shoppingImpact: "to_buy_secondhand",
     }));
 
-  return { appliedIds, additions, afterById };
+  return { appliedIds, judgedIds, additions, afterById };
 }
 
 export async function ensureFinalAssets(projectId: string): Promise<ShoppingAssets | null> {
@@ -857,6 +859,7 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
   //  - détecte les AJOUTS nets de la génération (ex: TV, meuble TV) absents de
   //    l'original donc d'aucune décision.
   let appliedIds = new Set<string>();
+  let judgedIds = new Set<string>();
   let additions: Alteration[] = [];
   let afterById = new Map<string, string>();
   if (project.basePhotoUrl) {
@@ -866,16 +869,19 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
     )) as unknown as ImageInput;
     const r = await confirmChanges(projectId, candidates, composite);
     appliedIds = r.appliedIds;
+    judgedIds = r.judgedIds;
     additions = r.additions;
     afterById = r.afterById;
   }
 
-  // Candidat non confirmé = finalement conservé → traité comme "keep".
-  // Candidat confirmé → on remplace sa description par l'état APRÈS vu dans le
-  // rendu (la liste reflète ce qu'il faut acheter, pas l'élément d'origine).
+  // STABILITÉ : on ne démote un candidat en "keep" QUE si l'audit l'a
+  // explicitement jugé "non appliqué". Si l'audit ne le mentionne pas (réponse
+  // vide/partielle/parsée KO), on le PRÉSUME appliqué → la liste ne s'effondre
+  // plus à cause d'un audit instable.
+  // Candidat confirmé → description = état APRÈS vu dans le rendu.
   const effective: ElementDecision[] = decisions.map((d) => {
     const isCandidate = d.mismatch_type === "surface" || d.mismatch_type === "structural";
-    if (isCandidate && !appliedIds.has(d.element_id)) {
+    if (isCandidate && judgedIds.has(d.element_id) && !appliedIds.has(d.element_id)) {
       return { ...d, mismatch_type: "none", action_slug: null, supply_items: null, qty: null };
     }
     const after = afterById.get(d.element_id);

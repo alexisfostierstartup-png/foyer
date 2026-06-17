@@ -47,9 +47,10 @@ async function main() {
   const styleName = amb?.data?.name ?? STYLE_SLUG;
   const styleMood = `${amb?.data?.mood}. palette: ${(amb?.data?.palette ?? []).join(", ")}. materials: ${(amb?.data?.materials ?? []).join(", ")}`;
 
-  // 3. designPlan = scénario "verdict buggé" : RESTYLE sur le canapé (+ garder le reste)
+  // 3. designPlan : REPLACE canapé + fauteuils (doivent être remplacés, pas retapissés)
   const designPlan = [
-    "- RESTYLE Canapé beige clair: personnaliser la finition pour s'accorder au style. Keep its shape, size and position.",
+    "- REPLACE Canapé beige clair: remplacer par un canapé du style. Same footprint and position.",
+    "- REPLACE Fauteuil: remplacer par un fauteuil du style. Same footprint and position.",
   ].join("\n");
 
   const genTpl = (await getPrompt("gen_wow_generic"))
