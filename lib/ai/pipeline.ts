@@ -525,10 +525,14 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
 }
 
 // 3 briefs de layout → 3 rendus distincts (la diversité vient des briefs).
+// Volontairement formulés en AGENCEMENT DE MOBILIER PUR (pas de repère
+// architectural type "mur", "coin", "fenêtre") : citer l'archi poussait le modèle
+// à déplacer l'escalier / inventer une fenêtre. La coquille reste verrouillée par
+// les règles + le compte exact du prompt.
 const DISPOSITION_BRIEFS = [
-  "Layout 1 — convivial : seating grouped around the coffee table, sofa and armchair facing each other near the main wall, TV/console facing the seating. Cosy conversation area.",
-  "Layout 2 — ouvert sur la lumière : the main sofa faces the window to enjoy the light and the view; the seating floats slightly away from the walls to open up the central circulation.",
-  "Layout 3 — en L / coin : arrange the seating in an L-shape using a room corner, freeing the centre of the room; add a small reading nook near the window.",
+  "Layout 1 — convivial : group the seating closely around the coffee table, sofa and armchair facing each other for an intimate conversation area.",
+  "Layout 2 — ouvert : orient the main sofa toward the brightest part of the room and float the seating slightly away from the walls to open up the central circulation.",
+  "Layout 3 — aéré : spread the furniture out for an open, airy feel — generous spacing and circulation, seating loosely arranged across the room.",
 ];
 
 /**
