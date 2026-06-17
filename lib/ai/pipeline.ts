@@ -94,6 +94,23 @@ function profilesToFurniture(profiles: ElementProfile[]): DetectedFurniture[] {
     }));
 }
 
+// Récapitule l'architecture FIXE détectée (ouvertures + fixtures notables) en une
+// ligne chiffrée injectée dans la génération → cible claire qui limite l'invention
+// ou le déplacement de fenêtres/portes/escalier sur les angles serrés.
+function buildFixedFeaturesSummary(profiles: ElementProfile[]): string {
+  const count = (cat: string) => profiles.filter((p) => p.category === cat).length;
+  const parts: string[] = [];
+  const w = count("window"); if (w) parts.push(`${w} fenêtre(s)`);
+  const fd = count("french_door"); if (fd) parts.push(`${fd} porte(s)-fenêtre(s)`);
+  const d = count("door"); if (d) parts.push(`${d} porte(s)`);
+  const KW = /escalier|staircase|stair|chemin|fireplace|radiat|poutre|beam|colonne|column|pilier|pillar/i;
+  const fixtures = profiles
+    .filter((p) => !["window", "french_door", "door"].includes(p.category) && KW.test(`${p.element} ${p.description}`))
+    .map((p) => (p.element || p.category).trim().toLowerCase());
+  parts.push(...new Set(fixtures));
+  return parts.length ? parts.join(", ") : "—";
+}
+
 type RawProfile = Partial<ElementProfile> & { element_id?: string };
 
 /**
@@ -469,6 +486,7 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
     roomType: project.roomType,
     furnitureDefaults,
     visionJson: JSON.stringify(profiles, null, 2),
+    fixedFeatures: buildFixedFeaturesSummary(profiles),
     userInstructions,
     designPlan: designPlan || "None — restyle freely to fit the style.",
   };
@@ -545,6 +563,7 @@ export async function runDispositionsPipeline(projectId: string): Promise<string
     roomType: project.roomType,
     furnitureDefaults,
     visionJson: JSON.stringify(profiles, null, 2),
+    fixedFeatures: buildFixedFeaturesSummary(profiles),
     userInstructions,
     designPlan: designPlan || "None — restyle freely to fit the style.",
   };
