@@ -514,6 +514,9 @@ export async function runIterationPipeline(
   await updateProject(projectId, {
     generatedRenderUrl: resultUrl,
     iterationCount: iterCount + 1,
+    // mémorise la demande d'édition → sert au diff pour distinguer un vrai
+    // changement voulu d'un faux positif sur un élément gardé.
+    editRequests: [...(project.editRequests ?? []), userRequest],
     ...CLEAR_FINALIZE,
   });
   console.log(`[pipeline:iterate] success, render: ${resultUrl}`);
@@ -529,6 +532,35 @@ export async function runIterationPipeline(
   });
 }
 
+// Résumé de l'intention (décisions de review + demandes d'édition) injecté dans
+// le prompt de diff pour discriminer vrais changements vs faux positifs.
+function buildIntentContext(project: Project): string {
+  const decisions = (project.element_decisions ?? []) as ElementDecision[];
+  const kept = decisions
+    .filter((d) => d.mismatch_type === "none")
+    .map((d) => `- ${d.description?.trim() || d.category}`);
+  const changed = decisions
+    .filter((d) => d.mismatch_type !== "none")
+    .map((d) => {
+      const what = d.mismatch_type === "structural" ? "à remplacer" : "à personnaliser";
+      return `- ${d.description?.trim() || d.category} (${what}${d.action_label ? ` : ${d.action_label}` : ""})`;
+    });
+  const edits = (project.editRequests ?? []).map((r) => `- "${r}"`);
+
+  const blocks: string[] = [];
+  if (kept.length)
+    blocks.push(
+      `KEPT on purpose — must NOT appear as changed unless undeniably different:\n${kept.join("\n")}`,
+    );
+  if (changed.length) blocks.push(`Intended to change:\n${changed.join("\n")}`);
+  blocks.push(
+    edits.length
+      ? `User live-edit requests (the only freeform changes after generation):\n${edits.join("\n")}`
+      : `User live-edit requests: none.`,
+  );
+  return blocks.join("\n\n") || "No recorded intent.";
+}
+
 export async function extractAlterations(projectId: string): Promise<unknown> {
   const project = await getProject(projectId);
   if (!project?.generatedRenderUrl || !project.basePhotoUrl) return undefined;
@@ -541,8 +573,14 @@ export async function extractAlterations(projectId: string): Promise<unknown> {
     project.generatedRenderUrl,
   )) as unknown as ImageInput;
 
+  // Intention de design connue → aide le diff à éviter les faux positifs : un
+  // élément GARDÉ (decision "none") et jamais visé par une demande d'édition ne
+  // doit pas être listé comme changé (le rendu le redessine légèrement, ce n'est
+  // pas un achat).
+  const intent = buildIntentContext(project);
+
   const t1 = Date.now();
-  const altPrompt = await resolvePrompt("extract_alterations", {}, { strict: false });
+  const altPrompt = await resolvePrompt("extract_alterations", { intent }, { strict: false });
   const result = await withTracking(
     { step: "other", projectId, provider: altPrompt.prompt.provider,
       requestPayload: { promptName: "extract_alterations", prompt: altPrompt.resolvedTemplate.slice(0, 5000) } },

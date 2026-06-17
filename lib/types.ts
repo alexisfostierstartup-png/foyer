@@ -76,6 +76,7 @@ export type Project = {
   generatedRenderUrl: string | null;
   firstRenderUrl?: string;
   iterationCount?: number;
+  editRequests?: string[]; // demandes d'édition live successives (pour le diff intent)
   detectedFurniture: DetectedFurniture[];
   architecture: {
     floor: string;
