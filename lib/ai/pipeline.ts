@@ -506,13 +506,19 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
   });
 }
 
+// 3 briefs de layout → 3 rendus distincts (la diversité vient des briefs).
+const DISPOSITION_BRIEFS = [
+  "Layout 1 — convivial : seating grouped around the coffee table, sofa and armchair facing each other near the main wall, TV/console facing the seating. Cosy conversation area.",
+  "Layout 2 — ouvert sur la lumière : the main sofa faces the window to enjoy the light and the view; the seating floats slightly away from the walls to open up the central circulation.",
+  "Layout 3 — en L / coin : arrange the seating in an L-shape using a room corner, freeing the centre of the room; add a small reading nook near the window.",
+];
+
 /**
- * Variations d'agencement (feature experts) : UN seul appel image qui produit un
- * triptyque (3 panneaux côte à côte = 3 layouts différents de la même pièce).
- * Réutilise les profils + le style + le design plan de generate. Ne touche pas
- * generatedRenderUrl (c'est une image d'inspiration, pas le rendu final).
+ * Variations d'agencement (feature experts) : 3 appels image, un par brief de
+ * layout → 3 rendus PLEIN FORMAT distincts. Réutilise profils/style/design plan.
+ * Ne touche pas generatedRenderUrl (le user en choisira un ensuite).
  */
-export async function runDispositionsPipeline(projectId: string): Promise<string> {
+export async function runDispositionsPipeline(projectId: string): Promise<string[]> {
   const project = await getProject(projectId);
   if (!project) throw new Error(`Project not found: ${projectId}`);
   if (!project.basePhotoUrl || !project.selectedStyleId || !project.roomType) {
@@ -533,7 +539,7 @@ export async function runDispositionsPipeline(projectId: string): Promise<string
   const userInstructions = await formatUserInstructions(choices);
   const designPlan = formatDesignPlan(project.element_decisions);
 
-  const ctx = {
+  const baseCtx = {
     styleName,
     styleMood,
     roomType: project.roomType,
@@ -543,28 +549,32 @@ export async function runDispositionsPipeline(projectId: string): Promise<string
     designPlan: designPlan || "None — restyle freely to fit the style.",
   };
 
-  const t1 = Date.now();
-  const genPrompt = await resolvePrompt("gen_wow_3_dispositions", ctx, { strict: false });
-  const result = await withTracking(
-    { step: "generation", projectId, provider: genPrompt.prompt.provider,
-      requestPayload: { promptName: "gen_wow_3_dispositions", prompt: genPrompt.resolvedTemplate.slice(0, 5000) } },
-    () => getImageProvider(genPrompt.prompt.provider).generateFromText(genPrompt.resolvedTemplate, sourceImage),
+  // 3 générations en parallèle (1 par brief).
+  const urls = await Promise.all(
+    DISPOSITION_BRIEFS.map(async (dispositionBrief, i) => {
+      const t1 = Date.now();
+      const genPrompt = await resolvePrompt(
+        "gen_wow_3_dispositions",
+        { ...baseCtx, dispositionBrief },
+        { strict: false },
+      );
+      const result = await withTracking(
+        { step: "generation", projectId, provider: genPrompt.prompt.provider,
+          requestPayload: { promptName: "gen_wow_3_dispositions", disposition: i + 1, prompt: genPrompt.resolvedTemplate.slice(0, 5000) } },
+        () => getImageProvider(genPrompt.prompt.provider).generateFromText(genPrompt.resolvedTemplate, sourceImage),
+      );
+      console.log(`[pipeline:dispositions] #${i + 1} ${Date.now() - t1}ms`);
+      const url = await saveRender(result.imageBuffer, project.storageFolder, result.mimeType, `disposition_${i + 1}`);
+      await logPipelineEvent({
+        project_id: projectId, event: "generate", step: `disposition_${i + 1}`,
+        provider: result.providerUsed, duration_ms: result.durationMs, render_url: url,
+      });
+      return url;
+    }),
   );
-  console.log(`[pipeline:dispositions] ${Date.now() - t1}ms, ${Math.round(result.imageBuffer.length / 1024)}KB`);
 
-  const url = await saveRender(result.imageBuffer, project.storageFolder, result.mimeType, "dispositions");
-  await updateProject(projectId, { dispositionsRenderUrl: url });
-
-  await logPipelineEvent({
-    project_id: projectId,
-    event: "generate",
-    step: "dispositions",
-    provider: result.providerUsed,
-    duration_ms: result.durationMs,
-    render_url: url,
-  });
-
-  return url;
+  await updateProject(projectId, { dispositionsRenderUrls: urls });
+  return urls;
 }
 
 export async function runIterationPipeline(

@@ -27,8 +27,8 @@ export async function POST(
   }
 
   try {
-    const url = await runDispositionsPipeline(id);
-    const res = NextResponse.json({ ok: true, projectId: id, url });
+    const urls = await runDispositionsPipeline(id);
+    const res = NextResponse.json({ ok: true, projectId: id, urls });
     if (!user && !firstFreeUsed) {
       res.cookies.set("foyer_free_used", "1", {
         httpOnly: true, sameSite: "lax", maxAge: 60 * 60 * 24 * 365, path: "/",

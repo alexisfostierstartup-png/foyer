@@ -14,11 +14,11 @@ export default async function DispositionsPage({
   if (!project) redirect("/create");
   if (!project.selectedStyleId) redirect(`/create/style?projectId=${projectId}`);
 
-  // Si déjà généré, on réaffiche sans relancer un appel.
+  // Si déjà généré, on réaffiche sans relancer d'appel.
   return (
     <DispositionsScreen
       projectId={projectId}
-      initialUrl={project.dispositionsRenderUrl}
+      initialUrls={project.dispositionsRenderUrls}
     />
   );
 }
