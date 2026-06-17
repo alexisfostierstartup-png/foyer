@@ -780,7 +780,7 @@ async function confirmChanges(
   projectId: string,
   candidates: ElementDecision[],
   composite: ImageInput,
-): Promise<{ appliedIds: Set<string>; additions: Alteration[] }> {
+): Promise<{ appliedIds: Set<string>; additions: Alteration[]; afterById: Map<string, string> }> {
   const candidatesJson = JSON.stringify(
     candidates.map((d) => ({
       element_id: d.element_id,
@@ -809,13 +809,18 @@ async function confirmChanges(
       }),
   );
   const parsed = result.parsed as {
-    results?: Array<{ element_id?: string; applied?: boolean }>;
+    results?: Array<{ element_id?: string; applied?: boolean; after?: string }>;
     additions?: Array<{ element?: string; category?: string; detail?: string }>;
   } | null;
 
   const appliedIds = new Set<string>();
+  // Description de l'APRÈS par élément → la liste de courses reflète ce que
+  // l'élément est DEVENU dans le rendu (ex. tapis bleu/jaune), pas l'original.
+  const afterById = new Map<string, string>();
   for (const r of parsed?.results ?? []) {
-    if (r.applied && typeof r.element_id === "string") appliedIds.add(r.element_id);
+    if (typeof r.element_id !== "string") continue;
+    if (r.applied) appliedIds.add(r.element_id);
+    if (r.after && r.after.trim()) afterById.set(r.element_id, r.after.trim());
   }
   // Ajouts nets (présents dans APRÈS, absents dans AVANT) → à acheter.
   const additions: Alteration[] = (parsed?.additions ?? [])
@@ -828,7 +833,7 @@ async function confirmChanges(
       shoppingImpact: "to_buy_secondhand",
     }));
 
-  return { appliedIds, additions };
+  return { appliedIds, additions, afterById };
 }
 
 export async function ensureFinalAssets(projectId: string): Promise<ShoppingAssets | null> {
@@ -853,6 +858,7 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
   //    l'original donc d'aucune décision.
   let appliedIds = new Set<string>();
   let additions: Alteration[] = [];
+  let afterById = new Map<string, string>();
   if (project.basePhotoUrl) {
     const composite = (await buildBeforeAfterComposite(
       project.basePhotoUrl,
@@ -861,14 +867,19 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
     const r = await confirmChanges(projectId, candidates, composite);
     appliedIds = r.appliedIds;
     additions = r.additions;
+    afterById = r.afterById;
   }
 
   // Candidat non confirmé = finalement conservé → traité comme "keep".
+  // Candidat confirmé → on remplace sa description par l'état APRÈS vu dans le
+  // rendu (la liste reflète ce qu'il faut acheter, pas l'élément d'origine).
   const effective: ElementDecision[] = decisions.map((d) => {
     const isCandidate = d.mismatch_type === "surface" || d.mismatch_type === "structural";
     if (isCandidate && !appliedIds.has(d.element_id)) {
       return { ...d, mismatch_type: "none", action_slug: null, supply_items: null, qty: null };
     }
+    const after = afterById.get(d.element_id);
+    if (isCandidate && after) return { ...d, description: after };
     return d;
   });
 
