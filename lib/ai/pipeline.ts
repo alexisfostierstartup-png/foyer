@@ -506,6 +506,67 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
   });
 }
 
+/**
+ * Variations d'agencement (feature experts) : UN seul appel image qui produit un
+ * triptyque (3 panneaux côte à côte = 3 layouts différents de la même pièce).
+ * Réutilise les profils + le style + le design plan de generate. Ne touche pas
+ * generatedRenderUrl (c'est une image d'inspiration, pas le rendu final).
+ */
+export async function runDispositionsPipeline(projectId: string): Promise<string> {
+  const project = await getProject(projectId);
+  if (!project) throw new Error(`Project not found: ${projectId}`);
+  if (!project.basePhotoUrl || !project.selectedStyleId || !project.roomType) {
+    throw new Error("Project incomplete: missing basePhotoUrl, selectedStyleId or roomType");
+  }
+
+  const sourceImage = await loadImage(project.basePhotoUrl);
+
+  let profiles = Array.isArray(project.visionOutput) ? (project.visionOutput as ElementProfile[]) : [];
+  if (profiles.length === 0) {
+    profiles = await detectElementProfiles(projectId, sourceImage, "dispositions", project.roomType);
+    await updateProject(projectId, { visionOutput: profiles });
+  }
+
+  const { styleName, styleMood } = await loadStyleContext(project.selectedStyleId);
+  const furnitureDefaults = await loadRoomDefaults(project.roomType);
+  const choices = project.userConstraints ? constraintsToChoices(project.userConstraints) : {};
+  const userInstructions = await formatUserInstructions(choices);
+  const designPlan = formatDesignPlan(project.element_decisions);
+
+  const ctx = {
+    styleName,
+    styleMood,
+    roomType: project.roomType,
+    furnitureDefaults,
+    visionJson: JSON.stringify(profiles, null, 2),
+    userInstructions,
+    designPlan: designPlan || "None — restyle freely to fit the style.",
+  };
+
+  const t1 = Date.now();
+  const genPrompt = await resolvePrompt("gen_wow_3_dispositions", ctx, { strict: false });
+  const result = await withTracking(
+    { step: "generation", projectId, provider: genPrompt.prompt.provider,
+      requestPayload: { promptName: "gen_wow_3_dispositions", prompt: genPrompt.resolvedTemplate.slice(0, 5000) } },
+    () => getImageProvider(genPrompt.prompt.provider).generateFromText(genPrompt.resolvedTemplate, sourceImage),
+  );
+  console.log(`[pipeline:dispositions] ${Date.now() - t1}ms, ${Math.round(result.imageBuffer.length / 1024)}KB`);
+
+  const url = await saveRender(result.imageBuffer, project.storageFolder, result.mimeType, "dispositions");
+  await updateProject(projectId, { dispositionsRenderUrl: url });
+
+  await logPipelineEvent({
+    project_id: projectId,
+    event: "generate",
+    step: "dispositions",
+    provider: result.providerUsed,
+    duration_ms: result.durationMs,
+    render_url: url,
+  });
+
+  return url;
+}
+
 export async function runIterationPipeline(
   projectId: string,
   userRequest: string,

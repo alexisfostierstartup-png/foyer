@@ -47,13 +47,10 @@ async function main() {
   const styleName = amb?.data?.name ?? STYLE_SLUG;
   const styleMood = `${amb?.data?.mood}. palette: ${(amb?.data?.palette ?? []).join(", ")}. materials: ${(amb?.data?.materials ?? []).join(", ")}`;
 
-  // 3. designPlan : REPLACE canapé + fauteuils (doivent être remplacés, pas retapissés)
-  const designPlan = [
-    "- REPLACE Canapé beige clair: remplacer par un canapé du style. Same footprint and position.",
-    "- REPLACE Fauteuil: remplacer par un fauteuil du style. Same footprint and position.",
-  ].join("\n");
+  // 3. test triptyque 3 dispositions (1 appel)
+  const designPlan = "None — restyle freely to fit the style.";
 
-  const genTpl = (await getPrompt("gen_wow_generic"))
+  const genTpl = (await getPrompt("gen_wow_3_dispositions"))
     .replaceAll("{{styleName}}", styleName).replaceAll("{{styleMood}}", styleMood)
     .replaceAll("{{roomType}}", "salon").replaceAll("{{furnitureDefaults}}", "sofa, coffee table, armchair, rug, lighting, bookshelf")
     .replaceAll("{{visionJson}}", JSON.stringify(profiles, null, 2))

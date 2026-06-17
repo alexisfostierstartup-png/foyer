@@ -106,15 +106,25 @@ export function ReviewScreen({ projectId, initialDecisions, allowedByCategory, f
     });
   }
 
-  async function handleGenerate(applyOverrides: boolean) {
-    if (applyOverrides && Object.keys(overrides).length > 0) {
+  async function persistOverrides() {
+    if (Object.keys(overrides).length > 0) {
       await fetch(`/api/projects/${projectId}/decisions`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ overrides }),
       });
     }
+  }
+
+  async function handleGenerate() {
+    await persistOverrides();
     router.push(`/create/generating?projectId=${projectId}`);
+  }
+
+  // Feature experts : 3 dispositions en 1 appel (triptyque).
+  async function handleDispositions() {
+    await persistOverrides();
+    router.push(`/create/dispositions?projectId=${projectId}`);
   }
 
   if (loading) {
@@ -139,7 +149,7 @@ export function ReviewScreen({ projectId, initialDecisions, allowedByCategory, f
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <p className="text-red-600 text-sm">{error}</p>
         <button
-          onClick={() => handleGenerate(false)}
+          onClick={handleGenerate}
           className="px-6 py-3 bg-foyer-ink text-foyer-cream rounded-xl text-sm"
         >
           Générer quand même
@@ -263,13 +273,22 @@ export function ReviewScreen({ projectId, initialDecisions, allowedByCategory, f
 
       {/* Sticky CTA — un seul bouton : il applique toujours les modifs en attente */}
       <div className="fixed bottom-0 inset-x-0 bg-foyer-cream/95 backdrop-blur-sm border-t border-foyer-border px-4 py-4">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto flex flex-col gap-2.5">
           <button
-            onClick={() => handleGenerate(true)}
+            onClick={handleGenerate}
             className="w-full py-3.5 bg-foyer-ink text-foyer-cream rounded-xl text-sm font-medium"
           >
-            Lancer le rendu
+            Lancer 1 rendu
             {hasOverrides ? ` · ${Object.keys(overrides).length} modif${Object.keys(overrides).length > 1 ? "s" : ""}` : ""}
+          </button>
+          <button
+            onClick={handleDispositions}
+            className="w-full py-3 border border-foyer-border text-foyer-muted rounded-xl text-sm hover:text-foyer-ink hover:border-foyer-ink/40 transition-colors"
+          >
+            Lancer 3 dispositions
+            <span className="ml-1.5 align-middle text-[10px] uppercase tracking-wide bg-foyer-terra/10 text-foyer-terra px-1.5 py-0.5 rounded-full">
+              expert
+            </span>
           </button>
         </div>
       </div>

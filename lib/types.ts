@@ -78,6 +78,8 @@ export type Project = {
   selectedStyleId: string | null;
   generatedRenderUrl: string | null;
   firstRenderUrl?: string;
+  // Triptyque "3 dispositions" (1 image, 3 panneaux) — feature experts.
+  dispositionsRenderUrl?: string;
   iterationCount?: number;
   editRequests?: string[]; // demandes d'édition live successives (pour le diff intent)
   detectedFurniture: DetectedFurniture[];
