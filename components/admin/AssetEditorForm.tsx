@@ -62,16 +62,30 @@ function RoomDefaultsFields({
   data: Record<string, unknown>;
   onChange: (d: Record<string, unknown>) => void;
 }) {
+  const removeCategories = (data.removeCategories as string[] | undefined) ?? [];
   return (
-    <Field label="Meubles attendus (en anglais, virgule-séparés)">
-      <textarea
-        value={String(data.englishFurniture ?? "")}
-        onChange={(e) => onChange({ ...data, englishFurniture: e.target.value })}
-        rows={5}
-        className={inputCls + " font-mono text-xs"}
-        placeholder="sofa, coffee table, armchair, TV unit, rug"
-      />
-    </Field>
+    <>
+      <Field label="Brief de la pièce (anglais) — pièce maîtresse + meubles + règles, injecté dans le prompt">
+        <textarea
+          value={String(data.englishFurniture ?? "")}
+          onChange={(e) => onChange({ ...data, englishFurniture: e.target.value })}
+          rows={6}
+          className={inputCls + " font-mono text-xs"}
+          placeholder="A bedroom. The bed is the centerpiece. It usually includes: a double bed…"
+        />
+      </Field>
+      <Field label="Catégories à RETIRER pour cette pièce (slugs, séparés par virgule) — parasites supprimés du rendu">
+        <textarea
+          value={removeCategories.join(", ")}
+          onChange={(e) =>
+            onChange({ ...data, removeCategories: e.target.value.split(/[,\n]/).map((s) => s.trim()).filter(Boolean) })
+          }
+          rows={2}
+          className={inputCls + " font-mono text-xs"}
+          placeholder="sofa, coffee_table, tv_stand, television, dining_table, dining_chair, bar_table"
+        />
+      </Field>
+    </>
   );
 }
 
@@ -244,7 +258,7 @@ type Props = {
 
 const DEFAULT_DATA: Record<string, Record<string, unknown>> = {
   ambiance: { name: "", description: "", palette: [], materials: [], mood: "" },
-  room_defaults: { englishFurniture: "" },
+  room_defaults: { englishFurniture: "", removeCategories: [] },
   floor_preset: { label: "", description: "" },
   wall_palette: { label: "", hex: "", description: "" },
   element_category: {
