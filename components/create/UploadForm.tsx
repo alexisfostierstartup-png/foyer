@@ -19,6 +19,7 @@ const STEPS = ["Photo", "Style", "Mobilier", "Rendu", "Projet"];
 const ROOM_OPTIONS: { value: RoomType; label: string }[] = [
   { value: "salon", label: "Salon" },
   { value: "chambre", label: "Chambre" },
+  { value: "chambre_parentale", label: "Chambre parentale" },
 ];
 
 const TIPS = [

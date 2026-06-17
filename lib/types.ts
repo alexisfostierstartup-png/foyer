@@ -1,4 +1,4 @@
-export type RoomType = "salon" | "chambre";
+export type RoomType = "salon" | "chambre" | "chambre_parentale";
 
 export type FurnitureDecision = "keep" | "customize" | "replace";
 

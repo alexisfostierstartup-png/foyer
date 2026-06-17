@@ -38,6 +38,18 @@ export async function loadRoomDefaults(roomType: string): Promise<string> {
   return (data.data as { englishFurniture: string }).englishFurniture;
 }
 
+// Catégories d'éléments à RETIRER pour ce type de pièce (ex. chambre → sofa,
+// coffee_table…). Statique par room type, stocké dans l'asset room_defaults.
+export async function loadRoomRemoveCategories(roomType: string): Promise<string[]> {
+  const { data } = await createSupabaseAdmin()
+    .from("assets")
+    .select("data")
+    .eq("category", "room_defaults")
+    .eq("slug", roomType)
+    .single();
+  return (data?.data as { removeCategories?: string[] } | undefined)?.removeCategories ?? [];
+}
+
 type FurnitureChoices = Record<string, "keep" | "customize" | "replace">;
 type FloorChoice = { action: "keep" | "change"; preset?: string; custom?: string };
 type WallsChoice = {

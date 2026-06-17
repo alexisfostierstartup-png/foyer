@@ -3,7 +3,7 @@ import path from "path";
 import sharp from "sharp";
 import { nanoid } from "nanoid";
 import { resolvePrompt } from "@/lib/prompts/engine";
-import { loadStyleContext, loadRoomDefaults, formatUserInstructions, formatDesignPlan } from "@/lib/prompts/helpers";
+import { loadStyleContext, loadRoomDefaults, loadRoomRemoveCategories, formatUserInstructions, formatDesignPlan } from "@/lib/prompts/helpers";
 import { getElementCategoryEnum, getElementCategories, getAllowedActionsByCategory } from "@/lib/db/assets";
 import type { DecisionAction } from "@/lib/db/assets";
 import { mergeShoppingItems } from "@/lib/shopping/categories";
@@ -109,6 +109,18 @@ function buildFixedFeaturesSummary(profiles: ElementProfile[]): string {
     .map((p) => (p.element || p.category).trim().toLowerCase());
   parts.push(...new Set(fixtures));
   return parts.length ? parts.join(", ") : "—";
+}
+
+// Liste des éléments DÉTECTÉS à retirer = intersection des catégories parasites de
+// la pièce (statique, depuis l'asset room_defaults.removeCategories) et de ce qui
+// est réellement sur la photo. Générique : aucune logique room-type en dur ici.
+function buildRemoveList(profiles: ElementProfile[], categories: string[]): string {
+  if (!categories.length) return "(none)";
+  const set = new Set(categories);
+  const items = profiles
+    .filter((p) => set.has(p.category))
+    .map((p) => (p.description?.trim() || p.element || p.category));
+  return items.length ? items.join("; ") : "(none)";
 }
 
 type RawProfile = Partial<ElementProfile> & { element_id?: string };
@@ -479,6 +491,7 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
   // Plan de design issu des décisions par élément (après review) → injecté dans
   // le prompt pour que l'image reflète réellement keep/customize/replace.
   const designPlan = formatDesignPlan(project.element_decisions);
+  const removeCategories = await loadRoomRemoveCategories(project.roomType);
 
   const genCtx = {
     styleName,
@@ -487,6 +500,8 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
     furnitureDefaults,
     visionJson: JSON.stringify(profiles, null, 2),
     fixedFeatures: buildFixedFeaturesSummary(profiles),
+    // Éléments détectés à retirer pour ce type de pièce (asset ∩ détection).
+    removeList: buildRemoveList(profiles, removeCategories),
     userInstructions,
     designPlan: designPlan || "None — restyle freely to fit the style.",
   };
@@ -561,6 +576,8 @@ export async function runDispositionsPipeline(projectId: string): Promise<string
   const userInstructions = await formatUserInstructions(choices);
   const designPlan = formatDesignPlan(project.element_decisions);
 
+  const removeCategories = await loadRoomRemoveCategories(project.roomType);
+
   const baseCtx = {
     styleName,
     styleMood,
@@ -568,6 +585,7 @@ export async function runDispositionsPipeline(projectId: string): Promise<string
     furnitureDefaults,
     visionJson: JSON.stringify(profiles, null, 2),
     fixedFeatures: buildFixedFeaturesSummary(profiles),
+    removeList: buildRemoveList(profiles, removeCategories),
     userInstructions,
     designPlan: designPlan || "None — restyle freely to fit the style.",
   };

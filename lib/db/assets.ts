@@ -113,8 +113,10 @@ export async function getAllowedActionsByCategory(): Promise<Map<string, Decisio
  */
 export async function getElementCategoryEnum(roomType?: string): Promise<string> {
   const cats = await getElementCategories().catch(() => [] as ElementCategory[]);
+  // La chambre parentale partage la taxonomie de la chambre.
+  const rt = roomType === "chambre_parentale" ? "chambre" : roomType;
   const filtered = cats.filter(
-    (c) => !roomType || !c.room_types?.length || c.room_types.includes(roomType),
+    (c) => !rt || !c.room_types?.length || c.room_types.includes(rt),
   );
   if (filtered.length === 0) return FALLBACK_CATEGORY_ENUM;
 
