@@ -9,7 +9,7 @@ import { saveRender } from "./saveRender";
 import { logPipelineEvent } from "./logger";
 import { withTracking } from "./track";
 import { getProject, updateProject } from "@/lib/storage/projects";
-import type { DetectedFurniture, UserConstraints, Project } from "@/lib/types";
+import type { DetectedFurniture, UserConstraints, Project, ShoppingItem, ScoreFoyer } from "@/lib/types";
 import { matchAlterationsToCatalog, computeScoreFoyer, type Alteration } from "@/lib/shopping/matcher";
 import { reconcilePlan } from "@/lib/shopping/reconcile";
 import { buildShoppingList, builtToLegacyShoppingList } from "@/lib/shopping/build";
@@ -554,18 +554,22 @@ export async function extractAlterations(projectId: string): Promise<unknown> {
   return result.parsed; // renvoyé pour chaîner le matching sans re-lecture DB (évite le lag read-after-write)
 }
 
+export type ShoppingAssets = { shoppingList: ShoppingItem[]; scoreFoyer: ScoreFoyer };
+
 export async function matchAndSaveShoppingList(
   projectId: string,
   altOverride?: unknown,
-): Promise<void> {
+): Promise<ShoppingAssets | null> {
   const project = await getProject(projectId);
-  if (!project) return;
-  if (project.shoppingList) return;
+  if (!project) return null;
+  if (project.shoppingList) {
+    return { shoppingList: project.shoppingList, scoreFoyer: project.scoreFoyer as ScoreFoyer };
+  }
 
   // altOverride (passé par ensureFinalAssets juste après extraction) évite le
   // lag read-after-write : on n'attend pas que la DB renvoie les alterations.
   const source = altOverride ?? project.alterations;
-  if (!source) return;
+  if (!source) return null;
 
   const raw = source as { alterations?: unknown[] } | null;
   const alterations = (raw?.alterations ?? []) as Alteration[];
@@ -576,6 +580,9 @@ export async function matchAndSaveShoppingList(
   console.log(`[pipeline:shopping] catalog match: ${Date.now() - t1}ms, ${shoppingList.length} items`);
 
   await updateProject(projectId, { shoppingList, scoreFoyer });
+  // On RENVOIE la liste calculée → la page finale l'utilise directement, sans
+  // re-lire la DB (qui peut renvoyer une réplique en retard → liste vide).
+  return { shoppingList, scoreFoyer };
 }
 
 export async function runApplicationAudit(
@@ -689,10 +696,12 @@ export async function runFullFinalizePipeline(projectId: string): Promise<void> 
   );
 }
 
-export async function ensureFinalAssets(projectId: string): Promise<void> {
+export async function ensureFinalAssets(projectId: string): Promise<ShoppingAssets | null> {
   const project = await getProject(projectId);
-  if (!project?.generatedRenderUrl) return;
-  if (project.shoppingList) return; // déjà calculé (CLEAR_FINALIZE l'invalide si le rendu change)
+  if (!project?.generatedRenderUrl) return null;
+  if (project.shoppingList) {
+    return { shoppingList: project.shoppingList, scoreFoyer: project.scoreFoyer as ScoreFoyer };
+  }
 
   // Liste de courses = DIFF RÉEL entre la photo source (AVANT) et le rendu final
   // (APRÈS). Simple et exact : on liste ce qui a vraiment changé à l'image, et
@@ -701,5 +710,5 @@ export async function ensureFinalAssets(projectId: string): Promise<void> {
   const alterations = project.alterations ?? (await extractAlterations(projectId));
   // On passe les alterations directement au matching (pas de re-lecture DB) →
   // la liste se peuple dès le 1er affichage, plus de « la liste se prépare… ».
-  await matchAndSaveShoppingList(projectId, alterations);
+  return matchAndSaveShoppingList(projectId, alterations);
 }
