@@ -127,12 +127,14 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <p className="truncate text-[15px] font-medium text-foyer-ink">
-            {item.name}
+          <div className="flex min-w-0 items-center gap-1.5">
+            <p className="truncate text-[15px] font-medium text-foyer-ink">{item.name}</p>
             {(item.quantity ?? 1) > 1 && (
-              <span className="ml-1 text-foyer-muted">×{item.quantity}</span>
+              <span className="shrink-0 rounded-full bg-foyer-ink/10 px-1.5 py-0.5 text-[12px] font-semibold text-foyer-ink">
+                ×{item.quantity}
+              </span>
             )}
-          </p>
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <SourceTag source={selected.source} />
             <span className="text-[13px] text-foyer-muted">{selected.name}</span>

@@ -530,9 +530,13 @@ function EnhancedListeShoppingTab({
                   </span>
                   <span className="min-w-0 flex-1 truncate text-[14px] text-foyer-muted" title={item.name}>
                     {item.name}
-                    {(item.quantity ?? 1) > 1 ? ` ×${item.quantity}` : ""}
                   </span>
-                  <span className="ml-auto shrink-0 text-[12px] text-foyer-muted">À sourcer</span>
+                  {(item.quantity ?? 1) > 1 && (
+                    <span className="shrink-0 rounded-full bg-foyer-ink/10 px-2 py-0.5 text-[12px] font-semibold text-foyer-ink">
+                      ×{item.quantity}
+                    </span>
+                  )}
+                  <span className="shrink-0 text-[12px] text-foyer-muted">À sourcer</span>
                 </li>
               ))}
 
