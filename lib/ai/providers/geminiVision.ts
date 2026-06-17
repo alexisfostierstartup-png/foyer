@@ -1,35 +1,50 @@
-import { getGeminiClient } from "../gemini";
+import type { MediaResolution } from "@google/genai";
+import { getGenAIClient } from "../gemini";
 import { toInlineData } from "../imageInput";
 import { withRetry } from "../retry";
 import type { VisionProvider, ImageInput, VisionResult } from "../types";
 
 const MODEL = "gemini-2.5-flash-lite";
 
-// Côté long max des images d'ENTRÉE vision. Défaut 0 = pas de redimensionnement
-// (comportement historique). N'affecte que les appels vision, jamais la génération.
+// Côté long max des images d'ENTRÉE vision. Défaut 0 = pas de redimensionnement.
+// On garde la pleine résolution pour profiter de l'analyse HIGH.
 const INPUT_MAX_DIM = Number.parseInt(process.env.INPUT_MAX_DIM ?? "0", 10) || 0;
+
+type VisionPart = { text: string } | { inlineData: { data: string; mimeType: string } };
 
 export class GeminiVisionProvider implements VisionProvider {
   readonly name = "gemini_vision";
 
   async analyze(prompt: string, images: ImageInput[]): Promise<VisionResult> {
     const start = Date.now();
-    const model = getGeminiClient().getGenerativeModel({
-      model: MODEL,
-      // temperature 0 : la vision (détection/verdict/diff) est analytique, pas
-      // créative → résultats plus consistants et complets (moins d'oublis).
-      generationConfig: { responseMimeType: "application/json", temperature: 0 },
-    });
+    const ai = getGenAIClient();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const parts: any[] = [prompt];
+    const parts: VisionPart[] = [{ text: prompt }];
     for (const img of images) {
       parts.push(await toInlineData(img, { maxDim: INPUT_MAX_DIM }));
     }
 
-    const result = await withRetry(() => model.generateContent(parts), { label: `vision ${MODEL}` });
-    const text = result.response.text();
+    const result = await withRetry(
+      () =>
+        ai.models.generateContent({
+          model: MODEL,
+          contents: parts,
+          config: {
+            responseMimeType: "application/json",
+            // temperature 0 : la vision est analytique, pas créative → résultats
+            // consistants. mediaResolution HIGH : analyse en haute résolution
+            // (détecte les petits éléments — plafonniers, cadres — et les
+            // nuances de couleur subtiles comme blanc→beige).
+            temperature: 0,
+            // chaîne littérale (et non l'enum) pour éviter tout souci de
+            // résolution de l'enum dans le bundle Next/Turbopack.
+            mediaResolution: "MEDIA_RESOLUTION_HIGH" as MediaResolution,
+          },
+        }),
+      { label: `vision ${MODEL}` },
+    );
 
+    const text = result.text ?? "";
     let parsed: unknown;
     try {
       parsed = JSON.parse(text);
@@ -37,18 +52,12 @@ export class GeminiVisionProvider implements VisionProvider {
       parsed = undefined;
     }
 
-    const meta = result.response.usageMetadata as
-      | {
-          promptTokenCount?: number;
-          candidatesTokenCount?: number;
-          thoughtsTokenCount?: number;
-        }
-      | undefined;
+    const meta = result.usageMetadata;
 
     return {
       text,
       parsed,
-      rawResponse: result.response,
+      rawResponse: result,
       providerUsed: this.name,
       modelUsed: MODEL,
       durationMs: Date.now() - start,
