@@ -46,7 +46,13 @@ export interface ImageProvider {
   editImage(prompt: string, sourceImage: ImageInput): Promise<GenerationResult>;
 }
 
+export type VisionOptions = {
+  /** Surcharge le modèle pour cet appel (ex: "gemini-2.5-flash" pour une
+   *  confirmation visuelle exigeante). Défaut: le modèle du provider. */
+  model?: string;
+};
+
 export interface VisionProvider {
   readonly name: string;
-  analyze(prompt: string, images: ImageInput[]): Promise<VisionResult>;
+  analyze(prompt: string, images: ImageInput[], opts?: VisionOptions): Promise<VisionResult>;
 }

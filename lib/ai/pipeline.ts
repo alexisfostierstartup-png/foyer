@@ -734,6 +734,54 @@ export async function runFullFinalizePipeline(projectId: string): Promise<void> 
   );
 }
 
+/**
+ * Confirme visuellement, PARMI les candidats (décisions customize/replace),
+ * lesquels ont réellement été appliqués au rendu. Renvoie l'ensemble des
+ * element_id confirmés. Les éléments "keep" ne sont JAMAIS candidats → jamais
+ * dans la liste (élimine les faux positifs). L'analyse est ciblée sur les seuls
+ * candidats → pas de diff libre qui hallucine.
+ */
+async function confirmAppliedChanges(
+  projectId: string,
+  candidates: ElementDecision[],
+  composite: ImageInput,
+): Promise<Set<string>> {
+  const candidatesJson = JSON.stringify(
+    candidates.map((d) => ({
+      element_id: d.element_id,
+      element: d.description,
+      category: d.category,
+      intended_action:
+        d.action_label ||
+        (d.mismatch_type === "structural" ? "remplacer cet élément" : "personnaliser cet élément"),
+    })),
+    null,
+    2,
+  );
+  const prompt = await resolvePrompt("confirm_changes", { candidatesJson }, { strict: false });
+  const result = await withTracking(
+    {
+      step: "audit",
+      projectId,
+      provider: prompt.prompt.provider,
+      requestPayload: { promptName: "confirm_changes", candidates: candidates.length },
+    },
+    // Confirmation EXIGEANTE → modèle plus fort (flash discrimine bien mieux que
+    // flash-lite : il rejette les éléments finalement conservés). ~1 appel,
+    // coût négligeable.
+    () =>
+      getVisionProvider(prompt.prompt.provider).analyze(prompt.resolvedTemplate, [composite], {
+        model: "gemini-2.5-flash",
+      }),
+  );
+  const parsed = result.parsed as { results?: Array<{ element_id?: string; applied?: boolean }> } | null;
+  const applied = new Set<string>();
+  for (const r of parsed?.results ?? []) {
+    if (r.applied && typeof r.element_id === "string") applied.add(r.element_id);
+  }
+  return applied;
+}
+
 export async function ensureFinalAssets(projectId: string): Promise<ShoppingAssets | null> {
   const project = await getProject(projectId);
   if (!project?.generatedRenderUrl) return null;
@@ -741,12 +789,41 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
     return { shoppingList: project.shoppingList, scoreFoyer: project.scoreFoyer as ScoreFoyer };
   }
 
-  // Liste de courses = DIFF RÉEL entre la photo source (AVANT) et le rendu final
-  // (APRÈS). Simple et exact : on liste ce qui a vraiment changé à l'image, et
-  // non les décisions planifiées (qui peuvent diverger du rendu). Les décisions
-  // de review pilotent la GÉNÉRATION (via le designPlan), pas la liste.
-  const alterations = project.alterations ?? (await extractAlterations(projectId));
-  // On passe les alterations directement au matching (pas de re-lecture DB) →
-  // la liste se peuple dès le 1er affichage, plus de « la liste se prépare… ».
-  return matchAndSaveShoppingList(projectId, alterations);
+  // Liste = INTENTION (décisions review) GATÉE par confirmation visuelle.
+  //  - "keep" (none) : jamais listé (filtre dur → zéro faux positif).
+  //  - "customize"/"replace" : candidats → on vérifie sur le rendu s'ils ont
+  //    VRAIMENT été appliqués (ou conservés tels quels malgré le plan).
+  const decisions = (project.element_decisions ?? []) as ElementDecision[];
+  const candidates = decisions.filter(
+    (d) => d.mismatch_type === "surface" || d.mismatch_type === "structural",
+  );
+
+  let appliedIds = new Set<string>();
+  if (candidates.length > 0 && project.basePhotoUrl) {
+    const composite = (await buildBeforeAfterComposite(
+      project.basePhotoUrl,
+      project.generatedRenderUrl,
+    )) as unknown as ImageInput;
+    appliedIds = await confirmAppliedChanges(projectId, candidates, composite);
+  }
+
+  // Candidat non confirmé = finalement conservé → traité comme "keep".
+  const effective: ElementDecision[] = decisions.map((d) => {
+    const isCandidate = d.mismatch_type === "surface" || d.mismatch_type === "structural";
+    if (isCandidate && !appliedIds.has(d.element_id)) {
+      return { ...d, mismatch_type: "none", action_slug: null, supply_items: null, qty: null };
+    }
+    return d;
+  });
+
+  const plan = reconcilePlan(effective, { elements: [] }, { repairAlreadyUsed: false });
+  const built = buildShoppingList(plan, project.selectedStyleId);
+  const shoppingList = builtToLegacyShoppingList(built);
+  const scoreFoyer = built.score;
+
+  await updateProject(projectId, { shoppingList, scoreFoyer, builtShoppingList: built });
+  console.log(
+    `[pipeline:final] ${candidates.length} candidats → ${appliedIds.size} confirmés → ${shoppingList.length} items`,
+  );
+  return { shoppingList, scoreFoyer };
 }

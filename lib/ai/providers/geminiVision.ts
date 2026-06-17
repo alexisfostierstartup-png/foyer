@@ -2,7 +2,7 @@ import type { MediaResolution } from "@google/genai";
 import { getGenAIClient } from "../gemini";
 import { toInlineData } from "../imageInput";
 import { withRetry } from "../retry";
-import type { VisionProvider, ImageInput, VisionResult } from "../types";
+import type { VisionProvider, ImageInput, VisionResult, VisionOptions } from "../types";
 
 const MODEL = "gemini-2.5-flash-lite";
 
@@ -15,9 +15,10 @@ type VisionPart = { text: string } | { inlineData: { data: string; mimeType: str
 export class GeminiVisionProvider implements VisionProvider {
   readonly name = "gemini_vision";
 
-  async analyze(prompt: string, images: ImageInput[]): Promise<VisionResult> {
+  async analyze(prompt: string, images: ImageInput[], opts?: VisionOptions): Promise<VisionResult> {
     const start = Date.now();
     const ai = getGenAIClient();
+    const model = opts?.model ?? MODEL;
 
     const parts: VisionPart[] = [{ text: prompt }];
     for (const img of images) {
@@ -27,7 +28,7 @@ export class GeminiVisionProvider implements VisionProvider {
     const result = await withRetry(
       () =>
         ai.models.generateContent({
-          model: MODEL,
+          model,
           contents: parts,
           config: {
             responseMimeType: "application/json",
@@ -41,7 +42,7 @@ export class GeminiVisionProvider implements VisionProvider {
             mediaResolution: "MEDIA_RESOLUTION_HIGH" as MediaResolution,
           },
         }),
-      { label: `vision ${MODEL}` },
+      { label: `vision ${model}` },
     );
 
     const text = result.text ?? "";
@@ -59,7 +60,7 @@ export class GeminiVisionProvider implements VisionProvider {
       parsed,
       rawResponse: result,
       providerUsed: this.name,
-      modelUsed: MODEL,
+      modelUsed: model,
       durationMs: Date.now() - start,
       usage: {
         inputTokens: meta?.promptTokenCount,
