@@ -36,7 +36,7 @@ async function main() {
     const r = await vision(prompt, buf);
     const profs = r?.elementProfiles ?? [];
     console.log(`\n### ${f} → ${profs.length} éléments`);
-    for (const e of profs) console.log(`  ${e.category.padEnd(16)} | ${e.element} — ${e.description}`);
+    for (const e of profs) console.log(`  ${e.category.padEnd(16)} | color=${(e.color ?? "∅").padEnd(18)} | ${e.element}`);
   }
 }
 main().catch((e) => { console.error("FATAL", e.message ?? e); process.exit(1); });

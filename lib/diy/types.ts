@@ -52,6 +52,7 @@ export type ElementProfile = {
   element: string;
   category: string;
   description: string;
+  color?: string;
   material_family: MaterialFamily;
   surface_features: string[];
   condition: "good" | "fair" | "poor";

@@ -144,6 +144,7 @@ async function detectElementProfiles(
       element: p.element ?? "",
       category: p.category ?? "other",
       description: p.description ?? "",
+      color: p.color ?? "",
       material_family: p.material_family ?? "unknown",
       surface_features: p.surface_features ?? [],
       condition: p.condition ?? "good",
