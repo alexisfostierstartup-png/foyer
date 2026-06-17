@@ -29,13 +29,26 @@ const ACTION_OF: Record<ElementDecision["mismatch_type"], "keep" | "customize" |
   none: "keep", surface: "customize", structural: "replace",
 };
 
+const FAMILY_LABELS: Record<string, string> = {
+  assise: "Assises", table: "Tables", rangement: "Rangements", couchage: "Couchage",
+  luminaire: "Luminaires", textile: "Textiles", surface: "Surfaces",
+  ouverture: "Ouvertures", deco: "Décoration", electromenager: "Électroménager", autre: "Autres",
+};
+const FAMILY_ORDER = [
+  "assise", "table", "rangement", "couchage", "luminaire", "textile",
+  "surface", "ouverture", "deco", "electromenager", "autre",
+];
+
+type Group = { key: string; rep: ElementDecision; ids: string[] };
+
 type Props = {
   projectId: string;
   initialDecisions?: ElementDecision[] | null;
   allowedByCategory?: Record<string, Array<"keep" | "customize" | "replace">>;
+  familyByCategory?: Record<string, string>;
 };
 
-export function ReviewScreen({ projectId, initialDecisions, allowedByCategory }: Props) {
+export function ReviewScreen({ projectId, initialDecisions, allowedByCategory, familyByCategory }: Props) {
   const router = useRouter();
   const [decisions, setDecisions] = useState<ElementDecision[]>(
     initialDecisions ?? [],
@@ -74,22 +87,22 @@ export function ReviewScreen({ projectId, initialDecisions, allowedByCategory }:
     })();
   }, [projectId, initialDecisions]);
 
-  function toggle(elementId: string, value: ElementDecision["mismatch_type"]) {
-    const original = decisions.find((d) => d.element_id === elementId);
-    if (!original) return;
+  // Applique une action à TOUT le groupe d'éléments identiques (ex. 4 chaises).
+  // Cliquer l'action déjà active, ou l'action d'origine, retire l'override.
+  function toggleGroup(
+    ids: string[],
+    value: ElementDecision["mismatch_type"],
+    original: ElementDecision["mismatch_type"],
+  ) {
     setOverrides((prev) => {
-      const current = prev[elementId] ?? original.mismatch_type;
-      if (current === value) {
-        const next = { ...prev };
-        delete next[elementId];
-        return next;
+      const current = prev[ids[0]] ?? original;
+      const remove = current === value || value === original;
+      const next = { ...prev };
+      for (const id of ids) {
+        if (remove) delete next[id];
+        else next[id] = value;
       }
-      if (value === original.mismatch_type) {
-        const next = { ...prev };
-        delete next[elementId];
-        return next;
-      }
-      return { ...prev, [elementId]: value };
+      return next;
     });
   }
 
@@ -137,6 +150,29 @@ export function ReviewScreen({ projectId, initialDecisions, allowedByCategory }:
 
   const hasOverrides = Object.keys(overrides).length > 0;
 
+  // Regroupe les éléments identiques (même catégorie + description) en une ligne
+  // avec un compteur ×N.
+  const groups: Group[] = [];
+  const byKey = new Map<string, Group>();
+  for (const d of decisions) {
+    const key = `${d.category}|||${(d.description ?? "").trim().toLowerCase()}`;
+    let g = byKey.get(key);
+    if (!g) { g = { key, rep: d, ids: [] }; byKey.set(key, g); groups.push(g); }
+    g.ids.push(d.element_id);
+  }
+
+  // Sections par famille (ordre stable).
+  const byFamily = new Map<string, Group[]>();
+  for (const g of groups) {
+    const fam = familyByCategory?.[g.rep.category] ?? "autre";
+    if (!byFamily.has(fam)) byFamily.set(fam, []);
+    byFamily.get(fam)!.push(g);
+  }
+  const orderedFamilies = [
+    ...FAMILY_ORDER.filter((f) => byFamily.has(f)),
+    ...[...byFamily.keys()].filter((f) => !FAMILY_ORDER.includes(f)),
+  ];
+
   return (
     <div className="min-h-screen bg-foyer-cream flex flex-col">
       <div className="max-w-2xl mx-auto w-full px-4 py-8 pb-32">
@@ -152,62 +188,75 @@ export function ReviewScreen({ projectId, initialDecisions, allowedByCategory }:
             Aucun élément détecté.
           </p>
         ) : (
-          <div className="space-y-3">
-            {decisions.map((d) => {
-              const current = overrides[d.element_id] ?? d.mismatch_type;
-              const isOverridden = d.element_id in overrides;
+          <div className="space-y-8">
+            {orderedFamilies.map((family) => (
+              <div key={family}>
+                <h2 className="text-xs font-medium uppercase tracking-[0.08em] text-foyer-muted mb-3">
+                  {FAMILY_LABELS[family] ?? family}
+                </h2>
+                <div className="space-y-3">
+                  {byFamily.get(family)!.map((g) => {
+                    const rep = g.rep;
+                    const current = overrides[g.ids[0]] ?? rep.mismatch_type;
+                    const isOverridden = g.ids.some((id) => id in overrides);
 
-              return (
-                <div
-                  key={d.element_id}
-                  className={`rounded-xl border p-4 transition-all ${
-                    isOverridden ? "border-foyer-terra/30 bg-foyer-terra/5" : "border-foyer-border bg-white"
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <div>
-                      <p className="text-sm font-medium text-foyer-ink capitalize">
-                        {d.category.replace(/_/g, " ")}
-                      </p>
-                      <p className="text-xs text-foyer-muted line-clamp-2">
-                        {d.description}
-                      </p>
-                      {d.action_label && current === "surface" && (
-                        <p className="text-xs text-foyer-terra mt-1">
-                          {d.action_label}
-                          {d.qty && d.qty_unit ? ` — ${d.qty} ${d.qty_unit}` : ""}
-                        </p>
-                      )}
-                    </div>
-                    {isOverridden && (
-                      <span className="text-[10px] text-foyer-terra bg-foyer-terra/10 px-2 py-0.5 rounded-full shrink-0">
-                        modifié
-                      </span>
-                    )}
-                  </div>
+                    return (
+                      <div
+                        key={g.key}
+                        className={`rounded-xl border p-4 transition-all ${
+                          isOverridden ? "border-foyer-terra/30 bg-foyer-terra/5" : "border-foyer-border bg-white"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3 mb-3">
+                          <div>
+                            <p className="text-sm font-medium text-foyer-ink capitalize">
+                              {rep.category.replace(/_/g, " ")}
+                              {g.ids.length > 1 && (
+                                <span className="ml-1 text-foyer-muted">×{g.ids.length}</span>
+                              )}
+                            </p>
+                            <p className="text-xs text-foyer-muted line-clamp-2">
+                              {rep.description}
+                            </p>
+                            {rep.action_label && current === "surface" && (
+                              <p className="text-xs text-foyer-terra mt-1">
+                                {rep.action_label}
+                                {rep.qty && rep.qty_unit ? ` — ${rep.qty} ${rep.qty_unit}` : ""}
+                              </p>
+                            )}
+                          </div>
+                          {isOverridden && (
+                            <span className="text-[10px] text-foyer-terra bg-foyer-terra/10 px-2 py-0.5 rounded-full shrink-0">
+                              modifié
+                            </span>
+                          )}
+                        </div>
 
-                  <div className="flex gap-1.5 flex-wrap">
-                    {ALL_ACTIONS.filter((type) => {
-                      const allowed = allowedByCategory?.[d.category];
-                      return !allowed || allowed.includes(ACTION_OF[type]);
-                    }).map((type) => {
-                      const active = current === type;
-                      return (
-                        <button
-                          key={type}
-                          onClick={() => toggle(d.element_id, type)}
-                          className={`px-3 py-1 text-xs rounded-lg border transition-all ${
-                            active ? MISMATCH_ACTIVE[type] : MISMATCH_COLORS[type]
-                          }`}
-                        >
-                          {MISMATCH_LABELS[type]}
-                        </button>
-                      );
-                    })}
-                  </div>
+                        <div className="flex gap-1.5 flex-wrap">
+                          {ALL_ACTIONS.filter((type) => {
+                            const allowed = allowedByCategory?.[rep.category];
+                            return !allowed || allowed.includes(ACTION_OF[type]);
+                          }).map((type) => {
+                            const active = current === type;
+                            return (
+                              <button
+                                key={type}
+                                onClick={() => toggleGroup(g.ids, type, rep.mismatch_type)}
+                                className={`px-3 py-1 text-xs rounded-lg border transition-all ${
+                                  active ? MISMATCH_ACTIVE[type] : MISMATCH_COLORS[type]
+                                }`}
+                              >
+                                {MISMATCH_LABELS[type]}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         )}
       </div>
