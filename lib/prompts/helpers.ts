@@ -149,17 +149,36 @@ export function formatDesignPlan(
   }> | null | undefined,
 ): string {
   if (!decisions?.length) return "";
-  const lines: string[] = [];
+
+  // Regroupe les éléments identiques (même type d'action + catégorie + description)
+  // → UNE ligne avec compteur. Un plan court et sans répétition est bien mieux
+  // suivi par le modèle image (ex. 4 chaises identiques = 1 instruction, pas 4).
+  type G = { d: (typeof decisions)[number]; count: number };
+  const groups = new Map<string, G>();
   for (const d of decisions) {
+    if (d.mismatch_type !== "surface" && d.mismatch_type !== "structural") continue;
+    const key = `${d.mismatch_type}|${d.category}|${(d.description ?? "").trim().toLowerCase()}`;
+    const g = groups.get(key);
+    if (g) g.count += 1;
+    else groups.set(key, { d, count: 1 });
+  }
+
+  const lines: string[] = [];
+  for (const { d, count } of groups.values()) {
     const what = (d.description?.trim() || d.category).replace(/\s+/g, " ");
+    const many = count > 1;
+    const tag = many ? ` (×${count})` : "";
     if (d.mismatch_type === "surface") {
       const qty = d.qty && d.qty_unit ? ` (≈ ${d.qty} ${d.qty_unit})` : "";
       lines.push(
-        `- RESTYLE ${what}: ${d.action_label ?? "personnaliser la finition pour s'accorder au style"}${qty}. Keep its shape, size and position.`,
+        `- RESTYLE ${what}${tag}: ${d.action_label ?? "personnaliser la finition pour s'accorder au style"}${qty}. Keep shape, size and position.`,
       );
-    } else if (d.mismatch_type === "structural") {
+    } else {
+      // REPLACE : instruction propre et explicite. On IGNORE volontairement
+      // action_label (souvent une suggestion "retapisser/repeindre" héritée du
+      // verdict qui CONTREDIT le remplacement et fait halluciner le modèle).
       lines.push(
-        `- REPLACE ${what}: ${d.action_label ?? "remplacer par un équivalent compatible avec le style"}. Same footprint and position, style-matching replacement.`,
+        `- REPLACE ${many ? `the ${count} ` : ""}${what}${tag}: put ${many ? `${count} ` : "a "}clearly different, style-matching ${many ? "pieces" : "piece"} in the same place(s) — same footprint and position. Do NOT reupholster or recolor the original.`,
       );
     }
   }
