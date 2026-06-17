@@ -4,6 +4,8 @@ import sharp from "sharp";
 import { nanoid } from "nanoid";
 import { resolvePrompt } from "@/lib/prompts/engine";
 import { loadStyleContext, loadRoomDefaults, formatUserInstructions, formatDesignPlan } from "@/lib/prompts/helpers";
+import { getElementCategoryEnum, getElementCategories } from "@/lib/db/assets";
+import { mergeShoppingItems } from "@/lib/shopping/categories";
 import { getImageProvider, getVisionProvider } from "./provider";
 import { saveRender } from "./saveRender";
 import { logPipelineEvent } from "./logger";
@@ -80,24 +82,72 @@ async function loadImage(url: string): Promise<ImageInput> {
   return { storageUrl: url };
 }
 
-function mapVisionToFurniture(visionOutput: unknown): DetectedFurniture[] {
-  const v = visionOutput as {
-    detectedElements?: Array<{
-      element?: string;
-      type?: string;
-      description?: string;
-      movable?: boolean;
-    }>;
-  } | null;
-  if (!v?.detectedElements) return [];
-  return v.detectedElements
-    .filter((e) => e.type === "furniture" || e.movable === true)
-    .map((e) => ({
+function profilesToFurniture(profiles: ElementProfile[]): DetectedFurniture[] {
+  return profiles
+    .filter((p) => p.movable !== false)
+    .map((p) => ({
       id: nanoid(),
-      type: e.element ?? "objet",
-      description: e.description ?? "",
+      type: p.element || p.category || "objet",
+      description: p.description ?? "",
       bbox: { x: 0.05, y: 0.05, w: 0.9, h: 0.9 },
       decision: "keep" as const,
+    }));
+}
+
+type RawProfile = Partial<ElementProfile> & { element_id?: string };
+
+/**
+ * APPEL VISION DÉTECTION (vision_detect_extended) → profils par élément normalisés.
+ * Partagé par l'analyse (review) ET la génération (fallback) : la détection n'est
+ * lancée qu'UNE fois par projet et réutilisée (cf. runGenerationPipeline qui
+ * réutilise les profils persistés par l'analyse au lieu de re-détecter).
+ */
+async function detectElementProfiles(
+  projectId: string,
+  sourceImage: ImageInput,
+  label: string,
+  roomType?: string,
+): Promise<ElementProfile[]> {
+  const tDet = Date.now();
+  // Taxonomie DB-driven : la liste des catégories autorisées est injectée depuis
+  // la table assets (element_category), filtrée par type de pièce.
+  const categories = await getElementCategoryEnum(roomType);
+  const detPrompt = await resolvePrompt("vision_detect_extended", { categories }, { strict: false });
+  const detResult = await withTracking(
+    {
+      step: "vision_detection",
+      projectId,
+      provider: detPrompt.prompt.provider,
+      requestPayload: { promptName: "vision_detect_extended", source: label },
+    },
+    () => getVisionProvider(detPrompt.prompt.provider).analyze(detPrompt.resolvedTemplate, [sourceImage]),
+  );
+  console.log(`[pipeline:${label}] detection: ${Date.now() - tDet}ms`);
+  await logPipelineEvent({
+    project_id: projectId,
+    event: "detection",
+    step: "detection",
+    provider: detPrompt.prompt.provider,
+    duration_ms: Date.now() - tDet,
+  });
+
+  const detParsed = detResult.parsed;
+  const rawProfiles: RawProfile[] = Array.isArray(detParsed)
+    ? (detParsed as RawProfile[])
+    : ((detParsed as { elementProfiles?: RawProfile[] } | null)?.elementProfiles ?? []);
+
+  return rawProfiles
+    .filter((p) => typeof p.element_id === "string")
+    .map((p) => ({
+      element_id: p.element_id!,
+      element: p.element ?? "",
+      category: p.category ?? "other",
+      description: p.description ?? "",
+      material_family: p.material_family ?? "unknown",
+      surface_features: p.surface_features ?? [],
+      condition: p.condition ?? "good",
+      movable: p.movable ?? true,
+      dims: p.dims ?? {},
     }));
 }
 
@@ -139,6 +189,10 @@ type VerdictInput = {
   action_label: string | null;
 };
 
+// Fournitures DIY conservées dans la shopping list pour l'instant : seulement les
+// matériaux cœur (peinture, moulures, tasseaux). Le reste est filtré (cf. plus bas).
+const KEPT_SUPPLY_RE = /peinture|moulure|tasseau/i;
+
 async function resolveElementDecision(
   verdict: VerdictInput,
   profile: ElementProfile,
@@ -170,15 +224,20 @@ async function resolveElementDecision(
     }
 
     if (action.supplies_template && action.supplies_template.length > 0) {
-      supply_items = action.supplies_template.map((s) => {
-        let resolvedQty = 0;
-        try {
-          resolvedQty = evalQtyFormula(s.qty_formula, dims);
-        } catch {
-          resolvedQty = 0;
-        }
-        return { name: s.name, qty: resolvedQty, unit: s.unit };
-      });
+      // Temporaire : on ne garde que les matériaux cœur (peinture, moulures,
+      // tasseaux) ; les consommables (rouleau, apprêt, papier de verre, colle,
+      // vis…) sont retirés pour réduire le bruit le temps des tests. À étendre.
+      supply_items = action.supplies_template
+        .filter((s) => KEPT_SUPPLY_RE.test(s.name))
+        .map((s) => {
+          let resolvedQty = 0;
+          try {
+            resolvedQty = evalQtyFormula(s.qty_formula, dims);
+          } catch {
+            resolvedQty = 0;
+          }
+          return { name: s.name, qty: resolvedQty, unit: s.unit };
+        });
     }
   }
 
@@ -214,48 +273,12 @@ export async function runAnalysisPipeline(projectId: string): Promise<void> {
   const actionMap = new Map(allActions.map((a) => [a.slug, a]));
 
   // ── 2. APPEL 1 — DÉTECTION (profils par élément, aucun verdict) ────────────
-  const tDet = Date.now();
-  const detPrompt = await resolvePrompt("vision_detect_extended", {}, { strict: false });
-  const detResult = await withTracking(
-    {
-      step: "vision_detection",
-      projectId,
-      provider: detPrompt.prompt.provider,
-      requestPayload: { promptName: "vision_detect_extended" },
-    },
-    () => getVisionProvider(detPrompt.prompt.provider).analyze(detPrompt.resolvedTemplate, [sourceImage]),
-  );
-  console.log(`[pipeline:analyze] detection: ${Date.now() - tDet}ms`);
-  await logPipelineEvent({
-    project_id: projectId,
-    event: "detection",
-    step: "detection",
-    provider: detPrompt.prompt.provider,
-    duration_ms: Date.now() - tDet,
-  });
-
-  type RawProfile = Partial<ElementProfile> & { element_id?: string };
-  const detParsed = detResult.parsed;
-  const rawProfiles: RawProfile[] = Array.isArray(detParsed)
-    ? (detParsed as RawProfile[])
-    : ((detParsed as { elementProfiles?: RawProfile[] } | null)?.elementProfiles ?? []);
-
-  const profiles: ElementProfile[] = rawProfiles
-    .filter((p) => typeof p.element_id === "string")
-    .map((p) => ({
-      element_id: p.element_id!,
-      element: p.element ?? "",
-      category: p.category ?? "other",
-      description: p.description ?? "",
-      material_family: p.material_family ?? "unknown",
-      surface_features: p.surface_features ?? [],
-      condition: p.condition ?? "good",
-      movable: p.movable ?? true,
-      dims: p.dims ?? {},
-    }));
+  // Persistée dans visionOutput → réutilisée telle quelle par la génération
+  // (plus de 2e appel Vision sur generate).
+  const profiles = await detectElementProfiles(projectId, sourceImage, "analyze", project.roomType);
 
   if (profiles.length === 0) {
-    await updateProject(projectId, { element_decisions: [], ...CLEAR_FINALIZE });
+    await updateProject(projectId, { element_decisions: [], visionOutput: profiles, ...CLEAR_FINALIZE });
     return;
   }
 
@@ -377,7 +400,7 @@ export async function runAnalysisPipeline(projectId: string): Promise<void> {
     }),
   );
 
-  await updateProject(projectId, { element_decisions: decisions, ...CLEAR_FINALIZE });
+  await updateProject(projectId, { element_decisions: decisions, visionOutput: profiles, ...CLEAR_FINALIZE });
   console.log(`[pipeline:analyze] saved ${decisions.length} decisions (2 calls: detection + verdict)`);
 }
 
@@ -390,32 +413,20 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
 
   const sourceImage = await loadImage(project.basePhotoUrl);
 
-  // 1. Vision
-  const t0 = Date.now();
-  const visionPrompt = await resolvePrompt("vision_detect", {}, { strict: false });
-  const visionResult = await withTracking(
-    { step: "vision_detection", projectId, provider: visionPrompt.prompt.provider,
-      requestPayload: { promptName: "vision_detect", prompt: visionPrompt.resolvedTemplate.slice(0, 5000) } },
-    () => getVisionProvider(visionPrompt.prompt.provider).analyze(visionPrompt.resolvedTemplate, [sourceImage]),
-  );
-  const visionDuration = Date.now() - t0;
-  console.log(`[pipeline:generate] vision: ${visionDuration}ms`);
-  await logPipelineEvent({
-    project_id: projectId,
-    event: "detection",
-    step: "vision",
-    provider: visionPrompt.prompt.provider,
-    duration_ms: visionDuration,
-  });
-
-  const visionOutput = visionResult.parsed;
-  const warnings = (visionOutput as { qualityWarnings?: string[] })?.qualityWarnings ?? [];
-  if (warnings.length > 0) {
-    console.warn("[pipeline:generate] quality warnings:", warnings);
+  // 1. Détection — RÉUTILISE les profils produits par l'analyse (review). La
+  // détection n'est plus relancée ici (1 appel Vision en moins par génération).
+  // Fallback : si la génération est déclenchée sans analyse préalable, on détecte
+  // une fois et on persiste.
+  let profiles = Array.isArray(project.visionOutput)
+    ? (project.visionOutput as ElementProfile[])
+    : [];
+  if (profiles.length === 0) {
+    profiles = await detectElementProfiles(projectId, sourceImage, "generate", project.roomType);
+    await updateProject(projectId, { visionOutput: profiles });
+  } else {
+    console.log(`[pipeline:generate] réutilise ${profiles.length} profils de l'analyse (pas de 2e appel Vision)`);
   }
-
-  const furniture = mapVisionToFurniture(visionOutput);
-  await updateProject(projectId, { visionOutput, detectedFurniture: furniture });
+  await updateProject(projectId, { detectedFurniture: profilesToFurniture(profiles) });
 
   // 2. Style context
   const { styleName, styleMood } = await loadStyleContext(project.selectedStyleId);
@@ -433,7 +444,7 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
     styleMood,
     roomType: project.roomType,
     furnitureDefaults,
-    visionJson: JSON.stringify(visionOutput, null, 2),
+    visionJson: JSON.stringify(profiles, null, 2),
     userInstructions,
     designPlan: designPlan || "None — restyle freely to fit the style.",
   };
@@ -837,28 +848,32 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
     return d;
   });
 
+  // Taxonomie DB → résolution catégorie unique (build + matcher), + non-matchés visibles.
+  const elementCategories = await getElementCategories().catch(() => []);
+  const taxonomy = new Map(elementCategories.map((c) => [c.slug, c.catalog_category]));
+
   const plan = reconcilePlan(effective, { elements: [] }, { repairAlreadyUsed: false });
-  const built = buildShoppingList(plan, project.selectedStyleId);
+  const built = buildShoppingList(plan, project.selectedStyleId, taxonomy);
   const fromDecisions = builtToLegacyShoppingList(built);
-  const fromAdditions = matchAlterationsToCatalog(additions, project.selectedStyleId);
+  const fromAdditions = matchAlterationsToCatalog(additions, project.selectedStyleId, taxonomy);
 
-  // Fusion (décisions confirmées + ajouts), dédupliquée par id.
-  const seen = new Set<string>();
-  const shoppingList = [...fromDecisions, ...fromAdditions].filter((i) => {
-    if (seen.has(i.id)) return false;
-    seen.add(i.id);
-    return true;
-  });
+  // Fusion décisions + ajouts, identiques regroupés en quantité (×N).
+  const shoppingList = mergeShoppingItems([...fromDecisions, ...fromAdditions]);
 
+  // Score recalculé sur la liste finale, en UNITÉS (quantité incluse).
+  const unitsWhere = (pred: (i: ShoppingItem) => boolean) =>
+    shoppingList.filter(pred).reduce((s, i) => s + (i.quantity ?? 1), 0);
+  const shUnits = unitsWhere((i) => i.source === "secondhand");
+  const ecoNewUnits = unitsWhere((i) => i.source !== "secondhand" && i.merchants.length > 0);
   const scoreFoyer: ScoreFoyer = {
-    ...built.score,
-    secondhand: built.score.secondhand + fromAdditions.filter((i) => i.source === "secondhand").length,
-    ecoNew:
-      built.score.ecoNew +
-      fromAdditions.filter((i) => i.source !== "secondhand" && i.merchants.length > 0).length,
-    totalEstimated:
-      built.score.totalEstimated +
-      fromAdditions.reduce((s, i) => s + (i.priceMin + i.priceMax) / 2, 0),
+    kept: built.score.kept,
+    secondhand: shUnits,
+    ecoNew: ecoNewUnits,
+    co2SavedKg: built.score.kept * 30 + shUnits * 20 + ecoNewUnits * 5,
+    totalEstimated: shoppingList.reduce(
+      (s, i) => s + ((i.priceMin + i.priceMax) / 2) * (i.quantity ?? 1),
+      0,
+    ),
   };
 
   await updateProject(projectId, { shoppingList, scoreFoyer, builtShoppingList: built });

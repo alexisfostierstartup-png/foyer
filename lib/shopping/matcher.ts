@@ -1,5 +1,6 @@
 import { CATALOG, type CatalogCategory, type CatalogProduct } from "./catalog";
 import type { ShoppingItem, ShoppingSource, ScoreFoyer } from "@/lib/types";
+import { resolveCatalogCategory, mergeShoppingItems } from "./categories";
 
 // Alteration as returned by extract_alterations AI prompt
 export type Alteration = {
@@ -9,43 +10,6 @@ export type Alteration = {
   detail?: string;
   shoppingImpact: "none" | "to_buy" | "to_buy_secondhand" | "diy_material";
 };
-
-// ── Category normalisation ────────────────────────────────────────────────────
-const CATEGORY_MAP: Record<string, CatalogCategory> = {
-  floor: "floor_material",
-  floor_changed: "floor_material",
-  flooring: "floor_material",
-  moldings: "mouldings",
-  molding: "mouldings",
-  bookcase: "bookshelf",
-  shelf: "bookshelf",
-  shelving: "bookshelf",
-  wardrobe: "dresser",
-  closet: "dresser",
-  table: "coffee_table",
-  "coffee table": "coffee_table",
-  "side table": "side_table",
-  armchair: "armchair",
-  "arm chair": "armchair",
-  "floor lamp": "floor_lamp",
-  "floor light": "floor_lamp",
-  "tv unit": "tv_stand",
-  "media unit": "tv_stand",
-  curtain: "curtains",
-  drapes: "curtains",
-};
-
-function normaliseCategory(raw: string): CatalogCategory | null {
-  const lower = raw.toLowerCase().trim();
-  if (CATEGORY_MAP[lower]) return CATEGORY_MAP[lower];
-  const direct = lower.replace(/\s+/g, "_") as CatalogCategory;
-  const valid: CatalogCategory[] = [
-    "sofa", "armchair", "coffee_table", "side_table", "rug", "lamp",
-    "floor_lamp", "tv_stand", "bookshelf", "bed", "nightstand", "dresser",
-    "curtains", "cushion", "plant", "paint", "mouldings", "floor_material", "other",
-  ];
-  return valid.includes(direct) ? direct : null;
-}
 
 // ── Eco RSE advice for heavy alterations ─────────────────────────────────────
 const RSE_ADVICE: Partial<Record<CatalogCategory, string>> = {
@@ -131,12 +95,12 @@ function unmatchedToShoppingItem(alteration: Alteration): ShoppingItem {
 export function matchAlterationsToCatalog(
   alterations: Alteration[],
   styleId: string | null,
+  taxonomy?: Map<string, string | null>,
 ): ShoppingItem[] {
-  const seen = new Set<string>();
-  return alterations
+  const items = alterations
     .filter((a) => a.shoppingImpact !== "none")
     .map((a) => {
-      const cat = normaliseCategory(a.category);
+      const cat = resolveCatalogCategory(a.category, taxonomy);
       if (!cat) return unmatchedToShoppingItem(a);
 
       const preferSecondhand = a.shoppingImpact === "to_buy_secondhand";
@@ -145,12 +109,9 @@ export function matchAlterationsToCatalog(
       if (!product) return unmatchedToShoppingItem(a);
 
       return catalogToShoppingItem(product, a);
-    })
-    .filter((item) => {
-      if (seen.has(item.id)) return false;
-      seen.add(item.id);
-      return true;
     });
+  // Fusionne les identiques en quantité (ex. plusieurs chaises ajoutées → ×N).
+  return mergeShoppingItems(items);
 }
 
 export function computeScoreFoyer(
@@ -164,7 +125,7 @@ export function computeScoreFoyer(
   const co2SavedKg = kept * 30 + secondhand * 20 + ecoNew * 5;
 
   const totalEstimated = shoppingList.reduce(
-    (sum, item) => sum + (item.priceMin + item.priceMax) / 2,
+    (sum, item) => sum + ((item.priceMin + item.priceMax) / 2) * (item.quantity ?? 1),
     0,
   );
 

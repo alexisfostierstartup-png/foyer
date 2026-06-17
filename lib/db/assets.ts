@@ -63,6 +63,60 @@ export async function getAmbiances(): Promise<Style[]> {
   return (data ?? []).map(mapAmbianceRow);
 }
 
+// ─── Taxonomie d'éléments (source unique des catégories de détection) ────────
+
+export type ElementCategory = {
+  slug: string;
+  label_fr: string;
+  label_en: string;
+  family: string;
+  room_types: string[];
+  movable: boolean;
+  diy_eligible: boolean;
+  catalog_category: string | null;
+  fixed_lightpoint?: boolean;
+  preserve_behind?: boolean;
+};
+
+// Repli si la table assets ne renvoie rien (DB vide / erreur) → la détection ne
+// casse jamais. Liste plate équivalente à l'ancien enum hardcodé.
+const FALLBACK_CATEGORY_ENUM =
+  "- sofa, armchair, chair, bed, wardrobe, dresser, bookshelf, tv_stand, coffee_table, side_table, nightstand, shelf, floor, wall, ceiling, window, door, headboard, bench, rug, lamp, plant, other";
+
+export async function getElementCategories(): Promise<ElementCategory[]> {
+  const { data } = await createSupabaseAdmin()
+    .from("assets")
+    .select("slug, data")
+    .eq("category", "element_category")
+    .eq("is_active", true)
+    .order("sort_order");
+  return (data ?? []).map((a) => ({
+    slug: a.slug,
+    ...(a.data as Omit<ElementCategory, "slug">),
+  }));
+}
+
+/**
+ * Construit le bloc {{categories}} injecté dans vision_detect_extended : familles
+ * → types précis, filtré par type de pièce. Repli sur l'ancien enum si vide.
+ */
+export async function getElementCategoryEnum(roomType?: string): Promise<string> {
+  const cats = await getElementCategories().catch(() => [] as ElementCategory[]);
+  const filtered = cats.filter(
+    (c) => !roomType || !c.room_types?.length || c.room_types.includes(roomType),
+  );
+  if (filtered.length === 0) return FALLBACK_CATEGORY_ENUM;
+
+  const byFamily = new Map<string, ElementCategory[]>();
+  for (const c of filtered) {
+    if (!byFamily.has(c.family)) byFamily.set(c.family, []);
+    byFamily.get(c.family)!.push(c);
+  }
+  return [...byFamily.entries()]
+    .map(([family, items]) => `- ${family}: ${items.map((c) => `${c.slug} (${c.label_fr})`).join(", ")}`)
+    .join("\n");
+}
+
 export async function getAmbianceById(slugOrId: string): Promise<Style | null> {
   const supabase = createSupabaseAdmin();
   const { data } = await supabase

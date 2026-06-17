@@ -86,13 +86,15 @@ function normalizeMerchant(m: ShoppingMerchant | string): ShoppingMerchant {
 
 // ── Price display ─────────────────────────────────────────────────────────────
 function displayPrice(item: ShoppingItem): string {
+  const qty = item.quantity ?? 1;
   if (item.priceMin > 0 && item.priceMin === item.priceMax) {
-    return `${item.priceMin} €`;
+    return `${item.priceMin * qty} €`;
   }
   const mid = item.priceMin && item.priceMax
     ? Math.round((item.priceMin + item.priceMax) / 2)
     : item.priceMin || item.priceMax;
-  return mid ? `~${mid} €` : "–";
+  const total = mid * qty;
+  return total ? `~${total} €` : "–";
 }
 
 // ── Card ──────────────────────────────────────────────────────────────────────
@@ -125,7 +127,12 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <p className="truncate text-[15px] font-medium text-foyer-ink">{item.name}</p>
+          <p className="truncate text-[15px] font-medium text-foyer-ink">
+            {item.name}
+            {(item.quantity ?? 1) > 1 && (
+              <span className="ml-1 text-foyer-muted">×{item.quantity}</span>
+            )}
+          </p>
           <div className="flex flex-wrap items-center gap-2">
             <SourceTag source={selected.source} />
             <span className="text-[13px] text-foyer-muted">{selected.name}</span>

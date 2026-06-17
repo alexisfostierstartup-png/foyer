@@ -85,11 +85,20 @@ export type CatalogEntry = {
   imgUrl?: string;
 };
 
+// Élément à remplacer mais sans produit catalogue correspondant → affiché
+// "À sourcer" (visible) au lieu d'être droppé silencieusement.
+export type UnmatchedEntry = {
+  element_id: string;
+  description: string;
+  category: string;
+};
+
 export type BuiltShoppingList = {
   kept: ElementDecision[];
   diy: DiyEntry[];
   secondhand: CatalogEntry[];
   ecoNew: CatalogEntry[];
+  unmatched: UnmatchedEntry[];
   dropped: DroppedItem[];
   score: ScoreFoyer;
 };

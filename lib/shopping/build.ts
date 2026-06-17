@@ -1,7 +1,8 @@
 import { CATALOG } from "./catalog";
 import type { CatalogCategory, CatalogProduct } from "./catalog";
-import type { ReconciledPlan, BuiltShoppingList, DiyEntry, CatalogEntry } from "./types";
+import type { ReconciledPlan, BuiltShoppingList, DiyEntry, CatalogEntry, UnmatchedEntry } from "./types";
 import type { ScoreFoyer, ShoppingItem, ShoppingSource } from "@/lib/types";
+import { resolveCatalogCategory, mergeShoppingItems } from "./categories";
 
 const ACTION_META: Record<string, { difficulty: "facile" | "intermédiaire" | "avancé"; time_h: number }> = {
   repaint:             { difficulty: "facile",          time_h: 4  },
@@ -20,31 +21,6 @@ const ACTION_META: Record<string, { difficulty: "facile" | "intermédiaire" | "a
   lay_tiles:           { difficulty: "avancé",          time_h: 24 },
   refinish_floor:      { difficulty: "avancé",          time_h: 16 },
 };
-
-const CATEGORY_NORMALISE: Record<string, CatalogCategory> = {
-  floor: "floor_material", flooring: "floor_material", floor_changed: "floor_material",
-  moldings: "mouldings",  molding: "mouldings",
-  bookcase: "bookshelf",  shelf: "bookshelf", shelving: "bookshelf",
-  wardrobe: "dresser",    closet: "dresser",
-  table: "coffee_table",
-  armchair: "armchair",   "arm chair": "armchair",
-  "floor lamp": "floor_lamp",
-  "tv unit": "tv_stand",  "media unit": "tv_stand",
-  curtain: "curtains",    drapes: "curtains",
-};
-
-const VALID_CATEGORIES: CatalogCategory[] = [
-  "sofa","armchair","coffee_table","side_table","rug","lamp","floor_lamp",
-  "tv_stand","bookshelf","bed","nightstand","dresser","curtains","cushion",
-  "plant","paint","mouldings","floor_material","other",
-];
-
-function toCategory(raw: string): CatalogCategory | null {
-  const lower = raw.toLowerCase().trim();
-  if (CATEGORY_NORMALISE[lower]) return CATEGORY_NORMALISE[lower];
-  const direct = lower.replace(/\s+/g, "_") as CatalogCategory;
-  return VALID_CATEGORIES.includes(direct) ? direct : null;
-}
 
 function findProduct(
   category: CatalogCategory,
@@ -67,6 +43,7 @@ function findProduct(
 export function buildShoppingList(
   plan: ReconciledPlan,
   styleId: string | null = null,
+  taxonomy?: Map<string, string | null>,
 ): BuiltShoppingList {
   // ── DIY entries ───────────────────────────────────────────────────────────
   const diy: DiyEntry[] = plan.applied.map((item) => ({
@@ -83,16 +60,20 @@ export function buildShoppingList(
   // ── Catalog entries from structural decisions ──────────────────────────────
   const secondhand: CatalogEntry[] = [];
   const ecoNew: CatalogEntry[] = [];
-  const seen = new Set<string>();
+  const unmatched: UnmatchedEntry[] = [];
 
+  // Pas de dédup ici : les identiques sont fusionnés plus tard avec une quantité
+  // (mergeShoppingItems), pour ne plus perdre le compte (ex. 6 chaises → ×6).
   for (const d of plan.toReplace) {
-    const cat = toCategory(d.category);
-    if (!cat) continue;
+    const cat = resolveCatalogCategory(d.category, taxonomy);
+    if (!cat) {
+      unmatched.push({ element_id: d.element_id, description: d.description, category: d.category });
+      continue;
+    }
 
     // Prefer secondhand
     const shProduct = findProduct(cat, styleId, true);
-    if (shProduct && shProduct.source === "secondhand" && !seen.has(shProduct.id)) {
-      seen.add(shProduct.id);
+    if (shProduct && shProduct.source === "secondhand") {
       secondhand.push({
         element_id: d.element_id,
         description: d.description,
@@ -109,8 +90,7 @@ export function buildShoppingList(
 
     // Fallback eco new
     const newProduct = findProduct(cat, styleId, false);
-    if (newProduct && !seen.has(newProduct.id)) {
-      seen.add(newProduct.id);
+    if (newProduct) {
       ecoNew.push({
         element_id: d.element_id,
         description: d.description,
@@ -122,7 +102,11 @@ export function buildShoppingList(
         url: newProduct.productUrl !== "#" ? newProduct.productUrl : undefined,
         imgUrl: newProduct.imgUrl,
       });
+      continue;
     }
+
+    // Catégorie valide mais aucun produit catalogue → à sourcer (visible).
+    unmatched.push({ element_id: d.element_id, description: d.description, category: cat });
   }
 
   // ── Score Foyer ───────────────────────────────────────────────────────────
@@ -143,6 +127,7 @@ export function buildShoppingList(
     diy,
     secondhand,
     ecoNew,
+    unmatched,
     dropped: plan.dropList,
     score,
   };
@@ -199,5 +184,21 @@ export function builtToLegacyShoppingList(built: BuiltShoppingList): ShoppingIte
     });
   }
 
-  return items;
+  // Non-matchés → ligne "À sourcer" (sans marchand, prix 0). id keyé sur
+  // catégorie+description pour fusionner les identiques en quantité.
+  for (const entry of built.unmatched) {
+    items.push({
+      id: `unmatched-${entry.category}-${entry.description}`,
+      name: entry.description || entry.category,
+      category: entry.category,
+      detail: "",
+      priceMin: 0,
+      priceMax: 0,
+      source: "new" as ShoppingSource,
+      merchants: [],
+    });
+  }
+
+  // Fusionne les lignes identiques en quantité (ex. 6 chaises → 1 ligne ×6).
+  return mergeShoppingItems(items);
 }

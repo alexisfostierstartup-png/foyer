@@ -23,6 +23,11 @@ const CATEGORIES = [
     label: "Palettes murales",
     description: "Couleurs de peinture murale avec code hex.",
   },
+  {
+    slug: "element_category",
+    label: "Catégories d'éléments",
+    description: "Taxonomie de détection : familles → types précis (TV, table basse, plafonnier…).",
+  },
 ];
 
 export default async function AdminAssetsPage() {

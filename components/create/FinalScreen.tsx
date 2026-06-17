@@ -91,7 +91,7 @@ function ScoreFoyerTab({
   const ecoNew = score?.ecoNew ?? 0;
   const total = kept + secondhand + ecoNew || 1;
   const co2 = score?.co2SavedKg ?? kept * 30 + secondhand * 20 + ecoNew * 5;
-  const budget = score?.totalEstimated ?? shoppingList.reduce((s, i) => s + (i.priceMin + i.priceMax) / 2, 0);
+  const budget = score?.totalEstimated ?? shoppingList.reduce((s, i) => s + ((i.priceMin + i.priceMax) / 2) * (i.quantity ?? 1), 0);
 
   const segments = [
     { value: Math.round((kept / total) * 100), label: "conservé", color: "#6B8E6F", dot: "bg-foyer-sage" },
@@ -524,7 +524,10 @@ function EnhancedListeShoppingTab({
                   className="flex items-center gap-3 rounded-xl border border-dashed border-foyer-border bg-white px-4 py-3"
                 >
                   <span className="size-2 shrink-0 rounded-full bg-foyer-muted/40" aria-hidden />
-                  <span className="text-[14px] capitalize text-foyer-muted">{item.name}</span>
+                  <span className="text-[14px] capitalize text-foyer-muted">
+                    {item.name}
+                    {(item.quantity ?? 1) > 1 ? ` ×${item.quantity}` : ""}
+                  </span>
                   <span className="ml-auto text-[12px] text-foyer-muted">À sourcer</span>
                 </li>
               ))}

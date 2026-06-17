@@ -8,6 +8,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   room_defaults: "Defaults pièce",
   floor_preset: "Presets sol",
   wall_palette: "Palettes murales",
+  element_category: "Catégories d'éléments",
 };
 
 export default async function NewAssetPage({

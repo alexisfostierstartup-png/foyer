@@ -50,6 +50,9 @@ export type ShoppingItem = {
   source: ShoppingSource;
   merchants: ShoppingMerchant[];
   imgUrl?: string;
+  // Nombre d'exemplaires identiques fusionnés sur cette ligne (ex. 6 chaises → 6).
+  // Absent ou 1 = une seule unité.
+  quantity?: number;
 };
 
 export type { ElementDecision } from "./diy/types";

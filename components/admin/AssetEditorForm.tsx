@@ -134,6 +134,63 @@ function WallPaletteFields({
   );
 }
 
+function ElementCategoryFields({
+  data,
+  onChange,
+}: {
+  data: Record<string, unknown>;
+  onChange: (d: Record<string, unknown>) => void;
+}) {
+  function update(key: string, value: unknown) {
+    onChange({ ...data, [key]: value });
+  }
+  const rooms = (data.room_types as string[] | undefined) ?? [];
+  function toggleRoom(r: string) {
+    update("room_types", rooms.includes(r) ? rooms.filter((x) => x !== r) : [...rooms, r]);
+  }
+  const Check = ({ k, label }: { k: string; label: string }) => (
+    <label className="flex items-center gap-2 text-sm text-foyer-ink cursor-pointer">
+      <input type="checkbox" checked={Boolean(data[k])} onChange={(e) => update(k, e.target.checked)} />
+      {label}
+    </label>
+  );
+
+  return (
+    <>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <Field label="Label (FR)">
+          <input value={String(data.label_fr ?? "")} onChange={(e) => update("label_fr", e.target.value)} className={inputCls} placeholder="Table basse" />
+        </Field>
+        <Field label="Label (EN)">
+          <input value={String(data.label_en ?? "")} onChange={(e) => update("label_en", e.target.value)} className={inputCls} placeholder="coffee table" />
+        </Field>
+        <Field label="Famille">
+          <input value={String(data.family ?? "")} onChange={(e) => update("family", e.target.value)} className={inputCls} placeholder="table" />
+        </Field>
+        <Field label="Catégorie catalogue (mapping shopping, vide = non matché)">
+          <input value={String(data.catalog_category ?? "")} onChange={(e) => update("catalog_category", e.target.value || null)} className={inputCls + " font-mono"} placeholder="coffee_table" />
+        </Field>
+      </div>
+      <Field label="Types de pièce">
+        <div className="flex gap-4">
+          {["salon", "chambre"].map((r) => (
+            <label key={r} className="flex items-center gap-2 text-sm text-foyer-ink cursor-pointer">
+              <input type="checkbox" checked={rooms.includes(r)} onChange={() => toggleRoom(r)} />
+              {r}
+            </label>
+          ))}
+        </div>
+      </Field>
+      <div className="flex flex-wrap gap-x-6 gap-y-2">
+        <Check k="movable" label="Déplaçable" />
+        <Check k="diy_eligible" label="Éligible DIY (personnalisable)" />
+        <Check k="fixed_lightpoint" label="Point lumineux fixe (remplacer en place)" />
+        <Check k="preserve_behind" label="Préserver l'arrière (fenêtre/porte)" />
+      </div>
+    </>
+  );
+}
+
 // ─── Shared helpers ──────────────────────────────────────────────────────────
 
 const inputCls =
@@ -170,6 +227,10 @@ const DEFAULT_DATA: Record<string, Record<string, unknown>> = {
   room_defaults: { englishFurniture: "" },
   floor_preset: { label: "", description: "" },
   wall_palette: { label: "", hex: "", description: "" },
+  element_category: {
+    label_fr: "", label_en: "", family: "", room_types: ["salon", "chambre"],
+    movable: true, diy_eligible: false, catalog_category: null,
+  },
 };
 
 export function AssetEditorForm({
@@ -323,6 +384,9 @@ export function AssetEditorForm({
         )}
         {category === "wall_palette" && (
           <WallPaletteFields data={data} onChange={setData} />
+        )}
+        {category === "element_category" && (
+          <ElementCategoryFields data={data} onChange={setData} />
         )}
       </div>
 
