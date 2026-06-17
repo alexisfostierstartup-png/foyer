@@ -52,25 +52,24 @@ type Family = "Mobilier" | "Décoration" | "Accessoires" | "Fournitures";
 const FAMILIES: Family[] = ["Mobilier", "Décoration", "Accessoires", "Fournitures"];
 
 const CATEGORY_FAMILY: Record<string, Family> = {
-  sofa: "Mobilier",
-  armchair: "Mobilier",
-  coffee_table: "Mobilier",
-  side_table: "Mobilier",
-  tv_stand: "Mobilier",
-  bookshelf: "Mobilier",
-  bed: "Mobilier",
-  nightstand: "Mobilier",
-  dresser: "Mobilier",
-  rug: "Décoration",
-  lamp: "Décoration",
-  floor_lamp: "Décoration",
-  curtains: "Décoration",
-  cushion: "Accessoires",
-  plant: "Accessoires",
-  other: "Accessoires",
-  paint: "Fournitures",
-  mouldings: "Fournitures",
-  floor_material: "Fournitures",
+  // Mobilier
+  sofa: "Mobilier", armchair: "Mobilier", chair: "Mobilier", dining_chair: "Mobilier",
+  bench: "Mobilier", stool: "Mobilier", pouf: "Mobilier",
+  coffee_table: "Mobilier", side_table: "Mobilier", dining_table: "Mobilier",
+  console_table: "Mobilier", bar_table: "Mobilier", desk: "Mobilier",
+  bookshelf: "Mobilier", shelf: "Mobilier", tv_stand: "Mobilier", dresser: "Mobilier",
+  sideboard: "Mobilier", wardrobe: "Mobilier", cabinet: "Mobilier", nightstand: "Mobilier",
+  bed: "Mobilier", headboard: "Mobilier", mattress: "Mobilier", television: "Mobilier",
+  // Décoration
+  rug: "Décoration", curtains: "Décoration",
+  lamp: "Décoration", ceiling_light: "Décoration", wall_sconce: "Décoration",
+  table_lamp: "Décoration", floor_lamp: "Décoration",
+  mirror: "Décoration", frame: "Décoration", plant: "Décoration",
+  // Accessoires
+  cushion: "Accessoires", decor_object: "Accessoires", other: "Accessoires",
+  // Fournitures (surfaces & matériaux)
+  paint: "Fournitures", mouldings: "Fournitures", floor_material: "Fournitures",
+  floor: "Fournitures", wall: "Fournitures", ceiling: "Fournitures",
 };
 
 function toFamily(category: string): Family {
@@ -466,7 +465,9 @@ function EnhancedListeShoppingTab({
   // Group shopping items by family
   const byFamily = new Map<Family, ShoppingItem[]>();
   for (const item of dedupedList) {
-    const f = toFamily(item.category);
+    // Les fournitures DIY (peinture, moulures, tasseaux) héritent de la catégorie
+    // de l'élément (ex. "wall") → on les force dans « Fournitures » via la source.
+    const f = item.source === "diy" ? "Fournitures" : toFamily(item.category);
     if (!byFamily.has(f)) byFamily.set(f, []);
     byFamily.get(f)!.push(item);
   }
