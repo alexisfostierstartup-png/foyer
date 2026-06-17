@@ -107,14 +107,10 @@ export async function getElementCategoryEnum(roomType?: string): Promise<string>
   );
   if (filtered.length === 0) return FALLBACK_CATEGORY_ENUM;
 
-  const byFamily = new Map<string, ElementCategory[]>();
-  for (const c of filtered) {
-    if (!byFamily.has(c.family)) byFamily.set(c.family, []);
-    byFamily.get(c.family)!.push(c);
-  }
-  return [...byFamily.entries()]
-    .map(([family, items]) => `- ${family}: ${items.map((c) => `${c.slug} (${c.label_fr})`).join(", ")}`)
-    .join("\n");
+  // Liste PLATE `slug = libellé` : le slug (gauche du =) est la valeur de
+  // `category`. On n'injecte PAS la famille ici (elle ne sert qu'au regroupement
+  // UI) pour éviter que le modèle renvoie un nom de famille comme catégorie.
+  return filtered.map((c) => `- ${c.slug} = ${c.label_fr}`).join("\n");
 }
 
 export async function getAmbianceById(slugOrId: string): Promise<Style | null> {

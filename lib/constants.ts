@@ -28,3 +28,9 @@ export const UPLOAD_MAX_DIMENSION = 1024; // px, longest edge after resize
 // Free-tier limits before auth / paywall.
 export const MAX_FREE_GENERATIONS = 1;
 export const MAX_FREE_EDITS = 2;
+
+// Mode test : la liste de courses finale n'associe PAS de produit catalogue par
+// défaut. Chaque élément à acheter est affiché « À sourcer » avec sa catégorie,
+// matière et couleur (issues de l'audit), pour vérifier le travail de l'audit.
+// Repasser à false pour réactiver le matching catalogue (vraie liste de courses).
+export const SHOPPING_RAW_AUDIT_MODE = true;

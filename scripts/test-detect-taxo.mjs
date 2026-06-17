@@ -14,9 +14,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function buildEnum(roomType) {
   const { data } = await sb.from("assets").select("slug,data,sort_order").eq("category", "element_category").eq("is_active", true).order("sort_order");
   const filtered = (data ?? []).filter((a) => !roomType || !a.data.room_types?.length || a.data.room_types.includes(roomType));
-  const byFam = new Map();
-  for (const a of filtered) { if (!byFam.has(a.data.family)) byFam.set(a.data.family, []); byFam.get(a.data.family).push(a); }
-  return [...byFam.entries()].map(([f, items]) => `- ${f}: ${items.map((a) => `${a.slug} (${a.data.label_fr})`).join(", ")}`).join("\n");
+  return filtered.map((a) => `- ${a.slug} = ${a.data.label_fr}`).join("\n");
 }
 
 async function vision(prompt, buf) {

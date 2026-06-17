@@ -1,6 +1,7 @@
 import { CATALOG, type CatalogCategory, type CatalogProduct } from "./catalog";
 import type { ShoppingItem, ShoppingSource, ScoreFoyer } from "@/lib/types";
 import { resolveCatalogCategory, mergeShoppingItems } from "./categories";
+import { SHOPPING_RAW_AUDIT_MODE } from "@/lib/constants";
 
 // Alteration as returned by extract_alterations AI prompt
 export type Alteration = {
@@ -32,6 +33,8 @@ function findCandidate(
   styleId: string | null,
   preferSecondhand: boolean,
 ): CatalogProduct | null {
+  // Mode audit : pas de produit par défaut → tout part en "À sourcer".
+  if (SHOPPING_RAW_AUDIT_MODE) return null;
   let pool = CATALOG.filter((p) => p.category === category);
 
   if (pool.length === 0) return null;
@@ -80,9 +83,9 @@ function catalogToShoppingItem(
 function unmatchedToShoppingItem(alteration: Alteration): ShoppingItem {
   return {
     id: `unmatched-${alteration.category}-${alteration.element}`,
-    name: alteration.element,
+    name: alteration.detail || alteration.element,
     category: alteration.category,
-    detail: alteration.detail ?? "",
+    detail: alteration.element,
     priceMin: 0,
     priceMax: 0,
     source: "new",

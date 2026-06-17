@@ -138,7 +138,7 @@ export function ReviewScreen({ projectId, initialDecisions }: Props) {
           Voici ce qu'on va faire
         </h1>
         <p className="text-foyer-muted text-sm mb-8">
-          Ajustez si besoin, ou générez directement.
+          Ajustez si besoin, puis lancez le rendu.
         </p>
 
         {decisions.length === 0 ? (
@@ -203,23 +203,16 @@ export function ReviewScreen({ projectId, initialDecisions }: Props) {
         )}
       </div>
 
-      {/* Sticky CTA */}
+      {/* Sticky CTA — un seul bouton : il applique toujours les modifs en attente */}
       <div className="fixed bottom-0 inset-x-0 bg-foyer-cream/95 backdrop-blur-sm border-t border-foyer-border px-4 py-4">
-        <div className="max-w-2xl mx-auto flex flex-col gap-2.5">
+        <div className="max-w-2xl mx-auto">
           <button
-            onClick={() => handleGenerate(false)}
+            onClick={() => handleGenerate(true)}
             className="w-full py-3.5 bg-foyer-ink text-foyer-cream rounded-xl text-sm font-medium"
           >
-            Générer directement
+            Lancer le rendu
+            {hasOverrides ? ` · ${Object.keys(overrides).length} modif${Object.keys(overrides).length > 1 ? "s" : ""}` : ""}
           </button>
-          {hasOverrides && (
-            <button
-              onClick={() => handleGenerate(true)}
-              className="w-full py-3 border border-foyer-terra text-foyer-terra rounded-xl text-sm"
-            >
-              Générer avec mes modifications ({Object.keys(overrides).length})
-            </button>
-          )}
         </div>
       </div>
     </div>

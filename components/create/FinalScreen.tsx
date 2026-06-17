@@ -524,11 +524,14 @@ function EnhancedListeShoppingTab({
                   className="flex items-center gap-3 rounded-xl border border-dashed border-foyer-border bg-white px-4 py-3"
                 >
                   <span className="size-2 shrink-0 rounded-full bg-foyer-muted/40" aria-hidden />
-                  <span className="text-[14px] capitalize text-foyer-muted">
+                  <span className="shrink-0 rounded bg-foyer-border/40 px-1.5 py-0.5 text-[11px] font-mono text-foyer-muted">
+                    {item.category.replace(/_/g, " ")}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-[14px] text-foyer-muted" title={item.name}>
                     {item.name}
                     {(item.quantity ?? 1) > 1 ? ` ×${item.quantity}` : ""}
                   </span>
-                  <span className="ml-auto text-[12px] text-foyer-muted">À sourcer</span>
+                  <span className="ml-auto shrink-0 text-[12px] text-foyer-muted">À sourcer</span>
                 </li>
               ))}
 

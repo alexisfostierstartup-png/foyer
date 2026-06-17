@@ -26,7 +26,19 @@ export async function PATCH(
   const current = (project.element_decisions ?? []) as ElementDecision[];
   const updated = current.map((d) => {
     if (d.element_id in overrides) {
-      return { ...d, mismatch_type: overrides[d.element_id], override: true };
+      // On réinitialise l'action liée à l'ancien verdict : sinon un élément forcé
+      // en "customize"/"replace" garderait un action_label périmé (ex. "Conserver
+      // …") que formatDesignPlan injecterait tel quel dans le prompt → contradiction
+      // et override sans effet. Vidé → formatDesignPlan utilise sa consigne générique.
+      return {
+        ...d,
+        mismatch_type: overrides[d.element_id],
+        override: true,
+        action_slug: null,
+        action_label: null,
+        supply_items: null,
+        qty: null,
+      };
     }
     return d;
   });
