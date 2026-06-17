@@ -741,11 +741,11 @@ export async function runFullFinalizePipeline(projectId: string): Promise<void> 
  * dans la liste (élimine les faux positifs). L'analyse est ciblée sur les seuls
  * candidats → pas de diff libre qui hallucine.
  */
-async function confirmAppliedChanges(
+async function confirmChanges(
   projectId: string,
   candidates: ElementDecision[],
   composite: ImageInput,
-): Promise<Set<string>> {
+): Promise<{ appliedIds: Set<string>; additions: Alteration[] }> {
   const candidatesJson = JSON.stringify(
     candidates.map((d) => ({
       element_id: d.element_id,
@@ -767,19 +767,33 @@ async function confirmAppliedChanges(
       requestPayload: { promptName: "confirm_changes", candidates: candidates.length },
     },
     // Confirmation EXIGEANTE → modèle plus fort (flash discrimine bien mieux que
-    // flash-lite : il rejette les éléments finalement conservés). ~1 appel,
-    // coût négligeable.
+    // flash-lite : il rejette les éléments finalement conservés). ~1 appel.
     () =>
       getVisionProvider(prompt.prompt.provider).analyze(prompt.resolvedTemplate, [composite], {
         model: "gemini-2.5-flash",
       }),
   );
-  const parsed = result.parsed as { results?: Array<{ element_id?: string; applied?: boolean }> } | null;
-  const applied = new Set<string>();
+  const parsed = result.parsed as {
+    results?: Array<{ element_id?: string; applied?: boolean }>;
+    additions?: Array<{ element?: string; category?: string; detail?: string }>;
+  } | null;
+
+  const appliedIds = new Set<string>();
   for (const r of parsed?.results ?? []) {
-    if (r.applied && typeof r.element_id === "string") applied.add(r.element_id);
+    if (r.applied && typeof r.element_id === "string") appliedIds.add(r.element_id);
   }
-  return applied;
+  // Ajouts nets (présents dans APRÈS, absents dans AVANT) → à acheter.
+  const additions: Alteration[] = (parsed?.additions ?? [])
+    .filter((a) => a && typeof a.category === "string")
+    .map((a) => ({
+      element: a.element ?? (a.category as string),
+      action: "added",
+      category: a.category as string,
+      detail: a.detail,
+      shoppingImpact: "to_buy_secondhand",
+    }));
+
+  return { appliedIds, additions };
 }
 
 export async function ensureFinalAssets(projectId: string): Promise<ShoppingAssets | null> {
@@ -798,13 +812,20 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
     (d) => d.mismatch_type === "surface" || d.mismatch_type === "structural",
   );
 
+  // Une seule passe vision (composite AVANT|APRÈS) qui fait DEUX choses :
+  //  - confirme quels candidats (customize/replace) ont vraiment été appliqués ;
+  //  - détecte les AJOUTS nets de la génération (ex: TV, meuble TV) absents de
+  //    l'original donc d'aucune décision.
   let appliedIds = new Set<string>();
-  if (candidates.length > 0 && project.basePhotoUrl) {
+  let additions: Alteration[] = [];
+  if (project.basePhotoUrl) {
     const composite = (await buildBeforeAfterComposite(
       project.basePhotoUrl,
       project.generatedRenderUrl,
     )) as unknown as ImageInput;
-    appliedIds = await confirmAppliedChanges(projectId, candidates, composite);
+    const r = await confirmChanges(projectId, candidates, composite);
+    appliedIds = r.appliedIds;
+    additions = r.additions;
   }
 
   // Candidat non confirmé = finalement conservé → traité comme "keep".
@@ -818,12 +839,31 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
 
   const plan = reconcilePlan(effective, { elements: [] }, { repairAlreadyUsed: false });
   const built = buildShoppingList(plan, project.selectedStyleId);
-  const shoppingList = builtToLegacyShoppingList(built);
-  const scoreFoyer = built.score;
+  const fromDecisions = builtToLegacyShoppingList(built);
+  const fromAdditions = matchAlterationsToCatalog(additions, project.selectedStyleId);
+
+  // Fusion (décisions confirmées + ajouts), dédupliquée par id.
+  const seen = new Set<string>();
+  const shoppingList = [...fromDecisions, ...fromAdditions].filter((i) => {
+    if (seen.has(i.id)) return false;
+    seen.add(i.id);
+    return true;
+  });
+
+  const scoreFoyer: ScoreFoyer = {
+    ...built.score,
+    secondhand: built.score.secondhand + fromAdditions.filter((i) => i.source === "secondhand").length,
+    ecoNew:
+      built.score.ecoNew +
+      fromAdditions.filter((i) => i.source !== "secondhand" && i.merchants.length > 0).length,
+    totalEstimated:
+      built.score.totalEstimated +
+      fromAdditions.reduce((s, i) => s + (i.priceMin + i.priceMax) / 2, 0),
+  };
 
   await updateProject(projectId, { shoppingList, scoreFoyer, builtShoppingList: built });
   console.log(
-    `[pipeline:final] ${candidates.length} candidats → ${appliedIds.size} confirmés → ${shoppingList.length} items`,
+    `[pipeline:final] ${candidates.length} candidats → ${appliedIds.size} confirmés + ${additions.length} ajouts → ${shoppingList.length} items`,
   );
   return { shoppingList, scoreFoyer };
 }
