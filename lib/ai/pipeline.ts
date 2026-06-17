@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import sharp from "sharp";
 import { nanoid } from "nanoid";
 import { resolvePrompt } from "@/lib/prompts/engine";
 import { loadStyleContext, loadRoomDefaults, formatUserInstructions, formatDesignPlan } from "@/lib/prompts/helpers";
@@ -30,6 +31,46 @@ const CLEAR_FINALIZE: Partial<Project> = {
   scoreFoyer: undefined,
   alterations: undefined,
 };
+
+async function fetchImageBytes(url: string): Promise<Buffer> {
+  if (url.startsWith("/")) {
+    return fs.readFile(path.join(process.cwd(), "public", url));
+  }
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch image (${res.status}): ${url}`);
+  return Buffer.from(await res.arrayBuffer());
+}
+
+/**
+ * Colle AVANT (gauche) et APRÈS (droite) dans UNE seule image. Envoyée en une
+ * seule image, l'analyse vision peut appliquer mediaResolution HIGH (ignoré sur
+ * un appel multi-images) → le modèle compare les deux moitiés en haute
+ * résolution et capte les détails subtils (plafonniers, cadres, blanc→beige).
+ */
+async function buildBeforeAfterComposite(beforeUrl: string, afterUrl: string): Promise<Buffer> {
+  const [beforeRaw, afterRaw] = await Promise.all([
+    fetchImageBytes(beforeUrl),
+    fetchImageBytes(afterUrl),
+  ]);
+  const H = 1024;
+  const gap = 24;
+  const [before, after] = await Promise.all([
+    sharp(beforeRaw).resize({ height: H }).toBuffer(),
+    sharp(afterRaw).resize({ height: H }).toBuffer(),
+  ]);
+  const [mb, ma] = await Promise.all([sharp(before).metadata(), sharp(after).metadata()]);
+  const wb = mb.width ?? H;
+  const wa = ma.width ?? H;
+  return sharp({
+    create: { width: wb + gap + wa, height: H, channels: 3, background: "#ffffff" },
+  })
+    .composite([
+      { input: before, left: 0, top: 0 },
+      { input: after, left: wb + gap, top: 0 },
+    ])
+    .jpeg({ quality: 90 })
+    .toBuffer();
+}
 
 async function loadImage(url: string): Promise<ImageInput> {
   if (url.startsWith("/")) {
@@ -493,15 +534,19 @@ export async function extractAlterations(projectId: string): Promise<unknown> {
   if (!project?.generatedRenderUrl || !project.basePhotoUrl) return undefined;
   if (project.alterations) return project.alterations;
 
-  const sourceImage = await loadImage(project.basePhotoUrl);
-  const finalImage = await loadImage(project.generatedRenderUrl);
+  // AVANT|APRÈS collés en une seule image → l'analyse passe en HIGH res (cf.
+  // buildBeforeAfterComposite) et compare les deux moitiés en haute définition.
+  const composite = (await buildBeforeAfterComposite(
+    project.basePhotoUrl,
+    project.generatedRenderUrl,
+  )) as unknown as ImageInput;
 
   const t1 = Date.now();
   const altPrompt = await resolvePrompt("extract_alterations", {}, { strict: false });
   const result = await withTracking(
     { step: "other", projectId, provider: altPrompt.prompt.provider,
       requestPayload: { promptName: "extract_alterations", prompt: altPrompt.resolvedTemplate.slice(0, 5000) } },
-    () => getVisionProvider(altPrompt.prompt.provider).analyze(altPrompt.resolvedTemplate, [sourceImage, finalImage]),
+    () => getVisionProvider(altPrompt.prompt.provider).analyze(altPrompt.resolvedTemplate, [composite]),
   );
   console.log(`[pipeline:alterations] extraction: ${Date.now() - t1}ms`);
 
