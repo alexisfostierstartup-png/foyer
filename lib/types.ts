@@ -1,4 +1,6 @@
-export type RoomType = "salon" | "chambre" | "chambre_parentale";
+// Les types de pièce sont définis par les assets room_defaults (data-driven) —
+// d'où un type permissif : ajouter une pièce = ajouter un asset, pas éditer une union.
+export type RoomType = string;
 
 export type FurnitureDecision = "keep" | "customize" | "replace";
 

@@ -1,13 +1,13 @@
-import { getFloorPresets, getRoomDefaults } from "@/lib/db/assets";
+import { getFloorPresets, getRoomTypes } from "@/lib/db/assets";
 import { UploadForm } from "@/components/create/UploadForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function UploadPage() {
-  const [floorPresets, roomDefaults] = await Promise.all([
+  const [floorPresets, roomTypes] = await Promise.all([
     getFloorPresets(),
-    getRoomDefaults(),
+    getRoomTypes(),
   ]);
 
-  return <UploadForm floorPresets={floorPresets} roomDefaults={roomDefaults} />;
+  return <UploadForm floorPresets={floorPresets} roomTypes={roomTypes} />;
 }

@@ -33,6 +33,23 @@ export async function getRoomDefaults(): Promise<Record<string, string[]>> {
   return result;
 }
 
+export type RoomTypeOption = { slug: string; label: string; furniture: string[] };
+
+// Source UNIQUE des types de pièce : les assets room_defaults. Ajouter une pièce
+// = ajouter un asset (slug + label + brief + removeCategories), zéro code.
+export async function getRoomTypes(): Promise<RoomTypeOption[]> {
+  const { data } = await createSupabaseAdmin()
+    .from("assets")
+    .select("slug, data")
+    .eq("category", "room_defaults")
+    .eq("is_active", true)
+    .order("sort_order");
+  return (data ?? []).map((a) => {
+    const d = a.data as { label?: string; expectedFurniture?: string[] };
+    return { slug: a.slug, label: d.label ?? a.slug, furniture: d.expectedFurniture ?? [] };
+  });
+}
+
 function mapAmbianceRow(a: { id: string; slug: string; data: unknown }): Style {
   const d = a.data as {
     name: string;
