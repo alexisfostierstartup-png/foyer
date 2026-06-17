@@ -65,6 +65,8 @@ export async function getAmbiances(): Promise<Style[]> {
 
 // ─── Taxonomie d'éléments (source unique des catégories de détection) ────────
 
+export type DecisionAction = "keep" | "customize" | "replace";
+
 export type ElementCategory = {
   slug: string;
   label_fr: string;
@@ -74,6 +76,8 @@ export type ElementCategory = {
   movable: boolean;
   diy_eligible: boolean;
   catalog_category: string | null;
+  // Actions proposées en review pour cette catégorie (défaut : les 3).
+  allowed_actions?: DecisionAction[];
   fixed_lightpoint?: boolean;
   preserve_behind?: boolean;
 };
@@ -94,6 +98,13 @@ export async function getElementCategories(): Promise<ElementCategory[]> {
     slug: a.slug,
     ...(a.data as Omit<ElementCategory, "slug">),
   }));
+}
+
+export async function getAllowedActionsByCategory(): Promise<Map<string, DecisionAction[]>> {
+  const cats = await getElementCategories().catch(() => [] as ElementCategory[]);
+  return new Map(
+    cats.map((c) => [c.slug, c.allowed_actions ?? ["keep", "customize", "replace"]]),
+  );
 }
 
 /**

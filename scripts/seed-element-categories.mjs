@@ -13,19 +13,32 @@ const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABA
 
 // [slug, label_fr, family, rooms, movable, diy_eligible, catalog_category, extraFlags]
 // rooms: "salon" | "chambre" | "any"
+// allowed_actions : sous-ensemble de ["keep","customize","replace"] proposé en review
+// pour cette catégorie (défaut = les 3). Ex. assises = pas de "customize" (retapisser
+// trop cher → remplacer), sol = pas de "customize", ouvertures = "keep" seul.
 const C = (slug, label_fr, family, rooms, movable, diy_eligible, catalog_category, extra = {}) => ({
-  slug, data: { label_fr, label_en: slug.replace(/_/g, " "), family, room_types: rooms === "any" ? ["salon", "chambre"] : [rooms], movable, diy_eligible, catalog_category, ...extra },
+  slug,
+  data: {
+    label_fr, label_en: slug.replace(/_/g, " "), family,
+    room_types: rooms === "any" ? ["salon", "chambre"] : [rooms],
+    movable, diy_eligible, catalog_category,
+    allowed_actions: ["keep", "customize", "replace"],
+    ...extra,
+  },
 });
+const KR = { allowed_actions: ["keep", "replace"] };       // garder / remplacer
+const KC = { allowed_actions: ["keep", "customize"] };     // garder / customiser
+const K = { allowed_actions: ["keep"] };                   // garder seulement
 
 const CATS = [
-  // ── ASSISE ──────────────────────────────────────────────────────────────
-  C("sofa", "Canapé", "assise", "salon", true, true, "sofa"),
-  C("armchair", "Fauteuil", "assise", "any", true, true, "armchair"),
-  C("chair", "Chaise", "assise", "any", true, true, null),
-  C("dining_chair", "Chaise de salle à manger", "assise", "salon", true, true, null),
-  C("bench", "Banc", "assise", "any", true, true, null),
-  C("stool", "Tabouret", "assise", "any", true, false, null),
-  C("pouf", "Pouf", "assise", "any", true, false, null),
+  // ── ASSISE (retapisser trop cher → garder / remplacer) ────────────────────
+  C("sofa", "Canapé", "assise", "salon", true, false, "sofa", KR),
+  C("armchair", "Fauteuil", "assise", "any", true, false, "armchair", KR),
+  C("chair", "Chaise", "assise", "any", true, false, null, KR),
+  C("dining_chair", "Chaise de salle à manger", "assise", "salon", true, false, null, KR),
+  C("bench", "Banc", "assise", "any", true, false, null, KR),
+  C("stool", "Tabouret", "assise", "any", true, false, null, KR),
+  C("pouf", "Pouf", "assise", "any", true, false, null, KR),
   // ── TABLE ───────────────────────────────────────────────────────────────
   C("coffee_table", "Table basse", "table", "salon", true, true, "coffee_table"),
   C("side_table", "Table d'appoint", "table", "salon", true, true, "side_table"),
@@ -43,34 +56,34 @@ const CATS = [
   C("cabinet", "Meuble de rangement", "rangement", "any", true, true, null),
   C("nightstand", "Table de chevet", "rangement", "chambre", true, true, "nightstand"),
   // ── COUCHAGE ────────────────────────────────────────────────────────────
-  C("bed", "Lit", "couchage", "chambre", true, false, "bed"),
+  C("bed", "Lit", "couchage", "chambre", true, false, "bed", KR),
   C("headboard", "Tête de lit", "couchage", "chambre", true, true, null),
-  C("mattress", "Matelas", "couchage", "chambre", true, false, null),
-  // ── LUMINAIRE ───────────────────────────────────────────────────────────
-  C("ceiling_light", "Luminaire plafonnier", "luminaire", "any", false, false, "lamp", { fixed_lightpoint: true }),
-  C("wall_sconce", "Applique murale", "luminaire", "any", false, false, "lamp", { fixed_lightpoint: true }),
-  C("table_lamp", "Lampe de table", "luminaire", "any", true, false, "lamp"),
-  C("floor_lamp", "Lampadaire", "luminaire", "any", true, false, "floor_lamp"),
+  C("mattress", "Matelas", "couchage", "chambre", true, false, null, KR),
+  // ── LUMINAIRE (remplacer en place, pas de customisation) ──────────────────
+  C("ceiling_light", "Luminaire plafonnier", "luminaire", "any", false, false, "lamp", { ...KR, fixed_lightpoint: true }),
+  C("wall_sconce", "Applique murale", "luminaire", "any", false, false, "lamp", { ...KR, fixed_lightpoint: true }),
+  C("table_lamp", "Lampe de table", "luminaire", "any", true, false, "lamp", KR),
+  C("floor_lamp", "Lampadaire", "luminaire", "any", true, false, "floor_lamp", KR),
   // ── TEXTILE ─────────────────────────────────────────────────────────────
-  C("rug", "Tapis", "textile", "any", true, false, "rug"),
-  C("curtains", "Rideaux", "textile", "any", true, false, "curtains"),
-  C("cushion", "Coussin", "textile", "any", true, false, "cushion"),
-  // ── OUVERTURE ───────────────────────────────────────────────────────────
-  C("window", "Fenêtre", "ouverture", "any", false, false, null, { preserve_behind: true }),
-  C("french_door", "Porte-fenêtre", "ouverture", "any", false, false, null, { preserve_behind: true }),
-  C("door", "Porte", "ouverture", "any", false, false, null),
-  // ── SURFACE ─────────────────────────────────────────────────────────────
-  C("floor", "Sol", "surface", "any", false, true, "floor_material"),
-  C("wall", "Mur", "surface", "any", false, true, "paint"),
-  C("ceiling", "Plafond", "surface", "any", false, false, null),
+  C("rug", "Tapis", "textile", "any", true, false, "rug", KR),
+  C("curtains", "Rideaux", "textile", "any", true, false, "curtains", KR),
+  C("cushion", "Coussin", "textile", "any", true, false, "cushion", KR),
+  // ── OUVERTURE (garder seulement) ──────────────────────────────────────────
+  C("window", "Fenêtre", "ouverture", "any", false, false, null, { ...K, preserve_behind: true }),
+  C("french_door", "Porte-fenêtre", "ouverture", "any", false, false, null, { ...K, preserve_behind: true }),
+  C("door", "Porte", "ouverture", "any", false, false, null, K),
+  // ── SURFACE ───────────────────────────────────────────────────────────────
+  C("floor", "Sol", "surface", "any", false, false, "floor_material", KR),   // sol : garder ou remplacer
+  C("wall", "Mur", "surface", "any", false, true, "paint", KC),              // mur : garder ou repeindre
+  C("ceiling", "Plafond", "surface", "any", false, false, null, KC),
   // ── DÉCO ────────────────────────────────────────────────────────────────
-  C("plant", "Plante", "deco", "any", true, false, "plant"),
-  C("mirror", "Miroir", "deco", "any", true, false, null),
-  C("frame", "Cadre / tableau", "deco", "any", true, false, null),
-  C("decor_object", "Objet déco", "deco", "any", true, false, null),
+  C("plant", "Plante", "deco", "any", true, false, "plant", KR),
+  C("mirror", "Miroir", "deco", "any", true, false, null, KR),
+  C("frame", "Cadre / tableau", "deco", "any", true, false, null, KR),
+  C("decor_object", "Objet déco", "deco", "any", true, false, null, KR),
   // ── ÉLECTROMÉNAGER ──────────────────────────────────────────────────────
-  C("television", "Téléviseur", "electromenager", "salon", true, false, null),
-  C("radiator", "Radiateur", "electromenager", "any", false, false, null, { preserve_behind: true }),
+  C("television", "Téléviseur", "electromenager", "salon", true, false, null, KR),
+  C("radiator", "Radiateur", "electromenager", "any", false, false, null, { ...K, preserve_behind: true }),
   // ── FALLBACK ────────────────────────────────────────────────────────────
   C("other", "Autre", "autre", "any", true, false, "other"),
 ];

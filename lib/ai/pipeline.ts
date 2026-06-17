@@ -4,7 +4,8 @@ import sharp from "sharp";
 import { nanoid } from "nanoid";
 import { resolvePrompt } from "@/lib/prompts/engine";
 import { loadStyleContext, loadRoomDefaults, formatUserInstructions, formatDesignPlan } from "@/lib/prompts/helpers";
-import { getElementCategoryEnum, getElementCategories } from "@/lib/db/assets";
+import { getElementCategoryEnum, getElementCategories, getAllowedActionsByCategory } from "@/lib/db/assets";
+import type { DecisionAction } from "@/lib/db/assets";
 import { mergeShoppingItems } from "@/lib/shopping/categories";
 import { getImageProvider, getVisionProvider } from "./provider";
 import { saveRender } from "./saveRender";
@@ -400,8 +401,31 @@ export async function runAnalysisPipeline(projectId: string): Promise<void> {
     }),
   );
 
-  await updateProject(projectId, { element_decisions: decisions, visionOutput: profiles, ...CLEAR_FINALIZE });
-  console.log(`[pipeline:analyze] saved ${decisions.length} decisions (2 calls: detection + verdict)`);
+  // ── 6. CLAMP par allowed_actions de la taxo ────────────────────────────────
+  // Une catégorie n'accepte que certaines actions (ex. assise = garder/remplacer,
+  // jamais "customize"/retapisser ; sol = garder/remplacer ; mur = garder/repeindre ;
+  // fenêtre/porte = garder). Si le verdict propose une action non autorisée, on la
+  // ramène à l'action de CHANGEMENT autorisée la plus forte (replace > customize),
+  // sinon "keep" — et on purge l'action liée (label/slug devenus caducs).
+  const allowedByCat = await getAllowedActionsByCategory();
+  const ACTION_OF: Record<ElementDecision["mismatch_type"], DecisionAction> = {
+    none: "keep", surface: "customize", structural: "replace",
+  };
+  const clampedDecisions = decisions.map((d) => {
+    const allowed = allowedByCat.get(d.category) ?? ["keep", "customize", "replace"];
+    const requested = ACTION_OF[d.mismatch_type];
+    if (allowed.includes(requested)) return d;
+    const target: DecisionAction =
+      requested === "keep" ? "keep"
+      : allowed.includes("replace") ? "replace"
+      : allowed.includes("customize") ? "customize"
+      : "keep";
+    const mt = target === "keep" ? "none" : target === "customize" ? "surface" : "structural";
+    return { ...d, mismatch_type: mt as ElementDecision["mismatch_type"], action_slug: null, action_label: null, supply_items: null, qty: null };
+  });
+
+  await updateProject(projectId, { element_decisions: clampedDecisions, visionOutput: profiles, ...CLEAR_FINALIZE });
+  console.log(`[pipeline:analyze] saved ${clampedDecisions.length} decisions (2 calls: detection + verdict)`);
 }
 
 export async function runGenerationPipeline(projectId: string): Promise<void> {

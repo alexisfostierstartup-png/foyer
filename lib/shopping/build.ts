@@ -109,7 +109,10 @@ export function buildShoppingList(
     }
 
     // Catégorie valide mais aucun produit catalogue → à sourcer (visible).
-    unmatched.push({ element_id: d.element_id, description: d.description, category: cat });
+    // On garde la catégorie FEUILLE du flow (d.category), pas la catégorie
+    // catalogue, pour rester cohérent avec la détection/review (ex. ceiling_light,
+    // pas "lamp").
+    unmatched.push({ element_id: d.element_id, description: d.description, category: d.category });
   }
 
   // ── Score Foyer ───────────────────────────────────────────────────────────

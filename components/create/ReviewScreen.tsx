@@ -24,12 +24,18 @@ const MISMATCH_ACTIVE: Record<string, string> = {
 
 type OverrideMap = Record<string, ElementDecision["mismatch_type"]>;
 
+const ALL_ACTIONS: ElementDecision["mismatch_type"][] = ["none", "surface", "structural"];
+const ACTION_OF: Record<ElementDecision["mismatch_type"], "keep" | "customize" | "replace"> = {
+  none: "keep", surface: "customize", structural: "replace",
+};
+
 type Props = {
   projectId: string;
   initialDecisions?: ElementDecision[] | null;
+  allowedByCategory?: Record<string, Array<"keep" | "customize" | "replace">>;
 };
 
-export function ReviewScreen({ projectId, initialDecisions }: Props) {
+export function ReviewScreen({ projectId, initialDecisions, allowedByCategory }: Props) {
   const router = useRouter();
   const [decisions, setDecisions] = useState<ElementDecision[]>(
     initialDecisions ?? [],
@@ -181,7 +187,10 @@ export function ReviewScreen({ projectId, initialDecisions }: Props) {
                   </div>
 
                   <div className="flex gap-1.5 flex-wrap">
-                    {(["none", "surface", "structural"] as const).map((type) => {
+                    {ALL_ACTIONS.filter((type) => {
+                      const allowed = allowedByCategory?.[d.category];
+                      return !allowed || allowed.includes(ACTION_OF[type]);
+                    }).map((type) => {
                       const active = current === type;
                       return (
                         <button

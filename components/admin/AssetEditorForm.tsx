@@ -181,6 +181,26 @@ function ElementCategoryFields({
           ))}
         </div>
       </Field>
+      <Field label="Actions autorisées en review">
+        <div className="flex gap-4">
+          {(["keep", "customize", "replace"] as const).map((a) => {
+            const actions = (data.allowed_actions as string[] | undefined) ?? ["keep", "customize", "replace"];
+            const labels = { keep: "Garder", customize: "Customiser", replace: "Remplacer" };
+            return (
+              <label key={a} className="flex items-center gap-2 text-sm text-foyer-ink cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={actions.includes(a)}
+                  onChange={() =>
+                    update("allowed_actions", actions.includes(a) ? actions.filter((x) => x !== a) : [...actions, a])
+                  }
+                />
+                {labels[a]}
+              </label>
+            );
+          })}
+        </div>
+      </Field>
       <div className="flex flex-wrap gap-x-6 gap-y-2">
         <Check k="movable" label="Déplaçable" />
         <Check k="diy_eligible" label="Éligible DIY (personnalisable)" />
@@ -230,6 +250,7 @@ const DEFAULT_DATA: Record<string, Record<string, unknown>> = {
   element_category: {
     label_fr: "", label_en: "", family: "", room_types: ["salon", "chambre"],
     movable: true, diy_eligible: false, catalog_category: null,
+    allowed_actions: ["keep", "customize", "replace"],
   },
 };
 
