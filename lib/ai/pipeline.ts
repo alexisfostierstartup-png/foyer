@@ -103,9 +103,10 @@ function buildFixedFeaturesSummary(profiles: ElementProfile[]): string {
   const w = count("window"); if (w) parts.push(`${w} fenêtre(s)`);
   const fd = count("french_door"); if (fd) parts.push(`${fd} porte(s)-fenêtre(s)`);
   const d = count("door"); if (d) parts.push(`${d} porte(s)`);
+  const wo = count("wall_opening"); if (wo) parts.push(`${wo} ouverture(s)/passage(s) vers une autre pièce`);
   const KW = /escalier|staircase|stair|chemin|fireplace|radiat|poutre|beam|colonne|column|pilier|pillar/i;
   const fixtures = profiles
-    .filter((p) => !["window", "french_door", "door"].includes(p.category) && KW.test(`${p.element} ${p.description}`))
+    .filter((p) => !["window", "french_door", "door", "wall_opening"].includes(p.category) && KW.test(`${p.element} ${p.description}`))
     .map((p) => (p.element || p.category).trim().toLowerCase());
   parts.push(...new Set(fixtures));
   return parts.length ? parts.join(", ") : "—";
