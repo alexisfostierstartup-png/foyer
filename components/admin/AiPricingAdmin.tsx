@@ -20,8 +20,8 @@ type Row = {
 // ── What each provider/model does in the pipeline ─────────────────────────────
 
 const USAGE_MAP: Record<string, string> = {
-  "gemini_vision/gemini-2.5-flash-lite":  "Analyse photo + décisions DIY (vision_analyze_full, audit_application, extract_alterations)",
-  "gemini_vision/gemini-2.5-flash":       "Vision/texte avec thinking — modèle legacy, remplacé par flash-lite",
+  "gemini_vision/gemini-2.5-flash-lite":  "Détection + verdict des éléments (vision_detect_extended, verdict_elements)",
+  "gemini_vision/gemini-2.5-flash":       "Confirmation visuelle des changements appliqués pour la liste de courses (confirm_changes)",
   "nano_banana/gemini-2.5-flash-image":   "Génération et édition de rendus déco (première génération + itérations)",
   "flux_kontext/flux-kontext-pro":        "Réparation ciblée de zones sur le rendu (repair pass — pas encore actif)",
   "jina/jina-embeddings-v3":             "Embeddings sémantiques pour le matching catalogue produits",
