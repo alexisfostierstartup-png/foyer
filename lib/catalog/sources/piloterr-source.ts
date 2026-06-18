@@ -29,7 +29,8 @@ const CDISCOUNT_KEYWORDS: Record<string, string> = {
   sofa: "canapé", armchair: "fauteuil", coffee_table: "table basse",
   side_table: "table d'appoint", tv_stand: "meuble tv", sideboard: "buffet",
   bookshelf: "bibliothèque", dining_table: "table à manger", chair: "chaise",
-  rug: "tapis", floor_lamp: "lampadaire", dresser: "commode",
+  // "lampadaire" seul renvoie du junk (livres/DVD en "…aire") → terme plus précis.
+  rug: "tapis", floor_lamp: "lampadaire salon", dresser: "commode",
 };
 const LEROYMERLIN_KEYWORDS: Record<string, string> = {
   rug: "tapis", floor_lamp: "lampadaire", dresser: "commode",
