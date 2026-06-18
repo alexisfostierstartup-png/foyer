@@ -27,6 +27,7 @@ const MAX_PER_MERCHANT = 300; // cap DUR
 // de ~500 crédits : 8×12 + 6×6 ≈ 130 produits ≈ ~340 crédits.
 const CDISCOUNT_PER_CAT = 8;
 const LEROYMERLIN_PER_CAT = 6;
+const IKEA_PER_CAT = 8; // IKEA = 1-step (image dans le search), moins cher
 
 function argValue(args: string[], flag: string): string | undefined {
   const i = args.indexOf(flag);
@@ -55,6 +56,7 @@ async function main() {
   const perByMerchant: Record<string, number> = {
     cdiscount: canary ? 3 : CDISCOUNT_PER_CAT,
     leroy_merlin: canary ? 3 : LEROYMERLIN_PER_CAT,
+    ikea: canary ? 3 : IKEA_PER_CAT,
   };
   const merchants = (merchantArg ? [merchantArg] : ["cdiscount", "leroy_merlin"]).filter(
     (m) => m in perByMerchant,

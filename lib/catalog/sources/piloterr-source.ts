@@ -22,7 +22,7 @@ import type { ProductSource, PartnerProductInput } from "../types";
 
 const PILOTERR_BASE = "https://api.piloterr.com";
 
-export type PiloterrMerchant = "cdiscount" | "leroy_merlin";
+export type PiloterrMerchant = "cdiscount" | "leroy_merlin" | "ikea";
 
 // Catégorie Foyer → mot-clé de recherche, par marchand.
 const CDISCOUNT_KEYWORDS: Record<string, string> = {
@@ -35,6 +35,17 @@ const CDISCOUNT_KEYWORDS: Record<string, string> = {
 const LEROYMERLIN_KEYWORDS: Record<string, string> = {
   rug: "tapis", floor_lamp: "lampadaire", dresser: "commode",
   bookshelf: "étagère", side_table: "table d'appoint", chair: "chaise",
+  // Fournitures DIY — le vrai fort de Leroy Merlin.
+  // ("peinture murale" renvoyait de la peinture métal/portail → "peinture mur intérieur".)
+  paint: "peinture mur intérieur", mouldings: "moulure décorative", batten: "tasseau bois",
+};
+
+// IKEA : query = URL de recherche IKEA (comme Cdiscount). Search renvoie déjà l'image.
+const IKEA_KEYWORDS: Record<string, string> = {
+  sofa: "canapé", armchair: "fauteuil", coffee_table: "table basse",
+  side_table: "table d'appoint", tv_stand: "meuble tv", sideboard: "buffet",
+  bookshelf: "bibliothèque", dining_table: "table à manger", chair: "chaise",
+  rug: "tapis", floor_lamp: "lampadaire", dresser: "commode",
 };
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -74,9 +85,38 @@ export class PiloterrSource implements ProductSource {
   constructor(public readonly merchant: PiloterrMerchant) {}
 
   async fetchProducts(category: string, limit: number): Promise<PartnerProductInput[]> {
-    return this.merchant === "cdiscount"
-      ? this.fetchCdiscount(category, limit)
-      : this.fetchLeroyMerlin(category, limit);
+    if (this.merchant === "cdiscount") return this.fetchCdiscount(category, limit);
+    if (this.merchant === "ikea") return this.fetchIkea(category, limit);
+    return this.fetchLeroyMerlin(category, limit);
+  }
+
+  private async fetchIkea(category: string, limit: number): Promise<PartnerProductInput[]> {
+    const kw = IKEA_KEYWORDS[category];
+    if (!kw) return [];
+    const searchUrl = `https://www.ikea.com/fr/fr/search/?q=${encodeURIComponent(kw)}`;
+    const json = (await piloterrGet("/v2/ikea/search", searchUrl)) as {
+      results?: Array<{
+        id?: string; url?: string; image?: string; title?: string; subtitle?: string;
+        price_amount?: number | string; rating?: number | string; reviews_count?: number | string;
+      }>;
+    };
+    return (json.results ?? [])
+      .filter((r) => r.id && r.url && r.image)
+      .slice(0, limit)
+      .map((r) => ({
+        merchant: "ikea",
+        external_id: r.id!,
+        category,
+        name: [r.title, r.subtitle].filter(Boolean).join(" ").slice(0, 255),
+        price: r.price_amount != null ? Number(r.price_amount) : null,
+        currency: "EUR",
+        product_url: r.url!,
+        image_urls: [r.image!],
+        primary_image_url: r.image!,
+        source_type: "eco_new",
+        // IKEA search ne donne pas les specs structurées (il faudrait /ikea/product).
+        attributes: { subtitle: r.subtitle, rating: r.rating, reviews_count: r.reviews_count },
+      }));
   }
 
   private async fetchCdiscount(category: string, limit: number): Promise<PartnerProductInput[]> {
