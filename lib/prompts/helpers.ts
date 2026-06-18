@@ -38,6 +38,18 @@ export async function loadRoomDefaults(roomType: string): Promise<string> {
   return (data.data as { englishFurniture: string }).englishFurniture;
 }
 
+// Catégories d'éléments à RETIRER pour ce type de pièce (ex. chambre → sofa,
+// coffee_table…). Statique par room type, stocké dans l'asset room_defaults.
+export async function loadRoomRemoveCategories(roomType: string): Promise<string[]> {
+  const { data } = await createSupabaseAdmin()
+    .from("assets")
+    .select("data")
+    .eq("category", "room_defaults")
+    .eq("slug", roomType)
+    .single();
+  return (data?.data as { removeCategories?: string[] } | undefined)?.removeCategories ?? [];
+}
+
 type FurnitureChoices = Record<string, "keep" | "customize" | "replace">;
 type FloorChoice = { action: "keep" | "change"; preset?: string; custom?: string };
 type WallsChoice = {
@@ -129,5 +141,58 @@ export async function formatUserInstructions(
   }
 
   if (lines.length === 0) return "None — use your judgment within the guidance.";
+  return lines.join("\n");
+}
+
+/**
+ * Transforme les décisions par élément (après review) en un plan lisible pour
+ * les prompts image (génération + itération). On n'inclut que les éléments
+ * ACTIONNABLES (personnaliser/remplacer) ; les "garder" sont déjà couverts par
+ * la règle d'ancrage du prompt de génération. Retourne "" si rien d'actionnable.
+ */
+export function formatDesignPlan(
+  decisions: Array<{
+    description?: string;
+    category: string;
+    mismatch_type: "none" | "surface" | "structural";
+    action_label?: string | null;
+    qty?: number | null;
+    qty_unit?: string | null;
+  }> | null | undefined,
+): string {
+  if (!decisions?.length) return "";
+
+  // Regroupe les éléments identiques (même type d'action + catégorie + description)
+  // → UNE ligne avec compteur. Un plan court et sans répétition est bien mieux
+  // suivi par le modèle image (ex. 4 chaises identiques = 1 instruction, pas 4).
+  type G = { d: (typeof decisions)[number]; count: number };
+  const groups = new Map<string, G>();
+  for (const d of decisions) {
+    if (d.mismatch_type !== "surface" && d.mismatch_type !== "structural") continue;
+    const key = `${d.mismatch_type}|${d.category}|${(d.description ?? "").trim().toLowerCase()}`;
+    const g = groups.get(key);
+    if (g) g.count += 1;
+    else groups.set(key, { d, count: 1 });
+  }
+
+  const lines: string[] = [];
+  for (const { d, count } of groups.values()) {
+    const what = (d.description?.trim() || d.category).replace(/\s+/g, " ");
+    const many = count > 1;
+    const tag = many ? ` (×${count})` : "";
+    if (d.mismatch_type === "surface") {
+      const qty = d.qty && d.qty_unit ? ` (≈ ${d.qty} ${d.qty_unit})` : "";
+      lines.push(
+        `- RESTYLE ${what}${tag}: ${d.action_label ?? "personnaliser la finition pour s'accorder au style"}${qty}. Keep shape, size and position.`,
+      );
+    } else {
+      // REPLACE : instruction propre et explicite. On IGNORE volontairement
+      // action_label (souvent une suggestion "retapisser/repeindre" héritée du
+      // verdict qui CONTREDIT le remplacement et fait halluciner le modèle).
+      lines.push(
+        `- REPLACE ${many ? `the ${count} ` : ""}${what}${tag}: put ${many ? `${count} ` : "a "}clearly different, style-matching ${many ? "pieces" : "piece"} in the same place(s) — same footprint and position. Do NOT reupholster or recolor the original.`,
+      );
+    }
+  }
   return lines.join("\n");
 }

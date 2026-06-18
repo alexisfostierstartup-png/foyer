@@ -33,6 +33,23 @@ export async function getRoomDefaults(): Promise<Record<string, string[]>> {
   return result;
 }
 
+export type RoomTypeOption = { slug: string; label: string; furniture: string[] };
+
+// Source UNIQUE des types de pièce : les assets room_defaults. Ajouter une pièce
+// = ajouter un asset (slug + label + brief + removeCategories), zéro code.
+export async function getRoomTypes(): Promise<RoomTypeOption[]> {
+  const { data } = await createSupabaseAdmin()
+    .from("assets")
+    .select("slug, data")
+    .eq("category", "room_defaults")
+    .eq("is_active", true)
+    .order("sort_order");
+  return (data ?? []).map((a) => {
+    const d = a.data as { label?: string; expectedFurniture?: string[] };
+    return { slug: a.slug, label: d.label ?? a.slug, furniture: d.expectedFurniture ?? [] };
+  });
+}
+
 function mapAmbianceRow(a: { id: string; slug: string; data: unknown }): Style {
   const d = a.data as {
     name: string;
@@ -61,6 +78,69 @@ export async function getAmbiances(): Promise<Style[]> {
     .eq("is_active", true)
     .order("sort_order");
   return (data ?? []).map(mapAmbianceRow);
+}
+
+// ─── Taxonomie d'éléments (source unique des catégories de détection) ────────
+
+export type DecisionAction = "keep" | "customize" | "replace";
+
+export type ElementCategory = {
+  slug: string;
+  label_fr: string;
+  label_en: string;
+  family: string;
+  room_types: string[];
+  movable: boolean;
+  diy_eligible: boolean;
+  catalog_category: string | null;
+  // Actions proposées en review pour cette catégorie (défaut : les 3).
+  allowed_actions?: DecisionAction[];
+  fixed_lightpoint?: boolean;
+  preserve_behind?: boolean;
+};
+
+// Repli si la table assets ne renvoie rien (DB vide / erreur) → la détection ne
+// casse jamais. Liste plate équivalente à l'ancien enum hardcodé.
+const FALLBACK_CATEGORY_ENUM =
+  "- sofa, armchair, chair, bed, wardrobe, dresser, bookshelf, tv_stand, coffee_table, side_table, nightstand, shelf, floor, wall, ceiling, window, door, headboard, bench, rug, lamp, plant, other";
+
+export async function getElementCategories(): Promise<ElementCategory[]> {
+  const { data } = await createSupabaseAdmin()
+    .from("assets")
+    .select("slug, data")
+    .eq("category", "element_category")
+    .eq("is_active", true)
+    .order("sort_order");
+  return (data ?? []).map((a) => ({
+    slug: a.slug,
+    ...(a.data as Omit<ElementCategory, "slug">),
+  }));
+}
+
+export async function getAllowedActionsByCategory(): Promise<Map<string, DecisionAction[]>> {
+  const cats = await getElementCategories().catch(() => [] as ElementCategory[]);
+  return new Map(
+    cats.map((c) => [c.slug, c.allowed_actions ?? ["keep", "customize", "replace"]]),
+  );
+}
+
+/**
+ * Construit le bloc {{categories}} injecté dans vision_detect_extended : familles
+ * → types précis, filtré par type de pièce. Repli sur l'ancien enum si vide.
+ */
+export async function getElementCategoryEnum(roomType?: string): Promise<string> {
+  const cats = await getElementCategories().catch(() => [] as ElementCategory[]);
+  // La chambre parentale partage la taxonomie de la chambre.
+  const rt = roomType === "chambre_parentale" ? "chambre" : roomType;
+  const filtered = cats.filter(
+    (c) => !rt || !c.room_types?.length || c.room_types.includes(rt),
+  );
+  if (filtered.length === 0) return FALLBACK_CATEGORY_ENUM;
+
+  // Liste PLATE `slug = libellé` : le slug (gauche du =) est la valeur de
+  // `category`. On n'injecte PAS la famille ici (elle ne sert qu'au regroupement
+  // UI) pour éviter que le modèle renvoie un nom de famille comme catégorie.
+  return filtered.map((c) => `- ${c.slug} = ${c.label_fr}`).join("\n");
 }
 
 export async function getAmbianceById(slugOrId: string): Promise<Style | null> {

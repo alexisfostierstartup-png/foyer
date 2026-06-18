@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { runGenerationPipeline } from "@/lib/ai/pipeline";
 import { createClient } from "@/lib/supabase/server";
 import { checkAndConsumeCredit } from "@/lib/auth/actions";
+import { logPipelineError } from "@/lib/ai/logger";
 
 export const maxDuration = 90;
 
@@ -69,6 +70,7 @@ export async function POST(
     return res;
   } catch (err) {
     console.error("[generate] pipeline error:", err);
+    await logPipelineError(id, "generate", err);
     const { message, status } = userMessage(err);
     return NextResponse.json({ error: message }, { status });
   }

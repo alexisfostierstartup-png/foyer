@@ -16,11 +16,6 @@ import type { RoomType } from "@/lib/types";
 
 const STEPS = ["Photo", "Style", "Mobilier", "Rendu", "Projet"];
 
-const ROOM_OPTIONS: { value: RoomType; label: string }[] = [
-  { value: "salon", label: "Salon" },
-  { value: "chambre", label: "Chambre" },
-];
-
 const TIPS = [
   { icon: Frame, text: "Cadrez large (un mur entier visible)" },
   { icon: Sun, text: "Éclairage naturel idéalement" },
@@ -29,10 +24,10 @@ const TIPS = [
 
 type Props = {
   floorPresets: { slug: string; label: string }[];
-  roomDefaults: Record<string, string[]>;
+  roomTypes: { slug: string; label: string; furniture: string[] }[];
 };
 
-export function UploadForm({ floorPresets, roomDefaults }: Props) {
+export function UploadForm({ floorPresets, roomTypes }: Props) {
   const router = useRouter();
   const [roomType, setRoomType] = useState<RoomType | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -126,13 +121,13 @@ export function UploadForm({ floorPresets, roomDefaults }: Props) {
             Quelle pièce ?
           </p>
           <div className="mt-2 grid grid-cols-2 gap-3">
-            {ROOM_OPTIONS.map((opt) => {
-              const selected = roomType === opt.value;
+            {roomTypes.map((opt) => {
+              const selected = roomType === opt.slug;
               return (
                 <button
-                  key={opt.value}
+                  key={opt.slug}
                   type="button"
-                  onClick={() => setRoomType(opt.value)}
+                  onClick={() => setRoomType(opt.slug)}
                   className={cn(
                     "h-16 rounded-2xl bg-white font-medium text-foyer-ink transition-all",
                     selected
@@ -257,7 +252,7 @@ export function UploadForm({ floorPresets, roomDefaults }: Props) {
               choices={choices}
               setChoices={setChoices}
               floorPresets={floorPresets}
-              furnitureItems={roomType ? (roomDefaults[roomType] ?? []) : []}
+              furnitureItems={roomType ? (roomTypes.find((r) => r.slug === roomType)?.furniture ?? []) : []}
             />
           </div>
         )}

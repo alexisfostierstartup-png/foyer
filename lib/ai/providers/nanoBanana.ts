@@ -1,6 +1,9 @@
 import { getGeminiClient } from "../gemini";
 import { toInlineData } from "../imageInput";
+import { withRetry } from "../retry";
 import type { ImageProvider, ImageInput, GenerationResult } from "../types";
+
+const MODEL = "gemini-2.5-flash-image";
 
 export class NanoBananaProvider implements ImageProvider {
   readonly name = "nano_banana";
@@ -10,15 +13,18 @@ export class NanoBananaProvider implements ImageProvider {
     sourceImage?: ImageInput,
   ): Promise<GenerationResult> {
     const start = Date.now();
+    // temperature 0 → suivi le plus littéral possible du plan (REPLACE, positions
+    // luminaires…) et dispersion minimale entre deux générations.
     const model = getGeminiClient().getGenerativeModel({
-      model: "gemini-2.5-flash-image",
+      model: MODEL,
+      generationConfig: { temperature: 0 },
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const parts: any[] = [prompt];
     if (sourceImage) parts.push(await toInlineData(sourceImage));
 
-    const result = await model.generateContent(parts);
+    const result = await withRetry(() => model.generateContent(parts), { label: `image ${MODEL}` });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const candidates = (result.response.candidates as any[]) ?? [];
@@ -43,12 +49,22 @@ export class NanoBananaProvider implements ImageProvider {
     const mimeType: string = imagePart.inlineData.mimeType;
     const imageBuffer = Buffer.from(imagePart.inlineData.data, "base64");
 
+    const meta = result.response.usageMetadata as
+      | { promptTokenCount?: number }
+      | undefined;
+
     return {
       imageBuffer,
       mimeType,
       rawResponse: result.response,
       providerUsed: this.name,
+      modelUsed: MODEL,
       durationMs: Date.now() - start,
+      usage: {
+        inputTokens: meta?.promptTokenCount,
+        imagesIn: sourceImage ? 1 : 0,
+        imagesOut: 1,
+      },
     };
   }
 

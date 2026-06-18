@@ -10,11 +10,13 @@ const CATEGORY_LABELS: Record<string, string> = {
   room_defaults: "Defaults pièce",
   floor_preset: "Presets sol",
   wall_palette: "Palettes murales",
+  element_category: "Catégories d'éléments",
 };
 
 function getLabel(category: string, data: Record<string, unknown>): string {
   if (category === "ambiance") return String(data.name ?? "—");
   if (category === "room_defaults") return "—";
+  if (category === "element_category") return String(data.label_fr ?? "—");
   return String(data.label ?? "—");
 }
 
@@ -79,6 +81,11 @@ export default async function AssetCategoryPage({
                     Couleur
                   </th>
                 )}
+                {category === "element_category" && (
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-foyer-muted uppercase tracking-wide">
+                    Famille
+                  </th>
+                )}
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-foyer-muted uppercase tracking-wide">
                   Ordre
                 </th>
@@ -111,6 +118,11 @@ export default async function AssetCategoryPage({
                             {String(data.hex ?? "—")}
                           </span>
                         </div>
+                      </td>
+                    )}
+                    {category === "element_category" && (
+                      <td className="px-4 py-3 text-xs text-foyer-muted">
+                        {String(data.family ?? "—")}
                       </td>
                     )}
                     <td className="px-4 py-3 text-xs text-foyer-muted">

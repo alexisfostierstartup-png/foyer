@@ -67,6 +67,16 @@ export function Sidebar() {
 
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
         <NavLink
+          href="/admin/dashboard"
+          label="Dashboard coûts"
+          onClick={() => setMobileOpen(false)}
+        />
+        <NavLink
+          href="/admin/ai-pricing"
+          label="Pricing IA"
+          onClick={() => setMobileOpen(false)}
+        />
+        <NavLink
           href="/admin/prompts"
           label="Prompts"
           onClick={() => setMobileOpen(false)}
@@ -79,6 +89,11 @@ export function Sidebar() {
         <NavLink
           href="/admin/catalog"
           label="Catalogue"
+          onClick={() => setMobileOpen(false)}
+        />
+        <NavLink
+          href="/admin/diy-actions"
+          label="Actions DIY"
           onClick={() => setMobileOpen(false)}
         />
 

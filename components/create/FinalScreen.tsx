@@ -46,32 +46,32 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-// ── Section routing (α-10) ───────────────────────────────────────────────────
-const DIY_CATEGORIES = new Set(["paint", "mouldings", "floor_material"]);
-
-type Section = "lbc" | "partner" | "diy" | "mock";
-
-function itemSection(item: ShoppingItem): Section {
-  if (item.matchingSource === "lbc") return "lbc";
-  if (item.matchingSource === "partner" || item.matchingSource === "mock_catalog") {
-    return DIY_CATEGORIES.has(item.category) ? "diy" : "partner";
-  }
-  // Fallback pour items sans matchingSource (mock ancien format)
-  if (DIY_CATEGORIES.has(item.category)) return "diy";
-  return "mock";
-}
-
-// Conservé pour le cas mock_catalog (groupement family legacy)
+// ── Family grouping ───────────────────────────────────────────────────────────
 type Family = "Mobilier" | "Décoration" | "Accessoires" | "Fournitures";
+
 const FAMILIES: Family[] = ["Mobilier", "Décoration", "Accessoires", "Fournitures"];
+
 const CATEGORY_FAMILY: Record<string, Family> = {
-  sofa: "Mobilier", armchair: "Mobilier", coffee_table: "Mobilier",
-  side_table: "Mobilier", tv_stand: "Mobilier", bookshelf: "Mobilier",
-  bed: "Mobilier", nightstand: "Mobilier", dresser: "Mobilier",
-  rug: "Décoration", lamp: "Décoration", floor_lamp: "Décoration", curtains: "Décoration",
-  cushion: "Accessoires", plant: "Accessoires", other: "Accessoires",
+  // Mobilier
+  sofa: "Mobilier", armchair: "Mobilier", chair: "Mobilier", dining_chair: "Mobilier",
+  bench: "Mobilier", stool: "Mobilier", pouf: "Mobilier",
+  coffee_table: "Mobilier", side_table: "Mobilier", dining_table: "Mobilier",
+  console_table: "Mobilier", bar_table: "Mobilier", desk: "Mobilier",
+  bookshelf: "Mobilier", shelf: "Mobilier", tv_stand: "Mobilier", dresser: "Mobilier",
+  sideboard: "Mobilier", wardrobe: "Mobilier", cabinet: "Mobilier", nightstand: "Mobilier",
+  bed: "Mobilier", headboard: "Mobilier", mattress: "Mobilier", television: "Mobilier",
+  // Décoration
+  rug: "Décoration", curtains: "Décoration",
+  lamp: "Décoration", ceiling_light: "Décoration", wall_sconce: "Décoration",
+  table_lamp: "Décoration", floor_lamp: "Décoration",
+  mirror: "Décoration", frame: "Décoration", plant: "Décoration",
+  // Accessoires
+  cushion: "Accessoires", decor_object: "Accessoires", other: "Accessoires",
+  // Fournitures (surfaces & matériaux)
   paint: "Fournitures", mouldings: "Fournitures", floor_material: "Fournitures",
+  floor: "Fournitures", wall: "Fournitures", ceiling: "Fournitures",
 };
+
 function toFamily(category: string): Family {
   return CATEGORY_FAMILY[category] ?? "Accessoires";
 }
@@ -90,7 +90,7 @@ function ScoreFoyerTab({
   const ecoNew = score?.ecoNew ?? 0;
   const total = kept + secondhand + ecoNew || 1;
   const co2 = score?.co2SavedKg ?? kept * 30 + secondhand * 20 + ecoNew * 5;
-  const budget = score?.totalEstimated ?? shoppingList.reduce((s, i) => s + (i.priceMin + i.priceMax) / 2, 0);
+  const budget = score?.totalEstimated ?? shoppingList.reduce((s, i) => s + ((i.priceMin + i.priceMax) / 2) * (i.quantity ?? 1), 0);
 
   const segments = [
     { value: Math.round((kept / total) * 100), label: "conservé", color: "#6B8E6F", dot: "bg-foyer-sage" },
@@ -444,39 +444,7 @@ export function FinalScreen({
   );
 }
 
-// ── Section header ────────────────────────────────────────────────────────────
-function SectionHeader({ emoji, title, count }: { emoji: string; title: string; count: number }) {
-  return (
-    <div className="flex items-center gap-2 mb-3">
-      <span className="text-[15px]" aria-hidden>{emoji}</span>
-      <SectionLabel>{title} {count > 0 && `(${count})`}</SectionLabel>
-    </div>
-  );
-}
-
-// ── Ligne item non-matchée ────────────────────────────────────────────────────
-function UnmatchedRow({ item }: { item: ShoppingItem }) {
-  return (
-    <li className="flex items-center gap-3 rounded-xl border border-dashed border-foyer-border bg-white px-4 py-3">
-      <span className="size-2 shrink-0 rounded-full bg-foyer-muted/40" aria-hidden />
-      <span className="text-[14px] capitalize text-foyer-muted">{item.name}</span>
-      <span className="ml-auto text-[12px] text-foyer-muted">À sourcer</span>
-    </li>
-  );
-}
-
-// ── Ligne altération conservée ────────────────────────────────────────────────
-function KeptRow({ alteration }: { alteration: Alteration }) {
-  return (
-    <li className="flex items-center gap-3 rounded-xl border border-foyer-border bg-white px-4 py-3">
-      <span className="size-2 shrink-0 rounded-full bg-foyer-sage" aria-hidden />
-      <span className="text-[14px] capitalize text-foyer-ink">{alteration.element}</span>
-      <span className="ml-auto text-[12px] text-foyer-sage font-medium">Conservé</span>
-    </li>
-  );
-}
-
-// ── Shopping tab avec 4 sections (α-10) ──────────────────────────────────────
+// ── Enhanced shopping tab with product URL buttons ────────────────────────────
 function EnhancedListeShoppingTab({
   shoppingList,
   alterations,
@@ -486,94 +454,20 @@ function EnhancedListeShoppingTab({
   alterations: Alteration[];
   onProductUrl: () => void;
 }) {
-  const isHybrid = shoppingList.some(
-    (i) => i.matchingSource === "lbc" || i.matchingSource === "partner",
-  );
+  // Dedup by id before grouping (guards against stale cached data with duplicate catalog products)
+  const seen = new Set<string>();
+  const dedupedList = shoppingList.filter((item) => {
+    if (seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  });
 
-  // ── Mode hybride : 4 sections ────────────────────────────────────────────
-  if (isHybrid) {
-    const keptAlterations = alterations.filter((a) => a.shoppingImpact === "none");
-    const lbcItems = shoppingList.filter((i) => itemSection(i) === "lbc");
-    const partnerItems = shoppingList.filter((i) => itemSection(i) === "partner");
-    const diyItems = shoppingList.filter((i) => itemSection(i) === "diy");
-    const unmatched = shoppingList.filter((i) => i.merchants.length === 0);
-
-    const hasContent =
-      keptAlterations.length > 0 || lbcItems.length > 0 ||
-      partnerItems.length > 0 || diyItems.length > 0;
-
-    if (!hasContent) {
-      return (
-        <div className="rounded-2xl border border-foyer-border bg-white px-5 py-8 text-center">
-          <p className="text-[15px] text-foyer-muted">La liste de courses se prépare…</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-6">
-        {/* Section 1 — Conservé */}
-        {keptAlterations.length > 0 && (
-          <section>
-            <SectionHeader emoji="✓" title="Conservé" count={keptAlterations.length} />
-            <ul className="flex flex-col gap-3">
-              {keptAlterations.map((a) => <KeptRow key={a.element} alteration={a} />)}
-            </ul>
-          </section>
-        )}
-
-        {/* Section 2 — Seconde main LBC */}
-        {lbcItems.length > 0 && (
-          <section>
-            <SectionHeader emoji="⚐" title="Seconde main" count={lbcItems.length} />
-            <ul className="flex flex-col gap-3">
-              {lbcItems.map((item) => (
-                <ShoppingItemRow key={item.id} item={item} onProductUrl={onProductUrl} />
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {/* Section 3 — Neuf durable */}
-        {partnerItems.length > 0 && (
-          <section>
-            <SectionHeader emoji="🌱" title="Neuf durable" count={partnerItems.length} />
-            <ul className="flex flex-col gap-3">
-              {partnerItems.map((item) => (
-                <ShoppingItemRow key={item.id} item={item} onProductUrl={onProductUrl} />
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {/* Section 4 — DIY & fournitures */}
-        {diyItems.length > 0 && (
-          <section>
-            <SectionHeader emoji="🔧" title="DIY & fournitures" count={diyItems.length} />
-            <ul className="flex flex-col gap-3">
-              {diyItems.map((item) => (
-                <ShoppingItemRow key={item.id} item={item} onProductUrl={onProductUrl} />
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {unmatched.length > 0 && (
-          <section>
-            <SectionLabel>À sourcer</SectionLabel>
-            <ul className="flex flex-col gap-3">
-              {unmatched.map((item) => <UnmatchedRow key={item.id} item={item} />)}
-            </ul>
-          </section>
-        )}
-      </div>
-    );
-  }
-
-  // ── Mode mock_catalog legacy : groupement par famille ────────────────────
+  // Group shopping items by family
   const byFamily = new Map<Family, ShoppingItem[]>();
-  for (const item of shoppingList) {
-    const f = toFamily(item.category);
+  for (const item of dedupedList) {
+    // Les fournitures DIY (peinture, moulures, tasseaux) héritent de la catégorie
+    // de l'élément (ex. "wall") → on les force dans « Fournitures » via la source.
+    const f = item.source === "diy" ? "Fournitures" : toFamily(item.category);
     if (!byFamily.has(f)) byFamily.set(f, []);
     byFamily.get(f)!.push(item);
   }
@@ -589,6 +483,10 @@ function EnhancedListeShoppingTab({
     (f) => (byFamily.get(f)?.length ?? 0) > 0 || (keptByFamily.get(f)?.length ?? 0) > 0,
   );
 
+  const allUrls = shoppingList
+    .flatMap((i) => i.merchants.map((m) => m.url).filter(Boolean))
+    .slice(0, 20) as string[];
+
   if (activeFamilies.length === 0) {
     return (
       <div className="rounded-2xl border border-foyer-border bg-white px-5 py-8 text-center">
@@ -596,10 +494,6 @@ function EnhancedListeShoppingTab({
       </div>
     );
   }
-
-  const allUrls = shoppingList
-    .flatMap((i) => i.merchants.map((m) => m.url).filter(Boolean))
-    .slice(0, 20) as string[];
 
   return (
     <div className="space-y-6">
@@ -609,19 +503,58 @@ function EnhancedListeShoppingTab({
         const matched = items.filter((i) => i.merchants.length > 0);
         const unmatched = items.filter((i) => i.merchants.length === 0);
         const count = matched.length + kept.length;
+
         return (
           <section key={family}>
-            <SectionLabel>{family} {count > 0 && `(${count})`}</SectionLabel>
+            <SectionLabel>
+              {family} {count > 0 && `(${count})`}
+            </SectionLabel>
+
             <ul className="flex flex-col gap-3">
               {matched.map((item) => (
-                <ShoppingItemRow key={item.id} item={item} onProductUrl={onProductUrl} />
+                <ShoppingItemRow
+                  key={item.id}
+                  item={item}
+                  onProductUrl={onProductUrl}
+                />
               ))}
-              {unmatched.map((item) => <UnmatchedRow key={item.id} item={item} />)}
-              {kept.map((a) => <KeptRow key={a.element} alteration={a} />)}
+
+              {unmatched.map((item) => (
+                <li
+                  key={item.id}
+                  className="flex items-center gap-3 rounded-xl border border-dashed border-foyer-border bg-white px-4 py-3"
+                >
+                  <span className="size-2 shrink-0 rounded-full bg-foyer-muted/40" aria-hidden />
+                  <span className="shrink-0 rounded bg-foyer-border/40 px-1.5 py-0.5 text-[11px] font-mono text-foyer-muted">
+                    {item.category.replace(/_/g, " ")}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-[14px] text-foyer-muted" title={item.name}>
+                    {item.name}
+                  </span>
+                  {(item.quantity ?? 1) > 1 && (
+                    <span className="shrink-0 rounded-full bg-foyer-ink/10 px-2 py-0.5 text-[12px] font-semibold text-foyer-ink">
+                      ×{item.quantity}
+                    </span>
+                  )}
+                  <span className="shrink-0 text-[12px] text-foyer-muted">À sourcer</span>
+                </li>
+              ))}
+
+              {kept.map((a) => (
+                <li
+                  key={a.element}
+                  className="flex items-center gap-3 rounded-xl border border-foyer-border bg-white px-4 py-3"
+                >
+                  <span className="size-2 shrink-0 rounded-full bg-foyer-sage" aria-hidden />
+                  <span className="text-[14px] capitalize text-foyer-ink">{a.element}</span>
+                  <span className="ml-auto text-[12px] text-foyer-sage font-medium">Conservé</span>
+                </li>
+              ))}
             </ul>
           </section>
         );
       })}
+
       {allUrls.length > 0 && (
         <button
           type="button"

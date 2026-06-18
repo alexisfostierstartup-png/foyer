@@ -41,95 +41,6 @@ const wallPalettes = [
   { slug: "gris-chaud", data: { label: "Gris chaud", hex: "#9D958A", description: "warm grey" } },
 ];
 
-const prompts = [
-  {
-    slug: "vision_detect", purpose: "detection" as const, conditions: {}, provider: "gemini_vision" as const,
-    notes: "Détection pure : Vision ne décide jamais, il observe.",
-    template: `Analyze this interior room photo. Return ONLY a JSON object listing what you observe. Do not give any instruction or recommendation — only describe what is present.
-
-{
-  "roomType": "salon | chambre | autre",
-  "architecture": {
-    "floor": "material and condition",
-    "walls": "color, material, condition",
-    "ceiling": "description",
-    "windows": "count, size, position, light direction",
-    "doors": "count, position"
-  },
-  "detectedElements": [
-    {
-      "element": "short label",
-      "type": "furniture | architectural | fixture | decor",
-      "location": "where in the room",
-      "description": "color, material, style, condition",
-      "movable": true
-    }
-  ],
-  "qualityWarnings": []
-}
-
-Rules: List EVERY visible element. "movable": false for built-in/structural. Describe only. Return ONLY the JSON.`,
-  },
-  {
-    slug: "gen_wow_generic", purpose: "generation" as const, conditions: {}, provider: "nano_banana" as const,
-    notes: "Prompt génération générique, archi 3 couches. Fallback quand aucun prompt spécifique ne matche les conditions.",
-    template: `Here is a photo of an interior room (attached). Furnish and redecorate it into a complete, beautiful, realistic interior in the "{{styleName}}" style. Act as a professional interior designer.
-
-ROOM TYPE: {{roomType}}
-ELEMENTS PRESENT — raw detection (JSON): {{visionJson}}
-PRIORITY RULE: Every detected element stays in its exact original position. You MAY restyle their finish. Anything you ADD must adapt around these fixed elements.
-HOW TO TREAT THE ROOM: A complete {{roomType}} usually includes: {{furnitureDefaults}}. Add whatever is missing.
-USER INSTRUCTIONS (hard — override): {{userInstructions}}
-
-Photorealistic, natural daylight, same framing as the original.`,
-  },
-  {
-    slug: "iterate_generic", purpose: "iteration" as const, conditions: {}, provider: "nano_banana" as const,
-    notes: "Itération édition localisée. À long terme, basculer sur flux_kontext.",
-    template: `This is an EDIT of the attached image, NOT a new generation. Output the SAME room with only ONE element changed.
-
-KEEP 100% IDENTICAL: the whole room, all furniture, walls, lighting, objects, colors, and the exact camera angle, framing and perspective.
-
-THE ONLY CHANGE: {{userRequest}}
-
-Photorealistic interior photograph, same viewpoint as the attached image.`,
-  },
-  {
-    slug: "audit_quality", purpose: "audit" as const, conditions: {}, provider: "gemini_vision" as const,
-    notes: "Audit qualité post-génération. Score < 7 = rejet.",
-    template: `Compare these two interior images. Image 1 = source photo. Image 2 = generated render.
-
-Return ONLY valid JSON:
-{
-  "architecturalConsistency": 0-10,
-  "furniturePreservation": 0-10,
-  "perspectiveMatch": 0-10,
-  "sameRoom": true/false,
-  "issues": [],
-  "overallPass": true/false
-}
-
-Score 7+ on each axis = acceptable. "sameRoom" false = critical failure.`,
-  },
-  {
-    slug: "extract_alterations", purpose: "alterations" as const, conditions: {}, provider: "gemini_vision" as const,
-    notes: "Compare source et rendu final, extrait la liste des changements pour la liste de courses.",
-    template: `Compare these two interior images. Image 1 = original source. Image 2 = final render.
-
-Return ONLY valid JSON:
-{
-  "alterations": [
-    {
-      "element": "description of what changed",
-      "action": "added | replaced | restyled | painted | floor_changed | removed",
-      "category": "sofa | armchair | coffee_table | rug | floor | paint | lamp | etc.",
-      "detail": "what specifically",
-      "shoppingImpact": "none | to_buy | to_buy_secondhand | diy_material"
-    }
-  ]
-}`,
-  },
-];
 
 async function upsertAssets(
   category: "ambiance" | "room_defaults" | "floor_preset" | "wall_palette",
@@ -145,26 +56,18 @@ async function upsertAssets(
   console.log(`  ✓ ${items.length} ${category}`);
 }
 
+// NOTE — ce seed ne couvre QUE les assets de design statiques (ambiances, defaults
+// pièce, presets sol, palettes murales). Les autres données sont gérées ailleurs :
+//   - prompts            → table `prompts`, éditée via l'admin (/admin/prompts).
+//                          (NE PAS re-seeder ici : on régresserait les templates en prod.)
+//   - element_category   → scripts/seed-element-categories.mjs
+//   - standard_dims / diy_actions → migrations supabase/migrations/
 async function seed() {
-  console.log("Seeding assets…");
+  console.log("Seeding design assets…");
   await upsertAssets("ambiance", ambiances);
   await upsertAssets("room_defaults", roomDefaults);
   await upsertAssets("floor_preset", floorPresets);
   await upsertAssets("wall_palette", wallPalettes);
-
-  console.log("Seeding prompts…");
-  for (const p of prompts) {
-    // Désactiver l'ancien actif s'il existe
-    await supabase.from("prompts").update({ is_active: false })
-      .eq("slug", p.slug).eq("purpose", p.purpose).eq("is_active", true);
-    // Insérer le nouveau (le trigger snapshot_prompt_version s'en charge)
-    const { error } = await supabase.from("prompts").insert({
-      slug: p.slug, purpose: p.purpose, conditions: p.conditions,
-      provider: p.provider, template: p.template, notes: p.notes, is_active: true,
-    });
-    if (error) throw new Error(`prompt ${p.slug}: ${error.message}`);
-    console.log(`  ✓ ${p.slug} (${p.purpose})`);
-  }
 
   console.log("\nSeed done ✓");
 }

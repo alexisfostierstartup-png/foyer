@@ -1,36 +1,46 @@
-import path from "path";
 import { nanoid } from "nanoid";
+import { createSupabaseAdmin } from "@/lib/supabase/server";
 import type { Project, RoomType } from "@/lib/types";
-import { DATA_DIR, readJson, writeJson } from "@/lib/storage/fs";
 
-const PROJECTS_FILE = path.join(DATA_DIR, "projects.json");
+// ── All project state lives in foyer_projects.data (jsonb).
+// ── No filesystem writes — works on Vercel's read-only environment.
 
-async function readAll(): Promise<Project[]> {
-  return readJson<Project[]>(PROJECTS_FILE, []);
-}
-
-async function writeAll(projects: Project[]): Promise<void> {
-  await writeJson(PROJECTS_FILE, projects);
-}
-
-export function buildStorageFolder(userId: string | undefined, projectCount: number): string {
-  const n = (projectCount + 1).toString().padStart(7, "0");
-  if (userId) {
-    return `${userId}_PR${n}`;
-  }
+export function buildStorageFolder(userId: string | undefined, projectId: string): string {
+  // Lisible (triable par date) ET unique. Le suffixe projectId (nanoid) garantit
+  // zéro collision : auparavant un compteur (UN/PR + n) redescendait à la
+  // suppression d'un projet → réutilisation du dossier d'un ancien → médias
+  // écrasés. Le projectId élimine ce risque tout en gardant un nom lisible.
   const now = new Date();
-  const date = now.toISOString().slice(0, 10);
-  const time = now.toTimeString().slice(0, 5).replace(":", "-");
-  return `${date}_${time}_UN${n}`;
+  const date = now.toISOString().slice(0, 10); // 2026-06-16
+  const time = now.toTimeString().slice(0, 5).replace(":", "-"); // 20-35
+  const stamp = `${date}_${time}`;
+  return userId
+    ? `${userId}/${stamp}_${projectId}`
+    : `${stamp}_UN_${projectId}`;
 }
 
 export async function listProjects(): Promise<Project[]> {
-  return readAll();
+  const { data, error } = await createSupabaseAdmin()
+    .from("foyer_projects")
+    .select("data")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("[projects] listProjects error:", error.message);
+    return [];
+  }
+  return (data ?? []).map((row) => row.data as Project);
 }
 
 export async function getProject(id: string): Promise<Project | null> {
-  const projects = await readAll();
-  return projects.find((p) => p.id === id) ?? null;
+  const { data, error } = await createSupabaseAdmin()
+    .from("foyer_projects")
+    .select("data")
+    .eq("id", id)
+    .single();
+
+  if (error || !data) return null;
+  return data.data as Project;
 }
 
 export async function createProject(
@@ -41,8 +51,9 @@ export async function createProject(
   id?: string,
   anonId?: string,
 ): Promise<Project> {
+  const projectId = id ?? nanoid();
   const project: Project = {
-    id: id ?? nanoid(),
+    id: projectId,
     createdAt: new Date().toISOString(),
     userId,
     anon_id: anonId,
@@ -57,9 +68,18 @@ export async function createProject(
     architecture: null,
     userConstraints: null,
   };
-  const projects = await readAll();
-  projects.push(project);
-  await writeAll(projects);
+
+  const { error } = await createSupabaseAdmin()
+    .from("foyer_projects")
+    .insert({
+      id: projectId,
+      user_id: userId ?? null,
+      anon_id: anonId ?? null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: project as any,
+    });
+
+  if (error) throw new Error(`Failed to create project: ${error.message}`);
   return project;
 }
 
@@ -67,11 +87,30 @@ export async function updateProject(
   id: string,
   updates: Partial<Omit<Project, "id" | "createdAt">>,
 ): Promise<Project | null> {
-  const projects = await readAll();
-  const index = projects.findIndex((p) => p.id === id);
-  if (index === -1) return null;
-  const updated = { ...projects[index], ...updates };
-  projects[index] = updated;
-  await writeAll(projects);
+  // Fetch current, merge, write back — keeps all existing fields
+  const { data: row, error: fetchError } = await createSupabaseAdmin()
+    .from("foyer_projects")
+    .select("data")
+    .eq("id", id)
+    .single();
+
+  if (fetchError || !row) return null;
+
+  const current = row.data as Project;
+  const updated: Project = { ...current, ...updates };
+
+  const { error: updateError } = await createSupabaseAdmin()
+    .from("foyer_projects")
+    .update({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: updated as any,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  if (updateError) {
+    console.error("[projects] updateProject error:", updateError.message);
+    return null;
+  }
   return updated;
 }

@@ -1,4 +1,6 @@
-export type RoomType = "salon" | "chambre";
+// Les types de pièce sont définis par les assets room_defaults (data-driven) —
+// d'où un type permissif : ajouter une pièce = ajouter un asset, pas éditer une union.
+export type RoomType = string;
 
 export type FurnitureDecision = "keep" | "customize" | "replace";
 
@@ -58,7 +60,12 @@ export type ShoppingItem = {
   city?: string;
   affiliateUrl?: string;
   postedAt?: string;
+  // Nombre d'exemplaires identiques fusionnés sur cette ligne (ex. 6 chaises → 6).
+  // Absent ou 1 = une seule unité.
+  quantity?: number;
 };
+
+export type { ElementDecision } from "./diy/types";
 
 export type ScoreFoyer = {
   kept: number;
@@ -81,7 +88,11 @@ export type Project = {
   selectedStyleId: string | null;
   generatedRenderUrl: string | null;
   firstRenderUrl?: string;
+  // "3 dispositions" : 3 rendus distincts (feature experts), parmi lesquels le
+  // user en choisit un (qui devient generatedRenderUrl).
+  dispositionsRenderUrls?: string[];
   iterationCount?: number;
+  editRequests?: string[]; // demandes d'édition live successives (pour le diff intent)
   detectedFurniture: DetectedFurniture[];
   architecture: {
     floor: string;
@@ -95,4 +106,9 @@ export type Project = {
   shoppingList?: ShoppingItem[];
   scoreFoyer?: ScoreFoyer;
   userConstraints: UserConstraints | null;
+  element_decisions?: import("./diy/types").ElementDecision[] | null;
+  applicationAudit?: import("./shopping/types").ApplicationAuditResult;
+  reconciledPlan?: import("./shopping/types").ReconciledPlan;
+  builtShoppingList?: import("./shopping/types").BuiltShoppingList;
+  repairApplied?: boolean;
 };

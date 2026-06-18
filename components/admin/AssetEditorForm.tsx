@@ -62,16 +62,30 @@ function RoomDefaultsFields({
   data: Record<string, unknown>;
   onChange: (d: Record<string, unknown>) => void;
 }) {
+  const removeCategories = (data.removeCategories as string[] | undefined) ?? [];
   return (
-    <Field label="Meubles attendus (en anglais, virgule-séparés)">
-      <textarea
-        value={String(data.englishFurniture ?? "")}
-        onChange={(e) => onChange({ ...data, englishFurniture: e.target.value })}
-        rows={5}
-        className={inputCls + " font-mono text-xs"}
-        placeholder="sofa, coffee table, armchair, TV unit, rug"
-      />
-    </Field>
+    <>
+      <Field label="Brief de la pièce (anglais) — pièce maîtresse + meubles + règles, injecté dans le prompt">
+        <textarea
+          value={String(data.englishFurniture ?? "")}
+          onChange={(e) => onChange({ ...data, englishFurniture: e.target.value })}
+          rows={6}
+          className={inputCls + " font-mono text-xs"}
+          placeholder="A bedroom. The bed is the centerpiece. It usually includes: a double bed…"
+        />
+      </Field>
+      <Field label="Catégories à RETIRER pour cette pièce (slugs, séparés par virgule) — parasites supprimés du rendu">
+        <textarea
+          value={removeCategories.join(", ")}
+          onChange={(e) =>
+            onChange({ ...data, removeCategories: e.target.value.split(/[,\n]/).map((s) => s.trim()).filter(Boolean) })
+          }
+          rows={2}
+          className={inputCls + " font-mono text-xs"}
+          placeholder="sofa, coffee_table, tv_stand, television, dining_table, dining_chair, bar_table"
+        />
+      </Field>
+    </>
   );
 }
 
@@ -134,6 +148,83 @@ function WallPaletteFields({
   );
 }
 
+function ElementCategoryFields({
+  data,
+  onChange,
+}: {
+  data: Record<string, unknown>;
+  onChange: (d: Record<string, unknown>) => void;
+}) {
+  function update(key: string, value: unknown) {
+    onChange({ ...data, [key]: value });
+  }
+  const rooms = (data.room_types as string[] | undefined) ?? [];
+  function toggleRoom(r: string) {
+    update("room_types", rooms.includes(r) ? rooms.filter((x) => x !== r) : [...rooms, r]);
+  }
+  const Check = ({ k, label }: { k: string; label: string }) => (
+    <label className="flex items-center gap-2 text-sm text-foyer-ink cursor-pointer">
+      <input type="checkbox" checked={Boolean(data[k])} onChange={(e) => update(k, e.target.checked)} />
+      {label}
+    </label>
+  );
+
+  return (
+    <>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <Field label="Label (FR)">
+          <input value={String(data.label_fr ?? "")} onChange={(e) => update("label_fr", e.target.value)} className={inputCls} placeholder="Table basse" />
+        </Field>
+        <Field label="Label (EN)">
+          <input value={String(data.label_en ?? "")} onChange={(e) => update("label_en", e.target.value)} className={inputCls} placeholder="coffee table" />
+        </Field>
+        <Field label="Famille">
+          <input value={String(data.family ?? "")} onChange={(e) => update("family", e.target.value)} className={inputCls} placeholder="table" />
+        </Field>
+        <Field label="Catégorie catalogue (mapping shopping, vide = non matché)">
+          <input value={String(data.catalog_category ?? "")} onChange={(e) => update("catalog_category", e.target.value || null)} className={inputCls + " font-mono"} placeholder="coffee_table" />
+        </Field>
+      </div>
+      <Field label="Types de pièce">
+        <div className="flex gap-4">
+          {["salon", "chambre"].map((r) => (
+            <label key={r} className="flex items-center gap-2 text-sm text-foyer-ink cursor-pointer">
+              <input type="checkbox" checked={rooms.includes(r)} onChange={() => toggleRoom(r)} />
+              {r}
+            </label>
+          ))}
+        </div>
+      </Field>
+      <Field label="Actions autorisées en review">
+        <div className="flex gap-4">
+          {(["keep", "customize", "replace"] as const).map((a) => {
+            const actions = (data.allowed_actions as string[] | undefined) ?? ["keep", "customize", "replace"];
+            const labels = { keep: "Garder", customize: "Customiser", replace: "Remplacer" };
+            return (
+              <label key={a} className="flex items-center gap-2 text-sm text-foyer-ink cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={actions.includes(a)}
+                  onChange={() =>
+                    update("allowed_actions", actions.includes(a) ? actions.filter((x) => x !== a) : [...actions, a])
+                  }
+                />
+                {labels[a]}
+              </label>
+            );
+          })}
+        </div>
+      </Field>
+      <div className="flex flex-wrap gap-x-6 gap-y-2">
+        <Check k="movable" label="Déplaçable" />
+        <Check k="diy_eligible" label="Éligible DIY (personnalisable)" />
+        <Check k="fixed_lightpoint" label="Point lumineux fixe (remplacer en place)" />
+        <Check k="preserve_behind" label="Préserver l'arrière (fenêtre/porte)" />
+      </div>
+    </>
+  );
+}
+
 // ─── Shared helpers ──────────────────────────────────────────────────────────
 
 const inputCls =
@@ -167,9 +258,14 @@ type Props = {
 
 const DEFAULT_DATA: Record<string, Record<string, unknown>> = {
   ambiance: { name: "", description: "", palette: [], materials: [], mood: "" },
-  room_defaults: { englishFurniture: "" },
+  room_defaults: { englishFurniture: "", removeCategories: [] },
   floor_preset: { label: "", description: "" },
   wall_palette: { label: "", hex: "", description: "" },
+  element_category: {
+    label_fr: "", label_en: "", family: "", room_types: ["salon", "chambre"],
+    movable: true, diy_eligible: false, catalog_category: null,
+    allowed_actions: ["keep", "customize", "replace"],
+  },
 };
 
 export function AssetEditorForm({
@@ -323,6 +419,9 @@ export function AssetEditorForm({
         )}
         {category === "wall_palette" && (
           <WallPaletteFields data={data} onChange={setData} />
+        )}
+        {category === "element_category" && (
+          <ElementCategoryFields data={data} onChange={setData} />
         )}
       </div>
 

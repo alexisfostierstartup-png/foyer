@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
 import { nanoid } from "nanoid";
-import { createProject, buildStorageFolder, listProjects } from "@/lib/storage/projects";
+import { createProject, buildStorageFolder } from "@/lib/storage/projects";
 import { saveSourceImage } from "@/lib/ai/saveRender";
 import { MAX_UPLOAD_BYTES, UPLOAD_MAX_DIMENSION } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
+import { getRoomTypes } from "@/lib/db/assets";
 import type { RoomType } from "@/lib/types";
 
 const ACCEPTED_TYPES = new Set([
@@ -14,8 +15,6 @@ const ACCEPTED_TYPES = new Set([
   "image/heic",
   "image/heif",
 ]);
-
-const ROOM_TYPES: RoomType[] = ["salon", "chambre"];
 
 export async function POST(request: NextRequest) {
   let formData: FormData;
@@ -31,7 +30,13 @@ export async function POST(request: NextRequest) {
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "Aucun fichier reçu" }, { status: 400 });
   }
-  if (typeof roomType !== "string" || !ROOM_TYPES.includes(roomType as RoomType)) {
+  if (typeof roomType !== "string") {
+    return NextResponse.json({ error: "Type de pièce invalide" }, { status: 400 });
+  }
+  // Validation data-driven : tout type de pièce qui existe comme asset room_defaults
+  // est accepté (ajouter une pièce = ajouter un asset, aucune liste en dur à éditer).
+  const validRoomTypes = (await getRoomTypes()).map((r) => r.slug);
+  if (!validRoomTypes.includes(roomType)) {
     return NextResponse.json({ error: "Type de pièce invalide" }, { status: 400 });
   }
   if (!ACCEPTED_TYPES.has(file.type)) {
@@ -62,13 +67,8 @@ export async function POST(request: NextRequest) {
     const existingAnonId = request.cookies.get("foyer_anon_id")?.value;
     const anonId = existingAnonId ?? nanoid();
 
-    const allProjects = await listProjects();
-    const userProjectCount = userId
-      ? allProjects.filter((p) => p.userId === userId).length
-      : allProjects.filter((p) => !p.userId).length;
-
     const projectId = nanoid();
-    const storageFolder = buildStorageFolder(userId, userProjectCount);
+    const storageFolder = buildStorageFolder(userId, projectId);
     const basePhotoUrl = await saveSourceImage(outputBuffer, storageFolder);
     const project = await createProject(
       roomType as RoomType,

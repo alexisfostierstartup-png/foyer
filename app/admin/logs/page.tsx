@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic";
+import Link from "next/link";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 
 type AuditScores = {
@@ -133,11 +134,12 @@ export default async function AdminLogsPage() {
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-foyer-muted uppercase tracking-wide">
                   Rendu
                 </th>
+                <th className="px-4 py-2.5 w-8" />
               </tr>
             </thead>
             <tbody className="divide-y divide-foyer-border">
               {rows.map((row) => (
-                <tr key={row.id} className="hover:bg-foyer-border/20 transition-colors">
+                <tr key={row.id} className="hover:bg-foyer-border/20 transition-colors group">
                   <td className="px-4 py-3 text-xs text-foyer-muted font-mono">
                     {timeAgo(row.created_at)}
                   </td>
@@ -192,6 +194,15 @@ export default async function AdminLogsPage() {
                     ) : (
                       <span className="text-xs text-foyer-muted">—</span>
                     )}
+                  </td>
+                  <td className="px-2 py-3">
+                    <Link
+                      href={`/admin/logs/${row.id}`}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity text-foyer-muted hover:text-foyer-ink text-xs"
+                      title="Voir le détail"
+                    >
+                      →
+                    </Link>
                   </td>
                 </tr>
               ))}

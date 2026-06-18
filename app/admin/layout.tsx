@@ -6,7 +6,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-foyer-cream">
       <Sidebar />
       <main className="md:pl-56">
-        <div className="px-6 py-8 max-w-5xl">{children}</div>
+        <div className="px-6 py-8">{children}</div>
       </main>
     </div>
   );

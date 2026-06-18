@@ -12,6 +12,150 @@ export type Database = {
   }
   public: {
     Tables: {
+      foyer_projects: {
+        Row: {
+          id: string
+          user_id: string | null
+          anon_id: string | null
+          created_at: string
+          updated_at: string
+          data: Json
+        }
+        Insert: {
+          id: string
+          user_id?: string | null
+          anon_id?: string | null
+          created_at?: string
+          updated_at?: string
+          data: Json
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          anon_id?: string | null
+          created_at?: string
+          updated_at?: string
+          data?: Json
+        }
+        Relationships: []
+      }
+      ai_calls: {
+        Row: {
+          id: string
+          project_id: string | null
+          iteration_id: string | null
+          step: string
+          provider: string
+          model: string | null
+          input_tokens: number | null
+          output_tokens: number | null
+          images_in: number
+          images_out: number
+          api_requests: number
+          unit_cost: number | null
+          total_cost: number
+          latency_ms: number | null
+          success: boolean
+          error: string | null
+          request_payload: Json | null
+          response_payload: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          project_id?: string | null
+          iteration_id?: string | null
+          step: string
+          provider: string
+          model?: string | null
+          input_tokens?: number | null
+          output_tokens?: number | null
+          images_in?: number
+          images_out?: number
+          api_requests?: number
+          unit_cost?: number | null
+          total_cost?: number
+          latency_ms?: number | null
+          success?: boolean
+          error?: string | null
+          request_payload?: Json | null
+          response_payload?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string | null
+          iteration_id?: string | null
+          step?: string
+          provider?: string
+          model?: string | null
+          input_tokens?: number | null
+          output_tokens?: number | null
+          images_in?: number
+          images_out?: number
+          api_requests?: number
+          unit_cost?: number | null
+          total_cost?: number
+          latency_ms?: number | null
+          success?: boolean
+          error?: string | null
+          request_payload?: Json | null
+          response_payload?: Json | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      diy_actions: {
+        Row: {
+          id: string
+          slug: string
+          label: string
+          label_en: string | null
+          applies_to_categories: string[]
+          requires: Json
+          excludes: Json
+          qty_formula: string | null
+          qty_unit: string | null
+          style_affinity: Json
+          supplies_template: Json | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          slug: string
+          label: string
+          label_en?: string | null
+          applies_to_categories?: string[]
+          requires?: Json
+          excludes?: Json
+          qty_formula?: string | null
+          qty_unit?: string | null
+          style_affinity?: Json
+          supplies_template?: Json | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          slug?: string
+          label?: string
+          label_en?: string | null
+          applies_to_categories?: string[]
+          requires?: Json
+          excludes?: Json
+          qty_formula?: string | null
+          qty_unit?: string | null
+          style_affinity?: Json
+          supplies_template?: Json | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       assets: {
         Row: {
           category: string
@@ -433,6 +577,52 @@ export type Database = {
         Row: { id: string; owner_id: string; name: string; email: string | null; phone: string | null; notes: string | null; created_at: string }
         Insert: { id?: string; owner_id: string; name: string; email?: string | null; phone?: string | null; notes?: string | null; created_at?: string }
         Update: { name?: string; email?: string | null; phone?: string | null; notes?: string | null }
+        Relationships: []
+      }
+      ai_pricing: {
+        Row: {
+          id: string
+          provider: string
+          model: string | null
+          per_1m_input_tokens: number | null
+          per_1m_output_tokens: number | null
+          per_image_in: number | null
+          per_image_out: number | null
+          per_request: number | null
+          per_1k_embeddings: number | null
+          notes: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          provider: string
+          model?: string | null
+          per_1m_input_tokens?: number | null
+          per_1m_output_tokens?: number | null
+          per_image_in?: number | null
+          per_image_out?: number | null
+          per_request?: number | null
+          per_1k_embeddings?: number | null
+          notes?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          provider?: string
+          model?: string | null
+          per_1m_input_tokens?: number | null
+          per_1m_output_tokens?: number | null
+          per_image_in?: number | null
+          per_image_out?: number | null
+          per_request?: number | null
+          per_1k_embeddings?: number | null
+          notes?: string | null
+          is_active?: boolean
+          updated_at?: string
+        }
         Relationships: []
       }
       pro_share_links: {
