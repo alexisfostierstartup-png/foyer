@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
@@ -56,7 +57,7 @@ const SYNC_STATUS_COLORS: Record<string, string> = {
   running: "text-blue-500",
 };
 
-const MERCHANTS = ["", "manomano", "castorama", "la_redoute", "ikea"];
+const MERCHANTS = ["", "manomano", "castorama", "la_redoute", "ikea", "cdiscount", "leroy_merlin"];
 const TIERS = ["", "strategic", "standard", "discovery"];
 const SOURCE_TYPES = ["", "eco_new", "secondhand", "eco_label_certified"];
 
@@ -210,20 +211,24 @@ export function CatalogAdmin({ initialProducts, totalCount, syncRuns }: Props) {
             {products.map((p) => (
               <tr key={p.id} className="hover:bg-foyer-cream/30">
                 <td className="px-4 py-3">
-                  {p.primary_image_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={p.primary_image_url}
-                      alt={p.name}
-                      className="size-10 rounded-md object-cover border border-foyer-border"
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                    />
-                  ) : (
-                    <div className="size-10 rounded-md bg-foyer-cream border border-foyer-border" />
-                  )}
+                  <Link href={`/admin/catalog/${p.id}`} className="block">
+                    {p.primary_image_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={p.primary_image_url}
+                        alt={p.name}
+                        className="size-10 rounded-md object-cover border border-foyer-border"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                      />
+                    ) : (
+                      <div className="size-10 rounded-md bg-foyer-cream border border-foyer-border" />
+                    )}
+                  </Link>
                 </td>
                 <td className="px-4 py-3 max-w-[200px]">
-                  <p className="truncate font-medium text-foyer-ink">{p.name}</p>
+                  <Link href={`/admin/catalog/${p.id}`} className="block truncate font-medium text-foyer-ink hover:text-foyer-sage hover:underline">
+                    {p.name}
+                  </Link>
                 </td>
                 <td className="px-4 py-3 text-foyer-muted">{p.category}</td>
                 <td className="px-4 py-3 text-foyer-muted">{p.merchant}</td>

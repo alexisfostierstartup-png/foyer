@@ -21,8 +21,9 @@ async function jinaEmbed(inputs: JinaInput[]): Promise<number[][]> {
   const apiKey = process.env.JINA_API_KEY;
   if (!apiKey) throw new Error("JINA_API_KEY not set");
 
+  const MAX_ATTEMPTS = 6;
   let attempt = 0;
-  while (attempt < 3) {
+  while (attempt < MAX_ATTEMPTS) {
     const res = await fetch(JINA_API_URL, {
       method: "POST",
       headers: {
@@ -37,13 +38,26 @@ async function jinaEmbed(inputs: JinaInput[]): Promise<number[][]> {
       return json.data.map((d) => d.embedding);
     }
 
+    // 429 = rate limit (tokens/min) → on attend que le bucket se recharge et on réessaie.
+    if (res.status === 429) {
+      attempt++;
+      if (attempt >= MAX_ATTEMPTS) {
+        const text = await res.text();
+        throw new Error(`Jina API 429 (retries épuisés): ${text.slice(0, 140)}`);
+      }
+      await new Promise((r) => setTimeout(r, 12_000 * attempt)); // 12s, 24s, 36s…
+      continue;
+    }
+
+    // autres 4xx = erreur définitive
     if (res.status >= 400 && res.status < 500) {
       const text = await res.text();
       throw new Error(`Jina API ${res.status}: ${text}`);
     }
 
+    // 5xx = retry court
     attempt++;
-    if (attempt < 3) await new Promise((r) => setTimeout(r, 600 * attempt));
+    if (attempt < MAX_ATTEMPTS) await new Promise((r) => setTimeout(r, 600 * attempt));
   }
 
   throw new Error("Jina API: max retries exceeded");
