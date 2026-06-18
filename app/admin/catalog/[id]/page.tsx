@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { CatalogProductGallery } from "@/components/admin/CatalogProductGallery";
 
 function Badge({ children }: { children: ReactNode }) {
   return (
@@ -40,27 +41,8 @@ export default async function CatalogDetailPage({
       </Link>
 
       <div className="mt-4 grid gap-8 md:grid-cols-2">
-        {/* Image en grand */}
-        <div>
-          {p.primary_image_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={p.primary_image_url}
-              alt={p.name}
-              className="w-full rounded-xl border border-foyer-border bg-white object-contain"
-            />
-          ) : (
-            <div className="aspect-square w-full rounded-xl border border-foyer-border bg-foyer-cream" />
-          )}
-          {images.length > 1 && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {images.slice(0, 8).map((u, i) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img key={i} src={u} alt="" className="size-16 rounded-md border border-foyer-border object-cover" />
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Galerie : clic miniature → grand + choix de l'image 1 (cosine) */}
+        <CatalogProductGallery productId={p.id} images={images} initialPrimary={p.primary_image_url ?? ""} />
 
         {/* Infos */}
         <div>

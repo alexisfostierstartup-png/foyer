@@ -60,6 +60,11 @@ const SYNC_STATUS_COLORS: Record<string, string> = {
 const MERCHANTS = ["", "manomano", "castorama", "la_redoute", "ikea", "cdiscount", "leroy_merlin"];
 const TIERS = ["", "strategic", "standard", "discovery"];
 const SOURCE_TYPES = ["", "eco_new", "secondhand", "eco_label_certified"];
+const CATEGORIES = [
+  "", "sofa", "armchair", "coffee_table", "side_table", "tv_stand", "sideboard",
+  "bookshelf", "dining_table", "chair", "rug", "floor_lamp", "dresser",
+  "paint", "mouldings", "batten",
+];
 
 export function CatalogAdmin({ initialProducts, totalCount, syncRuns }: Props) {
   const [products, setProducts] = useState(initialProducts);
@@ -159,6 +164,7 @@ export function CatalogAdmin({ initialProducts, totalCount, syncRuns }: Props) {
           className="rounded-md border border-foyer-border px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foyer-sage"
         />
         {[
+          { key: "category", label: "Catégorie", opts: CATEGORIES },
           { key: "merchant", label: "Merchant", opts: MERCHANTS },
           { key: "partner_tier", label: "Tier", opts: TIERS },
           { key: "source_type", label: "Source", opts: SOURCE_TYPES },
