@@ -44,6 +44,19 @@ export type ShoppingMerchant = {
 
 export type MatchingSource = "mock_catalog" | "lbc" | "partner" | "kept";
 
+// Produit réel du catalogue (partner_products) matché à un item de la liste de courses.
+export type ProductMatch = {
+  id: string;
+  name: string;
+  category: string;
+  merchant: string;
+  source_type: string;
+  price: number | null;
+  primary_image_url: string | null;
+  product_url: string | null;
+  similarity: number;
+};
+
 export type ShoppingItem = {
   id: string;
   name: string;
@@ -63,6 +76,8 @@ export type ShoppingItem = {
   // Nombre d'exemplaires identiques fusionnés sur cette ligne (ex. 6 chaises → 6).
   // Absent ou 1 = une seule unité.
   quantity?: number;
+  // Vrais produits du catalogue matchés (top-N par similarité cosine). [0] = meilleur.
+  matches?: ProductMatch[];
 };
 
 export type { ElementDecision } from "./diy/types";
