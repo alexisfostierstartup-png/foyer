@@ -30,6 +30,10 @@ export const UPLOAD_MAX_DIMENSION = 1024; // px, longest edge after resize
 export const MAX_FREE_GENERATIONS = 1;
 export const MAX_FREE_EDITS = 2;
 
+// TEMP (dev/test) : désactive le paywall pour tester le flow complet sans limite.
+// Repasser à false pour réactiver.
+export const PAYWALL_DISABLED = true;
+
 // Mode test : la liste de courses finale n'associe PAS de produit catalogue par
 // défaut. Chaque élément à acheter est affiché « À sourcer » avec sa catégorie,
 // matière et couleur (issues de l'audit), pour vérifier le travail de l'audit.

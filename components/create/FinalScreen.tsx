@@ -10,6 +10,7 @@ import { BeforeAfterSlider } from "@/components/create/BeforeAfterSlider";
 import { ShoppingCard } from "@/components/create/ShoppingCard";
 import { PaywallModal } from "@/components/paywalls/PaywallModal";
 import { cn } from "@/lib/utils";
+import { PAYWALL_DISABLED } from "@/lib/constants";
 import { useUser } from "@/lib/auth/useUser";
 import type { ShoppingItem, ScoreFoyer } from "@/lib/types";
 import type { PaywallTrigger } from "@/components/paywalls/PaywallModal";
@@ -295,6 +296,10 @@ export function FinalScreen({
   }
 
   function handleRestart() {
+    if (PAYWALL_DISABLED) {
+      router.push("/create");
+      return;
+    }
     if (isExpert) {
       router.push("/create");
       return;
@@ -434,7 +439,7 @@ export function FinalScreen({
         </main>
       </div>
 
-      {paywallTrigger && (
+      {!PAYWALL_DISABLED && paywallTrigger && (
         <PaywallModal
           trigger={paywallTrigger}
           onClose={() => setPaywallTrigger(null)}

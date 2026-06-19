@@ -3,6 +3,7 @@ import { runDispositionsPipeline } from "@/lib/ai/pipeline";
 import { createClient } from "@/lib/supabase/server";
 import { checkAndConsumeCredit } from "@/lib/auth/actions";
 import { logPipelineError } from "@/lib/ai/logger";
+import { PAYWALL_DISABLED } from "@/lib/constants";
 
 export const maxDuration = 90;
 
@@ -17,13 +18,15 @@ export async function POST(
   const { data: { user } } = await supabase.auth.getUser();
   const firstFreeUsed = request.cookies.get("foyer_free_used")?.value === "1";
 
-  if (user) {
-    const result = await checkAndConsumeCredit(id, user.id);
-    if (!result.allowed) {
+  if (!PAYWALL_DISABLED) {
+    if (user) {
+      const result = await checkAndConsumeCredit(id, user.id);
+      if (!result.allowed) {
+        return NextResponse.json({ error: "no_credits", paywall: "second_project" }, { status: 402 });
+      }
+    } else if (firstFreeUsed) {
       return NextResponse.json({ error: "no_credits", paywall: "second_project" }, { status: 402 });
     }
-  } else if (firstFreeUsed) {
-    return NextResponse.json({ error: "no_credits", paywall: "second_project" }, { status: 402 });
   }
 
   try {
