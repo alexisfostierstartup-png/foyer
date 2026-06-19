@@ -50,15 +50,21 @@ function bestSellerScore(c: Candidate): number {
   return reviews * Math.max(rating, 0.5) * (c.is_sponsored ? 0.7 : 1);
 }
 
-export function selectCandidates(candidates: Candidate[], category: string, target: number): Candidate[] {
+export function selectCandidates(
+  candidates: Candidate[],
+  category: string,
+  target: number,
+  opts: { relevance?: boolean } = {},
+): Candidate[] {
   const cfg = CATEGORY_CONFIG[category];
+  const checkRelevance = opts.relevance !== false; // IKEA : search déjà ciblé → relevance:false
 
   // 1. Pertinence (titre contient un terme de la catégorie) + prix dans la fourchette.
   let pool = candidates.filter((c) => {
     if (!c.external_id || !c.url || !c.title) return false;
     if (!cfg) return true;
     const t = c.title.toLowerCase();
-    const relevant = cfg.terms.some((term) => t.includes(term));
+    const relevant = !checkRelevance || cfg.terms.some((term) => t.includes(term));
     const p = c.price ?? 0;
     return relevant && p >= cfg.min && p <= cfg.max;
   });

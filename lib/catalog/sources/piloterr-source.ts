@@ -179,40 +179,67 @@ async function fetchIkeaCandidates(category: string, maxPages: number): Promise<
   return out;
 }
 
-async function detailIkea(c: Candidate, category: string): Promise<PartnerProductInput | null> {
+// Couleurs de base pour dédupliquer les variantes (1 entrée par couleur distincte).
+const IKEA_COLOR_WORDS = [
+  "blanc", "noir", "gris", "anthracite", "beige", "taupe", "écru", "crème", "marron",
+  "bleu", "vert", "olive", "kaki", "rose", "rouge", "jaune", "orange", "terracotta",
+  "moutarde", "chêne", "naturel", "noyer", "bouleau", "doré",
+];
+function baseColor(name: string): string {
+  const t = name.toLowerCase();
+  return IKEA_COLOR_WORDS.find((c) => t.includes(c)) ?? t.trim();
+}
+
+// Éclate une réf IKEA en 1 entrée PAR COULEUR (image + couleur propres), plafonné.
+// 1 appel produit → toutes les variantes (image+couleur) → N entrées couleur-aware.
+async function detailIkeaVariants(c: Candidate, category: string, maxVariants: number): Promise<PartnerProductInput[]> {
   let d: {
     images?: string[]; image?: string; description?: string; dimensions?: Record<string, unknown>;
-    category?: string; variants?: Array<{ name?: string }>; price_amount?: number | string;
+    category?: string; price_amount?: number | string;
+    variants?: Array<{ id?: string | number; name?: string; image?: string; url?: string }>;
   };
   try {
     d = (await piloterrGet("/v2/ikea/product", c.url)) as typeof d;
   } catch (e) {
     console.warn(`[ikea] product ${c.external_id}:`, e instanceof Error ? e.message : e);
-    return null;
+    return [];
   }
-  const imgs = (d.images?.length ? d.images : c.image ? [c.image] : []).filter(Boolean) as string[];
-  if (imgs.length === 0) return null;
-  return {
-    merchant: "ikea",
-    external_id: c.external_id,
-    category,
-    name: c.title.slice(0, 255),
-    price: c.price ?? (d.price_amount != null ? Number(d.price_amount) : null),
-    currency: "EUR",
-    product_url: c.url,
-    image_urls: imgs,
-    primary_image_url: imgs[0],
-    source_type: "eco_new",
-    description: d.description?.slice(0, 2000),
-    attributes: {
-      brand: "IKEA",
-      dimensions: d.dimensions,
-      ikea_category: d.category,
-      variants: d.variants?.map((v) => v.name).filter(Boolean),
-      rating: c.rating,
-      reviews_count: c.reviews_count,
-    },
-  };
+  const model = c.title.trim(); // ex. "POÄNG Fauteuil" (modèle + type, sans couleur)
+  const fallbackImg = d.images?.[0] ?? c.image ?? null;
+  const variants = d.variants?.length
+    ? d.variants
+    : [{ id: c.external_id, name: "", image: fallbackImg ?? undefined, url: c.url }];
+
+  const out: PartnerProductInput[] = [];
+  const seenColors = new Set<string>();
+  for (const v of variants) {
+    if (out.length >= maxVariants) break;
+    const img = v.image ?? fallbackImg;
+    if (!v.id || !img) continue;
+    const colorLabel = (v.name ?? "").trim();
+    const col = baseColor(colorLabel);
+    if (seenColors.has(col)) continue; // 1 entrée par couleur distincte
+    seenColors.add(col);
+    out.push({
+      merchant: "ikea",
+      external_id: String(v.id),
+      category,
+      name: `${model} ${colorLabel}`.trim().slice(0, 255),
+      price: c.price ?? (d.price_amount != null ? Number(d.price_amount) : null),
+      currency: "EUR",
+      product_url: v.url ?? c.url,
+      image_urls: [img],
+      primary_image_url: img,
+      source_type: "eco_new",
+      description: `${colorLabel}. ${d.description ?? ""}`.trim().slice(0, 2000),
+      attributes: {
+        brand: "IKEA", color: colorLabel || null, model,
+        dimensions: d.dimensions, ikea_category: d.category,
+        rating: c.rating, reviews_count: c.reviews_count,
+      },
+    });
+  }
+  return out;
 }
 
 export class PiloterrSource implements ProductSource {
@@ -238,12 +265,17 @@ export class PiloterrSource implements ProductSource {
 
   private async fetchIkea(category: string, limit: number): Promise<PartnerProductInput[]> {
     const cands = await fetchIkeaCandidates(category, Math.ceil(limit / 24) + 1);
-    const selected = selectCandidates(cands, category, limit);
+    // Le search IKEA est déjà ciblé (libellés type "Siège pivotant" ≠ "fauteuil") → relevance off.
+    const refs = selectCandidates(cands, category, limit, { relevance: false });
     const out: PartnerProductInput[] = [];
-    for (const c of selected) {
-      await sleep(1100); // throttle 2e appel (specs structurées)
-      const d = await detailIkea(c, category);
-      if (d) out.push(d);
+    for (const c of refs) {
+      if (out.length >= limit) break;
+      await sleep(1100); // throttle 2e appel (1 appel → toutes les variantes couleur)
+      const entries = await detailIkeaVariants(c, category, 4); // ≤4 couleurs/réf
+      for (const e of entries) {
+        if (out.length >= limit) break;
+        out.push(e);
+      }
     }
     return out;
   }
