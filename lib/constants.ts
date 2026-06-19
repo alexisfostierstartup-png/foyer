@@ -34,6 +34,11 @@ export const MAX_FREE_EDITS = 2;
 // Repasser à false pour réactiver.
 export const PAYWALL_DISABLED = true;
 
+// Matching catalogue : score = alpha·cosine(image) + (1-alpha)·cosine(texte produit).
+// En dessous du seuil → "À sourcer". À tuner.
+export const MATCH_BLEND_ALPHA = 0.5;
+export const MATCH_MIN_SIMILARITY = 0.25;
+
 // Mode test : la liste de courses finale n'associe PAS de produit catalogue par
 // défaut. Chaque élément à acheter est affiché « À sourcer » avec sa catégorie,
 // matière et couleur (issues de l'audit), pour vérifier le travail de l'audit.

@@ -10,6 +10,7 @@
  */
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { computeTextEmbedding, computeBatchTextEmbeddings } from "@/lib/embeddings/jina";
+import { MATCH_BLEND_ALPHA, MATCH_MIN_SIMILARITY } from "@/lib/constants";
 import type { ProductMatch } from "@/lib/types";
 
 // Catégorie d'item → catégorie catalogue. null = non-shoppable (pas de match).
@@ -47,16 +48,19 @@ function mapRow(r: any): ProductMatch {
 async function rpcMatch(embedding: number[], category: string, topN: number): Promise<ProductMatch[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = createSupabaseAdmin() as any;
-  const { data, error } = await supabase.rpc("match_partner_products", {
+  const { data, error } = await supabase.rpc("match_partner_products_hybrid", {
     query_embedding: embedding,
     match_category: category,
     match_count: topN,
+    alpha: MATCH_BLEND_ALPHA,
   });
   if (error) {
     console.warn("[partnerMatch] RPC échoué:", error.message);
     return [];
   }
-  return (data ?? []).map(mapRow);
+  return (data ?? [])
+    .map(mapRow)
+    .filter((m: ProductMatch) => m.similarity >= MATCH_MIN_SIMILARITY);
 }
 
 export async function matchPartnerProducts(category: string, description: string, topN = 4): Promise<ProductMatch[]> {

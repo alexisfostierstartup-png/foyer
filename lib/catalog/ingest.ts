@@ -4,7 +4,7 @@
  * les lignes comme jeu de test (purgeable en une requête).
  */
 import { createSupabaseAdmin } from "@/lib/supabase/server";
-import { computeImageEmbedding } from "@/lib/embeddings/jina";
+import { computeImageEmbedding, computeTextEmbedding } from "@/lib/embeddings/jina";
 import { withTracking } from "@/lib/tracking";
 import type { ProductSource } from "./types";
 
@@ -60,6 +60,8 @@ export async function ingestFromSource(
             () => computeImageEmbedding(p.primary_image_url),
             { merchant: p.merchant, category },
           );
+          // Embedding TEXTE (nom + description) → blend visuel/sémantique au matching.
+          const textEmbedding = await computeTextEmbedding(`${p.name}. ${p.description ?? ""}`.trim());
 
           const row = {
             merchant: p.merchant,
@@ -75,6 +77,7 @@ export async function ingestFromSource(
             source_type: p.source_type,
             availability_status: "available",
             embedding: JSON.stringify(embedding), // pgvector attend '[...]'
+            text_embedding: JSON.stringify(textEmbedding),
             last_synced_at: new Date().toISOString(),
             metadata: { ingestion: TEST_SCRAPE_MARKER, scraped_at: new Date().toISOString(), ...(p.attributes ?? {}) },
           };
