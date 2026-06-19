@@ -1,52 +1,48 @@
 /**
- * PiloterrSource — source de TEST (JETABLE) pour constituer le jeu de données catalog.
- * Implémente ProductSource via les scrapers Piloterr.
+ * PiloterrSource — source de TEST du jeu de données catalog. Implémente ProductSource.
  *
- * Conventions VÉRIFIÉES en live (juin 2026) :
- *  - Auth = header `x-api-key` (PAS `Authorization: Bearer` — sinon la clé est
- *    silencieusement ignorée et l'appel casse en 500/403 trompeurs).
- *  - Cdiscount : GET /v2/cdiscount/search?query=<URL de recherche Cdiscount COMPLÈTE>
- *    → results[] {id, url, image, images[], price, title}. 1 appel, images incluses.
- *    Couvre tout le meuble.
- *  - Leroy Merlin : GET /v2/leroymerlin/search?query=<mot-clé> → results[] {sku, url,
- *    title, price} SANS image → 2e appel GET /v2/leroymerlin/product?query=<url>
- *    → {images[]}. Couvre seulement un sous-ensemble (déco/rangement).
+ * Conventions Piloterr (vérifiées live) : auth `x-api-key`.
+ *  - Cdiscount : search = URL `cdiscount.com/search/10/<kw>.html?page=N` (pagination
+ *    dans l'URL, ~63/page). Pas de note/avis dans le search → produit (2e appel) pour
+ *    image + specs + reviews. Sélection : pertinence + prix + dédup + diversité couleur.
+ *  - IKEA : search = URL `ikea.com/fr/fr/search/?q=<kw>&page=N` (24/page) AVEC image +
+ *    rating + reviews_count → 1-step (pas de 2e appel), sélection best-seller possible.
+ *  - Leroy Merlin : search = mot-clé (~6/réponse) → produit (image + features). Sert
+ *    aux FOURNITURES (peinture V33 acrylique, moulures, tasseaux) par expansion de
+ *    mots-clés (catalogue LM peu profond par requête).
  *
- * La source de PROD = les flux d'affiliation Awin (cf. awin-source.ts), qui
- * implémentera la MÊME interface : l'ingestion n'en dépend pas.
- *
- * ⚠️ Code de test. Ne tourne JAMAIS en cron/prod (cf. flag SEED_SCRAPE_ENABLED
- * dans scripts/seed-test-catalog.ts).
+ * La source de PROD = flux Awin (cf. awin-source.ts), même interface ProductSource.
+ * ⚠️ Code de test (flag SEED_SCRAPE_ENABLED).
  */
 import type { ProductSource, PartnerProductInput } from "../types";
+import { selectCandidates, type Candidate } from "../select";
 
 const PILOTERR_BASE = "https://api.piloterr.com";
 
-export type PiloterrMerchant = "cdiscount" | "leroy_merlin" | "ikea";
+export type PiloterrMerchant = "cdiscount" | "ikea" | "leroy_merlin";
 
-// Catégorie Foyer → mot-clé de recherche, par marchand.
-const CDISCOUNT_KEYWORDS: Record<string, string> = {
+// Mobilier + luminaire → mot-clé de recherche (Cdiscount & IKEA).
+const FURNITURE_KEYWORDS: Record<string, string> = {
   sofa: "canapé", armchair: "fauteuil", coffee_table: "table basse",
   side_table: "table d'appoint", tv_stand: "meuble tv", sideboard: "buffet",
   bookshelf: "bibliothèque", dining_table: "table à manger", chair: "chaise",
-  // "lampadaire" seul renvoie du junk (livres/DVD en "…aire") → terme plus précis.
   rug: "tapis", floor_lamp: "lampadaire salon", dresser: "commode",
 };
-const LEROYMERLIN_KEYWORDS: Record<string, string> = {
-  rug: "tapis", floor_lamp: "lampadaire", dresser: "commode",
-  bookshelf: "étagère", side_table: "table d'appoint", chair: "chaise",
-  // Fournitures DIY — le vrai fort de Leroy Merlin.
-  // ("peinture murale" renvoyait de la peinture métal/portail → "peinture mur intérieur".)
-  paint: "peinture mur intérieur", mouldings: "moulure décorative", batten: "tasseau bois",
-};
 
-// IKEA : query = URL de recherche IKEA (comme Cdiscount). Search renvoie déjà l'image.
-const IKEA_KEYWORDS: Record<string, string> = {
-  sofa: "canapé", armchair: "fauteuil", coffee_table: "table basse",
-  side_table: "table d'appoint", tv_stand: "meuble tv", sideboard: "buffet",
-  bookshelf: "bibliothèque", dining_table: "table à manger", chair: "chaise",
-  rug: "tapis", floor_lamp: "lampadaire", dresser: "commode",
+// Fournitures (Leroy Merlin) — expansion de mots-clés (catalogue peu profond/requête).
+const LM_SUPPLY_KEYWORDS: Record<string, string[]> = {
+  paint: [
+    "peinture V33 acrylique mur", "peinture V33 murale intérieur", "peinture V33 multisupport intérieur",
+    "peinture V33 satin couleur", "peinture V33 mat velours",
+  ],
+  mouldings: [
+    "moulure décorative", "moulure polyuréthane", "cimaise murale", "corniche décorative", "rosace plafond",
+  ],
+  batten: [
+    "tasseau sapin", "tasseau chêne", "tasseau bois raboté", "tasseau pin", "liteau bois", "tasseau douglas",
+  ],
 };
+const PAINT_EXCLUDE = /m[ée]tal|\bfer\b|portail|grille|ext[ée]rieur|\bsol\b|radiateur|garde.?corps|carrelage|fa[çc]ade/i;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -60,7 +56,6 @@ async function piloterrGet(path: string, query: string): Promise<unknown> {
   const url = new URL(`${PILOTERR_BASE}${path}`);
   url.searchParams.set("query", query);
   let lastErr: unknown;
-  // Retry sur erreur RÉSEAU ("fetch failed") ou 5xx (transitoire). 4xx = définitif.
   for (let attempt = 0; attempt < 4; attempt++) {
     let res: Response;
     try {
@@ -81,128 +76,221 @@ async function piloterrGet(path: string, query: string): Promise<unknown> {
   throw lastErr instanceof Error ? lastErr : new Error(`Piloterr ${path}: échec après retries`);
 }
 
+// ── Cdiscount ────────────────────────────────────────────────────────────────
+async function fetchCdiscountCandidates(category: string, maxPages: number): Promise<Candidate[]> {
+  const kw = FURNITURE_KEYWORDS[category];
+  if (!kw) return [];
+  const out: Candidate[] = [];
+  for (let pg = 1; pg <= maxPages; pg++) {
+    const searchUrl = `https://www.cdiscount.com/search/10/${encodeURIComponent(kw)}.html?page=${pg}`;
+    let json: { results?: unknown[]; pagination?: { has_next_page?: boolean } };
+    try {
+      json = (await piloterrGet("/v2/cdiscount/search", searchUrl)) as typeof json;
+    } catch (e) {
+      console.warn(`[cdiscount] search ${category} p${pg}:`, e instanceof Error ? e.message : e);
+      break;
+    }
+    const results = (json.results ?? []) as Array<Record<string, unknown>>;
+    if (results.length === 0) break;
+    for (const r of results) {
+      const images = r.images as string[] | undefined;
+      out.push({
+        external_id: String(r.id ?? ""),
+        url: String(r.url ?? ""),
+        title: String(r.title ?? ""),
+        price: r.price != null ? Number(r.price) : null,
+        image: images?.[0] ?? (r.image as string | undefined) ?? null,
+        is_sponsored: !!r.is_sponsored,
+        seller: (r.seller as { name?: string } | undefined)?.name ?? null,
+      });
+    }
+    if (!json.pagination?.has_next_page) break;
+    await sleep(300);
+  }
+  return out;
+}
+
+async function detailCdiscount(c: Candidate, category: string): Promise<PartnerProductInput | null> {
+  let d: {
+    images?: string[]; brand?: string; description?: string; specifications?: Record<string, unknown>;
+    rating?: number | string; reviews_count?: number | string; condition?: string;
+    ean?: string; original_price?: number | string; seller?: { name?: string };
+  };
+  try {
+    d = (await piloterrGet("/v2/cdiscount/product", c.url)) as typeof d;
+  } catch (e) {
+    console.warn(`[cdiscount] product ${c.external_id}:`, e instanceof Error ? e.message : e);
+    return null;
+  }
+  const imgs = (d.images?.length ? d.images : c.image ? [c.image] : []).filter(Boolean) as string[];
+  if (imgs.length === 0) return null;
+  return {
+    merchant: "cdiscount",
+    external_id: c.external_id,
+    category,
+    name: (c.title || "").slice(0, 255),
+    price: c.price,
+    currency: "EUR",
+    product_url: c.url,
+    image_urls: imgs,
+    primary_image_url: imgs[0],
+    source_type: "eco_new",
+    description: d.description?.slice(0, 2000),
+    attributes: {
+      brand: d.brand, specifications: d.specifications, rating: d.rating,
+      reviews_count: d.reviews_count, condition: d.condition, ean: d.ean,
+      original_price: d.original_price, seller: d.seller?.name,
+    },
+  };
+}
+
+// ── IKEA (1-step : image + rating + reviews dans le search) ───────────────────
+async function fetchIkeaCandidates(category: string, maxPages: number): Promise<Candidate[]> {
+  const kw = FURNITURE_KEYWORDS[category];
+  if (!kw) return [];
+  const out: Candidate[] = [];
+  for (let pg = 1; pg <= maxPages; pg++) {
+    const url = `https://www.ikea.com/fr/fr/search/?q=${encodeURIComponent(kw)}&page=${pg}`;
+    let json: { results?: unknown[]; pagination?: { has_next_page?: boolean } };
+    try {
+      json = (await piloterrGet("/v2/ikea/search", url)) as typeof json;
+    } catch (e) {
+      console.warn(`[ikea] search ${category} p${pg}:`, e instanceof Error ? e.message : e);
+      break;
+    }
+    const results = (json.results ?? []) as Array<Record<string, unknown>>;
+    if (results.length === 0) break;
+    for (const r of results) {
+      if (!r.id || !r.url || !r.image) continue;
+      out.push({
+        external_id: String(r.id),
+        url: String(r.url),
+        title: [r.title, r.subtitle].filter(Boolean).join(" "),
+        price: r.price_amount != null ? Number(r.price_amount) : null,
+        image: r.image as string,
+        rating: r.rating != null ? Number(r.rating) : null,
+        reviews_count: r.reviews_count != null ? Number(r.reviews_count) : null,
+        seller: "IKEA",
+      });
+    }
+    if (!json.pagination?.has_next_page) break;
+    await sleep(300);
+  }
+  return out;
+}
+
+async function detailIkea(c: Candidate, category: string): Promise<PartnerProductInput | null> {
+  let d: {
+    images?: string[]; image?: string; description?: string; dimensions?: Record<string, unknown>;
+    category?: string; variants?: Array<{ name?: string }>; price_amount?: number | string;
+  };
+  try {
+    d = (await piloterrGet("/v2/ikea/product", c.url)) as typeof d;
+  } catch (e) {
+    console.warn(`[ikea] product ${c.external_id}:`, e instanceof Error ? e.message : e);
+    return null;
+  }
+  const imgs = (d.images?.length ? d.images : c.image ? [c.image] : []).filter(Boolean) as string[];
+  if (imgs.length === 0) return null;
+  return {
+    merchant: "ikea",
+    external_id: c.external_id,
+    category,
+    name: c.title.slice(0, 255),
+    price: c.price ?? (d.price_amount != null ? Number(d.price_amount) : null),
+    currency: "EUR",
+    product_url: c.url,
+    image_urls: imgs,
+    primary_image_url: imgs[0],
+    source_type: "eco_new",
+    description: d.description?.slice(0, 2000),
+    attributes: {
+      brand: "IKEA",
+      dimensions: d.dimensions,
+      ikea_category: d.category,
+      variants: d.variants?.map((v) => v.name).filter(Boolean),
+      rating: c.rating,
+      reviews_count: c.reviews_count,
+    },
+  };
+}
+
 export class PiloterrSource implements ProductSource {
   constructor(public readonly merchant: PiloterrMerchant) {}
 
   async fetchProducts(category: string, limit: number): Promise<PartnerProductInput[]> {
     if (this.merchant === "cdiscount") return this.fetchCdiscount(category, limit);
     if (this.merchant === "ikea") return this.fetchIkea(category, limit);
-    return this.fetchLeroyMerlin(category, limit);
-  }
-
-  private async fetchIkea(category: string, limit: number): Promise<PartnerProductInput[]> {
-    const kw = IKEA_KEYWORDS[category];
-    if (!kw) return [];
-    const searchUrl = `https://www.ikea.com/fr/fr/search/?q=${encodeURIComponent(kw)}`;
-    const json = (await piloterrGet("/v2/ikea/search", searchUrl)) as {
-      results?: Array<{
-        id?: string; url?: string; image?: string; title?: string; subtitle?: string;
-        price_amount?: number | string; rating?: number | string; reviews_count?: number | string;
-      }>;
-    };
-    return (json.results ?? [])
-      .filter((r) => r.id && r.url && r.image)
-      .slice(0, limit)
-      .map((r) => ({
-        merchant: "ikea",
-        external_id: r.id!,
-        category,
-        name: [r.title, r.subtitle].filter(Boolean).join(" ").slice(0, 255),
-        price: r.price_amount != null ? Number(r.price_amount) : null,
-        currency: "EUR",
-        product_url: r.url!,
-        image_urls: [r.image!],
-        primary_image_url: r.image!,
-        source_type: "eco_new",
-        // IKEA search ne donne pas les specs structurées (il faudrait /ikea/product).
-        attributes: { subtitle: r.subtitle, rating: r.rating, reviews_count: r.reviews_count },
-      }));
+    return this.fetchLeroyMerlinSupplies(category, limit);
   }
 
   private async fetchCdiscount(category: string, limit: number): Promise<PartnerProductInput[]> {
-    const kw = CDISCOUNT_KEYWORDS[category];
-    if (!kw) return [];
-    // query Cdiscount = URL de recherche complète (cf. doc Piloterr).
-    const searchUrl = `https://www.cdiscount.com/search/10/${encodeURIComponent(kw)}.html`;
-    const json = (await piloterrGet("/v2/cdiscount/search", searchUrl)) as {
-      results?: Array<{ id?: string; url?: string; title?: string; price?: number | string; image?: string; images?: string[] }>;
-    };
-    const base = (json.results ?? []).filter((r) => r.id && r.url).slice(0, limit);
+    const cands = await fetchCdiscountCandidates(category, Math.ceil(limit / 45) + 2);
+    const selected = selectCandidates(cands, category, limit);
     const out: PartnerProductInput[] = [];
-    // 2e appel `product` pour les caractéristiques STRUCTURÉES (couleur, matière,
-    // dimensions… via `specifications`) — essentielles au matching visuel au rendu.
-    for (const r of base) {
-      try {
-        await sleep(1100); // throttle ≥1 req/s
-        const d = (await piloterrGet("/v2/cdiscount/product", r.url!)) as {
-          images?: string[]; brand?: string; description?: string;
-          specifications?: Record<string, unknown>; condition?: string;
-          ean?: string; original_price?: number | string; seller?: { name?: string };
-        };
-        const imgs = (d.images?.length ? d.images : r.images?.length ? r.images : r.image ? [r.image] : []).filter(Boolean) as string[];
-        if (imgs.length === 0) continue;
-        out.push({
-          merchant: "cdiscount",
-          external_id: r.id!,
-          category,
-          name: (r.title ?? "").slice(0, 255),
-          price: r.price != null ? Number(r.price) : null,
-          currency: "EUR",
-          product_url: r.url!,
-          image_urls: imgs,
-          primary_image_url: imgs[0],
-          source_type: "eco_new",
-          description: d.description?.slice(0, 2000),
-          attributes: {
-            brand: d.brand,
-            specifications: d.specifications,
-            condition: d.condition,
-            ean: d.ean,
-            original_price: d.original_price,
-            seller: d.seller?.name,
-          },
-        });
-      } catch (e) {
-        console.warn(`[piloterr:cdiscount] product ${r.id} échec:`, e instanceof Error ? e.message : e);
-      }
+    for (const c of selected) {
+      await sleep(1100); // throttle 2e appel
+      const d = await detailCdiscount(c, category);
+      if (d) out.push(d);
     }
     return out;
   }
 
-  private async fetchLeroyMerlin(category: string, limit: number): Promise<PartnerProductInput[]> {
-    const kw = LEROYMERLIN_KEYWORDS[category];
-    if (!kw) return [];
-    const json = (await piloterrGet("/v2/leroymerlin/search", kw)) as {
-      results?: Array<{ sku?: string; url?: string; title?: string; price?: number }>;
-    };
-    const base = (json.results ?? []).filter((r) => r.sku && r.url).slice(0, limit);
+  private async fetchIkea(category: string, limit: number): Promise<PartnerProductInput[]> {
+    const cands = await fetchIkeaCandidates(category, Math.ceil(limit / 24) + 1);
+    const selected = selectCandidates(cands, category, limit);
     const out: PartnerProductInput[] = [];
-    // 2e appel `product` pour récupérer l'image (search LM n'en renvoie pas).
-    for (const r of base) {
+    for (const c of selected) {
+      await sleep(1100); // throttle 2e appel (specs structurées)
+      const d = await detailIkea(c, category);
+      if (d) out.push(d);
+    }
+    return out;
+  }
+
+  private async fetchLeroyMerlinSupplies(category: string, limit: number): Promise<PartnerProductInput[]> {
+    const keywords = LM_SUPPLY_KEYWORDS[category];
+    if (!keywords) return [];
+    const out: PartnerProductInput[] = [];
+    const seen = new Set<string>();
+    for (const kw of keywords) {
+      if (out.length >= limit) break;
+      let json: { results?: unknown[] };
       try {
-        await sleep(1100); // throttle ≥1 req/s
-        const detail = (await piloterrGet("/v2/leroymerlin/product", r.url!)) as {
-          images?: string[]; brand?: string; description?: string; features?: Record<string, unknown>;
-        };
-        const imgs = (detail.images ?? []).filter(Boolean);
-        if (imgs.length === 0) continue; // pas d'image → inutile pour l'embedding
-        out.push({
-          merchant: "leroy_merlin",
-          external_id: r.sku!,
-          category,
-          name: (r.title ?? "").slice(0, 255),
-          price: r.price != null ? Number(r.price) : null,
-          currency: "EUR",
-          product_url: r.url!,
-          image_urls: imgs,
-          primary_image_url: imgs[0],
-          source_type: "eco_new",
-          description: detail.description?.slice(0, 2000),
-          // LM expose des features STRUCTURÉES (dimensions, etc.) + la marque.
-          attributes: { brand: detail.brand, features: detail.features },
-        });
-      } catch (e) {
-        console.warn(`[piloterr:leroymerlin] product ${r.sku} échec:`, e instanceof Error ? e.message : e);
+        json = (await piloterrGet("/v2/leroymerlin/search", kw)) as typeof json;
+      } catch {
+        continue;
+      }
+      const results = (json.results ?? []) as Array<{ sku?: string; url?: string; title?: string; price?: number }>;
+      for (const r of results) {
+        if (out.length >= limit) break;
+        if (!r.sku || !r.url || seen.has(r.sku)) continue;
+        if (category === "paint" && PAINT_EXCLUDE.test(r.title ?? "")) continue; // peinture intérieure only
+        seen.add(r.sku);
+        try {
+          await sleep(1100);
+          const d = (await piloterrGet("/v2/leroymerlin/product", r.url)) as {
+            images?: string[]; brand?: string; description?: string; features?: Record<string, unknown>;
+          };
+          const imgs = (d.images ?? []).filter(Boolean);
+          if (imgs.length === 0) continue;
+          out.push({
+            merchant: "leroy_merlin",
+            external_id: r.sku,
+            category,
+            name: (r.title ?? "").slice(0, 255),
+            price: r.price != null ? Number(r.price) : null,
+            currency: "EUR",
+            product_url: r.url,
+            image_urls: imgs,
+            primary_image_url: imgs[0],
+            source_type: "eco_new",
+            description: d.description?.slice(0, 2000),
+            attributes: { brand: d.brand, features: d.features },
+          });
+        } catch {
+          continue;
+        }
       }
     }
     return out;

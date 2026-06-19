@@ -1,33 +1,33 @@
 #!/usr/bin/env npx tsx
 /**
- * SEED du jeu de TEST catalog (JETABLE).
- * Peuple partner_products : Cdiscount (meubles) + Leroy Merlin (sous-ensemble),
- * avec embedding image via Jina. Chaque ligne est marquée
- * metadata.ingestion='test_scrape' + source_type='eco_new' → purge en 1 requête.
+ * SEED du jeu de TEST catalog (JETABLE). Sélection QUALITATIVE (best-sellers,
+ * diversité, garde-fous), pas "les N premiers".
  *
- * ⚠️ Usage DEV uniquement. Ne tourne JAMAIS en cron/prod. Sera remplacé par les
- * flux d'affiliation Awin (cf. lib/catalog/sources/awin-source.ts).
+ * Plan par défaut :
+ *  - Mobilier + luminaire : Cdiscount (180/cat, best-sellers paginés) + IKEA (70/cat).
+ *  - Fournitures : Leroy Merlin — peinture V33 acrylique intérieur (~40), moulures (30),
+ *    tasseaux (30).
+ * Chaque ligne : metadata.ingestion='test_scrape' + source_type='eco_new' → purgeable.
  *
- * Activation OBLIGATOIRE : SEED_SCRAPE_ENABLED=true (sinon arrêt).
+ * ⚠️ Usage DEV uniquement. Ne tourne JAMAIS en cron/prod. Activation : SEED_SCRAPE_ENABLED=true
  * Usage :
- *   SEED_SCRAPE_ENABLED=true npx tsx scripts/seed-test-catalog.ts --canary  # 1 cat, 3 produits
- *   SEED_SCRAPE_ENABLED=true npx tsx scripts/seed-test-catalog.ts           # run complet
+ *   SEED_SCRAPE_ENABLED=true npx tsx scripts/seed-test-catalog.ts            # plan complet
+ *   SEED_SCRAPE_ENABLED=true npx tsx scripts/seed-test-catalog.ts --canary   # mini
+ *   SEED_SCRAPE_ENABLED=true npx tsx scripts/seed-test-catalog.ts --merchant ikea --cats sofa --per 20
  * Purge : npx tsx scripts/purge-test-catalog.ts
  */
 import { config } from "dotenv";
 config({ path: ".env.local" });
-config(); // fallback .env
+config();
 
-const CATEGORIES = [
+const FURNITURE = [
   "sofa", "armchair", "coffee_table", "side_table", "tv_stand", "sideboard",
   "bookshelf", "dining_table", "chair", "rug", "floor_lamp", "dresser",
 ];
-const MAX_PER_MERCHANT = 300; // cap DUR
-// 2-step (search → product) des DEUX côtés → ~4 crédits/produit. Calé sur le pool
-// de ~500 crédits : 8×12 + 6×6 ≈ 130 produits ≈ ~340 crédits.
-const CDISCOUNT_PER_CAT = 8;
-const LEROYMERLIN_PER_CAT = 6;
-const IKEA_PER_CAT = 8; // IKEA = 1-step (image dans le search), moins cher
+const CDISCOUNT_PER = 180; // best-sellers
+const IKEA_PER = 70;       // diversité marque
+const SUPPLY: Record<string, number> = { paint: 40, mouldings: 30, batten: 30 };
+const PER_CAT_CAP = 300;   // garde-fou par catégorie
 
 function argValue(args: string[], flag: string): string | undefined {
   const i = args.indexOf(flag);
@@ -39,54 +39,55 @@ async function main() {
     console.error("⛔ SEED_SCRAPE_ENABLED != true → arrêt. (Jeu de test, dev only.)");
     process.exit(1);
   }
-  console.warn(
-    "\n⚠️  Jeu de TEST, usage DEV uniquement. Sera remplacé par les flux d'affiliation Awin.\n" +
-      "    Ne PAS exécuter en production.\n",
-  );
+  console.warn("\n⚠️  Jeu de TEST, usage DEV uniquement. Sera remplacé par les flux Awin. Pas en prod.\n");
 
   const args = process.argv.slice(2);
   const canary = args.includes("--canary");
-  const merchantArg = argValue(args, "--merchant"); // cdiscount | leroy_merlin (sinon les deux)
-  const catsArg = argValue(args, "--cats");         // "rug,sofa,…" (sinon toutes)
-
-  const categories = catsArg
-    ? catsArg.split(",").map((s) => s.trim()).filter(Boolean)
-    : canary ? ["rug"] : CATEGORIES;
-
-  const perByMerchant: Record<string, number> = {
-    cdiscount: canary ? 3 : CDISCOUNT_PER_CAT,
-    leroy_merlin: canary ? 3 : LEROYMERLIN_PER_CAT,
-    ikea: canary ? 3 : IKEA_PER_CAT,
-  };
-  const merchants = (merchantArg ? [merchantArg] : ["cdiscount", "leroy_merlin"]).filter(
-    (m) => m in perByMerchant,
-  ) as Array<"cdiscount" | "leroy_merlin">;
-
-  if (merchants.length === 0) {
-    console.error(`⛔ Merchant inconnu : ${merchantArg}. Supportés : cdiscount, leroy_merlin.`);
-    process.exit(1);
-  }
-  // Garde-fou cap dur.
-  for (const m of merchants) {
-    if (categories.length * perByMerchant[m] > MAX_PER_MERCHANT) {
-      console.error(`⛔ Config dépasse le cap ${MAX_PER_MERCHANT}/marchand → refus.`);
-      process.exit(1);
-    }
-  }
+  const merchantArg = argValue(args, "--merchant");
+  const catsArg = argValue(args, "--cats");
+  const perArg = argValue(args, "--per");
 
   const { PiloterrSource } = await import("../lib/catalog/sources/piloterr-source");
   const { ingestFromSource } = await import("../lib/catalog/ingest");
 
-  console.log(`🌱 Seed ${canary ? "CANARY " : ""}— merchants: ${merchants.join(", ")} — catégories: ${categories.join(", ")}\n`);
-
-  for (const m of merchants) {
-    console.log(`── ${m} ──`);
-    const r = await ingestFromSource(new PiloterrSource(m), categories, {
-      perCategory: perByMerchant[m],
-      maxTotal: MAX_PER_MERCHANT,
+  // ── Mode ciblé (test) ──
+  if (merchantArg) {
+    const cats = catsArg
+      ? catsArg.split(",").map((s) => s.trim()).filter(Boolean)
+      : merchantArg === "leroy_merlin" ? Object.keys(SUPPLY) : FURNITURE;
+    const per = perArg ? Number(perArg) : canary ? 3 : 30;
+    if (per > PER_CAT_CAP) { console.error(`⛔ per > cap ${PER_CAT_CAP}`); process.exit(1); }
+    console.log(`🌱 ${merchantArg} — ${cats.join(", ")} (${per}/cat)\n`);
+    const r = await ingestFromSource(new PiloterrSource(merchantArg as never), cats, {
+      perCategory: per, maxTotal: cats.length * per + 50,
     });
-    console.log(`✅ ${m}: ${r.totalInserted} insérés\n`);
+    console.log(`✅ ${merchantArg}: ${r.totalInserted} insérés`);
+    process.exit(0);
   }
+
+  // ── Plan complet ──
+  console.log("🌱 Seed COMPLET (mobilier Cdiscount+IKEA + fournitures LM)\n");
+
+  console.log("── Cdiscount (mobilier, best-sellers) ──");
+  const cd = await ingestFromSource(new PiloterrSource("cdiscount"), FURNITURE, {
+    perCategory: canary ? 3 : CDISCOUNT_PER, maxTotal: 3000,
+  });
+
+  console.log("\n── IKEA (mobilier, diversité marque) ──");
+  const ik = await ingestFromSource(new PiloterrSource("ikea"), FURNITURE, {
+    perCategory: canary ? 3 : IKEA_PER, maxTotal: 1200,
+  });
+
+  console.log("\n── Leroy Merlin (fournitures : peinture V33 / moulures / tasseaux) ──");
+  let lmTotal = 0;
+  for (const [cat, per] of Object.entries(SUPPLY)) {
+    const r = await ingestFromSource(new PiloterrSource("leroy_merlin"), [cat], {
+      perCategory: canary ? 3 : per, maxTotal: per + 10,
+    });
+    lmTotal += r.totalInserted;
+  }
+
+  console.log(`\n✅ Terminé — Cdiscount ${cd.totalInserted} | IKEA ${ik.totalInserted} | Leroy Merlin ${lmTotal}`);
   process.exit(0);
 }
 
