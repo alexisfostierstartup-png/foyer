@@ -505,8 +505,9 @@ function EnhancedListeShoppingTab({
       {activeFamilies.map((family) => {
         const items = byFamily.get(family) ?? [];
         const kept = keptByFamily.get(family) ?? [];
-        const matched = items.filter((i) => i.merchants.length > 0);
-        const unmatched = items.filter((i) => i.merchants.length === 0);
+        // "matched" = a un produit catalogue matché OU un marchand (legacy).
+        const matched = items.filter((i) => (i.matches?.length ?? 0) > 0 || i.merchants.length > 0);
+        const unmatched = items.filter((i) => (i.matches?.length ?? 0) === 0 && i.merchants.length === 0);
         const count = matched.length + kept.length;
 
         return (

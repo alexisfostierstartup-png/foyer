@@ -16,7 +16,7 @@ import type { DetectedFurniture, UserConstraints, Project, ShoppingItem, ScoreFo
 import { matchAlterationsToCatalog, type Alteration } from "@/lib/shopping/matcher";
 import { reconcilePlan } from "@/lib/shopping/reconcile";
 import { buildShoppingList, builtToLegacyShoppingList } from "@/lib/shopping/build";
-import { matchPartnerProducts } from "@/lib/shopping/partnerMatch";
+import { matchPartnerProductsBatch } from "@/lib/shopping/partnerMatch";
 import type { ImageInput } from "./types";
 import { getAllDiyActions, getCandidateActions } from "@/lib/diy/rules";
 import { evalQtyFormula, getStandardDims } from "@/lib/diy/quantities";
@@ -814,12 +814,11 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
   const shoppingList = mergeShoppingItems([...fromDecisions, ...fromAdditions]);
 
   // Matching NEUF : attache les vrais produits du catalogue (top-N cosine) à chaque
-  // item — EN PLUS du raw audit (l'UI montrera le produit matché + la description brute).
-  await Promise.all(
-    shoppingList.map(async (it) => {
-      it.matches = await matchPartnerProducts(it.category, `${it.name} ${it.detail ?? ""}`.trim());
-    }),
+  // item — EN PLUS du raw audit. UN seul appel Jina (batch) pour toutes les requêtes.
+  const matchResults = await matchPartnerProductsBatch(
+    shoppingList.map((it) => ({ category: it.category, description: `${it.name} ${it.detail ?? ""}`.trim() })),
   );
+  shoppingList.forEach((it, i) => { it.matches = matchResults[i]; });
 
   // Score recalculé sur la liste finale, en UNITÉS (quantité incluse).
   const unitsWhere = (pred: (i: ShoppingItem) => boolean) =>
