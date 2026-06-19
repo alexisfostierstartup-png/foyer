@@ -21,6 +21,7 @@ export type PartnerProductInput = {
 
 export interface ProductSource {
   readonly merchant: string;
-  // Jusqu'à `limit` produits pour une catégorie Foyer donnée (vide si non couverte).
-  fetchProducts(category: string, limit: number): Promise<PartnerProductInput[]>;
+  // STREAM : yield chaque produit dès qu'il est récupéré (jusqu'à `limit`) → l'ingestion
+  // l'insère aussitôt (progression visible + une coupure ne perd que le produit en cours).
+  fetchProducts(category: string, limit: number): AsyncIterable<PartnerProductInput>;
 }

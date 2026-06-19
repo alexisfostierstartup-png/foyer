@@ -245,48 +245,47 @@ async function detailIkeaVariants(c: Candidate, category: string, maxVariants: n
 export class PiloterrSource implements ProductSource {
   constructor(public readonly merchant: PiloterrMerchant) {}
 
-  async fetchProducts(category: string, limit: number): Promise<PartnerProductInput[]> {
+  // STREAM : yield chaque produit dès qu'il est prêt (l'ingestion l'insère aussitôt).
+  fetchProducts(category: string, limit: number): AsyncIterable<PartnerProductInput> {
     if (this.merchant === "cdiscount") return this.fetchCdiscount(category, limit);
     if (this.merchant === "ikea") return this.fetchIkea(category, limit);
     return this.fetchLeroyMerlinSupplies(category, limit);
   }
 
-  private async fetchCdiscount(category: string, limit: number): Promise<PartnerProductInput[]> {
+  private async *fetchCdiscount(category: string, limit: number): AsyncGenerator<PartnerProductInput> {
     const cands = await fetchCdiscountCandidates(category, Math.ceil(limit / 45) + 2);
     const selected = selectCandidates(cands, category, limit);
-    const out: PartnerProductInput[] = [];
     for (const c of selected) {
       await sleep(1100); // throttle 2e appel
       const d = await detailCdiscount(c, category);
-      if (d) out.push(d);
+      if (d) yield d;
     }
-    return out;
   }
 
-  private async fetchIkea(category: string, limit: number): Promise<PartnerProductInput[]> {
+  private async *fetchIkea(category: string, limit: number): AsyncGenerator<PartnerProductInput> {
     const cands = await fetchIkeaCandidates(category, Math.ceil(limit / 24) + 1);
     // Le search IKEA est déjà ciblé (libellés type "Siège pivotant" ≠ "fauteuil") → relevance off.
     const refs = selectCandidates(cands, category, limit, { relevance: false });
-    const out: PartnerProductInput[] = [];
+    let count = 0;
     for (const c of refs) {
-      if (out.length >= limit) break;
+      if (count >= limit) break;
       await sleep(1100); // throttle 2e appel (1 appel → toutes les variantes couleur)
       const entries = await detailIkeaVariants(c, category, 4); // ≤4 couleurs/réf
       for (const e of entries) {
-        if (out.length >= limit) break;
-        out.push(e);
+        if (count >= limit) break;
+        yield e;
+        count++;
       }
     }
-    return out;
   }
 
-  private async fetchLeroyMerlinSupplies(category: string, limit: number): Promise<PartnerProductInput[]> {
+  private async *fetchLeroyMerlinSupplies(category: string, limit: number): AsyncGenerator<PartnerProductInput> {
     const keywords = LM_SUPPLY_KEYWORDS[category];
-    if (!keywords) return [];
-    const out: PartnerProductInput[] = [];
+    if (!keywords) return;
     const seen = new Set<string>();
+    let count = 0;
     for (const kw of keywords) {
-      if (out.length >= limit) break;
+      if (count >= limit) break;
       let json: { results?: unknown[] };
       try {
         json = (await piloterrGet("/v2/leroymerlin/search", kw)) as typeof json;
@@ -295,7 +294,7 @@ export class PiloterrSource implements ProductSource {
       }
       const results = (json.results ?? []) as Array<{ sku?: string; url?: string; title?: string; price?: number }>;
       for (const r of results) {
-        if (out.length >= limit) break;
+        if (count >= limit) break;
         if (!r.sku || !r.url || seen.has(r.sku)) continue;
         if (category === "paint" && PAINT_EXCLUDE.test(r.title ?? "")) continue; // peinture intérieure only
         seen.add(r.sku);
@@ -306,7 +305,7 @@ export class PiloterrSource implements ProductSource {
           };
           const imgs = (d.images ?? []).filter(Boolean);
           if (imgs.length === 0) continue;
-          out.push({
+          yield {
             merchant: "leroy_merlin",
             external_id: r.sku,
             category,
@@ -319,12 +318,12 @@ export class PiloterrSource implements ProductSource {
             source_type: "eco_new",
             description: d.description?.slice(0, 2000),
             attributes: { brand: d.brand, features: d.features },
-          });
+          };
+          count++;
         } catch {
           continue;
         }
       }
     }
-    return out;
   }
 }

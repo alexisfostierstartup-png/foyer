@@ -36,11 +36,9 @@ export async function ingestFromSource(
     }
     const stat: CategoryStat = { fetched: 0, inserted: 0, skipped: 0, failed: 0 };
     try {
-      const products = await source.fetchProducts(category, options.perCategory);
-      stat.fetched = products.length;
-
-      for (const p of products) {
+      for await (const p of source.fetchProducts(category, options.perCategory)) {
         if (totalInserted >= options.maxTotal) break;
+        stat.fetched++;
         try {
           // Dédup manuel : l'index unique (merchant, external_id) est PARTIEL
           // (WHERE external_id IS NOT NULL) → onConflict pas fiable.

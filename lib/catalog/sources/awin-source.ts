@@ -16,7 +16,8 @@ import type { ProductSource, PartnerProductInput } from "../types";
 export class AwinSource implements ProductSource {
   constructor(public readonly merchant: string) {}
 
-  async fetchProducts(category: string, limit: number): Promise<PartnerProductInput[]> {
+  // eslint-disable-next-line require-yield
+  async *fetchProducts(category: string, limit: number): AsyncGenerator<PartnerProductInput> {
     void category;
     void limit;
     throw new Error(
