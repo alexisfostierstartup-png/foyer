@@ -17,6 +17,12 @@ type IngestOptions = { perCategory: number; maxTotal: number };
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+// Erreur FATALE (solde Jina épuisé) → on doit ABORTER tout le run, sinon on continue
+// à appeler Piloterr (crédits brûlés) pour des produits qu'on ne peut pas embedder.
+function isFatalEmbeddingError(e: unknown): boolean {
+  return e instanceof Error && /Insufficient account balance|AUTHZ_INSUFFICIENT_BALANCE/i.test(e.message);
+}
+
 export async function ingestFromSource(
   source: ProductSource,
   categories: string[],
@@ -34,6 +40,18 @@ export async function ingestFromSource(
       console.warn(`[ingest:${source.merchant}] cap ${options.maxTotal} atteint — stop.`);
       break;
     }
+    // Reprise : si la catégorie est déjà (quasi) complète, on la saute → aucun re-fetch Piloterr.
+    const { count: already } = await supabase
+      .from("partner_products")
+      .select("id", { count: "exact", head: true })
+      .eq("merchant", source.merchant)
+      .eq("category", category);
+    if ((already ?? 0) >= Math.floor(options.perCategory * 0.8)) {
+      console.log(`[ingest:${source.merchant}] ${category}: déjà ${already} en base → skip (reprise).`);
+      perCategory[category] = { fetched: 0, inserted: 0, skipped: already ?? 0, failed: 0 };
+      continue;
+    }
+
     const stat: CategoryStat = { fetched: 0, inserted: 0, skipped: 0, failed: 0 };
     try {
       for await (const p of source.fetchProducts(category, options.perCategory)) {
@@ -89,6 +107,7 @@ export async function ingestFromSource(
           totalInserted++;
           await sleep(1500); // lisse le débit d'embeddings (rate limit Jina ~100k tokens/min)
         } catch (e) {
+          if (isFatalEmbeddingError(e)) throw e; // solde Jina épuisé → ABORT (sinon on brûle Piloterr)
           stat.failed++;
           console.warn(`[ingest:${source.merchant}] ${p.external_id} échec:`, e instanceof Error ? e.message : e);
         }
@@ -97,6 +116,10 @@ export async function ingestFromSource(
         `[ingest:${source.merchant}] ${category}: ${stat.fetched} fetched / ${stat.inserted} insérés / ${stat.skipped} skippés / ${stat.failed} échecs`,
       );
     } catch (e) {
+      if (isFatalEmbeddingError(e)) {
+        console.error("\n⛔ Jina : solde épuisé → ARRÊT du run. Recharge https://jina.ai/api-dashboard puis relance (le dédup + skip-reprise reprennent sans re-dépenser).");
+        throw e;
+      }
       stat.error = e instanceof Error ? e.message : String(e);
       console.warn(`[ingest:${source.merchant}] ${category} ÉCHEC catégorie:`, stat.error);
     }
