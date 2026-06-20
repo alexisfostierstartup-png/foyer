@@ -29,22 +29,55 @@ const FURNITURE_KEYWORDS: Record<string, string> = {
   rug: "tapis", floor_lamp: "lampadaire salon", dresser: "commode",
 };
 
-// Fournitures (Leroy Merlin) — expansion de mots-clés (catalogue peu profond/requête).
-const LM_SUPPLY_KEYWORDS: Record<string, string[]> = {
+// Leroy Merlin — expansion de mots-clés (catalogue peu profond/requête). Mobilier +
+// fournitures + revêtements de sol. "Vendu par LM" : on garde le catalogue LM (ARTENS
+// & co.), on exclut juste le hors-sujet (nettoyants, accessoires de pose…).
+const LM_KEYWORDS: Record<string, string[]> = {
+  // mobilier
+  sofa: ["canapé", "canapé d'angle", "canapé convertible", "canapé 3 places", "canapé cuir"],
+  armchair: ["fauteuil", "fauteuil scandinave", "fauteuil cuir", "fauteuil crapaud"],
+  coffee_table: ["table basse", "table basse bois", "table basse relevable"],
+  side_table: ["table d'appoint", "bout de canapé"],
+  tv_stand: ["meuble tv", "banc tv"],
+  sideboard: ["buffet", "enfilade", "bahut"],
+  bookshelf: ["bibliothèque", "étagère bois"],
+  dining_table: ["table à manger", "table de salle à manger", "table repas"],
+  chair: ["chaise", "chaise scandinave", "lot de chaises"],
+  rug: ["tapis", "tapis salon", "tapis berbère"],
+  floor_lamp: ["lampadaire", "lampadaire salon"],
+  dresser: ["commode", "commode bois"],
+  // fournitures
   paint: [
     "peinture V33 acrylique mur", "peinture V33 murale intérieur", "peinture V33 multisupport intérieur",
     "peinture V33 satin couleur", "peinture V33 mat velours",
   ],
-  mouldings: [
-    "moulure décorative", "moulure polyuréthane", "cimaise murale", "corniche décorative", "rosace plafond",
-  ],
-  batten: [
-    "tasseau sapin", "tasseau chêne", "tasseau bois raboté", "tasseau pin", "liteau bois", "tasseau douglas",
+  mouldings: ["moulure décorative", "moulure polyuréthane", "cimaise murale", "corniche décorative", "rosace plafond"],
+  batten: ["tasseau sapin", "tasseau chêne", "tasseau bois raboté", "tasseau pin", "liteau bois", "tasseau douglas"],
+  // revêtements de sol (parquet stratifié, béton ciré, carrelage, pvc…)
+  floor: [
+    "sol stratifié ARTENS", "parquet stratifié chêne", "sol stratifié",
+    "kit béton ciré sol", "béton ciré sol",
+    "carrelage sol aspect bois", "carrelage sol aspect béton", "carrelage intérieur ARTENS",
+    "lame pvc clipsable", "sol pvc",
   ],
 };
+
+// Filtres par catégorie : exclusion (hors-sujet) + inclusion (terme attendu).
 const PAINT_EXCLUDE = /m[ée]tal|\bfer\b|portail|grille|ext[ée]rieur|\bsol\b|radiateur|garde.?corps|carrelage|fa[çc]ade/i;
+const FLOOR_INCLUDE = /stratifi|parquet|carrelage|b[ée]ton cir|lame pvc|sol pvc|vinyle|dalle|moquette/i;
+const FLOOR_EXCLUDE = /nettoyant|protecteur|\bjoint|\bcolle|plinthe|seuil|sous.?couche|profil|d[ée]capant|entretien|raccord|quart de rond|\bspatule|\btruelle/i;
+const LM_FILTERS: Record<string, { include?: RegExp; exclude?: RegExp }> = {
+  paint: { exclude: PAINT_EXCLUDE },
+  floor: { include: FLOOR_INCLUDE, exclude: FLOOR_EXCLUDE },
+};
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Les images LM (media.adeo.com) sont en pleine résolution (~5-6 Mo) → Jina échoue à
+// les charger ("Failed to load image"). On demande une version redimensionnée (~800px).
+function adeoResize(url: string): string {
+  return url.includes("media.adeo.com") && !url.includes("?") ? `${url}?width=800` : url;
+}
 
 function apiKey(): string {
   const k = process.env.PILOTERR_API_KEY;
@@ -249,7 +282,7 @@ export class PiloterrSource implements ProductSource {
   fetchProducts(category: string, limit: number): AsyncIterable<PartnerProductInput> {
     if (this.merchant === "cdiscount") return this.fetchCdiscount(category, limit);
     if (this.merchant === "ikea") return this.fetchIkea(category, limit);
-    return this.fetchLeroyMerlinSupplies(category, limit);
+    return this.fetchLeroyMerlin(category, limit);
   }
 
   private async *fetchCdiscount(category: string, limit: number): AsyncGenerator<PartnerProductInput> {
@@ -279,9 +312,10 @@ export class PiloterrSource implements ProductSource {
     }
   }
 
-  private async *fetchLeroyMerlinSupplies(category: string, limit: number): AsyncGenerator<PartnerProductInput> {
-    const keywords = LM_SUPPLY_KEYWORDS[category];
+  private async *fetchLeroyMerlin(category: string, limit: number): AsyncGenerator<PartnerProductInput> {
+    const keywords = LM_KEYWORDS[category];
     if (!keywords) return;
+    const filter = LM_FILTERS[category];
     const seen = new Set<string>();
     let count = 0;
     for (const kw of keywords) {
@@ -296,14 +330,16 @@ export class PiloterrSource implements ProductSource {
       for (const r of results) {
         if (count >= limit) break;
         if (!r.sku || !r.url || seen.has(r.sku)) continue;
-        if (category === "paint" && PAINT_EXCLUDE.test(r.title ?? "")) continue; // peinture intérieure only
+        const title = r.title ?? "";
+        if (filter?.exclude?.test(title)) continue; // hors-sujet (peinture métal, nettoyants sol…)
+        if (filter?.include && !filter.include.test(title)) continue; // doit être un vrai produit de la catégorie
         seen.add(r.sku);
         try {
           await sleep(1100);
           const d = (await piloterrGet("/v2/leroymerlin/product", r.url)) as {
             images?: string[]; brand?: string; description?: string; features?: Record<string, unknown>;
           };
-          const imgs = (d.images ?? []).filter(Boolean);
+          const imgs = (d.images ?? []).filter(Boolean).map(adeoResize);
           if (imgs.length === 0) continue;
           yield {
             merchant: "leroy_merlin",

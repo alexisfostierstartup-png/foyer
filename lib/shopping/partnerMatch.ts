@@ -18,8 +18,8 @@ const CATEGORY_ALIASES: Record<string, string> = {
   dining_chair: "chair",
 };
 const NON_SHOPPABLE = new Set([
-  // architecture / non-produit
-  "floor", "wall", "ceiling", "window", "door", "french_door", "wall_opening",
+  // architecture / non-produit (floor EST shoppable → revêtements de sol LM)
+  "wall", "ceiling", "window", "door", "french_door", "wall_opening",
   "frame", "mirror", "plant", "decor_object", "other",
   // pas (encore) dans le catalogue
   "ceiling_light", "table_lamp", "lamp",

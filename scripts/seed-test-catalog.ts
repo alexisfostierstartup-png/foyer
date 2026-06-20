@@ -27,6 +27,8 @@ const FURNITURE = [
 const CDISCOUNT_PER = 180; // best-sellers
 const IKEA_PER = 70;       // diversité marque
 const SUPPLY: Record<string, number> = { paint: 40, mouldings: 30, batten: 30 };
+const LM_FURNITURE_PER = 40; // mobilier LM (catalogue peu profond → ~30-50/cat)
+const LM_FLOOR_PER = 60;     // revêtements de sol (stratifié/béton ciré/carrelage/pvc)
 const PER_CAT_CAP = 300;   // garde-fou par catégorie
 
 function argValue(args: string[], flag: string): string | undefined {
@@ -86,6 +88,17 @@ async function main() {
     });
     lmTotal += r.totalInserted;
   }
+
+  console.log("\n── Leroy Merlin (mobilier — diversité marques françaises) ──");
+  const lmFurn = await ingestFromSource(new PiloterrSource("leroy_merlin"), FURNITURE, {
+    perCategory: canary ? 3 : LM_FURNITURE_PER, maxTotal: 700,
+  });
+
+  console.log("\n── Leroy Merlin (revêtements de sol) ──");
+  const lmFloor = await ingestFromSource(new PiloterrSource("leroy_merlin"), ["floor"], {
+    perCategory: canary ? 3 : LM_FLOOR_PER, maxTotal: 80,
+  });
+  lmTotal += lmFurn.totalInserted + lmFloor.totalInserted;
 
   console.log(`\n✅ Terminé — Cdiscount ${cd.totalInserted} | IKEA ${ik.totalInserted} | Leroy Merlin ${lmTotal}`);
   process.exit(0);
