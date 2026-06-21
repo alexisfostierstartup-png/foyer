@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { CatalogProductGallery } from "@/components/admin/CatalogProductGallery";
 
@@ -28,7 +27,27 @@ export default async function CatalogDetailPage({
     .eq("id", id)
     .maybeSingle();
 
-  if (!p) notFound();
+  if (!p) {
+    return (
+      <div className="max-w-4xl">
+        <Link href="/admin/catalog" className="text-sm text-foyer-muted hover:text-foyer-ink">
+          ← Retour au catalogue
+        </Link>
+        <div className="mt-8 rounded-2xl border border-foyer-border bg-foyer-cream/40 px-6 py-12 text-center">
+          <p className="font-serif text-lg text-foyer-ink">Ce produit n&apos;existe plus</p>
+          <p className="mt-2 text-sm text-foyer-muted">
+            Il a probablement été supprimé ou remplacé lors d&apos;une mise à jour du catalogue.
+          </p>
+          <Link
+            href="/admin/catalog"
+            className="mt-5 inline-block rounded-lg bg-foyer-ink px-4 py-2 text-sm text-foyer-cream hover:bg-foyer-ink/90"
+          >
+            Retour au catalogue
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const metadata = (p.metadata ?? {}) as Record<string, unknown>;
   const features = (metadata.features ?? null) as Record<string, unknown> | null;
