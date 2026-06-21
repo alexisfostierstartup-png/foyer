@@ -127,7 +127,7 @@ export default function LandingPage() {
           </div>
           <nav className="flex items-center gap-4 text-[14px] font-semibold">
             <Link href="/auth" className="hidden text-white transition-colors hover:text-white/75 sm:inline">Se connecter</Link>
-            <Link href="/demo" className="rounded-full bg-white px-4 py-1.5 font-semibold text-foyer-sage shadow-[0_2px_8px_rgba(31,27,22,0.15)] transition-all hover:bg-white/90">Lancer mon rendu</Link>
+            <Link href="/create" className="rounded-full bg-white px-4 py-1.5 font-semibold text-foyer-sage shadow-[0_2px_8px_rgba(31,27,22,0.15)] transition-all hover:bg-white/90">Lancer mon rendu</Link>
           </nav>
         </div>
       </header>
@@ -162,7 +162,7 @@ export default function LandingPage() {
               <Reveal delay={210}>
                 <div className="mt-8">
                   <div className="flex items-center gap-3">
-                    <Link href="/demo" className="inline-flex h-11 shrink-0 items-center rounded-full bg-foyer-sage px-6 text-[14px] font-semibold text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:bg-foyer-sage/90 hover:shadow-[0_4px_14px_rgba(107,142,111,0.45)]">
+                    <Link href="/create" className="inline-flex h-11 shrink-0 items-center rounded-full bg-foyer-sage px-6 text-[14px] font-semibold text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:bg-foyer-sage/90 hover:shadow-[0_4px_14px_rgba(107,142,111,0.45)]">
                       Lancer ma transformation
                     </Link>
                     <Link href="#process" className="flex h-11 shrink-0 items-center rounded-full border border-foyer-border px-5 text-[13px] font-medium text-foyer-ink transition-colors hover:border-foyer-ink">
@@ -490,7 +490,7 @@ export default function LandingPage() {
                     </div>
                   </div>
                   <Link
-                    href="/demo"
+                    href="/create"
                     className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full bg-foyer-ink py-2.5 text-[13px] font-medium text-foyer-cream transition-colors hover:bg-foyer-ink/85"
                   >
                     Essayer sur ma pièce
@@ -631,7 +631,7 @@ export default function LandingPage() {
           {/* CTAs */}
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
             <Link
-              href="/demo"
+              href="/create"
               className="inline-flex items-center gap-2 rounded-full bg-foyer-sage px-8 py-3.5 text-[15px] font-semibold text-white shadow-[0_4px_20px_rgba(107,142,111,0.45)] transition-all hover:bg-foyer-sage/90"
             >
               Lancer ma transformation

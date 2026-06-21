@@ -28,7 +28,7 @@ export function FloatingCTA() {
       )}
     >
       <Link
-        href="/demo"
+        href="/create"
         className="flex items-center gap-2 rounded-full bg-foyer-sage px-5 py-3 text-[14px] font-semibold text-white shadow-[0_0_4px_4px_rgba(255,255,255,0.85),0_8px_24px_rgba(107,142,111,0.35)] transition-all hover:bg-foyer-sage/90"
       >
         Lancer ma transformation
