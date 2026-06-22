@@ -48,11 +48,25 @@ const LM_KEYWORDS: Record<string, string[]> = {
   dresser: ["commode", "commode bois", "commode scandinave", "chiffonnier", "commode blanche"],
   // fournitures — peinture MURALE couleur intérieur (pas "meuble")
   paint: [
+    // rendement général
     "peinture salon couleur", "peinture chambre couleur", "peinture mur couleur intérieur",
-    "peinture murale satin couleur", "peinture acrylique murale couleur",
-    "peinture murale taupe", "peinture murale greige", "peinture murale beige",
-    "peinture murale sable", "peinture murale ocre", "peinture murale terracotta",
-    "peinture murale vert", "peinture murale bleu", "peinture murale gris", "peinture murale rose",
+    "peinture murale satin couleur",
+    // neutres
+    "peinture murale blanc", "peinture murale crème", "peinture murale beige", "peinture murale greige",
+    "peinture murale taupe", "peinture murale sable", "peinture murale lin", "peinture murale gris",
+    "peinture murale gris clair", "peinture murale anthracite", "peinture murale noir",
+    // chauds
+    "peinture murale terracotta", "peinture murale ocre", "peinture murale jaune",
+    "peinture murale jaune moutarde", "peinture murale orange", "peinture murale rouge",
+    "peinture murale bordeaux", "peinture murale brique", "peinture murale rose",
+    "peinture murale rose poudré", "peinture murale corail", "peinture murale brun",
+    // froids
+    "peinture murale bleu", "peinture murale bleu marine", "peinture murale bleu canard",
+    "peinture murale bleu ciel", "peinture murale vert", "peinture murale vert sauge",
+    "peinture murale vert kaki", "peinture murale vert d'eau", "peinture murale vert olive",
+    "peinture murale turquoise", "peinture murale émeraude",
+    // violets
+    "peinture murale violet", "peinture murale mauve", "peinture murale prune", "peinture murale parme",
   ],
   mouldings: ["moulure décorative", "moulure polyuréthane", "cimaise murale", "corniche décorative", "rosace plafond"],
   batten: ["tasseau sapin", "tasseau chêne", "tasseau bois raboté", "tasseau pin", "liteau bois", "tasseau douglas"],
