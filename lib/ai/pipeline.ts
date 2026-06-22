@@ -918,6 +918,20 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
     it.matches = await matchFloorProductsBlend(`${it.name} ${it.detail ?? ""}`.trim(), crops[i]);
   }
 
+  // CALIBRATION (ÉTAPE 4) : par item blend matché, on trace catégorie, présence de crop,
+  // source du top-1, score blend ET les 2 cosines décomposés (image + texte). Permet de
+  // régler w/seuils sur données réelles et de vérifier que le texte rattrape les cosines
+  // image basses (ex. le canapé vu de dos : sim_image faible, sim_text qui sauve le match).
+  for (let i = 0; i < shoppingList.length; i++) {
+    const top = shoppingList[i].matches?.[0];
+    if (!top || (top.simImage === undefined && top.simText === undefined)) continue;
+    console.log(
+      `[match:calib] ${shoppingList[i].category} "${shoppingList[i].name.slice(0, 36)}" ` +
+        `crop=${crops[i] ? "oui" : "non"} → ${top.source_type} ` +
+        `score=${top.similarity.toFixed(3)} img=${top.simImage ?? "—"} txt=${top.simText ?? "—"} (${top.merchant})`,
+    );
+  }
+
   // PEINTURE : matching par COULEUR (le cosine image ne sert à rien). On compare AVANT|APRÈS
   // pour ne lister QUE les murs REPEINTS (les murs inchangés ne sont pas dans la liste),
   // 1 item par mur, classé par proximité de teinte (ΔE).
