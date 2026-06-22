@@ -48,7 +48,6 @@ const LM_KEYWORDS: Record<string, string[]> = {
   dresser: ["commode", "commode bois", "commode scandinave", "chiffonnier", "commode blanche"],
   // fournitures — peinture MURALE couleur intérieur (pas "meuble")
   paint: [
-    // rendement général
     "peinture salon couleur", "peinture chambre couleur", "peinture mur couleur intérieur",
     // neutres
     "peinture mur beige", "peinture mur greige", "peinture mur taupe", "peinture mur lin",
@@ -63,6 +62,9 @@ const LM_KEYWORDS: Record<string, string[]> = {
     "peinture mur vert d'eau", "peinture mur olive", "peinture mur turquoise", "peinture mur émeraude",
     // violets
     "peinture mur violet", "peinture mur mauve", "peinture mur prune", "peinture mur parme", "peinture mur lavande",
+    // gamme LUXENS (forme "Luxens X" = la plus efficace pour les teintes vives, ex. jaune/violet)
+    "Luxens jaune", "Luxens moutarde", "Luxens safran", "Luxens banana",
+    "Luxens violet", "Luxens aubergine", "Luxens prune", "Luxens mauve", "Luxens parme", "Luxens lavande", "Luxens lilas",
   ],
   mouldings: ["moulure décorative", "moulure polyuréthane", "cimaise murale", "corniche décorative", "rosace plafond"],
   batten: ["tasseau sapin", "tasseau chêne", "tasseau bois raboté", "tasseau pin", "liteau bois", "tasseau douglas"],
