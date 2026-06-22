@@ -10,14 +10,14 @@ import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { hexToLab, deltaE } from "@/lib/color";
 import type { ProductMatch } from "@/lib/types";
 
-const WALL_COLOR_PROMPT = `Tu analyses la photo d'une pièce rénovée. Donne la couleur DOMINANTE des MURS peints (ignore le sol, le plafond, les meubles, les fenêtres). Réponds en JSON STRICT, rien d'autre : {"wall_hex":"#RRGGBB"}. Donne toujours un hex précis, même pour un mur blanc/neutre (ex. {"wall_hex":"#F2EFE9"}).`;
+const WALL_COLOR_PROMPT = `Tu es coloriste. Sur cette photo de pièce, identifie le GRAND MUR peint principal (ignore le plafond, le sol, les meubles, rideaux, fenêtres). Donne la couleur de sa PEINTURE en échantillonnant une zone en MI-TON (évite les reflets/lumière vive et les ombres). Sois FIDÈLE à la teinte ET à la saturation réelles : un mur brun-taupe doit donner un brun-taupe (pas un beige délavé), un mur vert sauge un vert sauge. Réponds en JSON STRICT, rien d'autre : {"wall_hex":"#RRGGBB"}.`;
 
 const norm = (h: string) => `#${h.trim().replace(/^#/, "").toLowerCase()}`;
 
 export async function getWallColorFromRender(renderImage: ImageInput): Promise<string | null> {
   try {
     const res = await getVisionProvider("gemini_vision").analyze(WALL_COLOR_PROMPT, [renderImage], {
-      model: "gemini-2.5-flash-lite",
+      model: "gemini-2.5-flash",
     });
     const hex = (res.parsed as { wall_hex?: string } | null)?.wall_hex;
     return hex && /^#?[0-9a-fA-F]{6}$/.test(hex.trim()) ? norm(hex) : null;

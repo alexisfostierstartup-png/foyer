@@ -1,8 +1,8 @@
 #!/usr/bin/env npx tsx
 /**
- * Backfill metadata.color_hex des produits PEINTURE : mappe le nom de teinte FR
- * (features.Couleur, ex. "Vert sauge") → hex via Gemini. Utilisé par le matching
- * peinture par couleur (ΔE). Idempotent (ne touche que ceux sans color_hex).
+ * Backfill metadata.color_hex des produits PEINTURE : déduit le hex de la couleur de
+ * chaque peinture (depuis features.Couleur ET/OU le nom) via Gemini. Utilisé par le
+ * matching peinture par couleur (ΔE). Idempotent (ne touche que ceux sans color_hex).
  *
  * Usage : npx tsx scripts/backfill-paint-colors.ts
  */
@@ -29,27 +29,25 @@ async function main() {
     process.exit(1);
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const colorOf = (p: any): string | null =>
-    p.metadata?.features?.Couleur || p.metadata?.features?.["Couleur"] || null;
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const todo = (rows ?? []).filter((p: any) => !p.metadata?.color_hex && colorOf(p));
+  const todo = (rows ?? []).filter((p: any) => !p.metadata?.color_hex);
   console.log(`${todo.length} peintures à mapper (sur ${(rows ?? []).length}).`);
   if (todo.length === 0) process.exit(0);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const names = [...new Set(todo.map(colorOf).filter(Boolean))] as string[];
-  const prompt = `Tu es coloriste. Donne le code hexadécimal approximatif de chaque teinte de peinture d'intérieur (noms FR). Réponds en JSON STRICT, uniquement un objet {"<nom exact>":"#RRGGBB"}. Teintes : ${JSON.stringify(names)}`;
+  const items = todo.map((p: any) => ({
+    id: p.id,
+    nom: p.name,
+    couleur: p.metadata?.features?.Couleur ?? null,
+  }));
+  const prompt = `Tu es coloriste. Pour chaque peinture d'intérieur ci-dessous, donne le code hexadécimal de SA couleur (déduis-la du champ "couleur" si présent, sinon du nom — ex. "ocre nubie", "vert cardo", "fossil", "greige"). Sois fidèle à la teinte ET la saturation. Réponds en JSON STRICT, uniquement {"<id>":"#RRGGBB"}. Produits : ${JSON.stringify(items)}`;
 
-  const model = getGeminiClient().getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+  const model = getGeminiClient().getGenerativeModel({ model: "gemini-2.5-flash" });
   const res = await model.generateContent(prompt);
   const map = JSON.parse(stripFences(res.response.text())) as Record<string, string>;
-  console.log("Hex obtenus :", map);
 
   let done = 0;
   for (const p of todo) {
-    const name = colorOf(p);
-    const hex = name ? map[name] : null;
+    const hex = map[p.id];
     if (!hex || !/^#?[0-9a-fA-F]{6}$/.test(hex)) continue;
     await supabase
       .from("partner_products")
@@ -57,7 +55,7 @@ async function main() {
       .eq("id", p.id);
     done++;
   }
-  console.log(`✅ color_hex écrit sur ${done} peintures.`);
+  console.log(`✅ color_hex écrit sur ${done}/${todo.length} peintures.`);
   process.exit(0);
 }
 

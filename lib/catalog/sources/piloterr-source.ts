@@ -48,10 +48,11 @@ const LM_KEYWORDS: Record<string, string[]> = {
   dresser: ["commode", "commode bois", "commode scandinave", "chiffonnier", "commode blanche"],
   // fournitures — peinture MURALE couleur intérieur (pas "meuble")
   paint: [
-    "peinture mur couleur intérieur", "peinture acrylique murale couleur", "peinture mur plafond couleur",
-    "peinture murale satin couleur", "peinture chambre couleur", "peinture salon couleur",
-    "peinture murale vert", "peinture murale bleu", "peinture murale terracotta",
-    "peinture murale beige", "peinture murale gris", "peinture murale rose",
+    "peinture salon couleur", "peinture chambre couleur", "peinture mur couleur intérieur",
+    "peinture murale satin couleur", "peinture acrylique murale couleur",
+    "peinture murale taupe", "peinture murale greige", "peinture murale beige",
+    "peinture murale sable", "peinture murale ocre", "peinture murale terracotta",
+    "peinture murale vert", "peinture murale bleu", "peinture murale gris", "peinture murale rose",
   ],
   mouldings: ["moulure décorative", "moulure polyuréthane", "cimaise murale", "corniche décorative", "rosace plafond"],
   batten: ["tasseau sapin", "tasseau chêne", "tasseau bois raboté", "tasseau pin", "liteau bois", "tasseau douglas"],
