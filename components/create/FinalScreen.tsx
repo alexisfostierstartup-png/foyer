@@ -383,8 +383,8 @@ export function FinalScreen({
             ))}
           </div>
 
-          {/* Refresh button — expert only, visible on shopping tab */}
-          {isExpert && tabIdx === 0 && (
+          {/* Refresh button — visible on shopping tab (recalcule les matchs catalogue) */}
+          {tabIdx === 0 && (
             <button
               type="button"
               onClick={handleRefreshShopping}
