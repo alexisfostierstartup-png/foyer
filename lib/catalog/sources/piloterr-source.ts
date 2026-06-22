@@ -33,23 +33,25 @@ const FURNITURE_KEYWORDS: Record<string, string> = {
 // fournitures + revêtements de sol. "Vendu par LM" : on garde le catalogue LM (ARTENS
 // & co.), on exclut juste le hors-sujet (nettoyants, accessoires de pose…).
 const LM_KEYWORDS: Record<string, string[]> = {
-  // mobilier
-  sofa: ["canapé", "canapé d'angle", "canapé convertible", "canapé 3 places", "canapé cuir"],
-  armchair: ["fauteuil", "fauteuil scandinave", "fauteuil cuir", "fauteuil crapaud"],
-  coffee_table: ["table basse", "table basse bois", "table basse relevable"],
-  side_table: ["table d'appoint", "bout de canapé"],
-  tv_stand: ["meuble tv", "banc tv"],
-  sideboard: ["buffet", "enfilade", "bahut"],
-  bookshelf: ["bibliothèque", "étagère bois"],
-  dining_table: ["table à manger", "table de salle à manger", "table repas"],
-  chair: ["chaise", "chaise scandinave", "lot de chaises"],
-  rug: ["tapis", "tapis salon", "tapis berbère"],
-  floor_lamp: ["lampadaire", "lampadaire salon"],
-  dresser: ["commode", "commode bois"],
-  // fournitures
+  // mobilier (LM peu profond → on multiplie les angles pour plus de réfs distinctes)
+  sofa: ["canapé", "canapé d'angle", "canapé convertible", "canapé 3 places", "canapé 2 places", "canapé velours", "canapé tissu", "canapé scandinave", "banquette"],
+  armchair: ["fauteuil", "fauteuil scandinave", "fauteuil velours", "fauteuil cuir", "fauteuil crapaud", "fauteuil bergère", "fauteuil relax", "fauteuil œuf"],
+  coffee_table: ["table basse", "table basse bois", "table basse relevable", "table basse ronde", "table basse marbre", "table basse gigogne", "table basse industrielle"],
+  side_table: ["table d'appoint", "bout de canapé", "table d'appoint ronde", "guéridon", "sellette"],
+  tv_stand: ["meuble tv", "banc tv", "meuble tv bois", "meuble tv scandinave"],
+  sideboard: ["buffet", "enfilade", "bahut", "buffet bois", "buffet scandinave", "vaisselier"],
+  bookshelf: ["bibliothèque", "étagère bois", "étagère murale", "étagère échelle", "meuble de rangement", "cube de rangement"],
+  dining_table: ["table à manger", "table de salle à manger", "table repas", "table extensible", "table ronde", "table bois massif"],
+  chair: ["chaise", "chaise scandinave", "lot de chaises", "chaise velours", "chaise bois", "tabouret", "chaise de bar"],
+  rug: ["tapis", "tapis salon", "tapis berbère", "tapis laine", "tapis poils longs", "tapis scandinave", "tapis jute"],
+  floor_lamp: ["lampadaire", "lampadaire salon", "lampadaire trépied", "lampadaire arc", "liseuse"],
+  dresser: ["commode", "commode bois", "commode scandinave", "chiffonnier", "commode blanche"],
+  // fournitures — peinture MURALE couleur intérieur (pas "meuble")
   paint: [
-    "peinture V33 acrylique mur", "peinture V33 murale intérieur", "peinture V33 multisupport intérieur",
-    "peinture V33 satin couleur", "peinture V33 mat velours",
+    "peinture mur couleur intérieur", "peinture acrylique murale couleur", "peinture mur plafond couleur",
+    "peinture murale satin couleur", "peinture chambre couleur", "peinture salon couleur",
+    "peinture murale vert", "peinture murale bleu", "peinture murale terracotta",
+    "peinture murale beige", "peinture murale gris", "peinture murale rose",
   ],
   mouldings: ["moulure décorative", "moulure polyuréthane", "cimaise murale", "corniche décorative", "rosace plafond"],
   batten: ["tasseau sapin", "tasseau chêne", "tasseau bois raboté", "tasseau pin", "liteau bois", "tasseau douglas"],
@@ -63,7 +65,9 @@ const LM_KEYWORDS: Record<string, string[]> = {
 };
 
 // Filtres par catégorie : exclusion (hors-sujet) + inclusion (terme attendu).
-const PAINT_EXCLUDE = /m[ée]tal|\bfer\b|portail|grille|ext[ée]rieur|\bsol\b|radiateur|garde.?corps|carrelage|fa[çc]ade/i;
+// N'exclure QUE la peinture métal/extérieur. PAS "radiateur"/"sol" : les peintures
+// murales intérieures listent souvent "mur, boiserie, radiateur" comme surfaces.
+const PAINT_EXCLUDE = /m[ée]tal|\bfer\b|portail|grille|ext[ée]rieur|garde.?corps|fa[çc]ade/i;
 const FLOOR_INCLUDE = /stratifi|parquet|carrelage|b[ée]ton cir|lame pvc|sol pvc|vinyle|dalle|moquette/i;
 const FLOOR_EXCLUDE = /nettoyant|protecteur|\bjoint|\bcolle|plinthe|seuil|sous.?couche|profil|d[ée]capant|entretien|raccord|quart de rond|\bspatule|\btruelle/i;
 const LM_FILTERS: Record<string, { include?: RegExp; exclude?: RegExp }> = {
