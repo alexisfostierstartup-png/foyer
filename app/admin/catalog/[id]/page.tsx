@@ -74,6 +74,18 @@ export default async function CatalogDetailPage({
             <Badge>{p.availability_status}</Badge>
           </div>
 
+          {typeof metadata.color_hex === "string" && (
+            <div className="mt-3 flex items-center gap-2.5">
+              <span
+                className="size-8 rounded-md border border-foyer-border"
+                style={{ backgroundColor: metadata.color_hex }}
+                aria-hidden
+              />
+              <span className="font-mono text-sm text-foyer-ink">{metadata.color_hex}</span>
+              <span className="text-xs text-foyer-muted">hex (matching peinture par couleur)</span>
+            </div>
+          )}
+
           <p className="mt-3 text-2xl text-foyer-ink">
             {p.price != null ? `${p.price} ${p.currency ?? "€"}` : "–"}
           </p>
