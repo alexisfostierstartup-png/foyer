@@ -16,7 +16,8 @@ import type { DetectedFurniture, UserConstraints, Project, ShoppingItem, ScoreFo
 import { matchAlterationsToCatalog, type Alteration } from "@/lib/shopping/matcher";
 import { reconcilePlan } from "@/lib/shopping/reconcile";
 import { buildShoppingList, builtToLegacyShoppingList } from "@/lib/shopping/build";
-import { matchPartnerProductsBatch, matchFloorProducts } from "@/lib/shopping/partnerMatch";
+import { matchPartnerProductsBlendBatch, matchFloorProductsBlend } from "@/lib/shopping/partnerMatch";
+import { extractCrop, type Bbox } from "@/lib/shopping/crop";
 import { matchPaintByColor, getChangedWallColors } from "@/lib/shopping/paintMatch";
 import type { ImageInput } from "./types";
 import { getAllDiyActions, getCandidateActions } from "@/lib/diy/rules";
@@ -51,7 +52,11 @@ async function fetchImageBytes(url: string): Promise<Buffer> {
  * un appel multi-images) → le modèle compare les deux moitiés en haute
  * résolution et capte les détails subtils (plafonniers, cadres, blanc→beige).
  */
-async function buildBeforeAfterComposite(beforeUrl: string, afterUrl: string): Promise<Buffer> {
+// Géométrie du panneau APRÈS dans le composite (fractions 0-1 sur la largeur totale) →
+// permet de reprojeter une bbox donnée sur le composite vers le RENDU seul (crop).
+type Composite = { buffer: Buffer; afterLeftFrac: number; afterWidthFrac: number };
+
+async function buildBeforeAfterComposite(beforeUrl: string, afterUrl: string): Promise<Composite> {
   const [beforeRaw, afterRaw] = await Promise.all([
     fetchImageBytes(beforeUrl),
     fetchImageBytes(afterUrl),
@@ -65,8 +70,9 @@ async function buildBeforeAfterComposite(beforeUrl: string, afterUrl: string): P
   const [mb, ma] = await Promise.all([sharp(before).metadata(), sharp(after).metadata()]);
   const wb = mb.width ?? H;
   const wa = ma.width ?? H;
-  return sharp({
-    create: { width: wb + gap + wa, height: H, channels: 3, background: "#ffffff" },
+  const total = wb + gap + wa;
+  const buffer = await sharp({
+    create: { width: total, height: H, channels: 3, background: "#ffffff" },
   })
     .composite([
       { input: before, left: 0, top: 0 },
@@ -74,6 +80,7 @@ async function buildBeforeAfterComposite(beforeUrl: string, afterUrl: string): P
     ])
     .jpeg({ quality: 90 })
     .toBuffer();
+  return { buffer, afterLeftFrac: (wb + gap) / total, afterWidthFrac: wa / total };
 }
 
 async function loadImage(url: string): Promise<ImageInput> {
@@ -689,11 +696,43 @@ export type ShoppingAssets = { shoppingList: ShoppingItem[]; scoreFoyer: ScoreFo
  * dans la liste (élimine les faux positifs). L'analyse est ciblée sur les seuls
  * candidats → pas de diff libre qui hallucine.
  */
+// Reprojette une bbox donnée sur le COMPOSITE (normalisée 0-1 sur la largeur totale)
+// vers le RENDU seul (panneau APRÈS). Retourne null si la box tombe dans le panneau
+// AVANT (gauche) — le modèle s'est trompé de moitié → on préfère pas de crop.
+function mapCompositeBoxToRender(
+  box: Bbox,
+  afterLeftFrac: number,
+  afterWidthFrac: number,
+): Bbox | null {
+  if (afterWidthFrac <= 0) return null;
+  const centerX = box.x + box.w / 2;
+  if (centerX < afterLeftFrac - 0.02) return null; // centre côté AVANT → rejet
+  const rx = (box.x - afterLeftFrac) / afterWidthFrac;
+  const rw = box.w / afterWidthFrac;
+  const x = Math.max(0, Math.min(1, rx));
+  const y = Math.max(0, Math.min(1, box.y));
+  return { x, y, w: Math.min(1 - x, rw), h: Math.min(1 - y, box.h) };
+}
+
+// bbox tolérante : array [x,y,w,h] OU objet {x,y,w,h}, valeurs 0-1.
+function parseBbox(raw: unknown): Bbox | null {
+  let x, y, w, h;
+  if (Array.isArray(raw) && raw.length === 4) [x, y, w, h] = raw;
+  else if (raw && typeof raw === "object") {
+    const o = raw as Record<string, unknown>;
+    [x, y, w, h] = [o.x, o.y, o.w, o.h];
+  } else return null;
+  if ([x, y, w, h].some((v) => typeof v !== "number" || !Number.isFinite(v))) return null;
+  return { x: x as number, y: y as number, w: w as number, h: h as number };
+}
+
 async function confirmChanges(
   projectId: string,
   candidates: ElementDecision[],
   composite: ImageInput,
-): Promise<{ appliedIds: Set<string>; judgedIds: Set<string>; additions: Alteration[]; afterById: Map<string, string> }> {
+  afterLeftFrac: number,
+  afterWidthFrac: number,
+): Promise<{ appliedIds: Set<string>; judgedIds: Set<string>; additions: Alteration[]; afterById: Map<string, string>; bboxById: Map<string, Bbox> }> {
   const candidatesJson = JSON.stringify(
     candidates.map((d) => ({
       element_id: d.element_id,
@@ -722,7 +761,7 @@ async function confirmChanges(
       }),
   );
   const parsed = result.parsed as {
-    results?: Array<{ element_id?: string; changed?: boolean; after?: string }>;
+    results?: Array<{ element_id?: string; changed?: boolean; after?: string; bbox?: unknown }>;
     additions?: Array<{ element?: string; category?: string; detail?: string }>;
   } | null;
 
@@ -731,11 +770,18 @@ async function confirmChanges(
   // Description de l'APRÈS par élément → la liste de courses reflète ce que
   // l'élément est DEVENU dans le rendu (ex. tapis bleu/jaune), pas l'original.
   const afterById = new Map<string, string>();
+  // bbox de l'élément dans le RENDU (APRÈS) → crop pour le matching image↔image.
+  const bboxById = new Map<string, Bbox>();
   for (const r of parsed?.results ?? []) {
     if (typeof r.element_id !== "string") continue;
     judgedIds.add(r.element_id);
     if (r.changed) appliedIds.add(r.element_id); // appliedIds = éléments que le rendu a CHANGÉS
     if (r.after && r.after.trim()) afterById.set(r.element_id, r.after.trim());
+    const compBox = parseBbox(r.bbox);
+    if (compBox) {
+      const renderBox = mapCompositeBoxToRender(compBox, afterLeftFrac, afterWidthFrac);
+      if (renderBox) bboxById.set(r.element_id, renderBox);
+    }
   }
   // Ajouts nets (présents dans APRÈS, absents dans AVANT) → à acheter.
   const additions: Alteration[] = (parsed?.additions ?? [])
@@ -748,7 +794,7 @@ async function confirmChanges(
       shoppingImpact: "to_buy_secondhand",
     }));
 
-  return { appliedIds, judgedIds, additions, afterById };
+  return { appliedIds, judgedIds, additions, afterById, bboxById };
 }
 
 export async function ensureFinalAssets(projectId: string): Promise<ShoppingAssets | null> {
@@ -777,16 +823,21 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
   let judgedIds = new Set<string>();
   let additions: Alteration[] = [];
   let afterById = new Map<string, string>();
+  let bboxById = new Map<string, Bbox>();
   if (project.basePhotoUrl) {
-    const composite = (await buildBeforeAfterComposite(
-      project.basePhotoUrl,
-      project.generatedRenderUrl,
-    )) as unknown as ImageInput;
-    const r = await confirmChanges(projectId, candidates, composite);
+    const comp = await buildBeforeAfterComposite(project.basePhotoUrl, project.generatedRenderUrl);
+    const r = await confirmChanges(
+      projectId,
+      candidates,
+      comp.buffer as unknown as ImageInput,
+      comp.afterLeftFrac,
+      comp.afterWidthFrac,
+    );
     appliedIds = r.appliedIds;
     judgedIds = r.judgedIds;
     additions = r.additions;
     afterById = r.afterById;
+    bboxById = r.bboxById;
   }
 
   // La LISTE reflète le RENDU, pas seulement les décisions initiales :
@@ -833,17 +884,38 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
   // Fusion décisions + ajouts, identiques regroupés en quantité (×N).
   const shoppingList = mergeShoppingItems([...fromDecisions, ...fromAdditions]);
 
-  // Matching NEUF : attache les vrais produits du catalogue (top-N cosine) à chaque
-  // item — EN PLUS du raw audit. UN seul appel Jina (batch) pour toutes les requêtes.
-  const matchResults = await matchPartnerProductsBatch(
-    shoppingList.map((it) => ({ category: it.category, description: `${it.name} ${it.detail ?? ""}`.trim() })),
+  // CROP du rendu par item : on découpe la zone de l'élément (bbox de l'audit) dans le
+  // RENDU → embedding IMAGE (cible image↔image, bien plus discriminant que texte→image).
+  // bbox absente (ajout net, audit incomplet) → crop null → blend en texte seul.
+  const renderBytes = await fetchImageBytes(project.generatedRenderUrl).catch((e) => {
+    console.warn("[crop] rendu illisible, texte seul:", e instanceof Error ? e.message : e);
+    return null;
+  });
+  const crops = await Promise.all(
+    shoppingList.map(async (it) => {
+      if (!renderBytes || !it.elementId) return null;
+      const box = bboxById.get(it.elementId);
+      return box ? extractCrop(renderBytes, box) : null;
+    }),
+  );
+
+  // Matching NEUF en BLEND (crop image + description texte), pondéré par catégorie ×
+  // source — EN PLUS du raw audit. UN appel Jina texte + UN appel Jina crops (batch).
+  const matchResults = await matchPartnerProductsBlendBatch(
+    shoppingList.map((it, i) => ({
+      category: it.category,
+      description: `${it.name} ${it.detail ?? ""}`.trim(),
+      crop: crops[i],
+    })),
   );
   shoppingList.forEach((it, i) => { it.matches = matchResults[i]; });
 
-  // SOL : matching cosine FILTRÉ par matériau (un parquet bois ne doit pas matcher un
-  // carrelage effet bois) → override du cosine générique.
-  for (const it of shoppingList.filter((i) => i.category === "floor")) {
-    it.matches = await matchFloorProducts(`${it.name} ${it.detail ?? ""}`.trim());
+  // SOL : blend FILTRÉ par matériau (un parquet bois ne doit pas matcher un carrelage
+  // effet bois). Poids 'floor' : w image baissé → le motif joue dans la description.
+  for (let i = 0; i < shoppingList.length; i++) {
+    const it = shoppingList[i];
+    if (it.category !== "floor") continue;
+    it.matches = await matchFloorProductsBlend(`${it.name} ${it.detail ?? ""}`.trim(), crops[i]);
   }
 
   // PEINTURE : matching par COULEUR (le cosine image ne sert à rien). On compare AVANT|APRÈS
@@ -855,7 +927,7 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
       const composite = (await buildBeforeAfterComposite(
         project.basePhotoUrl,
         project.generatedRenderUrl,
-      )) as unknown as ImageInput;
+      )).buffer as unknown as ImageInput;
       const wallColors = await getChangedWallColors(composite); // murs repeints uniquement
       const template = paintItems[0];
       // Retire les items peinture génériques, ajoute 1 item par mur REPEINT (0 si aucun).

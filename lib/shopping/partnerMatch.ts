@@ -9,8 +9,19 @@
  * requête. La version batch fait UN seul appel Jina pour toute la liste.
  */
 import { createSupabaseAdmin } from "@/lib/supabase/server";
-import { computeTextEmbedding, computeBatchTextEmbeddings } from "@/lib/embeddings/jina";
+import {
+  computeTextEmbedding,
+  computeBatchTextEmbeddings,
+  computeBatchImageEmbeddingsFromBytes,
+} from "@/lib/embeddings/jina";
+import { withTracking } from "@/lib/tracking";
 import { MATCH_BLEND_ALPHA, MATCH_MIN_SIMILARITY } from "@/lib/constants";
+import {
+  getMatchingWeights,
+  minScoreForSource,
+  DEFAULT_WEIGHTS,
+  type MatchingWeights,
+} from "./matchingConfig";
 import type { ProductMatch } from "@/lib/types";
 
 // Catégorie d'item → catégorie catalogue. null = non-shoppable (pas de match).
@@ -94,6 +105,142 @@ const FLOOR_MATERIALS: Array<{ render: RegExp; product: RegExp }> = [
 // garde le bon matériau (parquet/bois → sols bois, pas carrelage).
 export async function matchFloorProducts(description: string, topN = 4): Promise<ProductMatch[]> {
   const pool = await matchPartnerProducts("floor", description, 24);
+  if (pool.length === 0) return [];
+  const mat = FLOOR_MATERIALS.find((m) => m.render.test(description));
+  if (!mat) return pool.slice(0, topN);
+  const sameMat = pool.filter((p) => mat.product.test(p.name));
+  return (sameMat.length > 0 ? sameMat : pool).slice(0, topN);
+}
+
+// ============================================================================
+// BLEND CROP↔image + DESCRIPTION↔texte (V1.5) — cible = 2 signaux de la même
+// détection. Score = w·cos(crop, image_produit) + (1−w)·cos(desc, texte_produit),
+// w (poids image) par catégorie × source (config assets). crop absent → texte seul.
+// ============================================================================
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapRowBlend(r: any): ProductMatch {
+  return {
+    ...mapRow(r),
+    simImage: r.sim_image != null ? Math.round(Number(r.sim_image) * 1000) / 1000 : undefined,
+    simText: r.sim_text != null ? Math.round(Number(r.sim_text) * 1000) / 1000 : undefined,
+  };
+}
+
+async function rpcBlend(
+  cropEmbedding: number[] | null,
+  descEmbedding: number[],
+  category: string,
+  topN: number,
+  weights: MatchingWeights,
+): Promise<ProductMatch[]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = createSupabaseAdmin() as any;
+  const { data, error } = await supabase.rpc("match_partner_products_blend", {
+    crop_embedding: cropEmbedding, // null → texte seul côté SQL
+    desc_embedding: descEmbedding,
+    match_category: category,
+    match_count: topN,
+    w_eco_new: weights.image_weight.eco_new,
+    w_secondhand: weights.image_weight.secondhand,
+  });
+  if (error) {
+    console.warn("[partnerMatch] RPC blend échoué:", error.message);
+    return [];
+  }
+  // Seuil d'affichage PAR SOURCE : sous le seuil → on n'affiche pas (item "À sourcer").
+  return (data ?? [])
+    .map(mapRowBlend)
+    .filter((m: ProductMatch) => m.similarity >= minScoreForSource(weights, m.source_type));
+}
+
+async function embedCrops(crops: (Buffer | null | undefined)[]): Promise<Map<number, number[]>> {
+  const present = crops.map((c, i) => ({ i, c })).filter((x): x is { i: number; c: Buffer } => !!x.c);
+  const out = new Map<number, number[]>();
+  if (present.length === 0) return out;
+  try {
+    const embs = await withTracking("embedding", () => computeBatchImageEmbeddingsFromBytes(present.map((p) => p.c)), {
+      count: present.length,
+      type: "crop",
+    });
+    present.forEach((p, k) => { if (embs[k]) out.set(p.i, embs[k]); });
+  } catch (e) {
+    // crop down → on tombe proprement sur texte seul (pas d'échec dur).
+    console.warn("[partnerMatch] embedding crops échoué, texte seul:", e instanceof Error ? e.message : e);
+  }
+  return out;
+}
+
+/**
+ * Batch blend : embedde toutes les descriptions (1 appel) + tous les crops présents
+ * (1 appel), puis blend par produit candidat (filtré par catégorie), poids par
+ * catégorie × source. crop absent pour un item → texte seul (w effectif 0).
+ */
+export async function matchPartnerProductsBlendBatch(
+  items: { category: string; description: string; crop?: Buffer | null }[],
+  topN = 4,
+): Promise<ProductMatch[][]> {
+  const cats = items.map((it) => catalogCategory(it.category));
+  const textTargets = items
+    .map((it, i) => ({ i, text: it.description?.trim() ?? "" }))
+    .filter((x) => cats[x.i] && x.text);
+  if (textTargets.length === 0) return items.map(() => []);
+
+  let descEmbs: number[][];
+  try {
+    descEmbs = await withTracking("embedding", () => computeBatchTextEmbeddings(textTargets.map((x) => x.text)), {
+      count: textTargets.length,
+      type: "text",
+    });
+  } catch (e) {
+    console.warn("[partnerMatch] batch desc embedding échoué:", e instanceof Error ? e.message : e);
+    return items.map(() => []);
+  }
+  const descByIdx = new Map<number, number[]>();
+  textTargets.forEach((x, k) => descByIdx.set(x.i, descEmbs[k]));
+
+  // Crops : seulement pour les items shoppables (catégorie résolue).
+  const cropByIdx = await embedCrops(items.map((it, i) => (cats[i] ? it.crop : null)));
+
+  // Poids résolus une fois par catégorie distincte.
+  const weightsByCat = new Map<string, MatchingWeights>();
+  await Promise.all(
+    [...new Set(cats.filter((c): c is string => !!c))].map(async (c) =>
+      weightsByCat.set(c, await getMatchingWeights(c)),
+    ),
+  );
+
+  return Promise.all(
+    items.map(async (_it, i) => {
+      const cat = cats[i];
+      const desc = descByIdx.get(i);
+      if (!cat || !desc) return [];
+      return rpcBlend(cropByIdx.get(i) ?? null, desc, cat, topN, weightsByCat.get(cat) ?? DEFAULT_WEIGHTS);
+    }),
+  );
+}
+
+/**
+ * SOL en blend : pool large par score, filtré par FAMILLE de matériau (un parquet bois
+ * ne doit pas matcher un carrelage effet bois). Poids 'floor' (w baissé) → le motif
+ * chevron/essence se joue dans la description, où l'image discrimine mal.
+ */
+export async function matchFloorProductsBlend(
+  description: string,
+  crop?: Buffer | null,
+  topN = 4,
+): Promise<ProductMatch[]> {
+  if (!description?.trim()) return [];
+  const weights = await getMatchingWeights("floor");
+  let descEmb: number[];
+  try {
+    descEmb = (await withTracking("embedding", () => computeBatchTextEmbeddings([description]), { count: 1, type: "text" }))[0];
+  } catch (e) {
+    console.warn("[partnerMatch] floor desc embedding échoué:", e instanceof Error ? e.message : e);
+    return [];
+  }
+  const cropEmb = (await embedCrops([crop])).get(0) ?? null;
+  const pool = await rpcBlend(cropEmb, descEmb, "floor", 24, weights);
   if (pool.length === 0) return [];
   const mat = FLOOR_MATERIALS.find((m) => m.render.test(description));
   if (!mat) return pool.slice(0, topN);

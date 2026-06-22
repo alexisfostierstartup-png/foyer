@@ -123,6 +123,16 @@ export async function computeBatchImageEmbeddings(imageUrls: string[]): Promise<
   return results;
 }
 
+/**
+ * Embedding IMAGE de buffers (crops du rendu) → base64, pas d'URL. Pas de cache : les
+ * crops sont éphémères (1 par élément matché, jamais réutilisés). UN appel Jina pour
+ * tout le lot. Jina-clip-v2 accepte une image en base64 dans le champ `image`.
+ */
+export async function computeBatchImageEmbeddingsFromBytes(buffers: Buffer[]): Promise<number[][]> {
+  if (buffers.length === 0) return [];
+  return jinaEmbed(buffers.map((b) => ({ image: b.toString("base64") })));
+}
+
 export function cosineSimilarity(a: number[], b: number[]): number {
   if (!a || !b || a.length !== b.length) return 0;
   let dot = 0, normA = 0, normB = 0;

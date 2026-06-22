@@ -55,6 +55,10 @@ export type ProductMatch = {
   primary_image_url: string | null;
   product_url: string | null;
   similarity: number;
+  // Calibration du blend (ÉTAPE 4) : cosines décomposés du top-1 — sim_image (crop↔image
+  // produit) et sim_text (description↔texte produit). Permet de régler w/seuils sur données.
+  simImage?: number;
+  simText?: number;
 };
 
 export type ShoppingItem = {
@@ -78,6 +82,9 @@ export type ShoppingItem = {
   quantity?: number;
   // Vrais produits du catalogue matchés (top-N par similarité cosine). [0] = meilleur.
   matches?: ProductMatch[];
+  // Élément source (decision.element_id) → permet de retrouver son crop/bbox dans le rendu
+  // pour le matching image↔image. Absent pour les ajouts nets (détectés sans bbox).
+  elementId?: string;
   // PEINTURE : couleur du mur détectée dans le rendu (hex) → matching ΔE + affichée.
   targetHex?: string;
 };
