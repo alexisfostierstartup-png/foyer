@@ -6,6 +6,7 @@
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { computeImageEmbedding, computeTextEmbedding } from "@/lib/embeddings/jina";
 import { withTracking } from "@/lib/tracking";
+import { buildProductText } from "./productText";
 import type { ProductSource } from "./types";
 
 export const TEST_SCRAPE_MARKER = "test_scrape";
@@ -76,8 +77,11 @@ export async function ingestFromSource(
             () => computeImageEmbedding(p.primary_image_url),
             { merchant: p.merchant, category },
           );
-          // Embedding TEXTE (nom + description) → blend visuel/sémantique au matching.
-          const textEmbedding = await computeTextEmbedding(`${p.name}. ${p.description ?? ""}`.trim());
+          // Embedding TEXTE (nom + description + specs : couleur/matière/dims/marque) →
+          // terme sémantique du blend, qui rattrape l'image quand elle trompe.
+          const textEmbedding = await computeTextEmbedding(
+            buildProductText({ name: p.name, description: p.description, metadata: p.attributes ?? {} }),
+          );
 
           const row = {
             merchant: p.merchant,
