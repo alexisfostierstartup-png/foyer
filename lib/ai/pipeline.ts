@@ -37,7 +37,7 @@ const CLEAR_FINALIZE: Partial<Project> = {
   alterations: undefined,
 };
 
-async function fetchImageBytes(url: string): Promise<Buffer> {
+export async function fetchImageBytes(url: string): Promise<Buffer> {
   if (url.startsWith("/")) {
     return fs.readFile(path.join(process.cwd(), "public", url));
   }
@@ -56,7 +56,7 @@ async function fetchImageBytes(url: string): Promise<Buffer> {
 // permet de reprojeter une bbox donnée sur le composite vers le RENDU seul (crop).
 type Composite = { buffer: Buffer; afterLeftFrac: number; afterWidthFrac: number };
 
-async function buildBeforeAfterComposite(beforeUrl: string, afterUrl: string): Promise<Composite> {
+export async function buildBeforeAfterComposite(beforeUrl: string, afterUrl: string): Promise<Composite> {
   const [beforeRaw, afterRaw] = await Promise.all([
     fetchImageBytes(beforeUrl),
     fetchImageBytes(afterUrl),
@@ -726,7 +726,7 @@ function parseBbox(raw: unknown): Bbox | null {
   return { x: x as number, y: y as number, w: w as number, h: h as number };
 }
 
-async function confirmChanges(
+export async function confirmChanges(
   projectId: string,
   candidates: ElementDecision[],
   composite: ImageInput,

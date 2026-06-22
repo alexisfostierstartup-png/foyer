@@ -148,10 +148,15 @@ async function rpcBlend(
     console.warn("[partnerMatch] RPC blend échoué:", error.message);
     return [];
   }
-  // Seuil d'affichage PAR SOURCE : sous le seuil → on n'affiche pas (item "À sourcer").
-  return (data ?? [])
-    .map(mapRowBlend)
-    .filter((m: ProductMatch) => m.similarity >= minScoreForSource(weights, m.source_type));
+  // Scores BRUTS : le seuil d'affichage est appliqué par l'appelant, APRÈS d'éventuels
+  // filtres (ex. matériau du sol) — sinon le seuil prunerait le pool avant le filtre et
+  // ne laisserait que des produits hors-matériau bien notés (carrelage effet bois).
+  return (data ?? []).map(mapRowBlend);
+}
+
+// Seuil d'affichage PAR SOURCE : sous le seuil → on ne propose pas (item "À sourcer").
+function applyDisplayThreshold(matches: ProductMatch[], weights: MatchingWeights): ProductMatch[] {
+  return matches.filter((m) => m.similarity >= minScoreForSource(weights, m.source_type));
 }
 
 async function embedCrops(crops: (Buffer | null | undefined)[]): Promise<Map<number, number[]>> {
@@ -215,7 +220,9 @@ export async function matchPartnerProductsBlendBatch(
       const cat = cats[i];
       const desc = descByIdx.get(i);
       if (!cat || !desc) return [];
-      return rpcBlend(cropByIdx.get(i) ?? null, desc, cat, topN, weightsByCat.get(cat) ?? DEFAULT_WEIGHTS);
+      const weights = weightsByCat.get(cat) ?? DEFAULT_WEIGHTS;
+      const matches = await rpcBlend(cropByIdx.get(i) ?? null, desc, cat, topN, weights);
+      return applyDisplayThreshold(matches, weights);
     }),
   );
 }
@@ -240,12 +247,15 @@ export async function matchFloorProductsBlend(
     return [];
   }
   const cropEmb = (await embedCrops([crop])).get(0) ?? null;
+  // Pool BRUT (sans seuil) → on filtre d'ABORD par matériau, PUIS on applique le seuil :
+  // un stratifié/parquet correct mais à 0.6 doit l'emporter sur un carrelage effet bois
+  // mieux noté visuellement mais hors-matériau.
   const pool = await rpcBlend(cropEmb, descEmb, "floor", 24, weights);
   if (pool.length === 0) return [];
   const mat = FLOOR_MATERIALS.find((m) => m.render.test(description));
-  if (!mat) return pool.slice(0, topN);
-  const sameMat = pool.filter((p) => mat.product.test(p.name));
-  return (sameMat.length > 0 ? sameMat : pool).slice(0, topN);
+  const filtered = mat ? pool.filter((p) => mat.product.test(p.name)) : pool;
+  const chosen = (filtered.length > 0 ? filtered : pool).slice(0, topN);
+  return applyDisplayThreshold(chosen, weights);
 }
 
 /** Batch : UN seul appel Jina (toutes les descriptions shoppables), puis RPC en parallèle. */
