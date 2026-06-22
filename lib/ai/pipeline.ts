@@ -17,7 +17,7 @@ import { matchAlterationsToCatalog, type Alteration } from "@/lib/shopping/match
 import { reconcilePlan } from "@/lib/shopping/reconcile";
 import { buildShoppingList, builtToLegacyShoppingList } from "@/lib/shopping/build";
 import { matchPartnerProductsBatch } from "@/lib/shopping/partnerMatch";
-import { matchPaintByColor, getWallColorsFromRender } from "@/lib/shopping/paintMatch";
+import { matchPaintByColor, getChangedWallColors } from "@/lib/shopping/paintMatch";
 import type { ImageInput } from "./types";
 import { getAllDiyActions, getCandidateActions } from "@/lib/diy/rules";
 import { evalQtyFormula, getStandardDims } from "@/lib/diy/quantities";
@@ -840,30 +840,31 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
   );
   shoppingList.forEach((it, i) => { it.matches = matchResults[i]; });
 
-  // PEINTURE : matching par COULEUR (le cosine image ne sert à rien pour de la peinture).
-  // On lit la couleur dominante des murs dans le rendu (vision) et on classe les
-  // peintures par proximité de teinte (ΔE), au lieu du cosine catégorie "wall" (vide).
+  // PEINTURE : matching par COULEUR (le cosine image ne sert à rien). On compare AVANT|APRÈS
+  // pour ne lister QUE les murs REPEINTS (les murs inchangés ne sont pas dans la liste),
+  // 1 item par mur, classé par proximité de teinte (ΔE).
   const paintItems = shoppingList.filter((it) => it.source === "diy" && /peinture|peindre/i.test(it.name));
-  if (paintItems.length > 0 && project.generatedRenderUrl) {
+  if (paintItems.length > 0 && project.generatedRenderUrl && project.basePhotoUrl) {
     try {
-      const renderImg = await loadImage(project.generatedRenderUrl);
-      // UNE couleur par mur DISTINCT (pas une moyenne globale) → 1 item peinture/mur.
-      const wallColors = await getWallColorsFromRender(renderImg);
-      if (wallColors.length > 0) {
-        const template = paintItems[0];
-        for (const p of paintItems) {
-          const i = shoppingList.indexOf(p);
-          if (i >= 0) shoppingList.splice(i, 1);
-        }
-        for (const w of wallColors) {
-          shoppingList.push({
-            ...template,
-            id: `paint-${w.hex.replace("#", "")}`,
-            name: wallColors.length > 1 ? `Peinture — ${w.label}` : "Peinture",
-            targetHex: w.hex,
-            matches: await matchPaintByColor(w.hex),
-          });
-        }
+      const composite = (await buildBeforeAfterComposite(
+        project.basePhotoUrl,
+        project.generatedRenderUrl,
+      )) as unknown as ImageInput;
+      const wallColors = await getChangedWallColors(composite); // murs repeints uniquement
+      const template = paintItems[0];
+      // Retire les items peinture génériques, ajoute 1 item par mur REPEINT (0 si aucun).
+      for (const p of paintItems) {
+        const i = shoppingList.indexOf(p);
+        if (i >= 0) shoppingList.splice(i, 1);
+      }
+      for (const w of wallColors) {
+        shoppingList.push({
+          ...template,
+          id: `paint-${w.hex.replace("#", "")}`,
+          name: wallColors.length > 1 ? `Peinture — ${w.label}` : "Peinture",
+          targetHex: w.hex,
+          matches: await matchPaintByColor(w.hex),
+        });
       }
     } catch (e) {
       console.warn("[paint] matching couleur échoué:", e instanceof Error ? e.message : e);

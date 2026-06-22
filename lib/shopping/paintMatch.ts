@@ -10,16 +10,17 @@ import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { hexToLab, deltaE } from "@/lib/color";
 import type { ProductMatch } from "@/lib/types";
 
-const WALL_COLORS_PROMPT = `Tu es coloriste. Sur cette photo de pièce rénovée, identifie CHAQUE mur peint de couleur DISTINCTE (une pièce a souvent un mur d'accent d'une couleur différente des autres murs). Pour CHAQUE couleur de mur distincte, donne son hex (échantillon en MI-TON, sans reflet/lumière vive ni ombre) ET un court label (ex. "mur principal", "mur d'accent", "mur du fond"). ⚠️ NE FUSIONNE JAMAIS plusieurs murs de couleurs différentes en une seule couleur moyenne (un mur blanc + un mur noir ne donnent PAS du gris). Sois fidèle à la teinte ET à la saturation. Ignore le plafond, le sol, les meubles, rideaux, fenêtres. Réponds en JSON STRICT, rien d'autre : {"walls":[{"hex":"#RRGGBB","label":"..."}]}.`;
+const WALL_COLORS_PROMPT = `Cette image contient DEUX photos CÔTE À CÔTE : moitié GAUCHE = AVANT (pièce d'origine), moitié DROITE = APRÈS (rendu). Identifie chaque MUR dont la COULEUR DE PEINTURE a CHANGÉ entre AVANT et APRÈS (mur repeint d'une couleur différente). Pour CHAQUE mur repeint, donne sa couleur dans l'APRÈS (DROITE) : son hex (échantillon en MI-TON, sans reflet ni ombre) + un court label (ex. "mur d'accent", "mur du fond"). ⚠️ NE LISTE PAS les murs restés de la même couleur (non repeints). Un mur qui reste blanc/crème/clair — même légèrement plus clair, plus chaud ou plus lumineux dans le rendu — n'est PAS repeint (c'est un simple artefact de rendu) : NE LE LISTE PAS. Ne liste un mur QUE si sa couleur a CLAIREMENT changé : teinte franchement différente, OU nuance nettement plus foncée/saturée. Ne fusionne jamais plusieurs murs de couleurs différentes. Sois fidèle à la teinte ET à la saturation. Ignore plafond, sol, meubles, rideaux, fenêtres. Réponds en JSON STRICT, rien d'autre : {"walls":[{"hex":"#RRGGBB","label":"..."}]}. Si aucun mur n'a changé de couleur : {"walls":[]}.`;
 
 const norm = (h: string) => `#${h.trim().replace(/^#/, "").toLowerCase()}`;
 
 export type WallColor = { hex: string; label: string };
 
-// Renvoie UNE couleur par mur DISTINCT (pas une moyenne globale).
-export async function getWallColorsFromRender(renderImage: ImageInput): Promise<WallColor[]> {
+// Compare AVANT|APRÈS (composite) → 1 couleur par mur REPEINT (les murs inchangés sont
+// exclus). Pas de moyenne globale entre murs de couleurs différentes.
+export async function getChangedWallColors(composite: ImageInput): Promise<WallColor[]> {
   try {
-    const res = await getVisionProvider("gemini_vision").analyze(WALL_COLORS_PROMPT, [renderImage], {
+    const res = await getVisionProvider("gemini_vision").analyze(WALL_COLORS_PROMPT, [composite], {
       model: "gemini-2.5-flash",
     });
     const walls = (res.parsed as { walls?: Array<{ hex?: string; label?: string }> } | null)?.walls ?? [];
@@ -56,10 +57,11 @@ export async function matchPaintByColor(targetHex: string, topN = 4): Promise<Pr
     return [];
   }
 
-  // Seuil de distance couleur : au-delà, ce n'est plus la MÊME couleur (ex. mur jaune
-  // vs peinture beige) → on ne propose RIEN (l'item passe en "À sourcer") plutôt qu'un
-  // faux match d'une autre teinte. ΔE 16 (CIE76) ≈ frontière même-famille / autre couleur.
-  const MAX_DELTA_E = 16;
+  // Seuil de distance couleur : au-delà, ce n'est plus la même famille (ex. mur jaune
+  // vs peinture marron) → "À sourcer" plutôt qu'un faux match. ΔE 24 (CIE76) tolère une
+  // teinte proche mais moins saturée/claire (ex. mur or/miel #d9b15c → peinture or #E0B22C,
+  // ΔE 20.6) tout en rejetant les vraies autres couleurs (ΔE ~30+).
+  const MAX_DELTA_E = 24;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const scored = (data ?? [])
     .map((r: any) => {
