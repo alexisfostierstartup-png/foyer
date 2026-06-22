@@ -50,23 +50,19 @@ const LM_KEYWORDS: Record<string, string[]> = {
   paint: [
     // rendement général
     "peinture salon couleur", "peinture chambre couleur", "peinture mur couleur intérieur",
-    "peinture murale satin couleur",
     // neutres
-    "peinture murale blanc", "peinture murale crème", "peinture murale beige", "peinture murale greige",
-    "peinture murale taupe", "peinture murale sable", "peinture murale lin", "peinture murale gris",
-    "peinture murale gris clair", "peinture murale anthracite", "peinture murale noir",
+    "peinture mur beige", "peinture mur greige", "peinture mur taupe", "peinture mur lin",
+    "peinture mur gris", "peinture mur gris clair", "peinture mur anthracite", "peinture mur noir",
     // chauds
-    "peinture murale terracotta", "peinture murale ocre", "peinture murale jaune",
-    "peinture murale jaune moutarde", "peinture murale orange", "peinture murale rouge",
-    "peinture murale bordeaux", "peinture murale brique", "peinture murale rose",
-    "peinture murale rose poudré", "peinture murale corail", "peinture murale brun",
+    "peinture mur terracotta", "peinture mur ocre", "peinture mur jaune", "peinture mur moutarde",
+    "peinture mur orange", "peinture mur rouge", "peinture mur bordeaux", "peinture mur brique",
+    "peinture mur rose", "peinture mur vieux rose", "peinture mur corail", "peinture mur brun",
     // froids
-    "peinture murale bleu", "peinture murale bleu marine", "peinture murale bleu canard",
-    "peinture murale bleu ciel", "peinture murale vert", "peinture murale vert sauge",
-    "peinture murale vert kaki", "peinture murale vert d'eau", "peinture murale vert olive",
-    "peinture murale turquoise", "peinture murale émeraude",
+    "peinture mur bleu", "peinture mur bleu marine", "peinture mur bleu canard", "peinture mur bleu nuit",
+    "peinture mur bleu gris", "peinture mur vert", "peinture mur vert sauge", "peinture mur vert kaki",
+    "peinture mur vert d'eau", "peinture mur olive", "peinture mur turquoise", "peinture mur émeraude",
     // violets
-    "peinture murale violet", "peinture murale mauve", "peinture murale prune", "peinture murale parme",
+    "peinture mur violet", "peinture mur mauve", "peinture mur prune", "peinture mur parme", "peinture mur lavande",
   ],
   mouldings: ["moulure décorative", "moulure polyuréthane", "cimaise murale", "corniche décorative", "rosace plafond"],
   batten: ["tasseau sapin", "tasseau chêne", "tasseau bois raboté", "tasseau pin", "liteau bois", "tasseau douglas"],
