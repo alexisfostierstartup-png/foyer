@@ -722,7 +722,7 @@ async function confirmChanges(
       }),
   );
   const parsed = result.parsed as {
-    results?: Array<{ element_id?: string; applied?: boolean; after?: string }>;
+    results?: Array<{ element_id?: string; changed?: boolean; after?: string }>;
     additions?: Array<{ element?: string; category?: string; detail?: string }>;
   } | null;
 
@@ -734,7 +734,7 @@ async function confirmChanges(
   for (const r of parsed?.results ?? []) {
     if (typeof r.element_id !== "string") continue;
     judgedIds.add(r.element_id);
-    if (r.applied) appliedIds.add(r.element_id);
+    if (r.changed) appliedIds.add(r.element_id); // appliedIds = éléments que le rendu a CHANGÉS
     if (r.after && r.after.trim()) afterById.set(r.element_id, r.after.trim());
   }
   // Ajouts nets (présents dans APRÈS, absents dans AVANT) → à acheter.
@@ -763,9 +763,11 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
   //  - "customize"/"replace" : candidats → on vérifie sur le rendu s'ils ont
   //    VRAIMENT été appliqués (ou conservés tels quels malgré le plan).
   const decisions = (project.element_decisions ?? []) as ElementDecision[];
-  const candidates = decisions.filter(
-    (d) => d.mismatch_type === "surface" || d.mismatch_type === "structural",
-  );
+  // On vérifie sur le RENDU tous les éléments shoppables (pas seulement les changements
+  // planifiés) : le générateur modifie parfois des éléments décidés "keep" — ex. un tapis
+  // changé lors d'une itération. On exclut juste l'architecture pure (jamais "achetée").
+  const NON_DETECTABLE = new Set(["ceiling", "door", "french_door", "window", "wall_opening"]);
+  const candidates = decisions.filter((d) => !NON_DETECTABLE.has(d.category));
 
   // Une seule passe vision (composite AVANT|APRÈS) qui fait DEUX choses :
   //  - confirme quels candidats (customize/replace) ont vraiment été appliqués ;
@@ -787,18 +789,29 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
     afterById = r.afterById;
   }
 
-  // STABILITÉ : on ne démote un candidat en "keep" QUE si l'audit l'a
-  // explicitement jugé "non appliqué". Si l'audit ne le mentionne pas (réponse
-  // vide/partielle/parsée KO), on le PRÉSUME appliqué → la liste ne s'effondre
-  // plus à cause d'un audit instable.
-  // Candidat confirmé → description = état APRÈS vu dans le rendu.
+  // La LISTE reflète le RENDU, pas seulement les décisions initiales :
+  //  - élément jugé CHANGÉ par l'audit → listé (achat). S'il était "keep" (ex. tapis
+  //    modifié à l'itération) → promu en remplacement structurel.
+  //  - élément jugé inchangé → keep (même si un changement était planifié mais pas fait).
+  //  - non jugé (architecture exclue / audit incomplet) → on préserve, candidats présumés OK.
   const effective: ElementDecision[] = decisions.map((d) => {
-    const isCandidate = d.mismatch_type === "surface" || d.mismatch_type === "structural";
-    if (isCandidate && judgedIds.has(d.element_id) && !appliedIds.has(d.element_id)) {
-      return { ...d, mismatch_type: "none", action_slug: null, supply_items: null, qty: null };
-    }
+    const wasCandidate = d.mismatch_type === "surface" || d.mismatch_type === "structural";
+    const judged = judgedIds.has(d.element_id);
+    const changed = appliedIds.has(d.element_id); // appliedIds = éléments que le rendu a changés
     const after = afterById.get(d.element_id);
-    if (isCandidate && after) return { ...d, description: after };
+
+    if (judged && changed) {
+      const base: ElementDecision = wasCandidate
+        ? d
+        : { ...d, mismatch_type: "structural", action_slug: null, supply_items: null, qty: null };
+      return after ? { ...base, description: after } : base;
+    }
+    if (judged && !changed) {
+      return wasCandidate
+        ? { ...d, mismatch_type: "none", action_slug: null, supply_items: null, qty: null }
+        : d;
+    }
+    if (wasCandidate) return after ? { ...d, description: after } : d;
     return d;
   });
 
