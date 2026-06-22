@@ -10,20 +10,32 @@ import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { hexToLab, deltaE } from "@/lib/color";
 import type { ProductMatch } from "@/lib/types";
 
-const WALL_COLOR_PROMPT = `Tu es coloriste. Sur cette photo de pièce, identifie le GRAND MUR peint principal (ignore le plafond, le sol, les meubles, rideaux, fenêtres). Donne la couleur de sa PEINTURE en échantillonnant une zone en MI-TON (évite les reflets/lumière vive et les ombres). Sois FIDÈLE à la teinte ET à la saturation réelles : un mur brun-taupe doit donner un brun-taupe (pas un beige délavé), un mur vert sauge un vert sauge. Réponds en JSON STRICT, rien d'autre : {"wall_hex":"#RRGGBB"}.`;
+const WALL_COLORS_PROMPT = `Tu es coloriste. Sur cette photo de pièce rénovée, identifie CHAQUE mur peint de couleur DISTINCTE (une pièce a souvent un mur d'accent d'une couleur différente des autres murs). Pour CHAQUE couleur de mur distincte, donne son hex (échantillon en MI-TON, sans reflet/lumière vive ni ombre) ET un court label (ex. "mur principal", "mur d'accent", "mur du fond"). ⚠️ NE FUSIONNE JAMAIS plusieurs murs de couleurs différentes en une seule couleur moyenne (un mur blanc + un mur noir ne donnent PAS du gris). Sois fidèle à la teinte ET à la saturation. Ignore le plafond, le sol, les meubles, rideaux, fenêtres. Réponds en JSON STRICT, rien d'autre : {"walls":[{"hex":"#RRGGBB","label":"..."}]}.`;
 
 const norm = (h: string) => `#${h.trim().replace(/^#/, "").toLowerCase()}`;
 
-export async function getWallColorFromRender(renderImage: ImageInput): Promise<string | null> {
+export type WallColor = { hex: string; label: string };
+
+// Renvoie UNE couleur par mur DISTINCT (pas une moyenne globale).
+export async function getWallColorsFromRender(renderImage: ImageInput): Promise<WallColor[]> {
   try {
-    const res = await getVisionProvider("gemini_vision").analyze(WALL_COLOR_PROMPT, [renderImage], {
+    const res = await getVisionProvider("gemini_vision").analyze(WALL_COLORS_PROMPT, [renderImage], {
       model: "gemini-2.5-flash",
     });
-    const hex = (res.parsed as { wall_hex?: string } | null)?.wall_hex;
-    return hex && /^#?[0-9a-fA-F]{6}$/.test(hex.trim()) ? norm(hex) : null;
+    const walls = (res.parsed as { walls?: Array<{ hex?: string; label?: string }> } | null)?.walls ?? [];
+    const out: WallColor[] = [];
+    const seen = new Set<string>();
+    for (const w of walls) {
+      if (!w.hex || !/^#?[0-9a-fA-F]{6}$/.test(w.hex.trim())) continue;
+      const hex = norm(w.hex);
+      if (seen.has(hex)) continue;
+      seen.add(hex);
+      out.push({ hex, label: (w.label ?? "mur").trim() || "mur" });
+    }
+    return out;
   } catch (e) {
-    console.warn("[paintMatch] couleur mur:", e instanceof Error ? e.message : e);
-    return null;
+    console.warn("[paintMatch] couleurs murs:", e instanceof Error ? e.message : e);
+    return [];
   }
 }
 
@@ -44,13 +56,17 @@ export async function matchPaintByColor(targetHex: string, topN = 4): Promise<Pr
     return [];
   }
 
+  // Seuil de distance couleur : au-delà, ce n'est plus la MÊME couleur (ex. mur jaune
+  // vs peinture beige) → on ne propose RIEN (l'item passe en "À sourcer") plutôt qu'un
+  // faux match d'une autre teinte. ΔE 16 (CIE76) ≈ frontière même-famille / autre couleur.
+  const MAX_DELTA_E = 16;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const scored = (data ?? [])
     .map((r: any) => {
       const lab = hexToLab(r.metadata?.color_hex);
       return { r, dE: lab ? deltaE(targetLab, lab) : Infinity };
     })
-    .filter((x: { dE: number }) => Number.isFinite(x.dE))
+    .filter((x: { dE: number }) => x.dE <= MAX_DELTA_E)
     .sort((a: { dE: number }, b: { dE: number }) => a.dE - b.dE)
     .slice(0, topN);
 
@@ -64,7 +80,9 @@ export async function matchPaintByColor(targetHex: string, topN = 4): Promise<Pr
     price: r.price != null ? Number(r.price) : null,
     primary_image_url: r.primary_image_url ?? null,
     product_url: r.product_url ?? null,
-    // ΔE → score lisible : 0 = identique, ~30 = très différent.
-    similarity: Math.round(Math.max(0, 1 - dE / 30) * 1000) / 1000,
+    // ΔE → score perceptuel. Repères CIE76 : ΔE~2.3 = différence à peine perceptible
+    // (JND), ~5 proche, ~15 visible. Courbe choisie pour qu'un BON match (ΔE≤4) lise
+    // ~93-96%, un match correct (ΔE~12) ~78%, et descende ensuite.
+    similarity: Math.round(Math.max(0, 1 - dE / 55) * 1000) / 1000,
   }));
 }

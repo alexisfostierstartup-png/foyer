@@ -17,7 +17,7 @@ import { matchAlterationsToCatalog, type Alteration } from "@/lib/shopping/match
 import { reconcilePlan } from "@/lib/shopping/reconcile";
 import { buildShoppingList, builtToLegacyShoppingList } from "@/lib/shopping/build";
 import { matchPartnerProductsBatch } from "@/lib/shopping/partnerMatch";
-import { matchPaintByColor, getWallColorFromRender } from "@/lib/shopping/paintMatch";
+import { matchPaintByColor, getWallColorsFromRender } from "@/lib/shopping/paintMatch";
 import type { ImageInput } from "./types";
 import { getAllDiyActions, getCandidateActions } from "@/lib/diy/rules";
 import { evalQtyFormula, getStandardDims } from "@/lib/diy/quantities";
@@ -847,10 +847,22 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
   if (paintItems.length > 0 && project.generatedRenderUrl) {
     try {
       const renderImg = await loadImage(project.generatedRenderUrl);
-      const wallHex = await getWallColorFromRender(renderImg);
-      if (wallHex) {
-        const paintMatches = await matchPaintByColor(wallHex);
-        for (const it of paintItems) it.matches = paintMatches;
+      // UNE couleur par mur DISTINCT (pas une moyenne globale) → 1 item peinture/mur.
+      const wallColors = await getWallColorsFromRender(renderImg);
+      if (wallColors.length > 0) {
+        const template = paintItems[0];
+        for (const p of paintItems) {
+          const i = shoppingList.indexOf(p);
+          if (i >= 0) shoppingList.splice(i, 1);
+        }
+        for (const w of wallColors) {
+          shoppingList.push({
+            ...template,
+            id: `paint-${w.hex.replace("#", "")}`,
+            name: wallColors.length > 1 ? `Peinture — ${w.label}` : "Peinture",
+            matches: await matchPaintByColor(w.hex),
+          });
+        }
       }
     } catch (e) {
       console.warn("[paint] matching couleur échoué:", e instanceof Error ? e.message : e);
