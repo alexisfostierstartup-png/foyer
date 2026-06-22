@@ -63,7 +63,7 @@ const SOURCE_TYPES = ["", "eco_new", "secondhand", "eco_label_certified"];
 const CATEGORIES = [
   "", "sofa", "armchair", "coffee_table", "side_table", "tv_stand", "sideboard",
   "bookshelf", "dining_table", "chair", "rug", "floor_lamp", "dresser",
-  "paint", "mouldings", "batten",
+  "paint", "mouldings", "batten", "floor",
 ];
 
 export function CatalogAdmin({ initialProducts, totalCount, syncRuns }: Props) {

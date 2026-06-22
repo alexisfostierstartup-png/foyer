@@ -76,6 +76,31 @@ export async function matchPartnerProducts(category: string, description: string
   return rpcMatch(emb, cat, topN);
 }
 
+// Familles de matériau de sol : on ne propose pas un carrelage pour un parquet bois.
+// Le `product` filtre sur le TYPE de revêtement (parquet/stratifié, carrelage…), PAS la
+// matière imitée : un "Carrelage effet bois chêne" contient "bois/chêne" mais reste du
+// carrelage → il ne doit PAS passer le filtre bois.
+const FLOOR_MATERIALS: Array<{ render: RegExp; product: RegExp }> = [
+  { render: /parquet|\bbois\b|stratifi|ch[êe]ne|chevron|noyer|teck|point de hongrie/i,
+    product: /parquet|stratifi|plancher|bois massif|lame.{0,14}bois/i },
+  { render: /carrelage|c[ée]ramique|gr[èe]s|c[ée]rame|fa[ïi]ence|tomette/i,
+    product: /carrelage|c[ée]ramique|gr[èe]s|c[ée]rame|tomette/i },
+  { render: /b[ée]ton|cir[ée]|r[ée]sine/i, product: /b[ée]ton|cir[ée]|r[ée]sine/i },
+  { render: /\bpvc\b|vinyle|lino/i, product: /\bpvc\b|vinyle|lino|lame.{0,14}pvc/i },
+];
+
+// SOL : cosine MAIS filtré par famille de matériau (le texte→image seul confond
+// "parquet bois" et "carrelage effet bois"). On prend un large pool cosine puis on
+// garde le bon matériau (parquet/bois → sols bois, pas carrelage).
+export async function matchFloorProducts(description: string, topN = 4): Promise<ProductMatch[]> {
+  const pool = await matchPartnerProducts("floor", description, 24);
+  if (pool.length === 0) return [];
+  const mat = FLOOR_MATERIALS.find((m) => m.render.test(description));
+  if (!mat) return pool.slice(0, topN);
+  const sameMat = pool.filter((p) => mat.product.test(p.name));
+  return (sameMat.length > 0 ? sameMat : pool).slice(0, topN);
+}
+
 /** Batch : UN seul appel Jina (toutes les descriptions shoppables), puis RPC en parallèle. */
 export async function matchPartnerProductsBatch(
   items: { category: string; description: string }[],

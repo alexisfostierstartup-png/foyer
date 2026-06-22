@@ -16,7 +16,7 @@ import type { DetectedFurniture, UserConstraints, Project, ShoppingItem, ScoreFo
 import { matchAlterationsToCatalog, type Alteration } from "@/lib/shopping/matcher";
 import { reconcilePlan } from "@/lib/shopping/reconcile";
 import { buildShoppingList, builtToLegacyShoppingList } from "@/lib/shopping/build";
-import { matchPartnerProductsBatch } from "@/lib/shopping/partnerMatch";
+import { matchPartnerProductsBatch, matchFloorProducts } from "@/lib/shopping/partnerMatch";
 import { matchPaintByColor, getChangedWallColors } from "@/lib/shopping/paintMatch";
 import type { ImageInput } from "./types";
 import { getAllDiyActions, getCandidateActions } from "@/lib/diy/rules";
@@ -839,6 +839,12 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
     shoppingList.map((it) => ({ category: it.category, description: `${it.name} ${it.detail ?? ""}`.trim() })),
   );
   shoppingList.forEach((it, i) => { it.matches = matchResults[i]; });
+
+  // SOL : matching cosine FILTRÉ par matériau (un parquet bois ne doit pas matcher un
+  // carrelage effet bois) → override du cosine générique.
+  for (const it of shoppingList.filter((i) => i.category === "floor")) {
+    it.matches = await matchFloorProducts(`${it.name} ${it.detail ?? ""}`.trim());
+  }
 
   // PEINTURE : matching par COULEUR (le cosine image ne sert à rien). On compare AVANT|APRÈS
   // pour ne lister QUE les murs REPEINTS (les murs inchangés ne sont pas dans la liste),
