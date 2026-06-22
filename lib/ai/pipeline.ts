@@ -17,6 +17,7 @@ import { matchAlterationsToCatalog, type Alteration } from "@/lib/shopping/match
 import { reconcilePlan } from "@/lib/shopping/reconcile";
 import { buildShoppingList, builtToLegacyShoppingList } from "@/lib/shopping/build";
 import { matchPartnerProductsBatch } from "@/lib/shopping/partnerMatch";
+import { matchPaintByColor, getWallColorFromRender } from "@/lib/shopping/paintMatch";
 import type { ImageInput } from "./types";
 import { getAllDiyActions, getCandidateActions } from "@/lib/diy/rules";
 import { evalQtyFormula, getStandardDims } from "@/lib/diy/quantities";
@@ -819,6 +820,23 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
     shoppingList.map((it) => ({ category: it.category, description: `${it.name} ${it.detail ?? ""}`.trim() })),
   );
   shoppingList.forEach((it, i) => { it.matches = matchResults[i]; });
+
+  // PEINTURE : matching par COULEUR (le cosine image ne sert à rien pour de la peinture).
+  // On lit la couleur dominante des murs dans le rendu (vision) et on classe les
+  // peintures par proximité de teinte (ΔE), au lieu du cosine catégorie "wall" (vide).
+  const paintItems = shoppingList.filter((it) => it.source === "diy" && /peinture|peindre/i.test(it.name));
+  if (paintItems.length > 0 && project.generatedRenderUrl) {
+    try {
+      const renderImg = await loadImage(project.generatedRenderUrl);
+      const wallHex = await getWallColorFromRender(renderImg);
+      if (wallHex) {
+        const paintMatches = await matchPaintByColor(wallHex);
+        for (const it of paintItems) it.matches = paintMatches;
+      }
+    } catch (e) {
+      console.warn("[paint] matching couleur échoué:", e instanceof Error ? e.message : e);
+    }
+  }
 
   // Score recalculé sur la liste finale, en UNITÉS (quantité incluse).
   const unitsWhere = (pred: (i: ShoppingItem) => boolean) =>
