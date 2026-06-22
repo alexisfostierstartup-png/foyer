@@ -801,10 +801,16 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
     const after = afterById.get(d.element_id);
 
     if (judged && changed) {
-      const base: ElementDecision = wasCandidate
+      let base: ElementDecision = wasCandidate
         ? d
         : { ...d, mismatch_type: "structural", action_slug: null, supply_items: null, qty: null };
-      return after ? { ...base, description: after } : base;
+      if (after) base = { ...base, description: after };
+      // Mur changé sans fourniture configurée (ex. action fresco_wall → supply_items []) :
+      // on injecte une fourniture "Peinture" pour qu'il apparaisse ET soit matché par couleur.
+      if (base.category === "wall" && base.mismatch_type === "surface" && (base.supply_items?.length ?? 0) === 0) {
+        base = { ...base, supply_items: [{ name: "Peinture", qty: 1, unit: "pot" }] };
+      }
+      return base;
     }
     if (judged && !changed) {
       return wasCandidate
