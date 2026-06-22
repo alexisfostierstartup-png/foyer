@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getProject, updateProject } from "@/lib/storage/projects";
 import { ensureFinalAssets } from "@/lib/ai/pipeline";
+import { PAYWALL_DISABLED } from "@/lib/constants";
 
 export async function POST(
   _req: Request,
@@ -9,13 +10,16 @@ export async function POST(
 ) {
   const { id } = await ctx.params;
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
   const project = await getProject(id);
   if (!project) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (project.userId !== user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  // En test (paywall désactivé) on autorise le refresh anonyme. Sinon : auth + ownership.
+  if (!PAYWALL_DISABLED) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (project.userId !== user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   // Reset puis recalcul via la même logique que la page finale (décisions gate +
   // confirmation visuelle sur le rendu courant).
