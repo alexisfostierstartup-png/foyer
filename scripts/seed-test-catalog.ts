@@ -61,7 +61,7 @@ async function main() {
     if (per > PER_CAT_CAP) { console.error(`⛔ per > cap ${PER_CAT_CAP}`); process.exit(1); }
     console.log(`🌱 ${merchantArg} — ${cats.join(", ")} (${per}/cat)\n`);
     const r = await ingestFromSource(new PiloterrSource(merchantArg as never), cats, {
-      perCategory: per, maxTotal: cats.length * per + 50,
+      perCategory: per, maxTotal: cats.length * per + 50, force: true, // ciblé = intention explicite → pas de skip-reprise
     });
     console.log(`✅ ${merchantArg}: ${r.totalInserted} insérés`);
     process.exit(0);

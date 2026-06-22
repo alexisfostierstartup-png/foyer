@@ -860,6 +860,7 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
             ...template,
             id: `paint-${w.hex.replace("#", "")}`,
             name: wallColors.length > 1 ? `Peinture — ${w.label}` : "Peinture",
+            targetHex: w.hex,
             matches: await matchPaintByColor(w.hex),
           });
         }

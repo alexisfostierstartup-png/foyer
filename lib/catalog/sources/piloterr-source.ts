@@ -48,23 +48,10 @@ const LM_KEYWORDS: Record<string, string[]> = {
   dresser: ["commode", "commode bois", "commode scandinave", "chiffonnier", "commode blanche"],
   // fournitures — peinture MURALE couleur intérieur (pas "meuble")
   paint: [
-    "peinture salon couleur", "peinture chambre couleur", "peinture mur couleur intérieur",
-    // neutres
-    "peinture mur beige", "peinture mur greige", "peinture mur taupe", "peinture mur lin",
-    "peinture mur gris", "peinture mur gris clair", "peinture mur anthracite", "peinture mur noir",
-    // chauds
-    "peinture mur terracotta", "peinture mur ocre", "peinture mur jaune", "peinture mur moutarde",
-    "peinture mur orange", "peinture mur rouge", "peinture mur bordeaux", "peinture mur brique",
-    "peinture mur rose", "peinture mur vieux rose", "peinture mur corail", "peinture mur brun",
-    // froids
-    "peinture mur bleu", "peinture mur bleu marine", "peinture mur bleu canard", "peinture mur bleu nuit",
-    "peinture mur bleu gris", "peinture mur vert", "peinture mur vert sauge", "peinture mur vert kaki",
-    "peinture mur vert d'eau", "peinture mur olive", "peinture mur turquoise", "peinture mur émeraude",
-    // violets
-    "peinture mur violet", "peinture mur mauve", "peinture mur prune", "peinture mur parme", "peinture mur lavande",
-    // gamme LUXENS (forme "Luxens X" = la plus efficace pour les teintes vives, ex. jaune/violet)
-    "Luxens jaune", "Luxens moutarde", "Luxens safran", "Luxens banana",
-    "Luxens violet", "Luxens aubergine", "Luxens prune", "Luxens mauve", "Luxens parme", "Luxens lavande", "Luxens lilas",
+    // TEMP (budget) : on cible les violets/prunes manquants via des noms de teintes Luxens.
+    "Luxens aubergine", "Luxens cassis", "Luxens figue", "Luxens raisin", "Luxens myrtille",
+    "Luxens améthyste", "Luxens prune", "Luxens lie de vin", "Luxens bruyère", "Luxens glycine",
+    "Luxens iris", "Luxens violet", "Luxens parme", "Luxens lilas", "Luxens cardinal",
   ],
   mouldings: ["moulure décorative", "moulure polyuréthane", "cimaise murale", "corniche décorative", "rosace plafond"],
   batten: ["tasseau sapin", "tasseau chêne", "tasseau bois raboté", "tasseau pin", "liteau bois", "tasseau douglas"],

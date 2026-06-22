@@ -13,7 +13,7 @@ export const TEST_SCRAPE_MARKER = "test_scrape";
 export type CategoryStat = { fetched: number; inserted: number; skipped: number; failed: number; error?: string };
 export type IngestStats = { merchant: string; perCategory: Record<string, CategoryStat>; totalInserted: number };
 
-type IngestOptions = { perCategory: number; maxTotal: number };
+type IngestOptions = { perCategory: number; maxTotal: number; force?: boolean };
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -46,7 +46,7 @@ export async function ingestFromSource(
       .select("id", { count: "exact", head: true })
       .eq("merchant", source.merchant)
       .eq("category", category);
-    if ((already ?? 0) >= Math.floor(options.perCategory * 0.8)) {
+    if (!options.force && (already ?? 0) >= Math.floor(options.perCategory * 0.8)) {
       console.log(`[ingest:${source.merchant}] ${category}: déjà ${already} en base → skip (reprise).`);
       perCategory[category] = { fetched: 0, inserted: 0, skipped: already ?? 0, failed: 0 };
       continue;

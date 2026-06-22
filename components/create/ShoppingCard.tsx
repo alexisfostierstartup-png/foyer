@@ -155,6 +155,19 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
         </div>
       )}
 
+      {/* PEINTURE : couleur du mur détectée dans le rendu (même quand "à sourcer"). */}
+      {item.targetHex && (
+        <p className="mt-2 flex items-center gap-1.5 text-[11px] text-foyer-muted">
+          Couleur détectée&nbsp;:
+          <span
+            className="inline-block size-3.5 rounded border border-foyer-border"
+            style={{ backgroundColor: item.targetHex }}
+            aria-hidden
+          />
+          <span className="font-mono text-foyer-ink">{item.targetHex}</span>
+        </p>
+      )}
+
       {/* Raw audit (mode test) — pour repérer un élément détecté mais non/mal matché. */}
       <p className="mt-2 text-[11px] text-foyer-muted/80">
         Détecté&nbsp;: <span className="font-medium">{item.name}</span> · {item.category}

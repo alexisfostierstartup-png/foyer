@@ -78,6 +78,8 @@ export type ShoppingItem = {
   quantity?: number;
   // Vrais produits du catalogue matchés (top-N par similarité cosine). [0] = meilleur.
   matches?: ProductMatch[];
+  // PEINTURE : couleur du mur détectée dans le rendu (hex) → matching ΔE + affichée.
+  targetHex?: string;
 };
 
 export type { ElementDecision } from "./diy/types";
