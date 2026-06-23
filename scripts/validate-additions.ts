@@ -31,13 +31,13 @@ async function main() {
   const taxonomy = new Map((elementCategories as any[]).map((c) => [c.slug, c.catalog_category]));
 
   const adds = await computeRenderAdditions(projectId, project.generatedRenderUrl, project.roomType, candidates, taxonomy);
-  console.log(`\n${adds.length} additions détectées. bbox présentes: ${adds.filter((a) => a.bbox).length}`);
+  console.log(`\n${adds.length} additions. bbox: ${adds.filter((a) => a.bbox).length}, hex: ${adds.filter((a) => a.color_hex).length}`);
 
   const renderBytes = await fetchImageBytes(project.generatedRenderUrl);
   const outDir = path.join(process.cwd(), "scripts", "out");
   await mkdir(outDir, { recursive: true });
-  const fmt = (m: { name: string; similarity: number; simImage?: number; simText?: number; merchant: string }) =>
-    `    ${m.similarity.toFixed(3)} [img=${m.simImage ?? "—"} txt=${m.simText ?? "—"}] ${m.merchant} ${m.name.slice(0, 46)}`;
+  const fmt = (m: { name: string; similarity: number; simImage?: number; simText?: number; merchant: string; colorHex?: string | null; colorDeltaE?: number }) =>
+    `    ${m.similarity.toFixed(3)} [img=${m.simImage ?? "—"} txt=${m.simText ?? "—"} hex=${m.colorHex ?? "—"} ΔE=${m.colorDeltaE ?? "—"}] ${m.merchant} ${m.name.slice(0, 42)}`;
 
   for (const cat of cats) {
     const a = adds.find((x) => x.category === cat);
@@ -52,9 +52,10 @@ async function main() {
       console.log(`  pas de bbox → crop null`);
     }
     const desc = `${a.detail ?? ""} ${a.element ?? ""}`.trim();
-    const withCrop = (await matchPartnerProductsBlendBatch([{ category: cat, description: desc, crop }], 3))[0] ?? [];
+    console.log(`  élément hex=${a.color_hex ?? "—"}`);
+    const withCrop = (await matchPartnerProductsBlendBatch([{ category: cat, description: desc, crop, colorHex: a.color_hex }], 3))[0] ?? [];
     const textOnly = await matchPartnerProducts(cat, desc, 3);
-    console.log(`  ▸ NOUVEAU (crop+texte) :`); withCrop.forEach((m) => console.log(fmt(m)));
+    console.log(`  ▸ NOUVEAU (crop+texte+couleur) :`); withCrop.forEach((m) => console.log(fmt(m)));
     if (!withCrop.length) console.log("    (aucun ≥ seuil)");
     console.log(`  ▸ ANCIEN (texte seul) :`); textOnly.forEach((m) => console.log(fmt(m)));
     if (!textOnly.length) console.log("    (vide)");

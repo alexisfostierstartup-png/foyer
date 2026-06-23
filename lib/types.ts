@@ -59,6 +59,9 @@ export type ProductMatch = {
   // produit) et sim_text (description↔texte produit). Permet de régler w/seuils sur données.
   simImage?: number;
   simText?: number;
+  // Couleur dominante du produit (hex) + ΔE à la couleur de l'élément (calibration couleur).
+  colorHex?: string | null;
+  colorDeltaE?: number;
 };
 
 export type ShoppingItem = {

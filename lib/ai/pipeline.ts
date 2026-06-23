@@ -144,9 +144,10 @@ type RawProfile = Partial<ElementProfile> & { element_id?: string };
 // Instruction bbox ajoutée EN CODE pour la seule détection d'inventaire du RENDU (pas de
 // modif du prompt partagé → la détection de base/review n'est pas touchée).
 const BBOX_SUFFIX =
-  "\n\nEN PLUS de la structure ci-dessus, ajoute à CHAQUE élément de elementProfiles un champ " +
-  '"bbox": [x, y, w, h] — la boîte englobante de l\'élément dans CETTE image, valeurs entre 0 et 1 ' +
-  "(x,y = coin haut-gauche ; w,h = largeur/hauteur en fraction de l'image). Cadre SERRÉ autour de l'objet.";
+  "\n\nEN PLUS de la structure ci-dessus, ajoute à CHAQUE élément de elementProfiles : " +
+  '(1) "bbox": [x, y, w, h] — boîte englobante dans CETTE image, valeurs 0-1 (x,y = coin haut-gauche ; ' +
+  "w,h = largeur/hauteur en fraction de l'image), cadre SERRÉ autour de l'objet ; " +
+  '(2) "color_hex": la couleur DOMINANTE de l\'objet (pas du fond/sol) en hexadécimal "#rrggbb".';
 
 async function detectElementProfiles(
   projectId: string,
@@ -198,7 +199,13 @@ async function detectElementProfiles(
       movable: p.movable ?? true,
       dims: p.dims ?? {},
       bbox: opts?.withBbox ? (parseBbox((p as { bbox?: unknown }).bbox) ?? undefined) : undefined,
+      color_hex: opts?.withBbox ? parseHex((p as { color_hex?: unknown }).color_hex) : undefined,
     }));
+}
+
+// "#rrggbb" valide (sinon undefined → pas de bonus couleur).
+function parseHex(v: unknown): string | undefined {
+  return typeof v === "string" && /^#[0-9a-fA-F]{6}$/.test(v.trim()) ? v.trim().toLowerCase() : undefined;
 }
 
 function constraintsToChoices(c: UserConstraints) {
@@ -852,6 +859,7 @@ function reconcileRenderAdditions(
       // element_id + bbox du rendu → crop de l'ajout pour le matching image↔image.
       element_id: p.element_id,
       bbox: p.bbox,
+      color_hex: p.color_hex,
     });
   }
   return adds;
@@ -899,6 +907,7 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
   let additions: Alteration[] = [];
   let afterById = new Map<string, string>();
   let bboxById = new Map<string, Bbox>();
+  const elementHexById = new Map<string, string>(); // element_id → couleur dominante (hex)
   if (project.basePhotoUrl) {
     const comp = await buildBeforeAfterComposite(project.basePhotoUrl, project.generatedRenderUrl);
     const r = await confirmChanges(
@@ -961,6 +970,7 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
     // comme les candidats (matching image↔image au lieu de texte seul).
     for (const a of additionsToUse) {
       if (a.element_id && a.bbox) bboxById.set(a.element_id, a.bbox);
+      if (a.element_id && a.color_hex) elementHexById.set(a.element_id, a.color_hex);
     }
   } catch (e) {
     console.warn("[pipeline:final] détection rendu échouée, fallback additions audit:", e instanceof Error ? e.message : e);
@@ -996,6 +1006,7 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
       category: it.category,
       description: `${it.name} ${it.detail ?? ""}`.trim(),
       crop: crops[i],
+      colorHex: it.elementId ? elementHexById.get(it.elementId) : undefined,
     })),
   );
   shoppingList.forEach((it, i) => { it.matches = matchResults[i]; });
@@ -1005,7 +1016,12 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
   for (let i = 0; i < shoppingList.length; i++) {
     const it = shoppingList[i];
     if (it.category !== "floor") continue;
-    it.matches = await matchFloorProductsBlend(`${it.name} ${it.detail ?? ""}`.trim(), crops[i]);
+    it.matches = await matchFloorProductsBlend(
+      `${it.name} ${it.detail ?? ""}`.trim(),
+      crops[i],
+      4,
+      it.elementId ? elementHexById.get(it.elementId) : undefined,
+    );
   }
 
   // CALIBRATION (ÉTAPE 4) : par item blend matché, on trace catégorie, présence de crop,

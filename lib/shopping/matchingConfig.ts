@@ -15,12 +15,19 @@
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 
 export type SourceScalars = { eco_new: number; secondhand: number };
-export type MatchingWeights = { image_weight: SourceScalars; min_score: SourceScalars };
+// color.weight = part du score couleur dans le re-ranking (0 = couleur ignorée).
+// color.threshold = ΔE au-delà duquel la couleur ne rapporte plus rien (latitude perceptuelle).
+export type MatchingWeights = {
+  image_weight: SourceScalars;
+  min_score: SourceScalars;
+  color: { weight: number; threshold: number };
+};
 
 // Repli si la table assets est vide / injoignable (= comportement neuf-photo standard).
 export const DEFAULT_WEIGHTS: MatchingWeights = {
   image_weight: { eco_new: 0.7, secondhand: 0.5 },
   min_score: { eco_new: 0.7, secondhand: 0.55 },
+  color: { weight: 0.3, threshold: 28 },
 };
 
 function num(v: unknown, fallback: number): number {
@@ -32,6 +39,7 @@ function normalize(data: unknown): MatchingWeights {
   const d = (data ?? {}) as Record<string, unknown>;
   const iw = (d.image_weight ?? {}) as Record<string, unknown>;
   const ms = (d.min_score ?? {}) as Record<string, unknown>;
+  const co = (d.color ?? {}) as Record<string, unknown>;
   return {
     image_weight: {
       eco_new: num(iw.eco_new, DEFAULT_WEIGHTS.image_weight.eco_new),
@@ -40,6 +48,10 @@ function normalize(data: unknown): MatchingWeights {
     min_score: {
       eco_new: num(ms.eco_new, DEFAULT_WEIGHTS.min_score.eco_new),
       secondhand: num(ms.secondhand, DEFAULT_WEIGHTS.min_score.secondhand),
+    },
+    color: {
+      weight: num(co.weight, DEFAULT_WEIGHTS.color.weight),
+      threshold: num(co.threshold, DEFAULT_WEIGHTS.color.threshold),
     },
   };
 }

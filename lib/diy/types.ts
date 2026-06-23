@@ -61,6 +61,8 @@ export type ElementProfile = {
   // Boîte englobante normalisée 0-1 (renseignée seulement pour la détection d'inventaire
   // du RENDU, withBbox) → crop des AJOUTS pour le matching image↔image.
   bbox?: { x: number; y: number; w: number; h: number };
+  // Couleur dominante de l'objet (hex), lue par Gemini → terme couleur ΔE du matching.
+  color_hex?: string;
 };
 
 export type ResolvedSupply = {

@@ -18,6 +18,7 @@ export type Alteration = {
   // Ajouts détectés dans le rendu : element_id + bbox → crop pour le matching image.
   element_id?: string;
   bbox?: { x: number; y: number; w: number; h: number };
+  color_hex?: string; // couleur dominante (hex) → terme couleur ΔE.
 };
 
 type PartnerProductRow = {

@@ -22,6 +22,7 @@ import {
   DEFAULT_WEIGHTS,
   type MatchingWeights,
 } from "./matchingConfig";
+import { hexToLab, deltaE } from "@/lib/color";
 import type { ProductMatch } from "@/lib/types";
 
 // Catégorie d'item → catégorie catalogue. null = non-shoppable (pas de match).
@@ -124,7 +125,32 @@ function mapRowBlend(r: any): ProductMatch {
     ...mapRow(r),
     simImage: r.sim_image != null ? Math.round(Number(r.sim_image) * 1000) / 1000 : undefined,
     simText: r.sim_text != null ? Math.round(Number(r.sim_text) * 1000) / 1000 : undefined,
+    colorHex: r.color_hex ?? null,
   };
+}
+
+// Re-ranking COULEUR (hex/ΔE) : bonus/malus selon la proximité perceptuelle entre la
+// couleur de l'ÉLÉMENT (lue par Gemini sur le rendu) et celle du PRODUIT. Pas un match
+// exact : latitude réglable (threshold). colorScore∈[0,1] → bonus = w·(2·score−1) ∈ [−w,+w].
+// Couleur inconnue (produit ou élément) → pas de bonus (neutre). Mute le score affiché.
+function applyColorRerank(
+  matches: ProductMatch[],
+  elementHex: string | null | undefined,
+  weights: MatchingWeights,
+): ProductMatch[] {
+  const w = weights.color.weight;
+  const eLab = elementHex ? hexToLab(elementHex) : null;
+  if (!eLab || w <= 0) return matches;
+  for (const m of matches) {
+    const pLab = m.colorHex ? hexToLab(m.colorHex) : null;
+    if (!pLab) continue;
+    const dE = deltaE(eLab, pLab);
+    m.colorDeltaE = Math.round(dE * 10) / 10;
+    const colorScore = Math.max(0, 1 - dE / weights.color.threshold);
+    const bonus = w * (2 * colorScore - 1);
+    m.similarity = Math.max(0, Math.min(1, Math.round((m.similarity + bonus) * 1000) / 1000));
+  }
+  return matches.sort((a, b) => b.similarity - a.similarity);
 }
 
 async function rpcBlend(
@@ -182,7 +208,7 @@ async function embedCrops(crops: (Buffer | null | undefined)[]): Promise<Map<num
  * catégorie × source. crop absent pour un item → texte seul (w effectif 0).
  */
 export async function matchPartnerProductsBlendBatch(
-  items: { category: string; description: string; crop?: Buffer | null }[],
+  items: { category: string; description: string; crop?: Buffer | null; colorHex?: string | null }[],
   topN = 4,
 ): Promise<ProductMatch[][]> {
   const cats = items.map((it) => catalogCategory(it.category));
@@ -221,8 +247,13 @@ export async function matchPartnerProductsBlendBatch(
       const desc = descByIdx.get(i);
       if (!cat || !desc) return [];
       const weights = weightsByCat.get(cat) ?? DEFAULT_WEIGHTS;
-      const matches = await rpcBlend(cropByIdx.get(i) ?? null, desc, cat, topN, weights);
-      return applyDisplayThreshold(matches, weights);
+      // pool large pour laisser la couleur repêcher un bon produit hors top-N blend.
+      const matches = await rpcBlend(cropByIdx.get(i) ?? null, desc, cat, Math.max(topN, 30), weights);
+      // Seuil "À sourcer" sur le BLEND (avant couleur) → la couleur re-classe mais
+      // n'élimine jamais (sinon une mauvaise couleur pénalisée passe sous le seuil et
+      // on perd même les bons coloris). Puis re-rank couleur sur les survivants.
+      const passing = applyDisplayThreshold(matches, weights);
+      return applyColorRerank(passing, items[i].colorHex, weights).slice(0, topN);
     }),
   );
 }
@@ -236,6 +267,7 @@ export async function matchFloorProductsBlend(
   description: string,
   crop?: Buffer | null,
   topN = 4,
+  colorHex?: string | null,
 ): Promise<ProductMatch[]> {
   if (!description?.trim()) return [];
   const weights = await getMatchingWeights("floor");
@@ -254,8 +286,9 @@ export async function matchFloorProductsBlend(
   if (pool.length === 0) return [];
   const mat = FLOOR_MATERIALS.find((m) => m.render.test(description));
   const filtered = mat ? pool.filter((p) => mat.product.test(p.name)) : pool;
-  const chosen = (filtered.length > 0 ? filtered : pool).slice(0, topN);
-  return applyDisplayThreshold(chosen, weights);
+  // Seuil sur le BLEND (avant couleur), puis re-rank couleur sur les survivants.
+  const passing = applyDisplayThreshold(filtered.length > 0 ? filtered : pool, weights);
+  return applyColorRerank(passing, colorHex, weights).slice(0, topN);
 }
 
 /** Batch : UN seul appel Jina (toutes les descriptions shoppables), puis RPC en parallèle. */
