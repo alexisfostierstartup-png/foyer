@@ -45,7 +45,7 @@ export class AwinSource implements ProductSource {
   }
 
   private toInput(r: AwinRow): PartnerProductInput | null {
-    const image = r.aw_image_url || r.merchant_image_url || "";
+    const image = r.aw_image_url || r.large_image || r.merchant_image_url || "";
     const affiliate = r.aw_deep_link || "";
     const externalId = r.aw_product_id || r.merchant_product_id || "";
     const name = (r.product_name || "").trim();
@@ -69,6 +69,12 @@ export class AwinSource implements ProductSource {
       source_type: "eco_new",
       attributes: {
         brand: r.brand_name || undefined,
+        // Clés lues par buildProductText (specs → embedding texte) : couleur/dimensions/
+        // matière enrichissent le terme texte du blend (motif, teinte, taille du tapis).
+        couleur: r.colour || undefined,
+        dimensions: r.dimensions || undefined,
+        matiere: r.material || undefined,
+        specifications: r.specifications || undefined,
         awin_category: r.merchant_product_category_path || undefined,
         platform: "awin",
       },
