@@ -6,7 +6,7 @@ import { resolvePrompt } from "@/lib/prompts/engine";
 import { loadStyleContext, loadRoomDefaults, loadRoomRemoveCategories, formatUserInstructions, formatDesignPlan } from "@/lib/prompts/helpers";
 import { getElementCategoryEnum, getElementCategories, getAllowedActionsByCategory } from "@/lib/db/assets";
 import type { DecisionAction } from "@/lib/db/assets";
-import { mergeShoppingItems } from "@/lib/shopping/categories";
+import { mergeShoppingItems, resolveCatalogCategory } from "@/lib/shopping/categories";
 import { getImageProvider, getVisionProvider } from "./provider";
 import { saveRender } from "./saveRender";
 import { logPipelineEvent } from "./logger";
@@ -797,6 +797,68 @@ export async function confirmChanges(
   return { appliedIds, judgedIds, additions, afterById, bboxById };
 }
 
+// Catégories qu'on ne liste PAS en addition (architecture/surfaces + déco sans produit
+// catalogue exploitable) — alignées sur le NON_SHOPPABLE du matcher, + floor (surface,
+// géré comme candidat, pas comme meuble ajouté).
+const ADDITION_SKIP = new Set([
+  "other", "frame", "mirror", "plant", "decor_object",
+  "wall", "ceiling", "window", "door", "french_door", "wall_opening", "floor",
+  "lamp", "table_lamp", "ceiling_light",
+]);
+
+/**
+ * ADDITIONS robustes : plutôt que de demander à l'audit (1 prompt multi-tâches) de
+ * DEVINER les net-new — peu fiable, rate parfois un canapé/tapis pourtant évident sur
+ * une pièce vide —, on DÉTECTE l'inventaire complet du RENDU (vision_detect_extended,
+ * pleine résolution) et on le réconcilie avec l'AVANT. Addition = meuble présent dans le
+ * rendu dont la catégorie n'est pas déjà couverte par un candidat (élément de l'AVANT).
+ * Pièce vide → aucun candidat meuble → tout le mobilier du rendu devient addition.
+ */
+function reconcileRenderAdditions(
+  renderProfiles: ElementProfile[],
+  candidates: ElementDecision[],
+  taxonomy: Map<string, string | null>,
+): Alteration[] {
+  const covered = new Map<string, number>(); // multiset des catégories catalogue de l'AVANT
+  for (const d of candidates) {
+    const c = resolveCatalogCategory(d.category, taxonomy);
+    if (c) covered.set(c, (covered.get(c) ?? 0) + 1);
+  }
+  const seen = new Map<string, number>();
+  const adds: Alteration[] = [];
+  for (const p of renderProfiles) {
+    if (p.movable === false || ADDITION_SKIP.has(p.category)) continue;
+    const c = resolveCatalogCategory(p.category, taxonomy);
+    if (!c) continue; // non shoppable
+    const used = seen.get(c) ?? 0;
+    seen.set(c, used + 1);
+    if (used < (covered.get(c) ?? 0)) continue; // déjà couvert par un candidat AVANT
+    adds.push({
+      element: p.element || p.category,
+      action: "added",
+      category: p.category,
+      detail: (p.description || p.color || "").trim() || undefined,
+      shoppingImpact: "to_buy_secondhand",
+    });
+  }
+  return adds;
+}
+
+/** Détecte l'inventaire du rendu (pleine résolution) + réconcilie → additions robustes. */
+export async function computeRenderAdditions(
+  projectId: string,
+  renderUrl: string,
+  roomType: string | undefined,
+  candidates: ElementDecision[],
+  taxonomy: Map<string, string | null>,
+): Promise<Alteration[]> {
+  const renderImg = await loadImage(renderUrl);
+  const renderProfiles = await detectElementProfiles(projectId, renderImg, "render_inventory", roomType);
+  const adds = reconcileRenderAdditions(renderProfiles, candidates, taxonomy);
+  console.log(`[pipeline:final] inventaire rendu: ${renderProfiles.length} éléments détectés → ${adds.length} additions`);
+  return adds;
+}
+
 export async function ensureFinalAssets(projectId: string): Promise<ShoppingAssets | null> {
   const project = await getProject(projectId);
   if (!project?.generatedRenderUrl) return null;
@@ -876,10 +938,20 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
   const elementCategories = await getElementCategories().catch(() => []);
   const taxonomy = new Map(elementCategories.map((c) => [c.slug, c.catalog_category]));
 
+  // ADDITIONS robustes : inventaire complet du RENDU (vision pleine résolution) réconcilié
+  // avec l'AVANT, au lieu du sous-prompt "additions" de l'audit qui rate parfois un meuble
+  // évident (canapé/tapis sur pièce vide). +1 appel vision. Fallback = additions de l'audit.
+  let additionsToUse = additions;
+  try {
+    additionsToUse = await computeRenderAdditions(projectId, project.generatedRenderUrl, project.roomType, candidates, taxonomy);
+  } catch (e) {
+    console.warn("[pipeline:final] détection rendu échouée, fallback additions audit:", e instanceof Error ? e.message : e);
+  }
+
   const plan = reconcilePlan(effective, { elements: [] }, { repairAlreadyUsed: false });
   const built = buildShoppingList(plan, project.selectedStyleId, taxonomy);
   const fromDecisions = builtToLegacyShoppingList(built);
-  const fromAdditions = matchAlterationsToCatalog(additions, project.selectedStyleId, taxonomy);
+  const fromAdditions = matchAlterationsToCatalog(additionsToUse, project.selectedStyleId, taxonomy);
 
   // Fusion décisions + ajouts, identiques regroupés en quantité (×N).
   const shoppingList = mergeShoppingItems([...fromDecisions, ...fromAdditions]);
@@ -981,7 +1053,7 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
 
   await updateProject(projectId, { shoppingList, scoreFoyer, builtShoppingList: built });
   console.log(
-    `[pipeline:final] ${candidates.length} candidats → ${appliedIds.size} confirmés + ${additions.length} ajouts → ${shoppingList.length} items`,
+    `[pipeline:final] ${candidates.length} candidats → ${appliedIds.size} confirmés + ${additionsToUse.length} ajouts → ${shoppingList.length} items`,
   );
   return { shoppingList, scoreFoyer };
 }
