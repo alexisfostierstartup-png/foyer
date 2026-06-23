@@ -23,7 +23,7 @@ const AWIN_MERCHANT_IDS: Record<string, number> = {
 };
 
 // Catégories Awin → catégorie Foyer
-const AWIN_CATEGORY_MAP: Record<string, string> = {
+export const AWIN_CATEGORY_MAP: Record<string, string> = {
   canapé: "sofa", "canapés": "sofa",
   "fauteuil": "armchair", "fauteuils": "armchair",
   "table basse": "coffee_table", "tables basses": "coffee_table",
@@ -49,7 +49,7 @@ const TARGET_CATEGORIES = new Set([
   "curtains", "cushion", "paint", "mouldings", "floor_material",
 ]);
 
-function detectCategory(productName: string, awinCategory?: string): string | null {
+export function detectCategory(productName: string, awinCategory?: string): string | null {
   const text = `${productName} ${awinCategory ?? ""}`.toLowerCase();
   for (const [key, cat] of Object.entries(AWIN_CATEGORY_MAP)) {
     if (text.includes(key)) return cat;
