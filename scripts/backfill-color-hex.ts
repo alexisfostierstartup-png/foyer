@@ -15,7 +15,9 @@ const UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (
 
 async function dominantHex(url: string, sharp: typeof import("sharp")): Promise<string | null> {
   try {
-    const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "image/avif,image/webp,*/*" } });
+    // jpeg/webp uniquement (PAS avif/heif que sharp ne décode pas — IKEA sert du heif
+    // sur un Accept large → décodage impossible → hex null).
+    const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "image/jpeg,image/webp" } });
     if (!res.ok) return null;
     const buf = Buffer.from(await res.arrayBuffer());
     const m = await sharp(buf).metadata();
