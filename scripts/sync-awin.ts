@@ -18,6 +18,7 @@ config();
 async function main() {
   const args = process.argv.slice(2);
   const fileArg = args.find((a) => a.startsWith("--file="))?.slice("--file=".length);
+  const force = args.includes("--force");
   const pos = args.filter((a) => !a.startsWith("--"));
   const merchant = pos[0];
   const cats = (pos[1] || "").split(",").map((s) => s.trim()).filter(Boolean);
@@ -36,7 +37,7 @@ async function main() {
   const stats = await ingestFromSource(new AwinSource(merchant, fileArg), categories, {
     perCategory,
     maxTotal,
-    force: false,
+    force,
   });
   console.log(JSON.stringify(stats.perCategory, null, 2));
   console.log(`✅ TOTAL inséré: ${stats.totalInserted}`);
