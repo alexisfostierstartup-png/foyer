@@ -57,9 +57,11 @@ function normalize(data: unknown): MatchingWeights {
 }
 
 let cache: Map<string, MatchingWeights> | null = null;
+let cacheAt = 0;
+const CACHE_TTL_MS = 30_000; // rafraîchit la config sans redémarrer le serveur.
 
 async function loadAll(): Promise<Map<string, MatchingWeights>> {
-  if (cache) return cache;
+  if (cache && Date.now() - cacheAt < CACHE_TTL_MS) return cache;
   const m = new Map<string, MatchingWeights>();
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -75,6 +77,7 @@ async function loadAll(): Promise<Map<string, MatchingWeights>> {
   }
   if (!m.has("default")) m.set("default", DEFAULT_WEIGHTS);
   cache = m;
+  cacheAt = Date.now();
   return m;
 }
 
