@@ -38,6 +38,7 @@ export const AWIN_CATEGORY_MAP: Record<string, string> = {
   "commode": "dresser", "armoire": "dresser",
   "rideau": "curtains",
   "coussin": "cushion",
+  "miroir": "mirror", "miroirs": "mirror",
   "peinture": "paint",
   "moulure": "mouldings", "plinthes": "mouldings",
   "parquet": "floor_material", "carrelage": "floor_material",
