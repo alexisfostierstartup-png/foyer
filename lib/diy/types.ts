@@ -58,6 +58,9 @@ export type ElementProfile = {
   condition: "good" | "fair" | "poor";
   movable: boolean;
   dims: ElementDims;
+  // Boîte englobante normalisée 0-1 (renseignée seulement pour la détection d'inventaire
+  // du RENDU, withBbox) → crop des AJOUTS pour le matching image↔image.
+  bbox?: { x: number; y: number; w: number; h: number };
 };
 
 export type ResolvedSupply = {

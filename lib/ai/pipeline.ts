@@ -141,17 +141,26 @@ type RawProfile = Partial<ElementProfile> & { element_id?: string };
  * lancée qu'UNE fois par projet et réutilisée (cf. runGenerationPipeline qui
  * réutilise les profils persistés par l'analyse au lieu de re-détecter).
  */
+// Instruction bbox ajoutée EN CODE pour la seule détection d'inventaire du RENDU (pas de
+// modif du prompt partagé → la détection de base/review n'est pas touchée).
+const BBOX_SUFFIX =
+  "\n\nEN PLUS de la structure ci-dessus, ajoute à CHAQUE élément de elementProfiles un champ " +
+  '"bbox": [x, y, w, h] — la boîte englobante de l\'élément dans CETTE image, valeurs entre 0 et 1 ' +
+  "(x,y = coin haut-gauche ; w,h = largeur/hauteur en fraction de l'image). Cadre SERRÉ autour de l'objet.";
+
 async function detectElementProfiles(
   projectId: string,
   sourceImage: ImageInput,
   label: string,
   roomType?: string,
+  opts?: { withBbox?: boolean },
 ): Promise<ElementProfile[]> {
   const tDet = Date.now();
   // Taxonomie DB-driven : la liste des catégories autorisées est injectée depuis
   // la table assets (element_category), filtrée par type de pièce.
   const categories = await getElementCategoryEnum(roomType);
   const detPrompt = await resolvePrompt("vision_detect_extended", { categories }, { strict: false });
+  const template = opts?.withBbox ? detPrompt.resolvedTemplate + BBOX_SUFFIX : detPrompt.resolvedTemplate;
   const detResult = await withTracking(
     {
       step: "vision_detection",
@@ -159,7 +168,7 @@ async function detectElementProfiles(
       provider: detPrompt.prompt.provider,
       requestPayload: { promptName: "vision_detect_extended", source: label },
     },
-    () => getVisionProvider(detPrompt.prompt.provider).analyze(detPrompt.resolvedTemplate, [sourceImage]),
+    () => getVisionProvider(detPrompt.prompt.provider).analyze(template, [sourceImage]),
   );
   console.log(`[pipeline:${label}] detection: ${Date.now() - tDet}ms`);
   await logPipelineEvent({
@@ -188,6 +197,7 @@ async function detectElementProfiles(
       condition: p.condition ?? "good",
       movable: p.movable ?? true,
       dims: p.dims ?? {},
+      bbox: opts?.withBbox ? (parseBbox((p as { bbox?: unknown }).bbox) ?? undefined) : undefined,
     }));
 }
 
@@ -839,12 +849,15 @@ function reconcileRenderAdditions(
       category: p.category,
       detail: (p.description || p.color || "").trim() || undefined,
       shoppingImpact: "to_buy_secondhand",
+      // element_id + bbox du rendu → crop de l'ajout pour le matching image↔image.
+      element_id: p.element_id,
+      bbox: p.bbox,
     });
   }
   return adds;
 }
 
-/** Détecte l'inventaire du rendu (pleine résolution) + réconcilie → additions robustes. */
+/** Détecte l'inventaire du rendu (pleine résolution, AVEC bbox) + réconcilie → additions robustes. */
 export async function computeRenderAdditions(
   projectId: string,
   renderUrl: string,
@@ -853,7 +866,7 @@ export async function computeRenderAdditions(
   taxonomy: Map<string, string | null>,
 ): Promise<Alteration[]> {
   const renderImg = await loadImage(renderUrl);
-  const renderProfiles = await detectElementProfiles(projectId, renderImg, "render_inventory", roomType);
+  const renderProfiles = await detectElementProfiles(projectId, renderImg, "render_inventory", roomType, { withBbox: true });
   const adds = reconcileRenderAdditions(renderProfiles, candidates, taxonomy);
   console.log(`[pipeline:final] inventaire rendu: ${renderProfiles.length} éléments détectés → ${adds.length} additions`);
   return adds;
@@ -944,6 +957,11 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
   let additionsToUse = additions;
   try {
     additionsToUse = await computeRenderAdditions(projectId, project.generatedRenderUrl, project.roomType, candidates, taxonomy);
+    // bbox des ajouts (détectées sur le rendu) → bboxById, pour qu'ils obtiennent un crop
+    // comme les candidats (matching image↔image au lieu de texte seul).
+    for (const a of additionsToUse) {
+      if (a.element_id && a.bbox) bboxById.set(a.element_id, a.bbox);
+    }
   } catch (e) {
     console.warn("[pipeline:final] détection rendu échouée, fallback additions audit:", e instanceof Error ? e.message : e);
   }

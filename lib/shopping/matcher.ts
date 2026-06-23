@@ -15,6 +15,9 @@ export type Alteration = {
   category: string;
   detail?: string;
   shoppingImpact: "none" | "to_buy" | "to_buy_secondhand" | "diy_material";
+  // Ajouts détectés dans le rendu : element_id + bbox → crop pour le matching image.
+  element_id?: string;
+  bbox?: { x: number; y: number; w: number; h: number };
 };
 
 type PartnerProductRow = {
@@ -103,6 +106,7 @@ function catalogProductToShoppingItem(
     id: product.id,
     name: product.name,
     category: product.category,
+    elementId: alteration.element_id,
     detail: alteration.detail ?? alteration.element,
     priceMin: product.price,
     priceMax: product.price,
@@ -124,6 +128,7 @@ function unmatchedToShoppingItem(alteration: Alteration): ShoppingItem {
     id: `unmatched-${alteration.category}-${alteration.element}`,
     name: alteration.detail || alteration.element,
     category: alteration.category,
+    elementId: alteration.element_id,
     detail: alteration.element,
     priceMin: 0,
     priceMax: 0,
