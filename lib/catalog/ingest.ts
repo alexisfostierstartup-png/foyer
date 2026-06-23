@@ -92,6 +92,7 @@ export async function ingestFromSource(
             price: p.price,
             currency: p.currency ?? "EUR",
             product_url: p.product_url,
+            affiliate_url: p.affiliate_url ?? null,
             image_urls: p.image_urls,
             primary_image_url: p.primary_image_url,
             source_type: p.source_type,

@@ -11,6 +11,7 @@ export type PartnerProductInput = {
   price: number | null;
   currency?: string;
   product_url: string;
+  affiliate_url?: string;  // lien tracké d'affiliation (ex. Awin aw_deep_link) → commissions
   image_urls: string[];
   primary_image_url: string;
   source_type: string;     // 'eco_new' pour le jeu de test
