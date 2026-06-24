@@ -51,6 +51,8 @@ export default async function CatalogDetailPage({
 
   const metadata = (p.metadata ?? {}) as Record<string, unknown>;
   const features = (metadata.features ?? null) as Record<string, unknown> | null;
+  const attrs = (metadata.attrs ?? null) as Record<string, unknown> | null;
+  const isHex = (v: unknown): v is string => typeof v === "string" && /^#[0-9a-fA-F]{6}$/.test(v);
   const images: string[] = Array.isArray(p.image_urls) ? p.image_urls : [];
 
   return (
@@ -99,6 +101,41 @@ export default async function CatalogDetailPage({
             >
               Voir le produit ↗
             </a>
+          )}
+
+          {attrs && Object.keys(attrs).filter((k) => k !== "_error").length > 0 && (
+            <section className="mt-5 rounded-xl border border-foyer-border bg-foyer-cream/40 p-3">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-foyer-muted">
+                Attributs structurés
+                {typeof metadata.attrs_model === "string" && (
+                  <span className="ml-2 font-normal normal-case text-foyer-muted/70">· {metadata.attrs_model}</span>
+                )}
+              </h2>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {Object.entries(attrs)
+                  .filter(([k]) => k !== "_error")
+                  .map(([k, v]) => (
+                    <span
+                      key={k}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-foyer-border bg-white/70 px-2.5 py-1 text-xs"
+                    >
+                      <span className="text-foyer-muted">{k}</span>
+                      {isHex(v) ? (
+                        <>
+                          <span
+                            className="size-3.5 rounded-sm border border-foyer-border"
+                            style={{ backgroundColor: v }}
+                            aria-hidden
+                          />
+                          <span className="font-mono text-foyer-ink">{v}</span>
+                        </>
+                      ) : (
+                        <span className="font-medium text-foyer-ink">{String(v)}</span>
+                      )}
+                    </span>
+                  ))}
+              </div>
+            </section>
           )}
 
           {p.description && (
