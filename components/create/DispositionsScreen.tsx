@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PaywallModal, type PaywallTrigger } from "@/components/paywalls/PaywallModal";
+import { PAYWALL_DISABLED } from "@/lib/constants";
 
 export function DispositionsScreen({
   projectId,
@@ -76,7 +77,7 @@ export function DispositionsScreen({
 
   return (
     <>
-      {paywallTrigger && (
+      {!PAYWALL_DISABLED && paywallTrigger && (
         <PaywallModal trigger={paywallTrigger} onClose={() => { setPaywallTrigger(null); setFailed(true); }} />
       )}
       <div className="min-h-screen bg-foyer-cream">
