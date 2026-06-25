@@ -51,12 +51,20 @@ async function main() {
   for (const cat of CATS) {
     const schema = getSchemaV3(schemaForCategory(cat));
     const enumKeys = schema.filter((a) => a.type === "enum").map((a) => a.key);
-    let q = sb.from("partner_products").select("id, primary_image_url, metadata").eq("category", cat).not("primary_image_url", "is", null).order("id");
-    if (!force) q = q.is("metadata->>attrs", null);
-    if (limit > 0) q = q.limit(limit);
-    const { data: prods } = await q;
+    // Pagination : le client Supabase plafonne à 1000 lignes/requête → on lit par pages
+    // (sinon une catégorie >1000, comme rug ~2785, est tronquée silencieusement).
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const rows = (prods ?? []) as any[];
+    const rows: any[] = [];
+    const PAGE = 1000;
+    for (let from = 0; ; from += PAGE) {
+      let q = sb.from("partner_products").select("id, primary_image_url, metadata").eq("category", cat).not("primary_image_url", "is", null).order("id").range(from, from + PAGE - 1);
+      if (!force) q = q.is("metadata->>attrs", null);
+      const { data } = await q;
+      const page = data ?? [];
+      rows.push(...page);
+      if (page.length < PAGE || (limit > 0 && rows.length >= limit)) break;
+    }
+    if (limit > 0) rows.length = Math.min(rows.length, limit);
     let done = 0, unk = 0, fail = 0;
     const CONC = 6;
     let idx = 0; // curseur partagé (incrément synchrone = pas de race en JS mono-thread)
