@@ -114,7 +114,25 @@ upload photo + style
 
 ## 6. Prompts, providers & tracking IA ✅
 
-- **8 prompts actifs en base** (`prompts`, clé `slug`) : `vision_detect`, `vision_detect_extended`, `verdict_elements`, `gen_wow_generic`, `gen_wow_3_dispositions`, `iterate_generic`, `confirm_changes`, `extract_alterations`. Résolus par `resolvePrompt(slug, vars, {strict})` (`lib/prompts/engine.ts`, `helpers.ts`), injection `{{vars}}`. ⚠️ **Le code doit être déployé avec les prompts** (sinon placeholder littéral).
+- **Prompts en base** (`prompts`, clé `slug`), résolus par `resolvePrompt(slug, vars, {strict})` (`lib/prompts/engine.ts`, `helpers.ts`), injection `{{vars}}`. ⚠️ **Le code doit être déployé avec les prompts** (sinon placeholder littéral).
+
+### 6.1 Carte des prompts — qui fait quoi, appelé où (single source of truth)
+
+Tous dans le pipeline PRINCIPAL `lib/ai/pipeline.ts`. **Ne pas confondre les rôles** (c'est la cause historique de confusion) :
+
+| Prompt | Appelé par (`pipeline.ts:ligne`) | Rôle | Temps moy.\* |
+|---|---|---|---|
+| `vision_detect_extended` | `runAnalysisPipeline` `:163` + `detectElementProfiles`(withBbox) via `computeRenderAdditions` | détecte les éléments d'**UNE** image (ne compare PAS avant/après). Usage 1 : analyse de la photo d'origine. Usage 2 : inventaire du **rendu** → ajouts net-new (pièce vide) | ~3-8 s (origine) / **~18-28 s** (inventaire rendu, HIGH res) |
+| `verdict_elements` | `runAnalysisPipeline` `:380` | décide **keep / customize / replace** + action DIY par élément (consomme la sortie de la détection → séquentiel) | ~4,6 s |
+| `gen_wow_generic` | `runGenerationPipeline` `:537` | génère le rendu redécoré (`nano_banana`) | ~9,5 s |
+| `gen_wow_3_dispositions` | `runDispositionsPipeline` `:625` (×3) | 3 variantes de rendu (lancées **en parallèle**) | ~10 s ×3 (//) |
+| `iterate_generic` | `runIterationPipeline` `:671` | applique une retouche live au rendu | ~9,4 s |
+| `confirm_changes` | `confirmChanges` via `ensureFinalAssets` `:765` | **compare AVANT/APRÈS (composite)** → par élément `changed` + `after` (état final) + `bbox` → **GÉNÈRE la liste de courses** (candidats remplacés) | à mesurer (flash) |
+
+\* Temps indicatifs (timeline réelle d'un projet) — **à affiner après l'optim** (allègement des retours). `confirm_changes` tourne en `gemini-2.5-flash` (plus fort), les autres détections en `flash-lite`.
+
+- **Inactifs gardés** (chantier futur pièce parentale) : `gen_wow_chambre_parentale`, `gen_wow_3_dispositions_chambre_parentale`.
+- **🗑️ 2026-06-25 — supprimés** (dé-confusion) : pipeline PRO (`lib/ai/pro-pipeline.ts` + route `api/pro/jobs/[jobId]/run`) et ses prompts `vision_detect` + `extract_alterations` (ce dernier était le **jumeau PRO de `confirm_changes`** → la confusion) ; + prompts morts `audit_application`, `audit_quality`, `vision_analyze_full`, `gen_shopping_list`. **Sauvegarde** : `supabase/archived-prompts-2026-06-25.json`. (`app/pro/` = mockup fictif, conservé.)
 - **Providers** (`lib/ai/provider.ts`) : vision = `gemini_vision` (`GeminiVisionProvider`) ; image = `nano_banana` (Gemini **flash-image**) ou `flux_kontext` (Flux). Le provider de chaque appel vient du champ `provider` du prompt.
 - **Modèles** référencés : `gemini-2.5-flash`, `gemini-2.5-flash-lite`, `gemini-2.5-flash-image`, `jina-clip-v2`.
 - **Tracking** : `withTracking(meta, fn)` (`lib/ai/track.ts`) écrit chaque appel dans `ai_calls` (tokens/images/latence/coût via `lib/ai/pricing.ts` ← `ai_pricing`). `logPipelineEvent` → `pipeline_logs`.
