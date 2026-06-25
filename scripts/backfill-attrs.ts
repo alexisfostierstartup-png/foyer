@@ -15,7 +15,7 @@ config({ path: ".env.local" });
 config();
 
 const UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36";
-const MODEL = "gemini-2.5-flash";
+const MODEL = process.argv.includes("--lite") ? "gemini-2.5-flash-lite" : "gemini-2.5-flash";
 const norm = (s: unknown): string | null => {
   if (typeof s !== "string") return null;
   const v = s.toLowerCase().trim().replace(/\s+/g, " ").replace(/[.;,]+$/, "").slice(0, 40);
@@ -25,10 +25,11 @@ const freePrompt = (cat: string, attr: string) =>
   `Photo produit d'un(e) ${cat}. L'attribut « ${attr} » ne rentre dans aucune valeur de notre liste fermée. Décris LIBREMENT la valeur de « ${attr} » pour CE produit, en 1-3 mots français. JSON strict : {"label":"..."}`;
 
 async function main() {
+  const idsArg = process.argv.find((a) => a.startsWith("--ids="))?.slice(6);
   const catsArg = process.argv[2];
   const limit = Number(process.argv[3] ?? 0); // 0 = pas de limite
   const force = process.argv.includes("--force");
-  if (!catsArg) { console.error("Usage: backfill-attrs <cat|all> [limit] [--force]"); process.exit(1); }
+  if (!idsArg && (!catsArg || catsArg.startsWith("--"))) { console.error("Usage: backfill-attrs <cat|all> [limit] [--force] | --ids=a,b,c [--lite]"); process.exit(1); }
 
   const { createSupabaseAdmin } = await import("../lib/supabase/server");
   const { getVisionProvider } = await import("../lib/ai/provider");
@@ -46,6 +47,29 @@ async function main() {
       return (res.parsed ?? null) as Record<string, unknown> | null;
     } catch { return null; }
   };
+
+  // Mode --ids : ré-extrait des produits PRÉCIS (toutes catégories), force-overwrite.
+  if (idsArg) {
+    const ids = idsArg.split(",").map((s) => s.trim()).filter(Boolean);
+    const { data } = await sb.from("partner_products").select("id, category, primary_image_url, metadata").in("id", ids);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const p of (data ?? []) as any[]) {
+      const schema = getSchemaV3(schemaForCategory(p.category));
+      const enumKeys = schema.filter((a) => a.type === "enum").map((a) => a.key);
+      const attrs = await extract(buildExtractionPrompt(schema), p.primary_image_url);
+      if (!attrs) { console.log(`✗ ${p.id} (${p.category})`); continue; }
+      for (const k of enumKeys) {
+        if (String(attrs[k]).toLowerCase() !== "unknown") continue;
+        const free = await extract(freePrompt(p.category, k), p.primary_image_url);
+        const label = norm(free?.label);
+        if (label) await sb.rpc("bump_vocab_candidate", { p_category: p.category, p_attribute: k, p_label: label, p_example: p.id });
+      }
+      await sb.from("partner_products").update({ metadata: { ...(p.metadata ?? {}), attrs, attrs_model: MODEL } }).eq("id", p.id);
+      console.log(`✓ ${String(p.category).padEnd(12)} ${JSON.stringify(attrs)}`);
+    }
+    console.log(`\n(modèle: ${MODEL})`);
+    process.exit(0);
+  }
 
   let totalDone = 0, totalUnknown = 0, totalFail = 0;
   for (const cat of CATS) {
