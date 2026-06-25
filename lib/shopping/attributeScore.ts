@@ -28,6 +28,10 @@ export const ATTR_WEIGHTS: Record<string, Record<string, number>> = {
   floor_material: { type: 40, color: 30, pattern: 20, finish: 10 },
   floor_lamp: { structure: 25, shade_type: 25, base_shape: 15, base_finish: 20, color: 15 },
   pendant_lamp: { shape: 35, shade_material: 25, color: 25, finish: 15 },
+  sideboard: { shape: 30, color: 20, material: 20, front: 20, legs: 10 },
+  dining_table: { shape: 30, top_material: 20, top_color: 15, legs_type: 20, legs_material: 15 },
+  mouldings: { shape: 70 }, // width (number, 30) omis : non extractible du rendu
+  batten: { shape: 30 }, // width (number, 70) omis : non extractible du rendu
   default: { color: 45, material: 30, shape: 25 },
 };
 

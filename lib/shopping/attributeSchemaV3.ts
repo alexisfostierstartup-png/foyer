@@ -97,6 +97,28 @@ export const SCHEMA_V3: Record<string, AttrV3[]> = {
     { key: "color", type: "hex" },
     { key: "finish", type: "enum", conditional: true, vocab: ["black_matte", "gold_brass", "chrome", "copper", "white", "rattan_rope"] },
   ],
+  sideboard: [
+    { key: "shape", type: "enum", vocab: ["low_credenza", "tall_hutch", "corner", "modular"] },
+    { key: "color", type: "hex" },
+    { key: "material", type: "enum", vocab: ["light_wood", "dark_wood", "oak", "walnut", "white", "black", "cane", "wood_metal_mix"] },
+    { key: "front", type: "enum", vocab: ["solid_doors", "cane", "glass", "drawers", "mixed"] },
+    { key: "legs", type: "enum", vocab: ["tapered", "straight", "metal", "plinth", "wall_mounted"] },
+  ],
+  dining_table: [
+    { key: "shape", type: "enum", vocab: ["round", "oval", "rectangular", "square", "extendable"] },
+    { key: "top_material", type: "enum", vocab: ["light_wood", "dark_wood", "oak", "walnut", "white_lacquer", "black", "marble", "ceramic", "glass", "metal", "travertine", "concrete"] },
+    { key: "top_color", type: "hex" },
+    { key: "legs_type", type: "enum", vocab: ["four_legs", "central", "trestle", "sled", "u_frame"] },
+    { key: "legs_material", type: "enum", conditional: true, vocab: ["wood", "black_metal", "gold_metal", "chrome_metal", "same_as_top"] },
+  ],
+  // mouldings/batten : `width` (number, gros poids Notion) = spec PRODUIT, non extractible du
+  // rendu → on garde le profil (visuel). Le coverage-aware gère l'absence de width côté rendu.
+  mouldings: [
+    { key: "shape", type: "enum", vocab: ["flat", "cove", "ogee", "dentil", "quarter_round", "ornate_cornice"] },
+  ],
+  batten: [
+    { key: "shape", type: "enum", vocab: ["square", "rectangular", "half_round", "fluted"] },
+  ],
   default: [
     { key: "color", type: "hex" },
     { key: "material", type: "enum", vocab: ["light_wood", "dark_wood", "metal", "fabric", "plastic", "glass", "rattan", "white", "black"] },
