@@ -126,6 +126,10 @@ export function buildExtractionPrompt(attrs: AttrV3[]): string {
   return (
     `Décris l'OBJET PRINCIPAL de cette photo produit (ignore le fond/décor). JSON STRICT, ` +
     `une valeur EXACTE du vocabulaire par clé.\n` +
+    `- Pour les MATIÈRES (matière, matériau), juge l'APPARENCE VISUELLE (ce à quoi ça ` +
+    `ressemble), PAS la construction réelle : un placage / mélaminé / MDF effet bois = "bois" ` +
+    `(light_wood ou dark_wood selon la teinte). N'utilise "unknown" sur une matière que si ` +
+    `l'aspect est vraiment indéterminable.\n` +
     `- "unknown" si l'attribut S'APPLIQUE mais n'est pas déterminable depuis l'image.\n` +
     `- "n/a" si l'attribut NE S'APPLIQUE PAS à ce produit (ex. matière des pieds s'il n'y a pas de pieds visibles).\n` +
     `{\n${lines.join(",\n")}\n}`
