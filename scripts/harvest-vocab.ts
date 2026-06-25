@@ -15,12 +15,6 @@ const UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (
 const MODEL = "gemini-2.5-flash";
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-function closedPrompt(schema: import("../lib/shopping/attributeSchemaV3").AttrV3[]): string {
-  const lines = schema.map((a) =>
-    a.type === "hex" ? `  "${a.key}": "#rrggbb"` : `  "${a.key}": one of [${a.vocab!.join(", ")}]`,
-  );
-  return `Décris l'OBJET PRINCIPAL de cette photo produit. Ignore le fond. JSON STRICT, une valeur EXACTE du vocab par clé, ou "unknown" si non déterminable :\n{\n${lines.join(",\n")}\n}`;
-}
 const freePrompt = (cat: string, attr: string) =>
   `Photo produit d'un(e) ${cat}. L'attribut « ${attr} » ne rentre dans aucune valeur de notre liste fermée. Décris LIBREMENT la valeur de « ${attr} » pour CE produit, en 1-3 mots français (le type/forme courant, ex. pour une chaise : « dossier échelle », « bistrot »…). JSON strict : {"label":"..."}`;
 
@@ -37,7 +31,7 @@ async function main() {
 
   const { createSupabaseAdmin } = await import("../lib/supabase/server");
   const { getVisionProvider } = await import("../lib/ai/provider");
-  const { getSchemaV3, schemaForCategory } = await import("../lib/shopping/attributeSchemaV3");
+  const { getSchemaV3, schemaForCategory, buildExtractionPrompt } = await import("../lib/shopping/attributeSchemaV3");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sb = createSupabaseAdmin() as any;
 
@@ -61,7 +55,7 @@ async function main() {
     let catUnknown = 0;
     for (const p of sample) {
       totalProducts++;
-      const attrs = await extract(closedPrompt(schema), p.primary_image_url);
+      const attrs = await extract(buildExtractionPrompt(schema), p.primary_image_url);
       if (!attrs) { await sleep(300); continue; }
       for (const k of enumKeys) {
         if (String(attrs[k]).toLowerCase() !== "unknown") continue;

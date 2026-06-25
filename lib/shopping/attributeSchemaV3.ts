@@ -6,7 +6,9 @@
  * NB : sous-ensemble des catégories ayant des produits au catalogue. Poids/conditionnels
  * gérés côté scoring (pas ici) ; ici on ne garde que clés + types + vocab pour l'extraction.
  */
-export type AttrV3 = { key: string; type: "enum" | "hex"; vocab?: string[] };
+// conditional = l'attribut peut ne PAS s'appliquer (ex. matière des pieds sans pieds, finition
+// métal sur un luminaire en rotin) → l'extraction renvoie "n/a", exclu du score (coverage).
+export type AttrV3 = { key: string; type: "enum" | "hex"; vocab?: string[]; conditional?: boolean };
 
 export const SCHEMA_V3: Record<string, AttrV3[]> = {
   sofa: [
@@ -15,7 +17,7 @@ export const SCHEMA_V3: Record<string, AttrV3[]> = {
     { key: "color", type: "hex" },
     { key: "upholstery", type: "enum", vocab: ["fabric", "velvet", "corduroy", "linen", "boucle", "chenille", "leather", "faux_leather"] },
     { key: "legs_type", type: "enum", vocab: ["tapered", "block", "metal_thin", "plinth", "casters", "none"] },
-    { key: "legs_material", type: "enum", vocab: ["light_wood", "dark_wood", "black_metal", "gold_metal", "chrome_metal"] },
+    { key: "legs_material", type: "enum", conditional: true, vocab: ["light_wood", "dark_wood", "black_metal", "gold_metal", "chrome_metal"] },
   ],
   armchair: [
     { key: "shape", type: "enum", vocab: ["wingback", "tub", "egg", "scandinavian", "low", "cabriolet", "club"] },
@@ -25,7 +27,7 @@ export const SCHEMA_V3: Record<string, AttrV3[]> = {
     { key: "armrests", type: "enum", vocab: ["with", "without"] },
   ],
   chair: [
-    { key: "shape", type: "enum", vocab: ["shell", "scandinavian_wood", "medallion", "bistro", "rush_cane", "upholstered", "transparent"] },
+    { key: "shape", type: "enum", vocab: ["shell", "scandinavian_wood", "medallion", "bistro", "rush_cane", "upholstered", "transparent", "ladder_back"] },
     { key: "color", type: "hex" },
     { key: "material", type: "enum", vocab: ["wood", "metal", "plastic", "padded_fabric", "velvet", "leather", "rattan_cane"] },
     { key: "legs_type", type: "enum", vocab: ["four_legs", "tapered", "cantilever", "central", "wood_splayed"] },
@@ -35,8 +37,8 @@ export const SCHEMA_V3: Record<string, AttrV3[]> = {
     { key: "shape", type: "enum", vocab: ["round", "oval", "rectangular", "square", "nesting", "organic"] },
     { key: "top_material", type: "enum", vocab: ["light_wood", "dark_wood", "oak", "walnut", "white_lacquer", "black", "marble", "glass", "metal", "travertine", "concrete"] },
     { key: "top_color", type: "hex" },
-    { key: "legs_material", type: "enum", vocab: ["wood", "black_metal", "gold_metal", "chrome_metal", "same_as_top"] },
-    { key: "legs_type", type: "enum", vocab: ["four_legs", "central", "tapered", "sled", "casters"] },
+    { key: "legs_material", type: "enum", conditional: true, vocab: ["wood", "black_metal", "gold_metal", "chrome_metal", "same_as_top"] },
+    { key: "legs_type", type: "enum", vocab: ["four_legs", "central", "tapered", "metal_thin", "sled", "casters"] },
     { key: "storage", type: "enum", vocab: ["none", "lower_shelf", "drawers", "lift_top"] },
   ],
   side_table: [
@@ -50,7 +52,8 @@ export const SCHEMA_V3: Record<string, AttrV3[]> = {
     { key: "color", type: "hex" },
     { key: "weave", type: "enum", vocab: ["flatweave", "shaggy", "berber", "tufted", "braided_jute", "kilim", "fringed", "low_velvet"] },
     { key: "shape", type: "enum", vocab: ["rectangular", "round", "oval", "runner"] },
-    { key: "material", type: "enum", vocab: ["wool", "cotton", "jute_sisal", "synthetic", "viscose"] },
+    // `material` (laine/synthétique) retiré : invisible sur photo (8/8 unknown au harvest).
+    // `weave` capte déjà la texture. À sourcer du texte produit si besoin.
   ],
   tv_stand: [
     { key: "shape", type: "enum", vocab: ["low_bench", "cabinet", "column", "wall_mounted", "corner"] },
@@ -81,7 +84,7 @@ export const SCHEMA_V3: Record<string, AttrV3[]> = {
   ],
   floor_lamp: [
     { key: "structure", type: "enum", vocab: ["arc", "column", "tripod", "reading", "multi_arm"] },
-    { key: "shade_type", type: "enum", vocab: ["fabric_drum", "metal_dome", "rattan_bamboo", "glass_opal", "none"] },
+    { key: "shade_type", type: "enum", vocab: ["fabric_drum", "metal_dome", "rattan_bamboo", "glass_opal", "paper_lantern", "none"] },
     { key: "base_material", type: "enum", vocab: ["black_metal", "gold_brass", "chrome", "wood"] },
     { key: "color", type: "hex" },
   ],
@@ -89,7 +92,7 @@ export const SCHEMA_V3: Record<string, AttrV3[]> = {
     { key: "shape", type: "enum", vocab: ["dome", "globe", "cylinder", "cascade", "disc", "cage", "chandelier"] },
     { key: "shade_material", type: "enum", vocab: ["metal", "rattan_bamboo", "glass_opal", "fabric", "paper_rice", "plastic"] },
     { key: "color", type: "hex" },
-    { key: "finish", type: "enum", vocab: ["black_matte", "gold_brass", "chrome", "copper", "white"] },
+    { key: "finish", type: "enum", conditional: true, vocab: ["black_matte", "gold_brass", "chrome", "copper", "white", "rattan_rope"] },
   ],
   default: [
     { key: "color", type: "hex" },
@@ -106,4 +109,22 @@ export function getSchemaV3(schema: string): AttrV3[] {
 export function schemaForCategory(category: string): string {
   const map: Record<string, string> = { floor: "floor_material", lamp: "pendant_lamp", mirror: "default" };
   return map[category] ?? (SCHEMA_V3[category] ? category : "default");
+}
+
+/**
+ * Prompt d'extraction fermée. Distingue "unknown" (s'applique mais indéterminable) de
+ * "n/a" (ne s'applique pas à ce produit) → "n/a" est exclu du score sans polluer la
+ * récolte de vocab (ex. matière des pieds quand il n'y a pas de pieds).
+ */
+export function buildExtractionPrompt(attrs: AttrV3[]): string {
+  const lines = attrs.map((a) =>
+    a.type === "hex" ? `  "${a.key}": "#rrggbb (couleur dominante de l'objet)"` : `  "${a.key}": one of [${a.vocab!.join(", ")}]`,
+  );
+  return (
+    `Décris l'OBJET PRINCIPAL de cette photo produit (ignore le fond/décor). JSON STRICT, ` +
+    `une valeur EXACTE du vocabulaire par clé.\n` +
+    `- "unknown" si l'attribut S'APPLIQUE mais n'est pas déterminable depuis l'image.\n` +
+    `- "n/a" si l'attribut NE S'APPLIQUE PAS à ce produit (ex. matière des pieds s'il n'y a pas de pieds visibles).\n` +
+    `{\n${lines.join(",\n")}\n}`
+  );
 }
