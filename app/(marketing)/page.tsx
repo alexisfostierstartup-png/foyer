@@ -18,6 +18,7 @@ import { BeforeAfterSlider } from "@/components/landing/BeforeAfterSlider";
 import { FaqAccordion } from "@/components/landing/FaqAccordion";
 import { Reveal } from "@/components/landing/Reveal";
 import { StrokeDivider } from "@/components/landing/StrokeDivider";
+import { ManageCookiesButton } from "@/components/shared/manage-cookies-button";
 
 type Tone = "sage" | "terra" | "ink" | "water" | "mousse";
 
@@ -677,7 +678,31 @@ export default function LandingPage() {
                 </li>
               </ul>
             </div>
-            <FooterColumn title="Légal" links={["CGU", "Privacy", "Mentions"]} />
+            <div>
+              <h3 className="text-[12px] font-medium uppercase tracking-[0.14em] text-foyer-ink">
+                Légal
+              </h3>
+              <ul className="mt-4 space-y-2.5 text-[14px] text-foyer-muted">
+                <li>
+                  <Link href="/mentions-legales" className="hover:text-foyer-ink">
+                    Mentions légales
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/confidentialite" className="hover:text-foyer-ink">
+                    Confidentialité
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/cookies" className="hover:text-foyer-ink">
+                    Cookies
+                  </Link>
+                </li>
+                <li>
+                  <ManageCookiesButton className="hover:text-foyer-ink" />
+                </li>
+              </ul>
+            </div>
           </div>
           <div className="mt-10 flex flex-col items-start justify-between gap-4 border-t border-foyer-border/60 pt-6 text-[13px] text-foyer-muted sm:flex-row sm:items-center">
             <span>© {new Date().getFullYear()} Foyer</span>
