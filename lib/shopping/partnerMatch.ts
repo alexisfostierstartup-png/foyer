@@ -183,7 +183,9 @@ async function applyStructuredRerank(
     const bonus = w * (2 * score - 1);
     m.similarity = Math.max(0, Math.min(1, Math.round((m.similarity + bonus) * 1000) / 1000));
   }
-  return matches.sort((a, b) => b.similarity - a.similarity);
+  // Tie-break par score structuré : quand sim sature (plafond 1.0 après bonus couleur+struct),
+  // l'attribut départage (ex. coffee_table où plusieurs rondes blend ~max → la mieux attribuée passe).
+  return matches.sort((a, b) => (b.similarity - a.similarity) || ((b.structScore ?? 0) - (a.structScore ?? 0)));
 }
 
 async function rpcBlend(
