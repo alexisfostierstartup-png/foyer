@@ -63,6 +63,8 @@ export type ElementProfile = {
   bbox?: { x: number; y: number; w: number; h: number };
   // Couleur dominante de l'objet (hex), lue par Gemini → terme couleur ΔE du matching.
   color_hex?: string;
+  // Attrs structurés V3 (renseignés avec withBbox sur l'inventaire du rendu) → score structuré.
+  attrs?: Record<string, unknown>;
 };
 
 export type ResolvedSupply = {

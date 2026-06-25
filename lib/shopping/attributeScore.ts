@@ -86,15 +86,21 @@ const fmtAttr = (a: AttrV3): string =>
  * émette, par élément, un objet `attrs` avec les attributs V3 de SA catégorie. On n'injecte
  * que les catégories utiles (celles présentes) pour garder le prompt lean.
  */
-export function buildAttrsInstruction(categories?: string[]): string {
+export function buildAttrsInstruction(categories?: string[], opts?: { replacedOnly?: boolean }): string {
   const schemas = categories && categories.length
     ? [...new Set(categories.map(schemaForCategory))]
     : Object.keys(SCHEMA_V3).filter((c) => c !== "default");
   const lines = schemas
     .filter((s) => SCHEMA_V3[s])
     .map((s) => `- ${s}: { ${SCHEMA_V3[s].map(fmtAttr).join(", ")} }`);
+  // confirm_changes : seuls les éléments REMPLACÉS (nouvel objet) ont besoin des attrs.
+  // Un simple re-finish/repeint = même objet, même forme → la couleur suffit, on n'alourdit pas.
+  const scope = opts?.replacedOnly
+    ? `UNIQUEMENT pour les éléments REMPLACÉS par un objet DIFFÉRENT dans l'APRÈS (un nouveau meuble). ` +
+      `Pour un élément simplement re-fini / repeint / re-tapissé (MÊME objet), N'ÉMETS PAS "attrs". `
+    : `à CHAQUE élément `;
   return (
-    `\n\nEN PLUS, ajoute à CHAQUE élément un objet "attrs" = les attributs structurés ` +
+    `\n\nEN PLUS, ajoute ${scope}un objet "attrs" = les attributs structurés ` +
     `correspondant à SA catégorie ci-dessous. Valeur EXACTE du vocab ; "unknown" si ` +
     `indéterminable depuis l'image ; "n/a" si l'attribut ne s'applique pas. Pour les matières, ` +
     `juge l'APPARENCE visuelle (placage/mélaminé effet bois = bois).\n${lines.join("\n")}`

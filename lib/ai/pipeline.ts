@@ -162,7 +162,11 @@ async function detectElementProfiles(
   // la table assets (element_category), filtrée par type de pièce.
   const categories = await getElementCategoryEnum(roomType);
   const detPrompt = await resolvePrompt("vision_detect_extended", { categories }, { strict: false });
-  const template = opts?.withBbox ? detPrompt.resolvedTemplate + BBOX_SUFFIX : detPrompt.resolvedTemplate;
+  // withBbox = inventaire du rendu : on émet AUSSI les attrs V3 (tous les meubles du rendu
+  // sont des achats potentiels) → score structuré pour les AJOUTS (pièces vides).
+  const template = opts?.withBbox
+    ? detPrompt.resolvedTemplate + BBOX_SUFFIX + buildAttrsInstruction()
+    : detPrompt.resolvedTemplate;
   const detResult = await withTracking(
     {
       step: "vision_detection",
@@ -201,6 +205,9 @@ async function detectElementProfiles(
       dims: p.dims ?? {},
       bbox: opts?.withBbox ? (parseBbox((p as { bbox?: unknown }).bbox) ?? undefined) : undefined,
       color_hex: opts?.withBbox ? parseHex((p as { color_hex?: unknown }).color_hex) : undefined,
+      attrs: opts?.withBbox && p.attrs && typeof p.attrs === "object" && !Array.isArray(p.attrs)
+        ? (p.attrs as Record<string, unknown>)
+        : undefined,
     }));
 }
 
@@ -763,8 +770,9 @@ export async function confirmChanges(
     null,
     2,
   );
-  // Instruction d'attrs structurés V3 (par catégorie présente) → Gemini émet `attrs` par élément.
-  const attrsInstruction = buildAttrsInstruction(candidates.map((d) => d.category));
+  // Instruction d'attrs structurés V3 (par catégorie présente). replacedOnly : on ne demande
+  // les attrs QUE pour les éléments remplacés (nouvel objet) — un re-finish garde sa forme.
+  const attrsInstruction = buildAttrsInstruction(candidates.map((d) => d.category), { replacedOnly: true });
   const prompt = await resolvePrompt("confirm_changes", { candidatesJson, attrsInstruction }, { strict: false });
   const result = await withTracking(
     {
@@ -868,6 +876,7 @@ function reconcileRenderAdditions(
       element_id: p.element_id,
       bbox: p.bbox,
       color_hex: p.color_hex,
+      attrs: p.attrs, // attrs V3 du rendu → score structuré de l'ajout.
     });
   }
   return adds;
@@ -982,6 +991,7 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
     for (const a of additionsToUse) {
       if (a.element_id && a.bbox) bboxById.set(a.element_id, a.bbox);
       if (a.element_id && a.color_hex) elementHexById.set(a.element_id, a.color_hex);
+      if (a.element_id && a.attrs) elementAttrsById.set(a.element_id, a.attrs);
     }
   } catch (e) {
     console.warn("[pipeline:final] détection rendu échouée, fallback additions audit:", e instanceof Error ? e.message : e);

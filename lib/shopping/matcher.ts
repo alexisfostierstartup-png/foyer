@@ -19,6 +19,7 @@ export type Alteration = {
   element_id?: string;
   bbox?: { x: number; y: number; w: number; h: number };
   color_hex?: string; // couleur dominante (hex) → terme couleur ΔE.
+  attrs?: Record<string, unknown>; // attrs structurés V3 (ajouts/remplacés) → score structuré.
 };
 
 type PartnerProductRow = {

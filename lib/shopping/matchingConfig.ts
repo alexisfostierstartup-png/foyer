@@ -31,7 +31,9 @@ export const DEFAULT_WEIGHTS: MatchingWeights = {
   image_weight: { eco_new: 0.7, secondhand: 0.5 },
   min_score: { eco_new: 0.7, secondhand: 0.55 },
   color: { weight: 0.3, threshold: 28 },
-  struct: { weight: 0.25 },
+  // 0.20 (baissé de 0.25) : limite la saturation du score (blend déjà ~0.9 + couleur + struct
+  // dépassait 1.0). À ré-affiner sur données réelles après tests.
+  struct: { weight: 0.2 },
 };
 
 function num(v: unknown, fallback: number): number {
