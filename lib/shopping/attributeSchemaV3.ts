@@ -23,7 +23,7 @@ export const SCHEMA_V3: Record<string, AttrV3[]> = {
     { key: "shape", type: "enum", vocab: ["wingback", "tub", "egg", "scandinavian", "low", "cabriolet", "club", "recliner"] },
     { key: "color", type: "hex" },
     { key: "upholstery", type: "enum", vocab: ["fabric", "velvet", "corduroy", "boucle", "linen", "leather", "faux_leather", "rattan_cane"] },
-    { key: "legs_type", type: "enum", vocab: ["tapered", "four_legs", "central", "tripod", "swivel", "rocking", "sled"] },
+    { key: "legs_type", type: "enum", vocab: ["tapered", "four_legs", "central", "tripod", "swivel", "rocking", "sled", "skirted"] },
     { key: "armrests", type: "enum", vocab: ["with", "without"] },
   ],
   chair: [
@@ -60,7 +60,7 @@ export const SCHEMA_V3: Record<string, AttrV3[]> = {
     { key: "color", type: "hex" },
     { key: "material", type: "enum", vocab: ["light_wood", "dark_wood", "oak", "walnut", "white", "black", "cane", "metal", "glass", "travertine"] },
     { key: "storage", type: "enum", vocab: ["doors", "drawers", "open_niches", "mixed"] },
-    { key: "legs", type: "enum", vocab: ["tapered", "metal", "casters", "floor_block", "wall_mounted"] },
+    { key: "legs", type: "enum", vocab: ["tapered", "metal", "block", "casters", "floor_block", "wall_mounted"] },
   ],
   bookshelf: [
     { key: "shape", type: "enum", vocab: ["tall_bookcase", "wall_shelf", "ladder", "cube", "modular", "narrow_column"] },
@@ -86,7 +86,7 @@ export const SCHEMA_V3: Record<string, AttrV3[]> = {
     // Refonte (harvest : base_material confondait forme et finition) → on sépare
     // base_shape (la forme du socle) de base_finish (le métal/finition).
     { key: "structure", type: "enum", vocab: ["arc", "column", "tripod", "reading", "multi_arm"] },
-    { key: "shade_type", type: "enum", vocab: ["fabric_drum", "metal_dome", "rattan_bamboo", "glass_opal", "paper_lantern", "cage", "none"] },
+    { key: "shade_type", type: "enum", vocab: ["fabric_drum", "metal_dome", "rattan_bamboo", "glass_opal", "paper_lantern", "rectangular", "cage", "none"] },
     { key: "base_shape", type: "enum", vocab: ["disc", "round_weighted", "square", "tripod", "integrated_shelf"] },
     { key: "base_finish", type: "enum", conditional: true, vocab: ["black_metal", "white_metal", "gold_brass", "chrome", "brushed_metal", "wood"] },
     { key: "color", type: "hex" },
