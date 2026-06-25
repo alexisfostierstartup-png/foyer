@@ -23,6 +23,7 @@ import {
   type MatchingWeights,
 } from "./matchingConfig";
 import { hexToLab, deltaE } from "@/lib/color";
+import { structuredScoreForCategory } from "./attributeScore";
 import type { ProductMatch } from "@/lib/types";
 
 // Catégorie d'item → catégorie catalogue. null = non-shoppable (pas de match).
@@ -153,6 +154,38 @@ function applyColorRerank(
   return matches.sort((a, b) => b.similarity - a.similarity);
 }
 
+// Re-ranking STRUCTURÉ (attrs V3) : bonus/malus selon la proximité des attributs entre
+// l'ÉLÉMENT du rendu et le PRODUIT (metadata.attrs, pré-extraits au catalogue). Coverage-aware
+// (renorm sur les attributs réellement comparables) → bonus = w·(2·score−1) ∈ [−w,+w],
+// neutre si couverture nulle (élément OU produit sans attrs). Comme la couleur : re-classe les
+// survivants du seuil, n'élimine jamais. Validé au diag (canapé 5-places promu vs 7-places).
+async function applyStructuredRerank(
+  matches: ProductMatch[],
+  category: string,
+  elementAttrs: Record<string, unknown> | null | undefined,
+  weights: MatchingWeights,
+): Promise<ProductMatch[]> {
+  const w = weights.struct.weight;
+  if (!elementAttrs || w <= 0 || matches.length === 0) return matches;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = createSupabaseAdmin() as any;
+  const { data } = await supabase.from("partner_products").select("id, metadata").in("id", matches.map((m) => m.id));
+  const attrsById = new Map<string, Record<string, unknown> | null>(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (data ?? []).map((r: any) => [r.id, (r.metadata?.attrs ?? null) as Record<string, unknown> | null]),
+  );
+  for (const m of matches) {
+    const pa = attrsById.get(m.id);
+    if (!pa) continue;
+    const { score, coverage } = structuredScoreForCategory(category, elementAttrs, pa);
+    if (coverage <= 0) continue;
+    m.structScore = Math.round(score * 1000) / 1000;
+    const bonus = w * (2 * score - 1);
+    m.similarity = Math.max(0, Math.min(1, Math.round((m.similarity + bonus) * 1000) / 1000));
+  }
+  return matches.sort((a, b) => b.similarity - a.similarity);
+}
+
 async function rpcBlend(
   cropEmbedding: number[] | null,
   descEmbedding: number[],
@@ -208,7 +241,7 @@ async function embedCrops(crops: (Buffer | null | undefined)[]): Promise<Map<num
  * catégorie × source. crop absent pour un item → texte seul (w effectif 0).
  */
 export async function matchPartnerProductsBlendBatch(
-  items: { category: string; description: string; crop?: Buffer | null; colorHex?: string | null }[],
+  items: { category: string; description: string; crop?: Buffer | null; colorHex?: string | null; attrs?: Record<string, unknown> | null }[],
   topN = 4,
 ): Promise<ProductMatch[][]> {
   const cats = items.map((it) => catalogCategory(it.category));
@@ -253,7 +286,10 @@ export async function matchPartnerProductsBlendBatch(
       // n'élimine jamais (sinon une mauvaise couleur pénalisée passe sous le seuil et
       // on perd même les bons coloris). Puis re-rank couleur sur les survivants.
       const passing = applyDisplayThreshold(matches, weights);
-      return applyColorRerank(passing, items[i].colorHex, weights).slice(0, topN);
+      // Re-rank couleur (synchrone) puis structuré (attrs V3, lookup DB) sur les survivants.
+      const colored = applyColorRerank(passing, items[i].colorHex, weights);
+      const structed = await applyStructuredRerank(colored, cat, items[i].attrs, weights);
+      return structed.slice(0, topN);
     }),
   );
 }

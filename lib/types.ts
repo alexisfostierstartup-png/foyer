@@ -62,6 +62,9 @@ export type ProductMatch = {
   // Couleur dominante du produit (hex) + ΔE à la couleur de l'élément (calibration couleur).
   colorHex?: string | null;
   colorDeltaE?: number;
+  // Score structuré (attrs V3 rendu↔produit) ∈ [0,1] du re-ranking (Étape 2). undefined
+  // si l'élément ou le produit n'a pas d'attrs (→ pas de bonus, neutre).
+  structScore?: number;
 };
 
 export type ShoppingItem = {

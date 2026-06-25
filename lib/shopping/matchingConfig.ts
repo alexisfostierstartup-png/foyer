@@ -21,6 +21,9 @@ export type MatchingWeights = {
   image_weight: SourceScalars;
   min_score: SourceScalars;
   color: { weight: number; threshold: number };
+  // struct.weight = part du score STRUCTURÉ (attrs V3) dans le re-ranking (0 = ignoré).
+  // Re-rank comme la couleur : bonus = w·(2·score−1), neutre si couverture nulle.
+  struct: { weight: number };
 };
 
 // Repli si la table assets est vide / injoignable (= comportement neuf-photo standard).
@@ -28,6 +31,7 @@ export const DEFAULT_WEIGHTS: MatchingWeights = {
   image_weight: { eco_new: 0.7, secondhand: 0.5 },
   min_score: { eco_new: 0.7, secondhand: 0.55 },
   color: { weight: 0.3, threshold: 28 },
+  struct: { weight: 0.25 },
 };
 
 function num(v: unknown, fallback: number): number {
@@ -40,6 +44,7 @@ function normalize(data: unknown): MatchingWeights {
   const iw = (d.image_weight ?? {}) as Record<string, unknown>;
   const ms = (d.min_score ?? {}) as Record<string, unknown>;
   const co = (d.color ?? {}) as Record<string, unknown>;
+  const st = (d.struct ?? {}) as Record<string, unknown>;
   return {
     image_weight: {
       eco_new: num(iw.eco_new, DEFAULT_WEIGHTS.image_weight.eco_new),
@@ -52,6 +57,9 @@ function normalize(data: unknown): MatchingWeights {
     color: {
       weight: num(co.weight, DEFAULT_WEIGHTS.color.weight),
       threshold: num(co.threshold, DEFAULT_WEIGHTS.color.threshold),
+    },
+    struct: {
+      weight: num(st.weight, DEFAULT_WEIGHTS.struct.weight),
     },
   };
 }

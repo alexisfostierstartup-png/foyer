@@ -17,6 +17,7 @@ import { matchAlterationsToCatalog, type Alteration } from "@/lib/shopping/match
 import { reconcilePlan } from "@/lib/shopping/reconcile";
 import { buildShoppingList, builtToLegacyShoppingList } from "@/lib/shopping/build";
 import { matchPartnerProductsBlendBatch, matchFloorProductsBlend } from "@/lib/shopping/partnerMatch";
+import { buildAttrsInstruction } from "@/lib/shopping/attributeScore";
 import { extractCrop, type Bbox } from "@/lib/shopping/crop";
 import { matchPaintByColor, getChangedWallColors } from "@/lib/shopping/paintMatch";
 import type { ImageInput } from "./types";
@@ -749,7 +750,7 @@ export async function confirmChanges(
   composite: ImageInput,
   afterLeftFrac: number,
   afterWidthFrac: number,
-): Promise<{ appliedIds: Set<string>; judgedIds: Set<string>; additions: Alteration[]; afterById: Map<string, string>; bboxById: Map<string, Bbox> }> {
+): Promise<{ appliedIds: Set<string>; judgedIds: Set<string>; additions: Alteration[]; afterById: Map<string, string>; bboxById: Map<string, Bbox>; attrsById: Map<string, Record<string, unknown>> }> {
   const candidatesJson = JSON.stringify(
     candidates.map((d) => ({
       element_id: d.element_id,
@@ -762,7 +763,9 @@ export async function confirmChanges(
     null,
     2,
   );
-  const prompt = await resolvePrompt("confirm_changes", { candidatesJson }, { strict: false });
+  // Instruction d'attrs structurés V3 (par catégorie présente) → Gemini émet `attrs` par élément.
+  const attrsInstruction = buildAttrsInstruction(candidates.map((d) => d.category));
+  const prompt = await resolvePrompt("confirm_changes", { candidatesJson, attrsInstruction }, { strict: false });
   const result = await withTracking(
     {
       step: "audit",
@@ -778,7 +781,7 @@ export async function confirmChanges(
       }),
   );
   const parsed = result.parsed as {
-    results?: Array<{ element_id?: string; changed?: boolean; after?: string; bbox?: unknown }>;
+    results?: Array<{ element_id?: string; changed?: boolean; after?: string; bbox?: unknown; attrs?: unknown }>;
     additions?: Array<{ element?: string; category?: string; detail?: string }>;
   } | null;
 
@@ -789,6 +792,8 @@ export async function confirmChanges(
   const afterById = new Map<string, string>();
   // bbox de l'élément dans le RENDU (APRÈS) → crop pour le matching image↔image.
   const bboxById = new Map<string, Bbox>();
+  // attrs structurés V3 de l'élément (état APRÈS) → score structuré du matching (Étape 2).
+  const attrsById = new Map<string, Record<string, unknown>>();
   for (const r of parsed?.results ?? []) {
     if (typeof r.element_id !== "string") continue;
     judgedIds.add(r.element_id);
@@ -798,6 +803,9 @@ export async function confirmChanges(
     if (compBox) {
       const renderBox = mapCompositeBoxToRender(compBox, afterLeftFrac, afterWidthFrac);
       if (renderBox) bboxById.set(r.element_id, renderBox);
+    }
+    if (r.attrs && typeof r.attrs === "object" && !Array.isArray(r.attrs)) {
+      attrsById.set(r.element_id, r.attrs as Record<string, unknown>);
     }
   }
   // Ajouts nets (présents dans APRÈS, absents dans AVANT) → à acheter.
@@ -811,7 +819,7 @@ export async function confirmChanges(
       shoppingImpact: "to_buy_secondhand",
     }));
 
-  return { appliedIds, judgedIds, additions, afterById, bboxById };
+  return { appliedIds, judgedIds, additions, afterById, bboxById, attrsById };
 }
 
 // Catégories qu'on ne liste PAS en addition (architecture/surfaces + déco sans produit
@@ -908,6 +916,8 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
   let afterById = new Map<string, string>();
   let bboxById = new Map<string, Bbox>();
   const elementHexById = new Map<string, string>(); // element_id → couleur dominante (hex)
+  // element_id → attrs structurés V3 (état APRÈS), pour le score structuré du matching.
+  const elementAttrsById = new Map<string, Record<string, unknown>>();
   if (project.basePhotoUrl) {
     const comp = await buildBeforeAfterComposite(project.basePhotoUrl, project.generatedRenderUrl);
     const r = await confirmChanges(
@@ -922,6 +932,7 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
     additions = r.additions;
     afterById = r.afterById;
     bboxById = r.bboxById;
+    r.attrsById.forEach((v, k) => elementAttrsById.set(k, v));
   }
 
   // La LISTE reflète le RENDU, pas seulement les décisions initiales :
@@ -1007,6 +1018,7 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
       description: `${it.name} ${it.detail ?? ""}`.trim(),
       crop: crops[i],
       colorHex: it.elementId ? elementHexById.get(it.elementId) : undefined,
+      attrs: it.elementId ? elementAttrsById.get(it.elementId) : undefined,
     })),
   );
   shoppingList.forEach((it, i) => { it.matches = matchResults[i]; });
