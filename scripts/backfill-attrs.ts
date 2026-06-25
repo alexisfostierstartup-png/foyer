@@ -16,7 +16,6 @@ config();
 
 const UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36";
 const MODEL = "gemini-2.5-flash";
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const norm = (s: unknown): string | null => {
   if (typeof s !== "string") return null;
   const v = s.toLowerCase().trim().replace(/\s+/g, " ").replace(/[.;,]+$/, "").slice(0, 40);
@@ -59,23 +58,27 @@ async function main() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const rows = (prods ?? []) as any[];
     let done = 0, unk = 0, fail = 0;
-    for (const p of rows) {
-      const attrs = await extract(buildExtractionPrompt(schema), p.primary_image_url);
-      if (!attrs) { fail++; totalFail++; await sleep(250); continue; }
-      // auto-harvest des unknown
-      for (const k of enumKeys) {
-        if (String(attrs[k]).toLowerCase() !== "unknown") continue;
-        unk++; totalUnknown++;
-        const free = await extract(freePrompt(cat, k), p.primary_image_url);
-        const label = norm(free?.label);
-        if (label) await sb.rpc("bump_vocab_candidate", { p_category: cat, p_attribute: k, p_label: label, p_example: p.id });
-        await sleep(200);
+    const CONC = 6;
+    let idx = 0; // curseur partagé (incrément synchrone = pas de race en JS mono-thread)
+    const worker = async () => {
+      while (idx < rows.length) {
+        const p = rows[idx++];
+        const attrs = await extract(buildExtractionPrompt(schema), p.primary_image_url);
+        if (!attrs) { fail++; totalFail++; continue; }
+        // auto-harvest des unknown
+        for (const k of enumKeys) {
+          if (String(attrs[k]).toLowerCase() !== "unknown") continue;
+          unk++; totalUnknown++;
+          const free = await extract(freePrompt(cat, k), p.primary_image_url);
+          const label = norm(free?.label);
+          if (label) await sb.rpc("bump_vocab_candidate", { p_category: cat, p_attribute: k, p_label: label, p_example: p.id });
+        }
+        await sb.from("partner_products").update({ metadata: { ...(p.metadata ?? {}), attrs, attrs_model: MODEL } }).eq("id", p.id);
+        done++; totalDone++;
+        if (done % 50 === 0) console.log(`  ${cat}: ${done}/${rows.length}`);
       }
-      await sb.from("partner_products").update({ metadata: { ...(p.metadata ?? {}), attrs, attrs_model: MODEL } }).eq("id", p.id);
-      done++; totalDone++;
-      if (done % 25 === 0) console.log(`  ${cat}: ${done}/${rows.length}`);
-      await sleep(250);
-    }
+    };
+    await Promise.all(Array.from({ length: CONC }, () => worker()));
     console.log(`✓ ${cat.padEnd(13)} ${done} extraits · ${unk} unknowns · ${fail} échecs`);
   }
   console.log(`\nTOTAL : ${totalDone} extraits, ${totalUnknown} unknowns harvestés, ${totalFail} échecs.`);
