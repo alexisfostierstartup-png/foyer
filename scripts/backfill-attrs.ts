@@ -39,13 +39,17 @@ async function main() {
 
   const CATS = catsArg === "all" ? Object.keys(SCHEMA_V3).filter((c) => c !== "default").concat(["floor", "lamp", "mirror"]) : catsArg.split(",");
 
+  // 2 tentatives : récupère les échecs transitoires (host qui throttle, 503 Gemini).
   const extract = async (prompt: string, url: string): Promise<Record<string, unknown> | null> => {
-    try {
-      const buf = Buffer.from(await (await fetch(url, { headers: { "User-Agent": UA, Accept: "image/jpeg,image/webp" } })).arrayBuffer());
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const res = await getVisionProvider("gemini_vision").analyze(prompt, [buf as any], { model: MODEL });
-      return (res.parsed ?? null) as Record<string, unknown> | null;
-    } catch { return null; }
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const buf = Buffer.from(await (await fetch(url, { headers: { "User-Agent": UA, Accept: "image/jpeg,image/webp" } })).arrayBuffer());
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const res = await getVisionProvider("gemini_vision").analyze(prompt, [buf as any], { model: MODEL });
+        return (res.parsed ?? null) as Record<string, unknown> | null;
+      } catch { if (attempt === 0) await new Promise((r) => setTimeout(r, 800)); }
+    }
+    return null;
   };
 
   // Mode --ids : ré-extrait des produits PRÉCIS (toutes catégories), force-overwrite.
@@ -90,7 +94,7 @@ async function main() {
     }
     if (limit > 0) rows.length = Math.min(rows.length, limit);
     let done = 0, unk = 0, fail = 0;
-    const CONC = 6;
+    const CONC = Number(process.argv.find((a) => a.startsWith("--conc="))?.slice(7)) || 6;
     let idx = 0; // curseur partagé (incrément synchrone = pas de race en JS mono-thread)
     const worker = async () => {
       while (idx < rows.length) {
