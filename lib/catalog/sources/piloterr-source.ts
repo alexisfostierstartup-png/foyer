@@ -363,8 +363,9 @@ export class PiloterrSource implements ProductSource {
           // PEINTURE : garde-fou DUR — uniquement marque Luxens ET pot 2.5L.
           if (category === "paint") {
             const isLuxens = /luxens/i.test(d.brand ?? "") || /luxens/i.test(r.title ?? "");
-            const blob = `${r.title ?? ""} ${d.description ?? ""} ${JSON.stringify(d.features ?? {})}`.toLowerCase();
-            if (!isLuxens || !/2[.,]5\s*l\b/.test(blob)) continue;
+            // 2.5L sur le TITRE seul (la description liste tous les volumes → faux positifs).
+            const is25L = /2[.,]5\s*l\b/i.test(r.title ?? "");
+            if (!isLuxens || !is25L) continue;
           }
           yield {
             merchant: "leroy_merlin",
