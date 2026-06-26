@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { getSchemaV3, schemaForCategory } from "@/lib/shopping/attributeSchemaV3";
@@ -83,6 +83,8 @@ export function CatalogAdmin({ initialProducts, totalCount, syncRuns }: Props) {
   const [editingTier, setEditingTier] = useState("");
   const [syncing, setSyncing] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // Aperçu grand format au survol d'une miniature (fixed → pas clippé par l'overflow du tableau).
+  const [hover, setHover] = useState<{ url: string; x: number; y: number } | null>(null);
 
   async function fetchProducts(p = page, f = filters, s = search, af = attrFilters) {
     setLoading(true);
@@ -104,6 +106,30 @@ export function CatalogAdmin({ initialProducts, totalCount, syncRuns }: Props) {
       setLoading(false);
     }
   }
+
+  // Persistance position/filtres au retour d'une fiche produit (sessionStorage).
+  const STORAGE_KEY = "catalogAdmin.state";
+  function saveState() {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ filters, attrFilters, search, page, scrollY: window.scrollY }));
+    } catch { /* ignore */ }
+  }
+  useEffect(() => {
+    const raw = typeof window !== "undefined" ? sessionStorage.getItem(STORAGE_KEY) : null;
+    if (!raw) return;
+    try {
+      const s = JSON.parse(raw) as { filters?: typeof filters; attrFilters?: Record<string, string[]>; search?: string; page?: number; scrollY?: number };
+      if (s.filters) setFilters(s.filters);
+      if (s.attrFilters) setAttrFilters(s.attrFilters);
+      if (s.search) setSearch(s.search);
+      const p = s.page ?? 1;
+      setPage(p);
+      void fetchProducts(p, s.filters ?? filters, s.search ?? "", s.attrFilters ?? {}).then(() => {
+        if (typeof s.scrollY === "number") requestAnimationFrame(() => window.scrollTo(0, s.scrollY!));
+      });
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleSaveTier(id: string) {
     try {
@@ -278,22 +304,25 @@ export function CatalogAdmin({ initialProducts, totalCount, syncRuns }: Props) {
             {products.map((p) => (
               <tr key={p.id} className="hover:bg-foyer-cream/30">
                 <td className="px-4 py-3">
-                  <Link href={`/admin/catalog/${p.id}`} className="block">
+                  <Link href={`/admin/catalog/${p.id}`} className="block" onClick={saveState}>
                     {p.primary_image_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={p.primary_image_url}
                         alt={p.name}
-                        className="size-10 rounded-md object-cover border border-foyer-border"
+                        className="size-20 rounded-md object-cover border border-foyer-border"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                        onMouseEnter={(e) => setHover({ url: p.primary_image_url, x: e.clientX, y: e.clientY })}
+                        onMouseMove={(e) => setHover((h) => (h ? { ...h, x: e.clientX, y: e.clientY } : h))}
+                        onMouseLeave={() => setHover(null)}
                       />
                     ) : (
-                      <div className="size-10 rounded-md bg-foyer-cream border border-foyer-border" />
+                      <div className="size-20 rounded-md bg-foyer-cream border border-foyer-border" />
                     )}
                   </Link>
                 </td>
                 <td className="px-4 py-3 max-w-[280px]">
-                  <Link href={`/admin/catalog/${p.id}`} className="block truncate font-medium text-foyer-ink hover:text-foyer-sage hover:underline">
+                  <Link href={`/admin/catalog/${p.id}`} className="block truncate font-medium text-foyer-ink hover:text-foyer-sage hover:underline" onClick={saveState}>
                     {p.name}
                   </Link>
                   {p.metadata?.attrs && Object.keys(p.metadata.attrs).length > 0 && (
@@ -430,6 +459,20 @@ export function CatalogAdmin({ initialProducts, totalCount, syncRuns }: Props) {
           </div>
         )}
       </div>
+
+      {/* Aperçu grand format au survol (400×400, suit la souris, clampé à l'écran). */}
+      {hover && (
+        <div
+          className="pointer-events-none fixed z-50 rounded-lg border border-foyer-border bg-white p-1 shadow-2xl"
+          style={{
+            left: Math.min(hover.x + 24, (typeof window !== "undefined" ? window.innerWidth : 1280) - 424),
+            top: Math.min(Math.max(hover.y - 200, 8), (typeof window !== "undefined" ? window.innerHeight : 800) - 424),
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={hover.url} alt="" className="size-[400px] rounded object-contain" />
+        </div>
+      )}
     </div>
   );
 }
