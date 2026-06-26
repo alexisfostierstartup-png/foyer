@@ -78,6 +78,28 @@ export function structuredScoreForCategory(
   return structuredScore(schemaForCategory(category), renderAttrs, productAttrs);
 }
 
+// Poids image `w` (base) et `w_max` (quand le texte/structuré est vide) PAR CATÉGORIE —
+// table Notion « ⚖️ Poids image vs description ». Clé = nom de schéma V3.
+export const CATEGORY_W: Record<string, { w: number; wMax: number }> = {
+  sofa: { w: 0.45, wMax: 0.8 }, armchair: { w: 0.55, wMax: 0.85 }, chair: { w: 0.55, wMax: 0.85 },
+  coffee_table: { w: 0.5, wMax: 0.8 }, side_table: { w: 0.55, wMax: 0.85 }, dining_table: { w: 0.45, wMax: 0.8 },
+  rug: { w: 0.6, wMax: 0.9 }, tv_stand: { w: 0.45, wMax: 0.8 }, bookshelf: { w: 0.45, wMax: 0.8 },
+  sideboard: { w: 0.5, wMax: 0.8 }, dresser: { w: 0.45, wMax: 0.8 }, floor_material: { w: 0.55, wMax: 0.85 },
+  floor_lamp: { w: 0.55, wMax: 0.85 }, pendant_lamp: { w: 0.6, wMax: 0.9 },
+  mouldings: { w: 0.5, wMax: 0.8 }, batten: { w: 0.4, wMax: 0.7 }, default: { w: 0.55, wMax: 0.85 },
+};
+
+/**
+ * `w_eff` coverage-aware (référentiel §2) : on part du `w` de base et on remonte vers `w_max`
+ * à mesure que la couverture d'attributs baisse (moins d'attrs comparables → moins de confiance
+ * dans le texte structuré → plus de poids à l'image). coverage = Σ poids comparables (sur 100).
+ */
+export function wEffForCoverage(category: string, coverage: number): number {
+  const { w, wMax } = CATEGORY_W[schemaForCategory(category)] ?? CATEGORY_W.default;
+  const cov = Math.max(0, Math.min(1, coverage / 100));
+  return w + (1 - cov) * (wMax - w);
+}
+
 const fmtAttr = (a: AttrV3): string =>
   a.type === "hex" ? `${a.key}:"#rrggbb"` : `${a.key}:[${a.vocab!.join("|")}]`;
 

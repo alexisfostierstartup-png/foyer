@@ -23,7 +23,7 @@ import {
   type MatchingWeights,
 } from "./matchingConfig";
 import { hexToLab, deltaE } from "@/lib/color";
-import { structuredScoreForCategory } from "./attributeScore";
+import { structuredScoreForCategory, wEffForCoverage } from "./attributeScore";
 import type { ProductMatch } from "@/lib/types";
 
 // Catégorie d'item → catégorie catalogue. null = non-shoppable (pas de match).
@@ -154,19 +154,20 @@ function applyColorRerank(
   return matches.sort((a, b) => b.similarity - a.similarity);
 }
 
-// Re-ranking STRUCTURÉ (attrs V3) : bonus/malus selon la proximité des attributs entre
-// l'ÉLÉMENT du rendu et le PRODUIT (metadata.attrs, pré-extraits au catalogue). Coverage-aware
-// (renorm sur les attributs réellement comparables) → bonus = w·(2·score−1) ∈ [−w,+w],
-// neutre si couverture nulle (élément OU produit sans attrs). Comme la couleur : re-classe les
-// survivants du seuil, n'élimine jamais. Validé au diag (canapé 5-places promu vs 7-places).
-async function applyStructuredRerank(
+// SCORE RÉFERENTIEL (Étape 2, formule Notion) : remplace le blend+bonus additifs par la
+// combinaison pondérée  final = cos(image) · w_eff + texte_structuré · (1 − w_eff).
+//  - texte_structuré = score d'attrs V3 (couleur conditionnelle + motif + forme…) ; si aucun
+//    attribut comparable (produit sans attrs, cov 0) → fallback sur le cosine TEXTE générique.
+//  - w_eff coverage-aware (monte vers w_max quand peu d'attrs). Reste dans [0,1] → pas de
+//    saturation. Le STRUCTURÉ est un terme de 1er rang, plus un bonus faible bridé.
+// Le seuil "À sourcer" reste appliqué AVANT sur le blend (inchangé) → ce re-score ne crée pas
+// de nouveau "À sourcer", il ne fait que (re)classer. crop absent (sim_image null) → garde le blend.
+async function applyReferentialScore(
   matches: ProductMatch[],
   category: string,
   elementAttrs: Record<string, unknown> | null | undefined,
-  weights: MatchingWeights,
 ): Promise<ProductMatch[]> {
-  const w = weights.struct.weight;
-  if (!elementAttrs || w <= 0 || matches.length === 0) return matches;
+  if (matches.length === 0) return matches;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = createSupabaseAdmin() as any;
   const { data } = await supabase.from("partner_products").select("id, metadata").in("id", matches.map((m) => m.id));
@@ -175,16 +176,16 @@ async function applyStructuredRerank(
     (data ?? []).map((r: any) => [r.id, (r.metadata?.attrs ?? null) as Record<string, unknown> | null]),
   );
   for (const m of matches) {
+    if (m.simImage == null) continue; // texte seul (pas de crop) → on garde le score blend
     const pa = attrsById.get(m.id);
-    if (!pa) continue;
     const { score, coverage } = structuredScoreForCategory(category, elementAttrs, pa);
-    if (coverage <= 0) continue;
     m.structScore = Math.round(score * 1000) / 1000;
-    const bonus = w * (2 * score - 1);
-    m.similarity = Math.max(0, Math.min(1, Math.round((m.similarity + bonus) * 1000) / 1000));
+    const wEff = wEffForCoverage(category, coverage);
+    // cov 0 (élément OU produit sans attrs comparables) → le texte structuré n'existe pas →
+    // fallback sur le cosine texte générique pour ne pas sous-scorer.
+    const textSide = coverage > 0 ? score : (m.simText ?? score);
+    m.similarity = Math.max(0, Math.min(1, Math.round((m.simImage * wEff + textSide * (1 - wEff)) * 1000) / 1000));
   }
-  // Tie-break par score structuré : quand sim sature (plafond 1.0 après bonus couleur+struct),
-  // l'attribut départage (ex. coffee_table où plusieurs rondes blend ~max → la mieux attribuée passe).
   return matches.sort((a, b) => (b.similarity - a.similarity) || ((b.structScore ?? 0) - (a.structScore ?? 0)));
 }
 
@@ -288,10 +289,10 @@ export async function matchPartnerProductsBlendBatch(
       // n'élimine jamais (sinon une mauvaise couleur pénalisée passe sous le seuil et
       // on perd même les bons coloris). Puis re-rank couleur sur les survivants.
       const passing = applyDisplayThreshold(matches, weights);
-      // Re-rank couleur (synchrone) puis structuré (attrs V3, lookup DB) sur les survivants.
-      const colored = applyColorRerank(passing, items[i].colorHex, weights);
-      const structed = await applyStructuredRerank(colored, cat, items[i].attrs, weights);
-      return structed.slice(0, topN);
+      // Score RÉFERENTIEL : final = image·w_eff + structuré·(1−w_eff) (formule Notion).
+      // Le seuil "À sourcer" reste sur le blend (passing) → pas de nouveau "À sourcer".
+      const scored = await applyReferentialScore(passing, cat, items[i].attrs);
+      return scored.slice(0, topN);
     }),
   );
 }
