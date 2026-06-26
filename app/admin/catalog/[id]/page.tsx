@@ -76,7 +76,10 @@ export default async function CatalogDetailPage({
             <Badge>{p.availability_status}</Badge>
           </div>
 
-          {typeof metadata.color_hex === "string" && (
+          {/* color_hex = couleur dominante (sharp) : FIABLE pour peinture/sol (aplats), mais
+              polluée par la scène sur le mobilier photographié en situation → on ne l'affiche
+              (et le matching ne s'en sert) QUE pour peinture/sol. Le mobilier utilise attrs.color. */}
+          {(p.category === "paint" || p.category === "floor") && typeof metadata.color_hex === "string" && (
             <div className="mt-3 flex items-center gap-2.5">
               <span
                 className="size-8 rounded-md border border-foyer-border"
@@ -84,7 +87,7 @@ export default async function CatalogDetailPage({
                 aria-hidden
               />
               <span className="font-mono text-sm text-foyer-ink">{metadata.color_hex}</span>
-              <span className="text-xs text-foyer-muted">hex (matching peinture par couleur)</span>
+              <span className="text-xs text-foyer-muted">hex (matching peinture/sol par couleur)</span>
             </div>
           )}
 

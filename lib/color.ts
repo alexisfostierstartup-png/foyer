@@ -38,3 +38,46 @@ export function hexToLab(hex: string | null | undefined): Lab | null {
 export function deltaE(a: Lab, b: Lab): number {
   return Math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2);
 }
+
+function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2;
+  let h = 0, s = 0;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h *= 60;
+  }
+  return [h, s, l];
+}
+
+// Familles de couleur (pour filtrage/vérif, pas le matching fin qui reste en ΔE).
+export const COLOR_FAMILIES = [
+  "blanc", "beige", "gris", "noir", "marron", "rouge", "orange", "jaune", "vert", "bleu", "violet", "rose",
+] as const;
+
+/** Classe un hex en famille de couleur (blanc/gris/bleu/…) via teinte + saturation + clarté. */
+export function colorFamily(hex: string | null | undefined): string | null {
+  const rgb = hex ? hexToRgb(hex) : null;
+  if (!rgb) return null;
+  const [h, s, l] = rgbToHsl(rgb[0], rgb[1], rgb[2]);
+  if (l >= 0.9 && s < 0.18) return "blanc";
+  if (l <= 0.12) return "noir";
+  if (s < 0.12) return "gris";
+  // Beige / marron = orange désaturé (h ~20-50) : par clarté.
+  if (h >= 20 && h < 50) {
+    if (s < 0.55 && l > 0.6) return "beige";
+    if (l < 0.45) return "marron";
+    return "orange";
+  }
+  if (h < 20 || h >= 345) return "rouge";
+  if (h < 45) return "orange";
+  if (h < 66) return "jaune";
+  if (h < 170) return "vert";
+  if (h < 255) return "bleu"; // inclut cyan/canard
+  if (h < 290) return "violet";
+  return "rose";
+}

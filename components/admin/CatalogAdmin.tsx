@@ -5,6 +5,7 @@ import { useState } from "react";
 import { RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { getSchemaV3, schemaForCategory } from "@/lib/shopping/attributeSchemaV3";
+import { COLOR_FAMILIES } from "@/lib/color";
 
 type PartnerProduct = {
   id: string;
@@ -206,9 +207,24 @@ export function CatalogAdmin({ initialProducts, totalCount, syncRuns }: Props) {
       </div>
 
       {/* Filtres par attribut (catégorie sélectionnée) */}
-      {filters.category && attrSchema.length > 0 && (
+      {filters.category && (
         <div className="mb-4 flex flex-wrap items-center gap-2 rounded-md border border-dashed border-foyer-border bg-foyer-cream/30 px-3 py-2">
           <span className="text-xs font-medium uppercase tracking-wide text-foyer-muted">Attributs</span>
+          {/* Couleur par FAMILLE (classée depuis attrs.color, pas le color_hex pollué). */}
+          <select
+            value={attrFilters.color_family ?? ""}
+            onChange={(e) => {
+              const af = { ...attrFilters, color_family: e.target.value };
+              setAttrFilters(af);
+              fetchProducts(1, filters, search, af);
+            }}
+            className="rounded-md border border-foyer-border bg-white px-2.5 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foyer-sage"
+          >
+            <option value="">couleur</option>
+            {COLOR_FAMILIES.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
           {attrSchema.map((a) => (
             <select
               key={a.key}
