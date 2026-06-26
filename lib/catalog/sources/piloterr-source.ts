@@ -62,16 +62,31 @@ const LM_KEYWORDS: Record<string, string[]> = {
     "peinture mur vert d'eau", "peinture mur olive", "peinture mur turquoise", "peinture mur émeraude",
     // violets
     "peinture mur violet", "peinture mur mauve", "peinture mur prune", "peinture mur parme", "peinture mur lavande",
-    // gamme LUXENS (forme "Luxens X" = la plus efficace pour les teintes vives)
-    "Luxens jaune", "Luxens moutarde", "Luxens safran", "Luxens banana",
+    // gamme LUXENS 2.5L — couverture LARGE ciblée sur les TROUS du nuancier actuel
+    // (marron/noir/blanc/jaune/violet/rouge/rose sous-représentés). Le filtre 2.5L + la
+    // sélection greedy anti-doublon (ΔE) se font au post-prune.
+    "Luxens blanc", "Luxens blanc cassé", "Luxens lin", "Luxens craie", "Luxens coquille",
+    "Luxens noir", "Luxens réglisse", "Luxens ardoise", "Luxens gris souris", "Luxens gris perle",
+    "Luxens beige", "Luxens sable", "Luxens taupe", "Luxens grège", "Luxens noisette",
+    "Luxens café", "Luxens chocolat", "Luxens cannelle", "Luxens terre", "Luxens brun", "Luxens marron glacé",
+    "Luxens jaune", "Luxens moutarde", "Luxens safran", "Luxens curry", "Luxens jonquille", "Luxens banana",
+    "Luxens abricot", "Luxens mandarine", "Luxens terracotta", "Luxens brique", "Luxens rouille",
+    "Luxens rouge", "Luxens framboise", "Luxens cerise", "Luxens corail", "Luxens grenade",
+    "Luxens rose", "Luxens rose poudré", "Luxens vieux rose", "Luxens fuchsia",
     "Luxens aubergine", "Luxens cassis", "Luxens figue", "Luxens raisin", "Luxens myrtille",
-    "Luxens prune", "Luxens lie de vin", "Luxens lilas", "Luxens parme", "Luxens violet",
+    "Luxens prune", "Luxens lie de vin", "Luxens lilas", "Luxens parme", "Luxens violet", "Luxens mauve", "Luxens glycine", "Luxens lavande",
+    "Luxens vert sauge", "Luxens vert olive", "Luxens vert kaki", "Luxens émeraude", "Luxens menthe", "Luxens amande", "Luxens eucalyptus",
+    "Luxens bleu canard", "Luxens bleu gris", "Luxens indigo", "Luxens cobalt", "Luxens bleu pétrole", "Luxens bleu nuit",
   ],
   mouldings: ["moulure décorative", "moulure polyuréthane", "cimaise murale", "corniche décorative", "rosace plafond"],
   batten: ["tasseau sapin", "tasseau chêne", "tasseau bois raboté", "tasseau pin", "liteau bois", "tasseau douglas"],
-  // revêtements de sol (parquet stratifié, béton ciré, carrelage, pvc…)
+  // revêtements de sol — STRATIFIÉ ÉTOFFÉ (essences/teintes/poses) + autres revêtements
   floor: [
     "sol stratifié ARTENS", "parquet stratifié chêne", "sol stratifié",
+    "sol stratifié chêne clair", "sol stratifié chêne naturel", "sol stratifié chêne foncé",
+    "sol stratifié chêne gris", "sol stratifié chêne blanchi", "sol stratifié bois clair",
+    "sol stratifié bois foncé", "sol stratifié effet bois", "parquet stratifié point de hongrie",
+    "parquet stratifié chevron", "sol stratifié gris", "sol stratifié blanc", "parquet stratifié naturel",
     "kit béton ciré sol", "béton ciré sol",
     "carrelage sol aspect bois", "carrelage sol aspect béton", "carrelage intérieur ARTENS",
     "lame pvc clipsable", "sol pvc",
