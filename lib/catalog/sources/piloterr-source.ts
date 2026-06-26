@@ -49,17 +49,18 @@ const LM_KEYWORDS: Record<string, string[]> = {
   // PEINTURE = marque LUXENS uniquement, pots 2.5L (filtre DUR Luxens ∧ 2.5L appliqué
   // dans fetchLeroyMerlin). Couverture LARGE ciblée sur les TROUS du nuancier actuel
   // (marron/noir/blanc/jaune/violet/rouge/rose sous-représentés).
+  // PEINTURE = marque LUXENS uniquement, pots 2.5L (filtre DUR Luxens ∧ 2.5L dans fetchLeroyMerlin).
   paint: [
     "peinture Luxens 2.5L", "peinture Luxens mur 2.5L",
     "Luxens blanc", "Luxens blanc cassé", "Luxens lin", "Luxens craie", "Luxens coquille",
-    "Luxens noir", "Luxens réglisse", "Luxens ardoise", "Luxens gris souris", "Luxens gris perle",
+    "Luxens noir", "Luxens réglisse", "Luxens charbon", "Luxens encre", "Luxens ébène", "Luxens ardoise", "Luxens gris souris", "Luxens gris perle", "Luxens anthracite",
     "Luxens beige", "Luxens sable", "Luxens taupe", "Luxens grège", "Luxens noisette",
-    "Luxens café", "Luxens chocolat", "Luxens cannelle", "Luxens terre", "Luxens brun", "Luxens marron glacé",
-    "Luxens jaune", "Luxens moutarde", "Luxens safran", "Luxens curry", "Luxens jonquille", "Luxens banana",
+    "Luxens café", "Luxens chocolat", "Luxens cacao", "Luxens chataigne", "Luxens tabac", "Luxens moka", "Luxens caramel", "Luxens havane", "Luxens écorce", "Luxens bronze", "Luxens cannelle", "Luxens terre", "Luxens brun", "Luxens marron", "Luxens marron glacé",
+    "Luxens jaune", "Luxens moutarde", "Luxens safran", "Luxens curry", "Luxens jonquille", "Luxens banana", "Luxens or", "Luxens miel", "Luxens citron", "Luxens ocre", "Luxens paille", "Luxens soleil", "Luxens blé",
     "Luxens abricot", "Luxens mandarine", "Luxens terracotta", "Luxens brique", "Luxens rouille",
     "Luxens rouge", "Luxens framboise", "Luxens cerise", "Luxens corail", "Luxens grenade",
     "Luxens rose", "Luxens rose poudré", "Luxens vieux rose", "Luxens fuchsia",
-    "Luxens aubergine", "Luxens cassis", "Luxens figue", "Luxens raisin", "Luxens myrtille",
+    "Luxens aubergine", "Luxens cassis", "Luxens figue", "Luxens raisin", "Luxens myrtille", "Luxens mûre", "Luxens byzance", "Luxens iris", "Luxens améthyste", "Luxens pourpre",
     "Luxens prune", "Luxens lie de vin", "Luxens lilas", "Luxens parme", "Luxens violet", "Luxens mauve", "Luxens glycine", "Luxens lavande",
     "Luxens vert sauge", "Luxens vert olive", "Luxens vert kaki", "Luxens émeraude", "Luxens menthe", "Luxens amande", "Luxens eucalyptus",
     "Luxens bleu canard", "Luxens bleu gris", "Luxens indigo", "Luxens cobalt", "Luxens bleu pétrole", "Luxens bleu nuit",

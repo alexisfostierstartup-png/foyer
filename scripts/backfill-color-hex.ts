@@ -22,12 +22,15 @@ async function dominantHex(url: string, sharp: typeof import("sharp"), category:
     const m = await sharp(buf).metadata();
     const W = m.width ?? 0, H = m.height ?? 0;
     if (!W || !H) return null;
-    // PEINTURE : l'image LM = un pot CENTRÉ sur un FOND qui EST la couleur → on échantillonne
-    // la BANDE DU HAUT (le fond = la teinte), pas le centre (= le pot, gris). Autres catégories :
-    // région centrale 40% → l'objet, en évitant le fond blanc et les bords.
+    // Échantillon selon la catégorie (les images LM sont des MISES EN SCÈNE) :
+    //  - PEINTURE : pot centré sur un FOND = la couleur → BANDE DU HAUT (le centre = le pot, gris).
+    //  - SOL : scène de pièce, le revêtement est EN BAS → BANDE DU BAS (le centre = le canapé/déco).
+    //  - autres : région centrale 40% (l'objet), en évitant fond blanc + bords.
     const region = category === "paint"
       ? { left: Math.round(W * 0.05), top: Math.round(H * 0.03), width: Math.round(W * 0.9), height: Math.round(H * 0.1) }
-      : { left: Math.round(W * 0.3), top: Math.round(H * 0.3), width: Math.round(W * 0.4), height: Math.round(H * 0.4) };
+      : category === "floor"
+        ? { left: Math.round(W * 0.15), top: Math.round(H * 0.82), width: Math.round(W * 0.7), height: Math.round(H * 0.13) }
+        : { left: Math.round(W * 0.3), top: Math.round(H * 0.3), width: Math.round(W * 0.4), height: Math.round(H * 0.4) };
     const px = await sharp(buf).extract(region).resize(1, 1).raw().toBuffer();
     return "#" + [px[0], px[1], px[2]].map((x) => x.toString(16).padStart(2, "0")).join("");
   } catch { return null; }
