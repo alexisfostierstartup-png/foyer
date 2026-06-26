@@ -31,11 +31,12 @@ export async function GET(request: Request) {
   // Filtres par attribut structuré : ?attr_<clé>=<valeur> → metadata.attrs.<clé> = valeur
   // (ex. attr_shape=round). Permet de vérifier le matching (lister les produits d'un même
   // profil d'attrs et voir si un plus proche existait sans remonter).
-  for (const [k, v] of searchParams.entries()) {
-    if (k.startsWith("attr_") && v) {
-      const attrKey = k.slice(5).replace(/[^a-z_]/gi, ""); // garde-fou injection
-      if (attrKey) query = query.eq(`metadata->attrs->>${attrKey}`, v);
-    }
+  const attrParamKeys = new Set<string>();
+  for (const k of searchParams.keys()) if (k.startsWith("attr_")) attrParamKeys.add(k);
+  for (const k of attrParamKeys) {
+    const attrKey = k.slice(5).replace(/[^a-z_]/gi, ""); // garde-fou injection
+    const vals = searchParams.getAll(k).filter(Boolean);
+    if (attrKey && vals.length) query = query.in(`metadata->attrs->>${attrKey}`, vals); // multi-valeurs = OU
   }
 
   const { data, error, count } = await query;

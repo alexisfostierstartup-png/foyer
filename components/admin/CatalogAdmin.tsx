@@ -77,8 +77,8 @@ export function CatalogAdmin({ initialProducts, totalCount, syncRuns }: Props) {
   const [filters, setFilters] = useState({
     merchant: "", category: "", partner_tier: "", source_type: "", availability_status: "",
   });
-  // Filtres par attribut structuré (apparaissent quand une catégorie à schéma est choisie).
-  const [attrFilters, setAttrFilters] = useState<Record<string, string>>({});
+  // Filtres par attribut structuré (multi-select : plusieurs valeurs par attribut → OU).
+  const [attrFilters, setAttrFilters] = useState<Record<string, string[]>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTier, setEditingTier] = useState("");
   const [syncing, setSyncing] = useState<string | null>(null);
@@ -91,8 +91,9 @@ export function CatalogAdmin({ initialProducts, totalCount, syncRuns }: Props) {
         page: String(p),
         ...(s ? { search: s } : {}),
         ...Object.fromEntries(Object.entries(f).filter(([, v]) => v)),
-        ...Object.fromEntries(Object.entries(af).filter(([, v]) => v).map(([k, v]) => [`attr_${k}`, v])),
       });
+      // Multi-select : un param attr_<clé> répété par valeur cochée (→ filtre IN côté API).
+      for (const [k, vals] of Object.entries(af)) for (const v of vals) if (v) params.append(`attr_${k}`, v);
       const res = await fetch(`/api/admin/catalog?${params}`);
       const data = await res.json() as { data: PartnerProduct[]; count: number };
       setProducts(data.data ?? []);
@@ -140,10 +141,24 @@ export function CatalogAdmin({ initialProducts, totalCount, syncRuns }: Props) {
   }
 
   const totalPages = Math.ceil(count / 20);
-  // Attributs enum de la catégorie sélectionnée → dropdowns de filtre.
+  // Attributs enum de la catégorie sélectionnée + couleur par famille → filtres multi-select.
   const attrSchema = filters.category
     ? getSchemaV3(schemaForCategory(filters.category)).filter((a) => a.type === "enum")
     : [];
+  const attrGroups: { key: string; values: string[] }[] = filters.category
+    ? [
+        { key: "color_family", values: [...COLOR_FAMILIES] },
+        ...attrSchema.map((a) => ({ key: a.key, values: [...(a.vocab ?? []), "unknown", "n/a"] })),
+      ]
+    : [];
+
+  function toggleAttr(key: string, value: string) {
+    const cur = attrFilters[key] ?? [];
+    const next = cur.includes(value) ? cur.filter((x) => x !== value) : [...cur, value];
+    const af = { ...attrFilters, [key]: next };
+    setAttrFilters(af);
+    fetchProducts(1, filters, search, af);
+  }
 
   return (
     <div>
@@ -208,46 +223,31 @@ export function CatalogAdmin({ initialProducts, totalCount, syncRuns }: Props) {
 
       {/* Filtres par attribut (catégorie sélectionnée) */}
       {filters.category && (
-        <div className="mb-4 flex flex-wrap items-center gap-2 rounded-md border border-dashed border-foyer-border bg-foyer-cream/30 px-3 py-2">
-          <span className="text-xs font-medium uppercase tracking-wide text-foyer-muted">Attributs</span>
-          {/* Couleur par FAMILLE (classée depuis attrs.color, pas le color_hex pollué). */}
-          <select
-            value={attrFilters.color_family ?? ""}
-            onChange={(e) => {
-              const af = { ...attrFilters, color_family: e.target.value };
-              setAttrFilters(af);
-              fetchProducts(1, filters, search, af);
-            }}
-            className="rounded-md border border-foyer-border bg-white px-2.5 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foyer-sage"
-          >
-            <option value="">couleur</option>
-            {COLOR_FAMILIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-          {attrSchema.map((a) => (
-            <select
-              key={a.key}
-              value={attrFilters[a.key] ?? ""}
-              onChange={(e) => {
-                const af = { ...attrFilters, [a.key]: e.target.value };
-                setAttrFilters(af);
-                fetchProducts(1, filters, search, af);
-              }}
-              className="rounded-md border border-foyer-border bg-white px-2.5 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foyer-sage"
-            >
-              <option value="">{a.key}</option>
-              {(a.vocab ?? []).map((v) => (
-                <option key={v} value={v}>{v}</option>
-              ))}
-              <option value="unknown">· unknown</option>
-              <option value="n/a">· n/a</option>
-            </select>
-          ))}
-          {Object.values(attrFilters).some(Boolean) && (
+        <div className="mb-4 flex flex-wrap items-start gap-2 rounded-md border border-dashed border-foyer-border bg-foyer-cream/30 px-3 py-2">
+          <span className="mt-1.5 text-xs font-medium uppercase tracking-wide text-foyer-muted">Attributs</span>
+          {/* Multi-select par attribut (+ couleur par famille). Plusieurs valeurs cochées = OU. */}
+          {attrGroups.map((g) => {
+            const sel = attrFilters[g.key] ?? [];
+            return (
+              <details key={g.key} className="relative">
+                <summary className="cursor-pointer list-none rounded-md border border-foyer-border bg-white px-2.5 py-1.5 text-sm">
+                  {g.key === "color_family" ? "couleur" : g.key}{sel.length ? ` (${sel.length})` : ""}
+                </summary>
+                <div className="absolute z-20 mt-1 max-h-64 w-44 overflow-auto rounded-md border border-foyer-border bg-white p-1.5 shadow-lg">
+                  {g.values.map((v) => (
+                    <label key={v} className="flex cursor-pointer items-center gap-1.5 rounded px-1.5 py-0.5 text-sm hover:bg-foyer-cream/50">
+                      <input type="checkbox" checked={sel.includes(v)} onChange={() => toggleAttr(g.key, v)} />
+                      {v}
+                    </label>
+                  ))}
+                </div>
+              </details>
+            );
+          })}
+          {Object.values(attrFilters).some((a) => a.length) && (
             <button
               onClick={() => { setAttrFilters({}); fetchProducts(1, filters, search, {}); }}
-              className="text-xs text-foyer-muted underline hover:text-foyer-ink"
+              className="mt-1.5 text-xs text-foyer-muted underline hover:text-foyer-ink"
             >
               réinitialiser
             </button>

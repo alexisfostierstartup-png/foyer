@@ -13,20 +13,22 @@ config();
 
 const UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36";
 
-async function dominantHex(url: string, sharp: typeof import("sharp")): Promise<string | null> {
+async function dominantHex(url: string, sharp: typeof import("sharp"), category: string): Promise<string | null> {
   try {
-    // jpeg/webp uniquement (PAS avif/heif que sharp ne décode pas — IKEA sert du heif
-    // sur un Accept large → décodage impossible → hex null).
-    const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "image/jpeg,image/webp" } });
+    // jpeg/webp/png (PAS avif/heif que sharp ne décode pas — IKEA sert du heif sinon ; LM sert du png).
+    const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "image/jpeg,image/webp,image/png" } });
     if (!res.ok) return null;
     const buf = Buffer.from(await res.arrayBuffer());
     const m = await sharp(buf).metadata();
     const W = m.width ?? 0, H = m.height ?? 0;
     if (!W || !H) return null;
-    // Région centrale 40% → l'objet, en évitant le fond blanc et les bords.
-    const px = await sharp(buf)
-      .extract({ left: Math.round(W * 0.3), top: Math.round(H * 0.3), width: Math.round(W * 0.4), height: Math.round(H * 0.4) })
-      .resize(1, 1).raw().toBuffer();
+    // PEINTURE : l'image LM = un pot CENTRÉ sur un FOND qui EST la couleur → on échantillonne
+    // la BANDE DU HAUT (le fond = la teinte), pas le centre (= le pot, gris). Autres catégories :
+    // région centrale 40% → l'objet, en évitant le fond blanc et les bords.
+    const region = category === "paint"
+      ? { left: Math.round(W * 0.05), top: Math.round(H * 0.03), width: Math.round(W * 0.9), height: Math.round(H * 0.1) }
+      : { left: Math.round(W * 0.3), top: Math.round(H * 0.3), width: Math.round(W * 0.4), height: Math.round(H * 0.4) };
+    const px = await sharp(buf).extract(region).resize(1, 1).raw().toBuffer();
     return "#" + [px[0], px[1], px[2]].map((x) => x.toString(16).padStart(2, "0")).join("");
   } catch { return null; }
 }
@@ -40,11 +42,11 @@ async function main() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sb = createSupabaseAdmin() as any;
 
-  type Row = { id: string; primary_image_url: string; metadata: Record<string, unknown> | null };
+  type Row = { id: string; category: string; primary_image_url: string; metadata: Record<string, unknown> | null };
   const rows: Row[] = [];
   const PAGE = 1000;
   for (let from = 0; ; from += PAGE) {
-    let q = sb.from("partner_products").select("id, primary_image_url, metadata").not("primary_image_url", "is", null).order("id").range(from, from + PAGE - 1);
+    let q = sb.from("partner_products").select("id, category, primary_image_url, metadata").not("primary_image_url", "is", null).order("id").range(from, from + PAGE - 1);
     if (cats) q = q.in("category", cats);
     const { data, error } = await q;
     if (error) { console.error(error.message); process.exit(1); }
@@ -60,7 +62,7 @@ async function main() {
   for (let i = 0; i < todo.length; i += CONC) {
     const batch = todo.slice(i, i + CONC);
     await Promise.all(batch.map(async (p) => {
-      const hex = await dominantHex(p.primary_image_url, sharp);
+      const hex = await dominantHex(p.primary_image_url, sharp, p.category);
       done++;
       if (!hex) return;
       ok++;
