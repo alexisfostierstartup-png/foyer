@@ -15,6 +15,7 @@ type PartnerProduct = {
   primary_image_url: string;
   last_synced_at: string | null;
   created_at: string;
+  metadata?: { attrs?: Record<string, unknown> } | null;
 };
 
 type SyncRun = {
@@ -37,7 +38,7 @@ export default async function AdminCatalogPage() {
   const [{ data: products, count }, { data: syncRuns }] = await Promise.all([
     (supabase as any)
       .from("partner_products")
-      .select("id, name, category, merchant, price, partner_tier, source_type, availability_status, primary_image_url, last_synced_at, created_at", { count: "exact" })
+      .select("id, name, category, merchant, price, partner_tier, source_type, availability_status, primary_image_url, last_synced_at, created_at, metadata", { count: "exact" })
       .order("created_at", { ascending: false })
       .limit(20),
     (supabase as any)

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
+import { getSchemaV3, schemaForCategory } from "@/lib/shopping/attributeSchemaV3";
 
 type PartnerProduct = {
   id: string;
@@ -17,6 +18,7 @@ type PartnerProduct = {
   primary_image_url: string;
   last_synced_at: string | null;
   created_at: string;
+  metadata?: { attrs?: Record<string, unknown> } | null;
 };
 
 type SyncRun = {
@@ -74,18 +76,21 @@ export function CatalogAdmin({ initialProducts, totalCount, syncRuns }: Props) {
   const [filters, setFilters] = useState({
     merchant: "", category: "", partner_tier: "", source_type: "", availability_status: "",
   });
+  // Filtres par attribut structuré (apparaissent quand une catégorie à schéma est choisie).
+  const [attrFilters, setAttrFilters] = useState<Record<string, string>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTier, setEditingTier] = useState("");
   const [syncing, setSyncing] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function fetchProducts(p = page, f = filters, s = search) {
+  async function fetchProducts(p = page, f = filters, s = search, af = attrFilters) {
     setLoading(true);
     try {
       const params = new URLSearchParams({
         page: String(p),
         ...(s ? { search: s } : {}),
         ...Object.fromEntries(Object.entries(f).filter(([, v]) => v)),
+        ...Object.fromEntries(Object.entries(af).filter(([, v]) => v).map(([k, v]) => [`attr_${k}`, v])),
       });
       const res = await fetch(`/api/admin/catalog?${params}`);
       const data = await res.json() as { data: PartnerProduct[]; count: number };
@@ -134,6 +139,10 @@ export function CatalogAdmin({ initialProducts, totalCount, syncRuns }: Props) {
   }
 
   const totalPages = Math.ceil(count / 20);
+  // Attributs enum de la catégorie sélectionnée → dropdowns de filtre.
+  const attrSchema = filters.category
+    ? getSchemaV3(schemaForCategory(filters.category)).filter((a) => a.type === "enum")
+    : [];
 
   return (
     <div>
@@ -175,7 +184,9 @@ export function CatalogAdmin({ initialProducts, totalCount, syncRuns }: Props) {
             onChange={(e) => {
               const f = { ...filters, [key]: e.target.value };
               setFilters(f);
-              fetchProducts(1, f);
+              // Changer de catégorie réinitialise les filtres d'attribut (vocab différent).
+              if (key === "category") { setAttrFilters({}); fetchProducts(1, f, search, {}); }
+              else fetchProducts(1, f);
             }}
             className="rounded-md border border-foyer-border px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foyer-sage"
           >
@@ -193,6 +204,40 @@ export function CatalogAdmin({ initialProducts, totalCount, syncRuns }: Props) {
           {loading ? "Chargement…" : "Filtrer"}
         </button>
       </div>
+
+      {/* Filtres par attribut (catégorie sélectionnée) */}
+      {filters.category && attrSchema.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-2 rounded-md border border-dashed border-foyer-border bg-foyer-cream/30 px-3 py-2">
+          <span className="text-xs font-medium uppercase tracking-wide text-foyer-muted">Attributs</span>
+          {attrSchema.map((a) => (
+            <select
+              key={a.key}
+              value={attrFilters[a.key] ?? ""}
+              onChange={(e) => {
+                const af = { ...attrFilters, [a.key]: e.target.value };
+                setAttrFilters(af);
+                fetchProducts(1, filters, search, af);
+              }}
+              className="rounded-md border border-foyer-border bg-white px-2.5 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foyer-sage"
+            >
+              <option value="">{a.key}</option>
+              {(a.vocab ?? []).map((v) => (
+                <option key={v} value={v}>{v}</option>
+              ))}
+              <option value="unknown">· unknown</option>
+              <option value="n/a">· n/a</option>
+            </select>
+          ))}
+          {Object.values(attrFilters).some(Boolean) && (
+            <button
+              onClick={() => { setAttrFilters({}); fetchProducts(1, filters, search, {}); }}
+              className="text-xs text-foyer-muted underline hover:text-foyer-ink"
+            >
+              réinitialiser
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Table */}
       <div className="rounded-lg border border-foyer-border overflow-hidden">
@@ -231,10 +276,15 @@ export function CatalogAdmin({ initialProducts, totalCount, syncRuns }: Props) {
                     )}
                   </Link>
                 </td>
-                <td className="px-4 py-3 max-w-[200px]">
+                <td className="px-4 py-3 max-w-[280px]">
                   <Link href={`/admin/catalog/${p.id}`} className="block truncate font-medium text-foyer-ink hover:text-foyer-sage hover:underline">
                     {p.name}
                   </Link>
+                  {p.metadata?.attrs && Object.keys(p.metadata.attrs).length > 0 && (
+                    <div className="mt-0.5 truncate text-[11px] text-foyer-muted" title={Object.entries(p.metadata.attrs).map(([k, v]) => `${k}:${v}`).join(" · ")}>
+                      {Object.entries(p.metadata.attrs).map(([k, v]) => `${k}:${v}`).join(" · ")}
+                    </div>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-foyer-muted">{p.category}</td>
                 <td className="px-4 py-3 text-foyer-muted">{p.merchant}</td>

@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase as any)
     .from("partner_products")
-    .select("id, name, category, merchant, price, partner_tier, source_type, availability_status, primary_image_url, last_synced_at, created_at", { count: "exact" })
+    .select("id, name, category, merchant, price, partner_tier, source_type, availability_status, primary_image_url, last_synced_at, created_at, metadata", { count: "exact" })
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -27,6 +27,16 @@ export async function GET(request: Request) {
   if (source_type) query = query.eq("source_type", source_type);
   if (availability) query = query.eq("availability_status", availability);
   if (search) query = query.ilike("name", `%${search}%`);
+
+  // Filtres par attribut structuré : ?attr_<clé>=<valeur> → metadata.attrs.<clé> = valeur
+  // (ex. attr_shape=round). Permet de vérifier le matching (lister les produits d'un même
+  // profil d'attrs et voir si un plus proche existait sans remonter).
+  for (const [k, v] of searchParams.entries()) {
+    if (k.startsWith("attr_") && v) {
+      const attrKey = k.slice(5).replace(/[^a-z_]/gi, ""); // garde-fou injection
+      if (attrKey) query = query.eq(`metadata->attrs->>${attrKey}`, v);
+    }
+  }
 
   const { data, error, count } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
