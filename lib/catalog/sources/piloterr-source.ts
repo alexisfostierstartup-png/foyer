@@ -46,25 +46,11 @@ const LM_KEYWORDS: Record<string, string[]> = {
   rug: ["tapis", "tapis salon", "tapis berbère", "tapis laine", "tapis poils longs", "tapis scandinave", "tapis jute"],
   floor_lamp: ["lampadaire", "lampadaire salon", "lampadaire trépied", "lampadaire arc", "liseuse"],
   dresser: ["commode", "commode bois", "commode scandinave", "chiffonnier", "commode blanche"],
-  // fournitures — peinture MURALE couleur intérieur (pas "meuble")
+  // PEINTURE = marque LUXENS uniquement, pots 2.5L (filtre DUR Luxens ∧ 2.5L appliqué
+  // dans fetchLeroyMerlin). Couverture LARGE ciblée sur les TROUS du nuancier actuel
+  // (marron/noir/blanc/jaune/violet/rouge/rose sous-représentés).
   paint: [
-    "peinture salon couleur", "peinture chambre couleur", "peinture mur couleur intérieur",
-    // neutres
-    "peinture mur beige", "peinture mur greige", "peinture mur taupe", "peinture mur lin",
-    "peinture mur gris", "peinture mur gris clair", "peinture mur anthracite", "peinture mur noir",
-    // chauds
-    "peinture mur terracotta", "peinture mur ocre", "peinture mur jaune", "peinture mur moutarde",
-    "peinture mur orange", "peinture mur rouge", "peinture mur bordeaux", "peinture mur brique",
-    "peinture mur rose", "peinture mur vieux rose", "peinture mur corail", "peinture mur brun",
-    // froids
-    "peinture mur bleu", "peinture mur bleu marine", "peinture mur bleu canard", "peinture mur bleu nuit",
-    "peinture mur bleu gris", "peinture mur vert", "peinture mur vert sauge", "peinture mur vert kaki",
-    "peinture mur vert d'eau", "peinture mur olive", "peinture mur turquoise", "peinture mur émeraude",
-    // violets
-    "peinture mur violet", "peinture mur mauve", "peinture mur prune", "peinture mur parme", "peinture mur lavande",
-    // gamme LUXENS 2.5L — couverture LARGE ciblée sur les TROUS du nuancier actuel
-    // (marron/noir/blanc/jaune/violet/rouge/rose sous-représentés). Le filtre 2.5L + la
-    // sélection greedy anti-doublon (ΔE) se font au post-prune.
+    "peinture Luxens 2.5L", "peinture Luxens mur 2.5L",
     "Luxens blanc", "Luxens blanc cassé", "Luxens lin", "Luxens craie", "Luxens coquille",
     "Luxens noir", "Luxens réglisse", "Luxens ardoise", "Luxens gris souris", "Luxens gris perle",
     "Luxens beige", "Luxens sable", "Luxens taupe", "Luxens grège", "Luxens noisette",
@@ -100,7 +86,7 @@ const PAINT_EXCLUDE = /m[ée]tal|\bfer\b|portail|grille|ext[ée]rieur|garde.?cor
 const FLOOR_INCLUDE = /stratifi|parquet|carrelage|b[ée]ton cir|lame pvc|sol pvc|vinyle|dalle|moquette/i;
 const FLOOR_EXCLUDE = /nettoyant|protecteur|\bjoint|\bcolle|plinthe|seuil|sous.?couche|profil|d[ée]capant|entretien|raccord|quart de rond|\bspatule|\btruelle/i;
 const LM_FILTERS: Record<string, { include?: RegExp; exclude?: RegExp }> = {
-  paint: { exclude: PAINT_EXCLUDE },
+  paint: { include: /luxens/i, exclude: PAINT_EXCLUDE }, // peinture = Luxens uniquement
   floor: { include: FLOOR_INCLUDE, exclude: FLOOR_EXCLUDE },
 };
 
@@ -374,6 +360,12 @@ export class PiloterrSource implements ProductSource {
           };
           const imgs = (d.images ?? []).filter(Boolean).map(adeoResize);
           if (imgs.length === 0) continue;
+          // PEINTURE : garde-fou DUR — uniquement marque Luxens ET pot 2.5L.
+          if (category === "paint") {
+            const isLuxens = /luxens/i.test(d.brand ?? "") || /luxens/i.test(r.title ?? "");
+            const blob = `${r.title ?? ""} ${d.description ?? ""} ${JSON.stringify(d.features ?? {})}`.toLowerCase();
+            if (!isLuxens || !/2[.,]5\s*l\b/.test(blob)) continue;
+          }
           yield {
             merchant: "leroy_merlin",
             external_id: r.sku,
