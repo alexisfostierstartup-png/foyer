@@ -5,25 +5,38 @@
  * sa seule description : un embedding IMAGE du crop comparé aux embeddings IMAGE des
  * produits est bien plus discriminant (teinte, texture, forme) que texte→image.
  *
- * bbox = { x, y, w, h } NORMALISÉ 0-1 sur le RENDU (déjà ramené au panneau APRÈS en
- * amont). Padding ~10% clampé aux bords pour absorber l'imprécision des bbox Gemini.
+ * bbox = { x, y, w, h } NORMALISÉ 0-1 sur le RENDU (déjà ramené au panneau APRÈS en amont).
+ *
+ * CROP SERRÉ (validé sur cas réel) : on INSET légèrement la bbox (padding NÉGATIF) au lieu
+ * d'AJOUTER du fond. Le décor autour (mur/sol/cadre) noie l'objet dans une « scène beige »
+ * que CLIP matche pareil pour deux canapés différents → discrimination quasi nulle (écart
+ * cosine ~0.01). En serrant sur l'objet, le bon produit MONTE et le mauvais DESCEND (écart
+ * ~0.11, ×10). CLIP encode l'image ENTIÈRE → moins de décor = match plus discriminant.
+ * ⚠️ NB : la suppression de fond (segmentation) a été testée et ÉCARTÉE — elle efface l'objet
+ * sur les crops de rendu (scènes, pas objets isolés) et fait CHUTER les cosines.
  * bbox absente / dégénérée → null (le matching bascule proprement sur texte seul).
  */
 import sharp from "sharp";
 
 export type Bbox = { x: number; y: number; w: number; h: number };
 
-const PADDING = 0.1; // 10 % de chaque côté.
+// Inset de 5 % de chaque côté (padding NÉGATIF) → crop serré sur l'objet, sans décor.
+const PADDING = -0.05;
 
-// bbox inexploitable : absente, hors-bornes, surface quasi nulle (crop vide) ou quasi
-// pleine image (le crop n'apporte alors aucune discrimination → autant rester en texte).
+// bbox inexploitable : absente, NaN, ou surface VISIBLE trop petite / quasi pleine image.
+// Un DÉBORDEMENT hors-image n'est PAS rejeté (Gemini sur-estime souvent la hauteur d'un tapis
+// qui touche le bas) : on CLAMPE à la partie visible (extractCrop borne déjà à [0,1]) et on
+// juge celle-ci → le tapis obtient son crop au lieu de tomber en texte seul.
 export function isDegenerateBbox(b?: Bbox | null): boolean {
   if (!b) return true;
   const vals = [b.x, b.y, b.w, b.h];
   if (vals.some((v) => typeof v !== "number" || !Number.isFinite(v))) return true;
   if (b.w <= 0.02 || b.h <= 0.02) return true;
-  if (b.x < -0.01 || b.y < -0.01 || b.x + b.w > 1.01 || b.y + b.h > 1.01) return true;
-  if (b.w >= 0.98 && b.h >= 0.98) return true;
+  // Surface VISIBLE (bbox ∩ image) après clamp.
+  const vw = Math.min(1, b.x + b.w) - Math.max(0, b.x);
+  const vh = Math.min(1, b.y + b.h) - Math.max(0, b.y);
+  if (vw < 0.05 || vh < 0.05) return true; // démarre hors-image / ne chevauche presque rien
+  if (vw >= 0.98 && vh >= 0.98) return true; // quasi pleine image → aucune discrimination
   return false;
 }
 

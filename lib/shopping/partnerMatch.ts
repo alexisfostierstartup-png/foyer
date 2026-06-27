@@ -176,15 +176,23 @@ async function applyReferentialScore(
     (data ?? []).map((r: any) => [r.id, (r.metadata?.attrs ?? null) as Record<string, unknown> | null]),
   );
   for (const m of matches) {
-    if (m.simImage == null) continue; // texte seul (pas de crop) → on garde le score blend
     const pa = attrsById.get(m.id);
-    const { score, coverage } = structuredScoreForCategory(category, elementAttrs, pa);
+    const { score, coverage, details } = structuredScoreForCategory(category, elementAttrs, pa);
+    // structScore + détail par attribut TOUJOURS calculés/affichés (même en texte seul, ex.
+    // un tapis dont le crop a échoué) → on voit toujours la comparaison d'attributs sur /final.
     m.structScore = Math.round(score * 1000) / 1000;
+    m.attrScores = details.map((d) => ({
+      key: d.key, render: d.render, product: d.product, weight: d.weight, sim: d.sim, compared: d.compared,
+    }));
+    // Le SCORE (ranking) n'intègre le structuré QUE s'il y a un crop image (sinon on garde le
+    // score blend texte tel quel → on ne change pas un ranking texte-seul déjà bon).
+    if (m.simImage == null) continue;
     const wEff = wEffForCoverage(category, coverage);
     // cov 0 (élément OU produit sans attrs comparables) → le texte structuré n'existe pas →
     // fallback sur le cosine texte générique pour ne pas sous-scorer.
     const textSide = coverage > 0 ? score : (m.simText ?? score);
     m.similarity = Math.max(0, Math.min(1, Math.round((m.simImage * wEff + textSide * (1 - wEff)) * 1000) / 1000));
+    m.imgWeight = Math.round(wEff * 100) / 100; // poids image effectif (debug)
   }
   return matches.sort((a, b) => (b.similarity - a.similarity) || ((b.structScore ?? 0) - (a.structScore ?? 0)));
 }
@@ -216,9 +224,21 @@ async function rpcBlend(
   return (data ?? []).map(mapRowBlend);
 }
 
-// Seuil d'affichage PAR SOURCE : sous le seuil → on ne propose pas (item "À sourcer").
-function applyDisplayThreshold(matches: ProductMatch[], weights: MatchingWeights): ProductMatch[] {
-  return matches.filter((m) => m.similarity >= minScoreForSource(weights, m.source_type));
+// Seuil d'affichage PAR SOURCE. Le seuil ne sert PLUS à éliminer le neuf (eco_new) : tant
+// qu'il n'y a pas d'alternative LBC/seconde-main (non codée), le NEUF doit TOUJOURS être
+// proposé (le top-N catalogue), même à faible similarité — sinon des catégories pourtant
+// présentes (tapis, side_table) ressortent vides. On se contente de MARQUER `belowThreshold`
+// (confiance faible) pour l'UI ; le tri/affichage garde quand même le produit.
+// La seconde main, elle, reste filtrée par seuil (on ne propose pas un reconditionné médiocre).
+function flagOrFilterByThreshold(matches: ProductMatch[], weights: MatchingWeights): ProductMatch[] {
+  const out: ProductMatch[] = [];
+  for (const m of matches) {
+    const below = m.similarity < minScoreForSource(weights, m.source_type);
+    if (m.source_type === "secondhand" && below) continue; // seconde main médiocre → écartée
+    m.belowThreshold = below;
+    out.push(m);
+  }
+  return out;
 }
 
 async function embedCrops(crops: (Buffer | null | undefined)[]): Promise<Map<number, number[]>> {
@@ -283,16 +303,14 @@ export async function matchPartnerProductsBlendBatch(
       const desc = descByIdx.get(i);
       if (!cat || !desc) return [];
       const weights = weightsByCat.get(cat) ?? DEFAULT_WEIGHTS;
-      // pool large pour laisser la couleur repêcher un bon produit hors top-N blend.
+      // pool large pour laisser le re-score structuré + la couleur repêcher un bon produit
+      // hors top-N blend. On NE filtre PLUS par seuil ici (le neuf doit toujours sortir).
       const matches = await rpcBlend(cropByIdx.get(i) ?? null, desc, cat, Math.max(topN, 30), weights);
-      // Seuil "À sourcer" sur le BLEND (avant couleur) → la couleur re-classe mais
-      // n'élimine jamais (sinon une mauvaise couleur pénalisée passe sous le seuil et
-      // on perd même les bons coloris). Puis re-rank couleur sur les survivants.
-      const passing = applyDisplayThreshold(matches, weights);
-      // Score RÉFERENTIEL : final = image·w_eff + structuré·(1−w_eff) (formule Notion).
-      // Le seuil "À sourcer" reste sur le blend (passing) → pas de nouveau "À sourcer".
-      const scored = await applyReferentialScore(passing, cat, items[i].attrs);
-      return scored.slice(0, topN);
+      // Score RÉFERENTIEL d'abord (final = image·w_eff + structuré·(1−w_eff)) sur TOUT le pool,
+      // puis on MARQUE (sans éliminer) le neuf sous le seuil → le top-N neuf sort toujours.
+      const scored = await applyReferentialScore(matches, cat, items[i].attrs);
+      const flagged = flagOrFilterByThreshold(scored, weights);
+      return flagged.slice(0, topN);
     }),
   );
 }
@@ -306,7 +324,7 @@ export async function matchFloorProductsBlend(
   description: string,
   crop?: Buffer | null,
   topN = 4,
-  colorHex?: string | null,
+  attrs?: Record<string, unknown> | null,
 ): Promise<ProductMatch[]> {
   if (!description?.trim()) return [];
   const weights = await getMatchingWeights("floor");
@@ -325,9 +343,14 @@ export async function matchFloorProductsBlend(
   if (pool.length === 0) return [];
   const mat = FLOOR_MATERIALS.find((m) => m.render.test(description));
   const filtered = mat ? pool.filter((p) => mat.product.test(p.name)) : pool;
-  // Seuil sur le BLEND (avant couleur), puis re-rank couleur sur les survivants.
-  const passing = applyDisplayThreshold(filtered.length > 0 ? filtered : pool, weights);
-  return applyColorRerank(passing, colorHex, weights).slice(0, topN);
+  // Le neuf sort toujours : on MARQUE le sous-seuil (sans éliminer). Puis SCORE STRUCTURÉ
+  // (comme les autres catégories) : le sol a des attrs (type/couleur/motif/finition) → on
+  // calcule structScore + le final référentiel image·w + struct·(1−w). La couleur est déjà
+  // l'attribut 'color' (poids 30) du schéma floor_material → plus besoin du color-rerank séparé
+  // (qui double-comptait la couleur). Le filtre MATÉRIAU dur reste appliqué AVANT.
+  const flagged = flagOrFilterByThreshold(filtered.length > 0 ? filtered : pool, weights);
+  const scored = await applyReferentialScore(flagged, "floor", attrs);
+  return scored.slice(0, topN);
 }
 
 /** Batch : UN seul appel Jina (toutes les descriptions shoppables), puis RPC en parallèle. */

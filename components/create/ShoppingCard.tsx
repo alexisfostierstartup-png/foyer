@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Sofa, Table, CircleDot, LampFloor, Tv, Frame, Grid2x2, BookOpen, Shrub,
   PaintBucket, Package, Pencil, Check, ExternalLink, type LucideIcon,
@@ -42,6 +42,94 @@ function matchSource(m: ProductMatch): ShoppingSource {
   return m.source_type === "secondhand" ? "secondhand" : "new";
 }
 
+// Affichage des blocs de DEBUG scoring uniquement si ?debug=1 dans l'URL (sinon masqué pour
+// un visiteur normal / une démo). Lu après montage (client) → pas de mismatch d'hydratation.
+export function useDebug(): boolean {
+  const [debug, setDebug] = useState(false);
+  useEffect(() => {
+    setDebug(new URLSearchParams(window.location.search).get("debug") === "1");
+  }, []);
+  return debug;
+}
+
+// ── Débogage scoring (/final) ────────────────────────────────────────────────
+// Décompose le score final d'un produit : image / attributs / texte + leurs POIDS,
+// puis le détail par attribut (valeur rendu vs produit, ✓/✗, poids). But : comprendre
+// pourquoi un produit gagne (ex. une banquette qui bat le vrai canapé sur les attrs).
+function fmt(n: number | null | undefined): string {
+  return n == null ? "—" : n.toFixed(2);
+}
+function ScoreBreakdown({ m }: { m: ProductMatch }) {
+  const wImg = m.imgWeight;                         // poids image effectif (w_eff)
+  const wTxt = wImg != null ? 1 - wImg : undefined; // poids du terme attributs/texte
+  const usesStruct = m.structScore != null;         // attrs comparés → terme = struct, sinon texte
+  return (
+    <div className="mt-1.5 rounded-md bg-foyer-cream/60 px-2.5 py-1.5 font-mono text-[11px] leading-relaxed text-foyer-muted">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
+        <span className="font-semibold text-foyer-ink">final {Math.round(m.similarity * 100)}%</span>
+        <span>image {fmt(m.simImage)}{wImg != null && <span className="opacity-60"> ·w{Math.round(wImg * 100)}</span>}</span>
+        <span>
+          attrs {fmt(m.structScore)}
+          {wTxt != null && usesStruct && <span className="opacity-60"> ·w{Math.round(wTxt * 100)}</span>}
+        </span>
+        <span>texte {fmt(m.simText)}{!usesStruct && wTxt != null && <span className="opacity-60"> ·w{Math.round(wTxt * 100)} (repli)</span>}</span>
+        {m.colorDeltaE != null && <span>ΔE {m.colorDeltaE}</span>}
+        {m.belowThreshold && <span className="rounded bg-amber-100 px-1 text-amber-700">confiance faible</span>}
+      </div>
+      {m.attrScores && m.attrScores.length > 0 && (
+        <div className="mt-1 grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-x-3 gap-y-0.5">
+          {m.attrScores.map((a) => (
+            <span
+              key={a.key}
+              className={cn(
+                "whitespace-nowrap",
+                !a.compared ? "opacity-40" : a.sim >= 0.5 ? "text-foyer-sage" : "text-rose-500",
+              )}
+            >
+              <span className="opacity-60">{a.key}</span> {a.render ?? "?"}
+              <span className="px-0.5">{a.compared ? (a.sim >= 0.99 ? "=" : a.sim > 0 ? "≈" : "≠") : "·"}</span>
+              {a.product ?? "?"}<span className="opacity-50"> ·w{a.weight}</span>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// En-tête debug AU NIVEAU DE L'ITEM : la règle de pondération de la catégorie (image vs
+// attrs + image max) ET les attributs détectés sur le RENDU (le "target") avec leur poids.
+// Permet de repérer une mauvaise extraction côté rendu (ex. legs_type mal lu) qui fausse le
+// score de TOUS les produits de cet item.
+function ItemScoringHeader({ item }: { item: ShoppingItem }) {
+  const wr = item.weightRule;
+  if (!wr) return null;
+  const ea = (item.elementAttrs ?? {}) as Record<string, unknown>;
+  return (
+    <div className="mt-2 rounded-lg border border-dashed border-foyer-border bg-foyer-cream/40 px-3 py-2 font-mono text-[11px] leading-relaxed text-foyer-muted">
+      <div className="font-semibold text-foyer-ink">
+        Pondération {item.category} : image {Math.round(wr.imgW * 100)}% / attrs {Math.round((1 - wr.imgW) * 100)}%
+        <span className="font-normal opacity-60"> (image max {Math.round(wr.imgWMax * 100)}% si peu d&apos;attrs)</span>
+      </div>
+      <div className="mt-1">
+        <span className="opacity-60">Attributs du rendu (cible) — poids&nbsp;:</span>
+        <div className="mt-1 grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-x-3 gap-y-0.5">
+          {Object.entries(wr.attrWeights).map(([k, w]) => {
+            const v = ea[k];
+            const bad = v == null || v === "unknown" || v === "n/a" || v === "";
+            return (
+              <span key={k} className={cn(bad && "text-amber-600")}>
+                <span className="opacity-60">{k}</span> {bad ? "—" : String(v)}
+                <span className="opacity-50"> ·w{w}</span>
+              </span>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Miniature + agrandissement au survol.
 function Thumb({ url, alt, fallback }: { url: string | null; alt: string; fallback: LucideIcon }) {
   const [err, setErr] = useState(false);
@@ -68,6 +156,7 @@ function Thumb({ url, alt, fallback }: { url: string | null; alt: string; fallba
 export function ShoppingCard({ item }: { item: ShoppingItem }) {
   const [open, setOpen] = useState(false);
   const [selIdx, setSelIdx] = useState(0);
+  const debug = useDebug();
 
   const Icon = CATEGORY_ICON[item.category] ?? Package;
   const matches = item.matches ?? [];
@@ -88,6 +177,7 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
                 {Math.round(best.similarity * 100)}%
               </span>
             </div>
+            {debug && <ScoreBreakdown m={best} />}
           </div>
 
           <div className="flex shrink-0 flex-col items-end gap-1.5">
@@ -139,6 +229,7 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
                       <SourceTag source={matchSource(m)} />
                       <span className="text-[12px] text-foyer-muted">{m.merchant} · {Math.round(m.similarity * 100)}%</span>
                     </div>
+                    {debug && <ScoreBreakdown m={m} />}
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
@@ -173,6 +264,9 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
         Détecté&nbsp;: <span className="font-medium">{item.name}</span> · {item.category}
         {(item.quantity ?? 1) > 1 ? ` ×${item.quantity}` : ""}
       </p>
+
+      {/* Règle de pondération + attributs du rendu (debug scoring, ?debug=1). */}
+      {debug && <ItemScoringHeader item={item} />}
     </div>
   );
 }

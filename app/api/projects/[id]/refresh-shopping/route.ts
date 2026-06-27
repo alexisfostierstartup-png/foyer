@@ -5,10 +5,13 @@ import { ensureFinalAssets } from "@/lib/ai/pipeline";
 import { PAYWALL_DISABLED } from "@/lib/constants";
 
 export async function POST(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
   const { id } = await ctx.params;
+  // ?full=1 → recalcule AUSSI l'analyse vision (Gemini). Par défaut : re-rank seul — on GARDE
+  // renderAnalysis en cache → seulement matching Jina + scoring (~0 appel Gemini, bien plus rapide).
+  const full = new URL(req.url).searchParams.get("full") === "1";
 
   const project = await getProject(id);
   if (!project) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -21,9 +24,13 @@ export async function POST(
     if (project.userId !== user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  // Reset puis recalcul via la même logique que la page finale (décisions gate +
-  // confirmation visuelle sur le rendu courant).
-  await updateProject(id, { shoppingList: undefined, scoreFoyer: undefined, builtShoppingList: undefined });
+  // Reset de la liste (toujours) ; le cache vision (renderAnalysis) n'est purgé qu'en mode full.
+  await updateProject(id, {
+    shoppingList: undefined,
+    scoreFoyer: undefined,
+    builtShoppingList: undefined,
+    ...(full ? { renderAnalysis: undefined } : {}),
+  });
   const assets = await ensureFinalAssets(id);
 
   return NextResponse.json({

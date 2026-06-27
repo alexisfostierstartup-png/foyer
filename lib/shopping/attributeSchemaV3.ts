@@ -8,7 +8,9 @@
  */
 // conditional = l'attribut peut ne PAS s'appliquer (ex. matière des pieds sans pieds, finition
 // métal sur un luminaire en rotin) → l'extraction renvoie "n/a", exclu du score (coverage).
-export type AttrV3 = { key: string; type: "enum" | "hex"; vocab?: string[]; conditional?: boolean };
+// hint = courte indication d'extraction injectée dans le prompt (désambiguïse un attribut,
+// ex. distinguer base vs forme des pieds, ou matière de structure vs revêtement).
+export type AttrV3 = { key: string; type: "enum" | "hex"; vocab?: string[]; conditional?: boolean; hint?: string };
 
 export const SCHEMA_V3: Record<string, AttrV3[]> = {
   sofa: [
@@ -23,7 +25,11 @@ export const SCHEMA_V3: Record<string, AttrV3[]> = {
     { key: "shape", type: "enum", vocab: ["wingback", "tub", "egg", "scandinavian", "low", "cabriolet", "club", "recliner"] },
     { key: "color", type: "hex" },
     { key: "upholstery", type: "enum", vocab: ["fabric", "velvet", "corduroy", "boucle", "linen", "leather", "faux_leather", "rattan_cane"] },
-    { key: "legs_type", type: "enum", vocab: ["tapered", "four_legs", "central", "tripod", "swivel", "rocking", "sled", "skirted"] },
+    // PIEDS éclatés en 2 dimensions distinctes (avant : un seul legs_type qui mélangeait
+    // forme et configuration → faux mismatch "tapered" vs "four_legs").
+    { key: "legs_base", type: "enum", vocab: ["four_legs", "central", "tripod", "sled", "swivel", "rocking", "skirted"], hint: "CONFIGURATION de la base : skirted=jupe/tissu jusqu'au sol sans pieds visibles, central=piètement unique, sled=base luge" },
+    { key: "legs_shape", type: "enum", conditional: true, vocab: ["tapered", "straight", "turned"], hint: "FORME des pieds si pieds distincts visibles (tapered=s'affinent vers le bas, turned=tournés/galbés) ; n/a si base skirted/central" },
+    { key: "frame_material", type: "enum", vocab: ["wood", "metal", "none"], hint: "matière de la STRUCTURE/ACCOUDOIRS apparente : wood=bois visible, none=entièrement rembourré sans structure dure apparente" },
     { key: "armrests", type: "enum", vocab: ["with", "without"] },
   ],
   chair: [
@@ -142,9 +148,10 @@ export function schemaForCategory(category: string): string {
  * récolte de vocab (ex. matière des pieds quand il n'y a pas de pieds).
  */
 export function buildExtractionPrompt(attrs: AttrV3[]): string {
-  const lines = attrs.map((a) =>
-    a.type === "hex" ? `  "${a.key}": "#rrggbb (couleur dominante de l'objet)"` : `  "${a.key}": one of [${a.vocab!.join(", ")}]`,
-  );
+  const lines = attrs.map((a) => {
+    const base = a.type === "hex" ? `  "${a.key}": "#rrggbb (couleur dominante de l'objet)"` : `  "${a.key}": one of [${a.vocab!.join(", ")}]`;
+    return a.hint ? `${base}  — ${a.hint}` : base;
+  });
   return (
     `Décris l'OBJET PRINCIPAL de cette photo produit (ignore le fond/décor). JSON STRICT, ` +
     `une valeur EXACTE du vocabulaire par clé.\n` +
@@ -154,6 +161,9 @@ export function buildExtractionPrompt(attrs: AttrV3[]): string {
     `l'aspect est vraiment indéterminable.\n` +
     `- "unknown" si l'attribut S'APPLIQUE mais n'est pas déterminable depuis l'image.\n` +
     `- "n/a" si l'attribut NE S'APPLIQUE PAS à ce produit (ex. matière des pieds s'il n'y a pas de pieds visibles).\n` +
+    `- PIEDS : si l'objet REPOSE AU SOL sans pieds apparents (canapé bas, socle plein, pieds ` +
+    `cachés sous l'assise), alors legs_type = "none" ET legs_material = "n/a". N'invente PAS ` +
+    `des pieds (ex. "block"/"dark_wood") quand on n'en voit pas.\n` +
     `{\n${lines.join(",\n")}\n}`
   );
 }

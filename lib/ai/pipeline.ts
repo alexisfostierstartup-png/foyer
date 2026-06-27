@@ -12,14 +12,15 @@ import { saveRender } from "./saveRender";
 import { logPipelineEvent } from "./logger";
 import { withTracking } from "./track";
 import { getProject, updateProject } from "@/lib/storage/projects";
-import type { DetectedFurniture, UserConstraints, Project, ShoppingItem, ScoreFoyer } from "@/lib/types";
+import type { DetectedFurniture, UserConstraints, Project, ShoppingItem, ScoreFoyer, RenderAnalysis } from "@/lib/types";
 import { matchAlterationsToCatalog, type Alteration } from "@/lib/shopping/matcher";
 import { reconcilePlan } from "@/lib/shopping/reconcile";
 import { buildShoppingList, builtToLegacyShoppingList } from "@/lib/shopping/build";
 import { matchPartnerProductsBlendBatch, matchFloorProductsBlend } from "@/lib/shopping/partnerMatch";
-import { buildAttrsInstruction } from "@/lib/shopping/attributeScore";
+import { buildAttrsInstruction, CATEGORY_W, ATTR_WEIGHTS } from "@/lib/shopping/attributeScore";
+import { schemaForCategory } from "@/lib/shopping/attributeSchemaV3";
 import { extractCrop, type Bbox } from "@/lib/shopping/crop";
-import { matchPaintByColor, getChangedWallColors } from "@/lib/shopping/paintMatch";
+import { matchPaintByColor, getChangedWallColors, type WallColor } from "@/lib/shopping/paintMatch";
 import type { ImageInput } from "./types";
 import { getAllDiyActions, getCandidateActions } from "@/lib/diy/rules";
 import { evalQtyFormula, getStandardDims } from "@/lib/diy/quantities";
@@ -897,13 +898,35 @@ export async function computeRenderAdditions(
   return adds;
 }
 
+/**
+ * Orchestration du /final en DEUX phases :
+ *  A. analyzeRender (VISION Gemini : confirmChanges + inventaire rendu + couleurs murs) →
+ *     RenderAnalysis, MISE EN CACHE (clé = renderUrl). Ne dépend QUE du rendu.
+ *  B. buildMatchesAndScore (Jina crops + matching + scoring) → ShoppingAssets. Dépend des POIDS.
+ * Au refresh, si le rendu n'a pas changé, on RÉUTILISE le cache A → 0 appel Gemini, on ne
+ * refait que B (rapide). Le rendu change → A est recalculé.
+ */
 export async function ensureFinalAssets(projectId: string): Promise<ShoppingAssets | null> {
   const project = await getProject(projectId);
   if (!project?.generatedRenderUrl) return null;
   if (project.shoppingList) {
     return { shoppingList: project.shoppingList, scoreFoyer: project.scoreFoyer as ScoreFoyer };
   }
+  // Analyse vision : réutilisée tant que le rendu est le même (sinon recalcul + re-cache).
+  let analysis = project.renderAnalysis;
+  if (!analysis || analysis.renderUrl !== project.generatedRenderUrl) {
+    analysis = await analyzeRender(projectId, project);
+    await updateProject(projectId, { renderAnalysis: analysis });
+  } else {
+    console.log("[pipeline:final] analyse vision RÉUTILISÉE (rendu inchangé) → re-rank seul, 0 appel Gemini");
+  }
+  return buildMatchesAndScore(projectId, project, analysis);
+}
 
+// ── Phase A : ANALYSE VISION (Gemini) — cacheable, indépendante des poids ────────────────
+async function analyzeRender(projectId: string, project: Project): Promise<RenderAnalysis> {
+  // generatedRenderUrl est garanti non-null par l'appelant (ensureFinalAssets).
+  const renderUrl = project.generatedRenderUrl as string;
   // Liste = INTENTION (décisions review) GATÉE par confirmation visuelle.
   //  - "keep" (none) : jamais listé (filtre dur → zéro faux positif).
   //  - "customize"/"replace" : candidats → on vérifie sur le rendu s'ils ont
@@ -927,21 +950,25 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
   const elementHexById = new Map<string, string>(); // element_id → couleur dominante (hex)
   // element_id → attrs structurés V3 (état APRÈS), pour le score structuré du matching.
   const elementAttrsById = new Map<string, Record<string, unknown>>();
+  // Couleurs des murs REPEINTS (diff avant/après) — calculées ici (vision) puis cachées ;
+  // le matching peinture (matchPaintByColor, Jina) reste en phase B.
+  let wallColors: WallColor[] = [];
   if (project.basePhotoUrl) {
-    const comp = await buildBeforeAfterComposite(project.basePhotoUrl, project.generatedRenderUrl);
-    const r = await confirmChanges(
-      projectId,
-      candidates,
-      comp.buffer as unknown as ImageInput,
-      comp.afterLeftFrac,
-      comp.afterWidthFrac,
-    );
+    const comp = await buildBeforeAfterComposite(project.basePhotoUrl, renderUrl);
+    const compBuf = comp.buffer as unknown as ImageInput;
+    const r = await confirmChanges(projectId, candidates, compBuf, comp.afterLeftFrac, comp.afterWidthFrac);
     appliedIds = r.appliedIds;
     judgedIds = r.judgedIds;
     additions = r.additions;
     afterById = r.afterById;
     bboxById = r.bboxById;
     r.attrsById.forEach((v, k) => elementAttrsById.set(k, v));
+    // Même composite → murs repeints (getChangedWallColors ne renvoie QUE ce qui a changé).
+    try {
+      wallColors = await getChangedWallColors(compBuf);
+    } catch (e) {
+      console.warn("[paint] détection couleurs murs échouée:", e instanceof Error ? e.message : e);
+    }
   }
 
   // La LISTE reflète le RENDU, pas seulement les décisions initiales :
@@ -985,7 +1012,7 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
   // évident (canapé/tapis sur pièce vide). +1 appel vision. Fallback = additions de l'audit.
   let additionsToUse = additions;
   try {
-    additionsToUse = await computeRenderAdditions(projectId, project.generatedRenderUrl, project.roomType, candidates, taxonomy);
+    additionsToUse = await computeRenderAdditions(projectId, renderUrl, project.roomType, candidates, taxonomy);
     // bbox des ajouts (détectées sur le rendu) → bboxById, pour qu'ils obtiennent un crop
     // comme les candidats (matching image↔image au lieu de texte seul).
     for (const a of additionsToUse) {
@@ -1003,12 +1030,40 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
   const fromAdditions = matchAlterationsToCatalog(additionsToUse, project.selectedStyleId, taxonomy);
 
   // Fusion décisions + ajouts, identiques regroupés en quantité (×N).
-  const shoppingList = mergeShoppingItems([...fromDecisions, ...fromAdditions]);
+  const items = mergeShoppingItems([...fromDecisions, ...fromAdditions]);
+
+  console.log(
+    `[pipeline:final] (analyse) ${candidates.length} candidats → ${appliedIds.size} confirmés + ${additionsToUse.length} ajouts → ${items.length} items`,
+  );
+  return {
+    renderUrl,
+    items,
+    bboxById: Object.fromEntries(bboxById),
+    elementHexById: Object.fromEntries(elementHexById),
+    elementAttrsById: Object.fromEntries(elementAttrsById),
+    wallColors,
+    keptScore: built.score.kept,
+    builtShoppingList: built,
+  };
+}
+
+// ── Phase B : MATCHING + SCORING (Jina + SQL) — re-jouable, dépend des POIDS ──────────────
+async function buildMatchesAndScore(
+  projectId: string,
+  project: Project,
+  analysis: RenderAnalysis,
+): Promise<ShoppingAssets> {
+  // Copie fraîche du squelette (on mute matches/scoring). Maps reconstruites depuis le cache.
+  const shoppingList: ShoppingItem[] = analysis.items.map((it) => ({ ...it }));
+  const bboxById = new Map<string, Bbox>(Object.entries(analysis.bboxById));
+  const elementHexById = new Map<string, string>(Object.entries(analysis.elementHexById));
+  const elementAttrsById = new Map<string, Record<string, unknown>>(Object.entries(analysis.elementAttrsById));
+  const built = analysis.builtShoppingList;
 
   // CROP du rendu par item : on découpe la zone de l'élément (bbox de l'audit) dans le
   // RENDU → embedding IMAGE (cible image↔image, bien plus discriminant que texte→image).
   // bbox absente (ajout net, audit incomplet) → crop null → blend en texte seul.
-  const renderBytes = await fetchImageBytes(project.generatedRenderUrl).catch((e) => {
+  const renderBytes = await fetchImageBytes(analysis.renderUrl).catch((e) => {
     console.warn("[crop] rendu illisible, texte seul:", e instanceof Error ? e.message : e);
     return null;
   });
@@ -1033,6 +1088,16 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
   );
   shoppingList.forEach((it, i) => { it.matches = matchResults[i]; });
 
+  // Débogage scoring (/final) : attache à chaque item les attributs DÉTECTÉS SUR LE RENDU
+  // (le « target ») + la règle de pondération de sa catégorie (image vs attrs, poids/attribut).
+  for (const it of shoppingList) {
+    if (it.elementId && elementAttrsById.has(it.elementId)) it.elementAttrs = elementAttrsById.get(it.elementId);
+    const schema = schemaForCategory(it.category);
+    const cw = CATEGORY_W[schema] ?? CATEGORY_W.default;
+    const aw = ATTR_WEIGHTS[schema] ?? ATTR_WEIGHTS.default;
+    it.weightRule = { imgW: cw.w, imgWMax: cw.wMax, attrWeights: aw };
+  }
+
   // SOL : blend FILTRÉ par matériau (un parquet bois ne doit pas matcher un carrelage
   // effet bois). Poids 'floor' : w image baissé → le motif joue dans la description.
   for (let i = 0; i < shoppingList.length; i++) {
@@ -1042,7 +1107,7 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
       `${it.name} ${it.detail ?? ""}`.trim(),
       crops[i],
       4,
-      it.elementId ? elementHexById.get(it.elementId) : undefined,
+      it.elementId ? elementAttrsById.get(it.elementId) : undefined,
     );
   }
 
@@ -1060,20 +1125,20 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
     );
   }
 
-  // PEINTURE : matching par COULEUR (le cosine image ne sert à rien). On compare AVANT|APRÈS
-  // pour ne lister QUE les murs REPEINTS (les murs inchangés ne sont pas dans la liste),
-  // 1 item par mur, classé par proximité de teinte (ΔE).
-  const paintItems = shoppingList.filter((it) => it.source === "diy" && /peinture|peindre/i.test(it.name));
-  if (paintItems.length > 0 && project.generatedRenderUrl && project.basePhotoUrl) {
+  // PEINTURE : les murs repeints (diff avant/après) ont été détectés en phase A (cachés dans
+  // analysis.wallColors) ; ici on ne fait QUE le matching couleur ΔE (matchPaintByColor, Jina),
+  // re-jouable au refresh sans rappeler Gemini. 1 item peinture par mur repeint.
+  const wallColors = analysis.wallColors;
+  if (wallColors.length > 0) {
     try {
-      const composite = (await buildBeforeAfterComposite(
-        project.basePhotoUrl,
-        project.generatedRenderUrl,
-      )).buffer as unknown as ImageInput;
-      const wallColors = await getChangedWallColors(composite); // murs repeints uniquement
-      const template = paintItems[0];
-      // Retire les items peinture génériques, ajoute 1 item par mur REPEINT (0 si aucun).
-      for (const p of paintItems) {
+      // Template = item peinture DIY existant (action repaint) si présent ; sinon gabarit
+      // par défaut (mur repeint à l'itération, hors action DIY).
+      const existing = shoppingList.filter((it) => it.source === "diy" && /peinture|peindre/i.test(it.name));
+      const template: ShoppingItem = existing[0] ?? {
+        id: "paint", name: "Peinture", category: "paint", detail: "peinture",
+        priceMin: 0, priceMax: 0, source: "diy", merchants: [], quantity: 1,
+      };
+      for (const p of existing) {
         const i = shoppingList.indexOf(p);
         if (i >= 0) shoppingList.splice(i, 1);
       }
@@ -1108,8 +1173,6 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
   };
 
   await updateProject(projectId, { shoppingList, scoreFoyer, builtShoppingList: built });
-  console.log(
-    `[pipeline:final] ${candidates.length} candidats → ${appliedIds.size} confirmés + ${additionsToUse.length} ajouts → ${shoppingList.length} items`,
-  );
+  console.log(`[pipeline:final] (matching) ${shoppingList.length} items scorés`);
   return { shoppingList, scoreFoyer };
 }

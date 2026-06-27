@@ -7,7 +7,7 @@ import { ExternalLink, Pencil, Link2, Star, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { ProgressBar } from "@/components/create/ProgressBar";
 import { BeforeAfterSlider } from "@/components/create/BeforeAfterSlider";
-import { ShoppingCard } from "@/components/create/ShoppingCard";
+import { ShoppingCard, useDebug } from "@/components/create/ShoppingCard";
 import { PaywallModal } from "@/components/paywalls/PaywallModal";
 import { cn } from "@/lib/utils";
 import { PAYWALL_DISABLED } from "@/lib/constants";
@@ -249,6 +249,7 @@ export function FinalScreen({
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>(initialShoppingList);
   const [scoreFoyer, setScoreFoyer] = useState<ScoreFoyer | undefined>(initialScoreFoyer);
   const [refreshing, setRefreshing] = useState(false);
+  const debug = useDebug(); // ?debug=1 → affichage scoring + layout large (sinon design éditorial 480px)
 
   const alterationsList = ((alterations as { alterations?: Alteration[] } | null)
     ?.alterations ?? []) as Alteration[];
@@ -320,7 +321,7 @@ export function FinalScreen({
       <div className="flex flex-1 flex-col">
         <ProgressBar currentStep={5} labels={STEPS} />
 
-        <main className="mx-auto w-full max-w-[480px] flex-1 px-5 pb-24 pt-6">
+        <main className={cn("mx-auto w-full flex-1 px-5 pb-24 pt-6", debug ? "max-w-[820px]" : "max-w-[480px]")}>
           {/* Before / After slider */}
           <BeforeAfterSlider
             before={beforeUrl}
