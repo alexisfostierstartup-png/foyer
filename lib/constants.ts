@@ -30,8 +30,21 @@ export const UPLOAD_MAX_DIMENSION = 1024; // px, longest edge after resize
 export const MAX_FREE_GENERATIONS = 1;
 export const MAX_FREE_EDITS = 2;
 
-// Mode test : la liste de courses finale n'associe PAS de produit catalogue par
-// défaut. Chaque élément à acheter est affiché « À sourcer » avec sa catégorie,
-// matière et couleur (issues de l'audit), pour vérifier le travail de l'audit.
-// Repasser à false pour réactiver le matching catalogue (vraie liste de courses).
-export const SHOPPING_RAW_AUDIT_MODE = true;
+// TEMP (dev/test) : désactive le paywall pour tester le flow complet sans limite.
+// Repasser à false pour réactiver.
+export const PAYWALL_DISABLED = true;
+
+// Matching catalogue : score = alpha·cosine(image) + (1-alpha)·cosine(texte produit).
+// En dessous du seuil → "À sourcer". À tuner.
+export const MATCH_BLEND_ALPHA = 0.5;
+export const MATCH_MIN_SIMILARITY = 0.25;
+
+// Pré-filtre couleur (réversible). 1 = on hard-filtre les candidats par FAMILLE de couleur
+// (RPC blend_v2, array-overlap tolérant) avant le blend ; 0 = comportement v1 inchangé.
+// But : ne pas proposer un canapé vert pour un rendu bleu + élaguer le pool (latence). On ne
+// l'applique QUE là où la couleur discrimine déjà (weights.color.weight ≥ seuil ci-dessous) →
+// jamais sur les cats où la forme prime (table 0.04, fauteuil 0.08). Flip à 0 si ça nuit à la
+// similarité. À pérenniser si ça l'améliore.
+export const MATCH_COLOR_FAMILY_RESTRICT = 1;
+export const MATCH_COLOR_FAMILY_MIN_WEIGHT = 0.15;
+

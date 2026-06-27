@@ -6,16 +6,21 @@ import { resolvePrompt } from "@/lib/prompts/engine";
 import { loadStyleContext, loadRoomDefaults, loadRoomRemoveCategories, formatUserInstructions, formatDesignPlan } from "@/lib/prompts/helpers";
 import { getElementCategoryEnum, getElementCategories, getAllowedActionsByCategory } from "@/lib/db/assets";
 import type { DecisionAction } from "@/lib/db/assets";
-import { mergeShoppingItems } from "@/lib/shopping/categories";
+import { mergeShoppingItems, resolveCatalogCategory } from "@/lib/shopping/categories";
 import { getImageProvider, getVisionProvider } from "./provider";
 import { saveRender } from "./saveRender";
 import { logPipelineEvent } from "./logger";
 import { withTracking } from "./track";
 import { getProject, updateProject } from "@/lib/storage/projects";
-import type { DetectedFurniture, UserConstraints, Project, ShoppingItem, ScoreFoyer } from "@/lib/types";
+import type { DetectedFurniture, UserConstraints, Project, ShoppingItem, ScoreFoyer, RenderAnalysis } from "@/lib/types";
 import { matchAlterationsToCatalog, type Alteration } from "@/lib/shopping/matcher";
 import { reconcilePlan } from "@/lib/shopping/reconcile";
 import { buildShoppingList, builtToLegacyShoppingList } from "@/lib/shopping/build";
+import { matchPartnerProductsBlendBatch, matchFloorProductsBlend } from "@/lib/shopping/partnerMatch";
+import { buildAttrsInstruction, CATEGORY_W, ATTR_WEIGHTS } from "@/lib/shopping/attributeScore";
+import { schemaForCategory } from "@/lib/shopping/attributeSchemaV3";
+import { extractCrop, type Bbox } from "@/lib/shopping/crop";
+import { matchPaintByColor, getChangedWallColors, type WallColor } from "@/lib/shopping/paintMatch";
 import type { ImageInput } from "./types";
 import { getAllDiyActions, getCandidateActions } from "@/lib/diy/rules";
 import { evalQtyFormula, getStandardDims } from "@/lib/diy/quantities";
@@ -34,7 +39,7 @@ const CLEAR_FINALIZE: Partial<Project> = {
   alterations: undefined,
 };
 
-async function fetchImageBytes(url: string): Promise<Buffer> {
+export async function fetchImageBytes(url: string): Promise<Buffer> {
   if (url.startsWith("/")) {
     return fs.readFile(path.join(process.cwd(), "public", url));
   }
@@ -49,7 +54,11 @@ async function fetchImageBytes(url: string): Promise<Buffer> {
  * un appel multi-images) → le modèle compare les deux moitiés en haute
  * résolution et capte les détails subtils (plafonniers, cadres, blanc→beige).
  */
-async function buildBeforeAfterComposite(beforeUrl: string, afterUrl: string): Promise<Buffer> {
+// Géométrie du panneau APRÈS dans le composite (fractions 0-1 sur la largeur totale) →
+// permet de reprojeter une bbox donnée sur le composite vers le RENDU seul (crop).
+type Composite = { buffer: Buffer; afterLeftFrac: number; afterWidthFrac: number };
+
+export async function buildBeforeAfterComposite(beforeUrl: string, afterUrl: string): Promise<Composite> {
   const [beforeRaw, afterRaw] = await Promise.all([
     fetchImageBytes(beforeUrl),
     fetchImageBytes(afterUrl),
@@ -63,8 +72,9 @@ async function buildBeforeAfterComposite(beforeUrl: string, afterUrl: string): P
   const [mb, ma] = await Promise.all([sharp(before).metadata(), sharp(after).metadata()]);
   const wb = mb.width ?? H;
   const wa = ma.width ?? H;
-  return sharp({
-    create: { width: wb + gap + wa, height: H, channels: 3, background: "#ffffff" },
+  const total = wb + gap + wa;
+  const buffer = await sharp({
+    create: { width: total, height: H, channels: 3, background: "#ffffff" },
   })
     .composite([
       { input: before, left: 0, top: 0 },
@@ -72,6 +82,7 @@ async function buildBeforeAfterComposite(beforeUrl: string, afterUrl: string): P
     ])
     .jpeg({ quality: 90 })
     .toBuffer();
+  return { buffer, afterLeftFrac: (wb + gap) / total, afterWidthFrac: wa / total };
 }
 
 async function loadImage(url: string): Promise<ImageInput> {
@@ -104,11 +115,17 @@ function buildFixedFeaturesSummary(profiles: ElementProfile[]): string {
   const fd = count("french_door"); if (fd) parts.push(`${fd} porte(s)-fenêtre(s)`);
   const d = count("door"); if (d) parts.push(`${d} porte(s)`);
   const wo = count("wall_opening"); if (wo) parts.push(`${wo} ouverture(s)/passage(s) vers une autre pièce`);
-  const KW = /escalier|staircase|stair|chemin|fireplace|radiat|poutre|beam|colonne|column|pilier|pillar/i;
+  // Fixtures FIXES à reproduire à l'identique (jamais déplacer/supprimer/ajouter/recolorer).
+  // ⚠️ inclut le CHAUFFE-EAU/ballon (était absent → la génération le supprimait), et le poêle.
+  const KW = /escalier|staircase|stair|chemin|fireplace|po[êe]le|radiat|chauffe[- ]?eau|water[- ]?heater|ballon|cumulus|poutre|beam|colonne|column|pilier|pillar/i;
   const fixtures = profiles
     .filter((p) => !["window", "french_door", "door", "wall_opening"].includes(p.category) && KW.test(`${p.element} ${p.description}`))
     .map((p) => (p.element || p.category).trim().toLowerCase());
-  parts.push(...new Set(fixtures));
+  // COMPTE par type (ex. "2 radiator") au lieu de dédupliquer → la génération préserve le
+  // NOMBRE exact (sinon elle en ajoute/déplace ; ex. radiateur dupliqué + bougé observé).
+  const counts = new Map<string, number>();
+  for (const f of fixtures) counts.set(f, (counts.get(f) ?? 0) + 1);
+  for (const [name, n] of counts) parts.push(n > 1 ? `${n} ${name}` : name);
   return parts.length ? parts.join(", ") : "—";
 }
 
@@ -132,17 +149,31 @@ type RawProfile = Partial<ElementProfile> & { element_id?: string };
  * lancée qu'UNE fois par projet et réutilisée (cf. runGenerationPipeline qui
  * réutilise les profils persistés par l'analyse au lieu de re-détecter).
  */
+// Instruction bbox ajoutée EN CODE pour la seule détection d'inventaire du RENDU (pas de
+// modif du prompt partagé → la détection de base/review n'est pas touchée).
+const BBOX_SUFFIX =
+  "\n\nEN PLUS de la structure ci-dessus, ajoute à CHAQUE élément de elementProfiles : " +
+  '(1) "bbox": [x, y, w, h] — boîte englobante dans CETTE image, valeurs 0-1 (x,y = coin haut-gauche ; ' +
+  "w,h = largeur/hauteur en fraction de l'image), cadre SERRÉ autour de l'objet ; " +
+  '(2) "color_hex": la couleur DOMINANTE de l\'objet (pas du fond/sol) en hexadécimal "#rrggbb".';
+
 async function detectElementProfiles(
   projectId: string,
   sourceImage: ImageInput,
   label: string,
   roomType?: string,
+  opts?: { withBbox?: boolean },
 ): Promise<ElementProfile[]> {
   const tDet = Date.now();
   // Taxonomie DB-driven : la liste des catégories autorisées est injectée depuis
   // la table assets (element_category), filtrée par type de pièce.
   const categories = await getElementCategoryEnum(roomType);
   const detPrompt = await resolvePrompt("vision_detect_extended", { categories }, { strict: false });
+  // withBbox = inventaire du rendu : on émet AUSSI les attrs V3 (tous les meubles du rendu
+  // sont des achats potentiels) → score structuré pour les AJOUTS (pièces vides).
+  const template = opts?.withBbox
+    ? detPrompt.resolvedTemplate + BBOX_SUFFIX + buildAttrsInstruction()
+    : detPrompt.resolvedTemplate;
   const detResult = await withTracking(
     {
       step: "vision_detection",
@@ -150,7 +181,7 @@ async function detectElementProfiles(
       provider: detPrompt.prompt.provider,
       requestPayload: { promptName: "vision_detect_extended", source: label },
     },
-    () => getVisionProvider(detPrompt.prompt.provider).analyze(detPrompt.resolvedTemplate, [sourceImage]),
+    () => getVisionProvider(detPrompt.prompt.provider).analyze(template, [sourceImage]),
   );
   console.log(`[pipeline:${label}] detection: ${Date.now() - tDet}ms`);
   await logPipelineEvent({
@@ -179,7 +210,17 @@ async function detectElementProfiles(
       condition: p.condition ?? "good",
       movable: p.movable ?? true,
       dims: p.dims ?? {},
+      bbox: opts?.withBbox ? (parseBbox((p as { bbox?: unknown }).bbox) ?? undefined) : undefined,
+      color_hex: opts?.withBbox ? parseHex((p as { color_hex?: unknown }).color_hex) : undefined,
+      attrs: opts?.withBbox && p.attrs && typeof p.attrs === "object" && !Array.isArray(p.attrs)
+        ? (p.attrs as Record<string, unknown>)
+        : undefined,
     }));
+}
+
+// "#rrggbb" valide (sinon undefined → pas de bonus couleur).
+function parseHex(v: unknown): string | undefined {
+  return typeof v === "string" && /^#[0-9a-fA-F]{6}$/.test(v.trim()) ? v.trim().toLowerCase() : undefined;
 }
 
 function constraintsToChoices(c: UserConstraints) {
@@ -687,11 +728,43 @@ export type ShoppingAssets = { shoppingList: ShoppingItem[]; scoreFoyer: ScoreFo
  * dans la liste (élimine les faux positifs). L'analyse est ciblée sur les seuls
  * candidats → pas de diff libre qui hallucine.
  */
-async function confirmChanges(
+// Reprojette une bbox donnée sur le COMPOSITE (normalisée 0-1 sur la largeur totale)
+// vers le RENDU seul (panneau APRÈS). Retourne null si la box tombe dans le panneau
+// AVANT (gauche) — le modèle s'est trompé de moitié → on préfère pas de crop.
+function mapCompositeBoxToRender(
+  box: Bbox,
+  afterLeftFrac: number,
+  afterWidthFrac: number,
+): Bbox | null {
+  if (afterWidthFrac <= 0) return null;
+  const centerX = box.x + box.w / 2;
+  if (centerX < afterLeftFrac - 0.02) return null; // centre côté AVANT → rejet
+  const rx = (box.x - afterLeftFrac) / afterWidthFrac;
+  const rw = box.w / afterWidthFrac;
+  const x = Math.max(0, Math.min(1, rx));
+  const y = Math.max(0, Math.min(1, box.y));
+  return { x, y, w: Math.min(1 - x, rw), h: Math.min(1 - y, box.h) };
+}
+
+// bbox tolérante : array [x,y,w,h] OU objet {x,y,w,h}, valeurs 0-1.
+function parseBbox(raw: unknown): Bbox | null {
+  let x, y, w, h;
+  if (Array.isArray(raw) && raw.length === 4) [x, y, w, h] = raw;
+  else if (raw && typeof raw === "object") {
+    const o = raw as Record<string, unknown>;
+    [x, y, w, h] = [o.x, o.y, o.w, o.h];
+  } else return null;
+  if ([x, y, w, h].some((v) => typeof v !== "number" || !Number.isFinite(v))) return null;
+  return { x: x as number, y: y as number, w: w as number, h: h as number };
+}
+
+export async function confirmChanges(
   projectId: string,
   candidates: ElementDecision[],
   composite: ImageInput,
-): Promise<{ appliedIds: Set<string>; judgedIds: Set<string>; additions: Alteration[]; afterById: Map<string, string> }> {
+  afterLeftFrac: number,
+  afterWidthFrac: number,
+): Promise<{ appliedIds: Set<string>; judgedIds: Set<string>; additions: Alteration[]; afterById: Map<string, string>; bboxById: Map<string, Bbox>; attrsById: Map<string, Record<string, unknown>> }> {
   const candidatesJson = JSON.stringify(
     candidates.map((d) => ({
       element_id: d.element_id,
@@ -704,7 +777,10 @@ async function confirmChanges(
     null,
     2,
   );
-  const prompt = await resolvePrompt("confirm_changes", { candidatesJson }, { strict: false });
+  // Instruction d'attrs structurés V3 (par catégorie présente). replacedOnly : on ne demande
+  // les attrs QUE pour les éléments remplacés (nouvel objet) — un re-finish garde sa forme.
+  const attrsInstruction = buildAttrsInstruction(candidates.map((d) => d.category), { replacedOnly: true });
+  const prompt = await resolvePrompt("confirm_changes", { candidatesJson, attrsInstruction }, { strict: false });
   const result = await withTracking(
     {
       step: "audit",
@@ -720,7 +796,7 @@ async function confirmChanges(
       }),
   );
   const parsed = result.parsed as {
-    results?: Array<{ element_id?: string; applied?: boolean; after?: string }>;
+    results?: Array<{ element_id?: string; changed?: boolean; after?: string; bbox?: unknown; attrs?: unknown }>;
     additions?: Array<{ element?: string; category?: string; detail?: string }>;
   } | null;
 
@@ -729,11 +805,23 @@ async function confirmChanges(
   // Description de l'APRÈS par élément → la liste de courses reflète ce que
   // l'élément est DEVENU dans le rendu (ex. tapis bleu/jaune), pas l'original.
   const afterById = new Map<string, string>();
+  // bbox de l'élément dans le RENDU (APRÈS) → crop pour le matching image↔image.
+  const bboxById = new Map<string, Bbox>();
+  // attrs structurés V3 de l'élément (état APRÈS) → score structuré du matching (Étape 2).
+  const attrsById = new Map<string, Record<string, unknown>>();
   for (const r of parsed?.results ?? []) {
     if (typeof r.element_id !== "string") continue;
     judgedIds.add(r.element_id);
-    if (r.applied) appliedIds.add(r.element_id);
+    if (r.changed) appliedIds.add(r.element_id); // appliedIds = éléments que le rendu a CHANGÉS
     if (r.after && r.after.trim()) afterById.set(r.element_id, r.after.trim());
+    const compBox = parseBbox(r.bbox);
+    if (compBox) {
+      const renderBox = mapCompositeBoxToRender(compBox, afterLeftFrac, afterWidthFrac);
+      if (renderBox) bboxById.set(r.element_id, renderBox);
+    }
+    if (r.attrs && typeof r.attrs === "object" && !Array.isArray(r.attrs)) {
+      attrsById.set(r.element_id, r.attrs as Record<string, unknown>);
+    }
   }
   // Ajouts nets (présents dans APRÈS, absents dans AVANT) → à acheter.
   const additions: Alteration[] = (parsed?.additions ?? [])
@@ -746,24 +834,115 @@ async function confirmChanges(
       shoppingImpact: "to_buy_secondhand",
     }));
 
-  return { appliedIds, judgedIds, additions, afterById };
+  return { appliedIds, judgedIds, additions, afterById, bboxById, attrsById };
 }
 
+// Catégories qu'on ne liste PAS en addition (architecture/surfaces + déco sans produit
+// catalogue exploitable) — alignées sur le NON_SHOPPABLE du matcher, + floor (surface,
+// géré comme candidat, pas comme meuble ajouté).
+const ADDITION_SKIP = new Set([
+  "other", "frame", "mirror", "plant", "decor_object",
+  "wall", "ceiling", "window", "door", "french_door", "wall_opening", "floor",
+  "lamp", "table_lamp", "ceiling_light",
+]);
+
+/**
+ * ADDITIONS robustes : plutôt que de demander à l'audit (1 prompt multi-tâches) de
+ * DEVINER les net-new — peu fiable, rate parfois un canapé/tapis pourtant évident sur
+ * une pièce vide —, on DÉTECTE l'inventaire complet du RENDU (vision_detect_extended,
+ * pleine résolution) et on le réconcilie avec l'AVANT. Addition = meuble présent dans le
+ * rendu dont la catégorie n'est pas déjà couverte par un candidat (élément de l'AVANT).
+ * Pièce vide → aucun candidat meuble → tout le mobilier du rendu devient addition.
+ */
+function reconcileRenderAdditions(
+  renderProfiles: ElementProfile[],
+  candidates: ElementDecision[],
+  taxonomy: Map<string, string | null>,
+): Alteration[] {
+  const covered = new Map<string, number>(); // multiset des catégories catalogue de l'AVANT
+  for (const d of candidates) {
+    const c = resolveCatalogCategory(d.category, taxonomy);
+    if (c) covered.set(c, (covered.get(c) ?? 0) + 1);
+  }
+  const seen = new Map<string, number>();
+  const adds: Alteration[] = [];
+  for (const p of renderProfiles) {
+    if (p.movable === false || ADDITION_SKIP.has(p.category)) continue;
+    const c = resolveCatalogCategory(p.category, taxonomy);
+    if (!c) continue; // non shoppable
+    const used = seen.get(c) ?? 0;
+    seen.set(c, used + 1);
+    if (used < (covered.get(c) ?? 0)) continue; // déjà couvert par un candidat AVANT
+    adds.push({
+      element: p.element || p.category,
+      action: "added",
+      category: p.category,
+      detail: (p.description || p.color || "").trim() || undefined,
+      shoppingImpact: "to_buy_secondhand",
+      // element_id + bbox du rendu → crop de l'ajout pour le matching image↔image.
+      element_id: p.element_id,
+      bbox: p.bbox,
+      color_hex: p.color_hex,
+      attrs: p.attrs, // attrs V3 du rendu → score structuré de l'ajout.
+    });
+  }
+  return adds;
+}
+
+/** Détecte l'inventaire du rendu (pleine résolution, AVEC bbox) + réconcilie → additions robustes. */
+export async function computeRenderAdditions(
+  projectId: string,
+  renderUrl: string,
+  roomType: string | undefined,
+  candidates: ElementDecision[],
+  taxonomy: Map<string, string | null>,
+): Promise<Alteration[]> {
+  const renderImg = await loadImage(renderUrl);
+  const renderProfiles = await detectElementProfiles(projectId, renderImg, "render_inventory", roomType, { withBbox: true });
+  const adds = reconcileRenderAdditions(renderProfiles, candidates, taxonomy);
+  console.log(`[pipeline:final] inventaire rendu: ${renderProfiles.length} éléments détectés → ${adds.length} additions`);
+  return adds;
+}
+
+/**
+ * Orchestration du /final en DEUX phases :
+ *  A. analyzeRender (VISION Gemini : confirmChanges + inventaire rendu + couleurs murs) →
+ *     RenderAnalysis, MISE EN CACHE (clé = renderUrl). Ne dépend QUE du rendu.
+ *  B. buildMatchesAndScore (Jina crops + matching + scoring) → ShoppingAssets. Dépend des POIDS.
+ * Au refresh, si le rendu n'a pas changé, on RÉUTILISE le cache A → 0 appel Gemini, on ne
+ * refait que B (rapide). Le rendu change → A est recalculé.
+ */
 export async function ensureFinalAssets(projectId: string): Promise<ShoppingAssets | null> {
   const project = await getProject(projectId);
   if (!project?.generatedRenderUrl) return null;
   if (project.shoppingList) {
     return { shoppingList: project.shoppingList, scoreFoyer: project.scoreFoyer as ScoreFoyer };
   }
+  // Analyse vision : réutilisée tant que le rendu est le même (sinon recalcul + re-cache).
+  let analysis = project.renderAnalysis;
+  if (!analysis || analysis.renderUrl !== project.generatedRenderUrl) {
+    analysis = await analyzeRender(projectId, project);
+    await updateProject(projectId, { renderAnalysis: analysis });
+  } else {
+    console.log("[pipeline:final] analyse vision RÉUTILISÉE (rendu inchangé) → re-rank seul, 0 appel Gemini");
+  }
+  return buildMatchesAndScore(projectId, project, analysis);
+}
 
+// ── Phase A : ANALYSE VISION (Gemini) — cacheable, indépendante des poids ────────────────
+async function analyzeRender(projectId: string, project: Project): Promise<RenderAnalysis> {
+  // generatedRenderUrl est garanti non-null par l'appelant (ensureFinalAssets).
+  const renderUrl = project.generatedRenderUrl as string;
   // Liste = INTENTION (décisions review) GATÉE par confirmation visuelle.
   //  - "keep" (none) : jamais listé (filtre dur → zéro faux positif).
   //  - "customize"/"replace" : candidats → on vérifie sur le rendu s'ils ont
   //    VRAIMENT été appliqués (ou conservés tels quels malgré le plan).
   const decisions = (project.element_decisions ?? []) as ElementDecision[];
-  const candidates = decisions.filter(
-    (d) => d.mismatch_type === "surface" || d.mismatch_type === "structural",
-  );
+  // On vérifie sur le RENDU tous les éléments shoppables (pas seulement les changements
+  // planifiés) : le générateur modifie parfois des éléments décidés "keep" — ex. un tapis
+  // changé lors d'une itération. On exclut juste l'architecture pure (jamais "achetée").
+  const NON_DETECTABLE = new Set(["ceiling", "door", "french_door", "window", "wall_opening"]);
+  const candidates = decisions.filter((d) => !NON_DETECTABLE.has(d.category));
 
   // Une seule passe vision (composite AVANT|APRÈS) qui fait DEUX choses :
   //  - confirme quels candidats (customize/replace) ont vraiment été appliqués ;
@@ -773,30 +952,60 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
   let judgedIds = new Set<string>();
   let additions: Alteration[] = [];
   let afterById = new Map<string, string>();
+  let bboxById = new Map<string, Bbox>();
+  const elementHexById = new Map<string, string>(); // element_id → couleur dominante (hex)
+  // element_id → attrs structurés V3 (état APRÈS), pour le score structuré du matching.
+  const elementAttrsById = new Map<string, Record<string, unknown>>();
+  // Couleurs des murs REPEINTS (diff avant/après) — calculées ici (vision) puis cachées ;
+  // le matching peinture (matchPaintByColor, Jina) reste en phase B.
+  let wallColors: WallColor[] = [];
   if (project.basePhotoUrl) {
-    const composite = (await buildBeforeAfterComposite(
-      project.basePhotoUrl,
-      project.generatedRenderUrl,
-    )) as unknown as ImageInput;
-    const r = await confirmChanges(projectId, candidates, composite);
+    const comp = await buildBeforeAfterComposite(project.basePhotoUrl, renderUrl);
+    const compBuf = comp.buffer as unknown as ImageInput;
+    const r = await confirmChanges(projectId, candidates, compBuf, comp.afterLeftFrac, comp.afterWidthFrac);
     appliedIds = r.appliedIds;
     judgedIds = r.judgedIds;
     additions = r.additions;
     afterById = r.afterById;
+    bboxById = r.bboxById;
+    r.attrsById.forEach((v, k) => elementAttrsById.set(k, v));
+    // Même composite → murs repeints (getChangedWallColors ne renvoie QUE ce qui a changé).
+    try {
+      wallColors = await getChangedWallColors(compBuf);
+    } catch (e) {
+      console.warn("[paint] détection couleurs murs échouée:", e instanceof Error ? e.message : e);
+    }
   }
 
-  // STABILITÉ : on ne démote un candidat en "keep" QUE si l'audit l'a
-  // explicitement jugé "non appliqué". Si l'audit ne le mentionne pas (réponse
-  // vide/partielle/parsée KO), on le PRÉSUME appliqué → la liste ne s'effondre
-  // plus à cause d'un audit instable.
-  // Candidat confirmé → description = état APRÈS vu dans le rendu.
+  // La LISTE reflète le RENDU, pas seulement les décisions initiales :
+  //  - élément jugé CHANGÉ par l'audit → listé (achat). S'il était "keep" (ex. tapis
+  //    modifié à l'itération) → promu en remplacement structurel.
+  //  - élément jugé inchangé → keep (même si un changement était planifié mais pas fait).
+  //  - non jugé (architecture exclue / audit incomplet) → on préserve, candidats présumés OK.
   const effective: ElementDecision[] = decisions.map((d) => {
-    const isCandidate = d.mismatch_type === "surface" || d.mismatch_type === "structural";
-    if (isCandidate && judgedIds.has(d.element_id) && !appliedIds.has(d.element_id)) {
-      return { ...d, mismatch_type: "none", action_slug: null, supply_items: null, qty: null };
-    }
+    const wasCandidate = d.mismatch_type === "surface" || d.mismatch_type === "structural";
+    const judged = judgedIds.has(d.element_id);
+    const changed = appliedIds.has(d.element_id); // appliedIds = éléments que le rendu a changés
     const after = afterById.get(d.element_id);
-    if (isCandidate && after) return { ...d, description: after };
+
+    if (judged && changed) {
+      let base: ElementDecision = wasCandidate
+        ? d
+        : { ...d, mismatch_type: "structural", action_slug: null, supply_items: null, qty: null };
+      if (after) base = { ...base, description: after };
+      // Mur changé sans fourniture configurée (ex. action fresco_wall → supply_items []) :
+      // on injecte une fourniture "Peinture" pour qu'il apparaisse ET soit matché par couleur.
+      if (base.category === "wall" && base.mismatch_type === "surface" && (base.supply_items?.length ?? 0) === 0) {
+        base = { ...base, supply_items: [{ name: "Peinture", qty: 1, unit: "pot" }] };
+      }
+      return base;
+    }
+    if (judged && !changed) {
+      return wasCandidate
+        ? { ...d, mismatch_type: "none", action_slug: null, supply_items: null, qty: null }
+        : d;
+    }
+    if (wasCandidate) return after ? { ...d, description: after } : d;
     return d;
   });
 
@@ -804,13 +1013,154 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
   const elementCategories = await getElementCategories().catch(() => []);
   const taxonomy = new Map(elementCategories.map((c) => [c.slug, c.catalog_category]));
 
+  // ADDITIONS robustes : inventaire complet du RENDU (vision pleine résolution) réconcilié
+  // avec l'AVANT, au lieu du sous-prompt "additions" de l'audit qui rate parfois un meuble
+  // évident (canapé/tapis sur pièce vide). +1 appel vision. Fallback = additions de l'audit.
+  let additionsToUse = additions;
+  try {
+    additionsToUse = await computeRenderAdditions(projectId, renderUrl, project.roomType, candidates, taxonomy);
+    // bbox des ajouts (détectées sur le rendu) → bboxById, pour qu'ils obtiennent un crop
+    // comme les candidats (matching image↔image au lieu de texte seul).
+    for (const a of additionsToUse) {
+      if (a.element_id && a.bbox) bboxById.set(a.element_id, a.bbox);
+      if (a.element_id && a.color_hex) elementHexById.set(a.element_id, a.color_hex);
+      if (a.element_id && a.attrs) elementAttrsById.set(a.element_id, a.attrs);
+    }
+  } catch (e) {
+    console.warn("[pipeline:final] détection rendu échouée, fallback additions audit:", e instanceof Error ? e.message : e);
+  }
+
   const plan = reconcilePlan(effective, { elements: [] }, { repairAlreadyUsed: false });
   const built = buildShoppingList(plan, project.selectedStyleId, taxonomy);
   const fromDecisions = builtToLegacyShoppingList(built);
-  const fromAdditions = matchAlterationsToCatalog(additions, project.selectedStyleId, taxonomy);
+  const fromAdditions = matchAlterationsToCatalog(additionsToUse, project.selectedStyleId, taxonomy);
 
   // Fusion décisions + ajouts, identiques regroupés en quantité (×N).
-  const shoppingList = mergeShoppingItems([...fromDecisions, ...fromAdditions]);
+  const items = mergeShoppingItems([...fromDecisions, ...fromAdditions]);
+
+  console.log(
+    `[pipeline:final] (analyse) ${candidates.length} candidats → ${appliedIds.size} confirmés + ${additionsToUse.length} ajouts → ${items.length} items`,
+  );
+  return {
+    renderUrl,
+    items,
+    bboxById: Object.fromEntries(bboxById),
+    elementHexById: Object.fromEntries(elementHexById),
+    elementAttrsById: Object.fromEntries(elementAttrsById),
+    wallColors,
+    keptScore: built.score.kept,
+    builtShoppingList: built,
+  };
+}
+
+// ── Phase B : MATCHING + SCORING (Jina + SQL) — re-jouable, dépend des POIDS ──────────────
+async function buildMatchesAndScore(
+  projectId: string,
+  project: Project,
+  analysis: RenderAnalysis,
+): Promise<ShoppingAssets> {
+  // Copie fraîche du squelette (on mute matches/scoring). Maps reconstruites depuis le cache.
+  const shoppingList: ShoppingItem[] = analysis.items.map((it) => ({ ...it }));
+  const bboxById = new Map<string, Bbox>(Object.entries(analysis.bboxById));
+  const elementHexById = new Map<string, string>(Object.entries(analysis.elementHexById));
+  const elementAttrsById = new Map<string, Record<string, unknown>>(Object.entries(analysis.elementAttrsById));
+  const built = analysis.builtShoppingList;
+
+  // CROP du rendu par item : on découpe la zone de l'élément (bbox de l'audit) dans le
+  // RENDU → embedding IMAGE (cible image↔image, bien plus discriminant que texte→image).
+  // bbox absente (ajout net, audit incomplet) → crop null → blend en texte seul.
+  const renderBytes = await fetchImageBytes(analysis.renderUrl).catch((e) => {
+    console.warn("[crop] rendu illisible, texte seul:", e instanceof Error ? e.message : e);
+    return null;
+  });
+  const crops = await Promise.all(
+    shoppingList.map(async (it) => {
+      if (!renderBytes || !it.elementId) return null;
+      const box = bboxById.get(it.elementId);
+      return box ? extractCrop(renderBytes, box) : null;
+    }),
+  );
+
+  // Matching NEUF en BLEND (crop image + description texte), pondéré par catégorie ×
+  // source — EN PLUS du raw audit. UN appel Jina texte + UN appel Jina crops (batch).
+  const matchResults = await matchPartnerProductsBlendBatch(
+    shoppingList.map((it, i) => ({
+      category: it.category,
+      description: `${it.name} ${it.detail ?? ""}`.trim(),
+      crop: crops[i],
+      colorHex: it.elementId ? elementHexById.get(it.elementId) : undefined,
+      attrs: it.elementId ? elementAttrsById.get(it.elementId) : undefined,
+    })),
+  );
+  shoppingList.forEach((it, i) => { it.matches = matchResults[i]; });
+
+  // Débogage scoring (/final) : attache à chaque item les attributs DÉTECTÉS SUR LE RENDU
+  // (le « target ») + la règle de pondération de sa catégorie (image vs attrs, poids/attribut).
+  for (const it of shoppingList) {
+    if (it.elementId && elementAttrsById.has(it.elementId)) it.elementAttrs = elementAttrsById.get(it.elementId);
+    const schema = schemaForCategory(it.category);
+    const cw = CATEGORY_W[schema] ?? CATEGORY_W.default;
+    const aw = ATTR_WEIGHTS[schema] ?? ATTR_WEIGHTS.default;
+    it.weightRule = { imgW: cw.w, imgWMax: cw.wMax, attrWeights: aw };
+  }
+
+  // SOL : blend FILTRÉ par matériau (un parquet bois ne doit pas matcher un carrelage
+  // effet bois). Poids 'floor' : w image baissé → le motif joue dans la description.
+  for (let i = 0; i < shoppingList.length; i++) {
+    const it = shoppingList[i];
+    if (it.category !== "floor") continue;
+    it.matches = await matchFloorProductsBlend(
+      `${it.name} ${it.detail ?? ""}`.trim(),
+      crops[i],
+      4,
+      it.elementId ? elementAttrsById.get(it.elementId) : undefined,
+    );
+  }
+
+  // CALIBRATION (ÉTAPE 4) : par item blend matché, on trace catégorie, présence de crop,
+  // source du top-1, score blend ET les 2 cosines décomposés (image + texte). Permet de
+  // régler w/seuils sur données réelles et de vérifier que le texte rattrape les cosines
+  // image basses (ex. le canapé vu de dos : sim_image faible, sim_text qui sauve le match).
+  for (let i = 0; i < shoppingList.length; i++) {
+    const top = shoppingList[i].matches?.[0];
+    if (!top || (top.simImage === undefined && top.simText === undefined)) continue;
+    console.log(
+      `[match:calib] ${shoppingList[i].category} "${shoppingList[i].name.slice(0, 36)}" ` +
+        `crop=${crops[i] ? "oui" : "non"} → ${top.source_type} ` +
+        `score=${top.similarity.toFixed(3)} img=${top.simImage ?? "—"} txt=${top.simText ?? "—"} (${top.merchant})`,
+    );
+  }
+
+  // PEINTURE : les murs repeints (diff avant/après) ont été détectés en phase A (cachés dans
+  // analysis.wallColors) ; ici on ne fait QUE le matching couleur ΔE (matchPaintByColor, Jina),
+  // re-jouable au refresh sans rappeler Gemini. 1 item peinture par mur repeint.
+  const wallColors = analysis.wallColors;
+  if (wallColors.length > 0) {
+    try {
+      // Template = item peinture DIY existant (action repaint) si présent ; sinon gabarit
+      // par défaut (mur repeint à l'itération, hors action DIY).
+      const existing = shoppingList.filter((it) => it.source === "diy" && /peinture|peindre/i.test(it.name));
+      const template: ShoppingItem = existing[0] ?? {
+        id: "paint", name: "Peinture", category: "paint", detail: "peinture",
+        priceMin: 0, priceMax: 0, source: "diy", merchants: [], quantity: 1,
+      };
+      for (const p of existing) {
+        const i = shoppingList.indexOf(p);
+        if (i >= 0) shoppingList.splice(i, 1);
+      }
+      for (const w of wallColors) {
+        shoppingList.push({
+          ...template,
+          id: `paint-${w.hex.replace("#", "")}`,
+          name: wallColors.length > 1 ? `Peinture — ${w.label}` : "Peinture",
+          targetHex: w.hex,
+          matches: await matchPaintByColor(w.hex),
+        });
+      }
+    } catch (e) {
+      console.warn("[paint] matching couleur échoué:", e instanceof Error ? e.message : e);
+    }
+  }
 
   // Score recalculé sur la liste finale, en UNITÉS (quantité incluse).
   const unitsWhere = (pred: (i: ShoppingItem) => boolean) =>
@@ -829,8 +1179,6 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
   };
 
   await updateProject(projectId, { shoppingList, scoreFoyer, builtShoppingList: built });
-  console.log(
-    `[pipeline:final] ${candidates.length} candidats → ${appliedIds.size} confirmés + ${additions.length} ajouts → ${shoppingList.length} items`,
-  );
+  console.log(`[pipeline:final] (matching) ${shoppingList.length} items scorés`);
   return { shoppingList, scoreFoyer };
 }

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { ProgressBar } from "@/components/create/ProgressBar";
 import { BeforeAfterSlider } from "@/components/create/BeforeAfterSlider";
 import { PaywallModal } from "@/components/paywalls/PaywallModal";
+import { PAYWALL_DISABLED } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/lib/auth/useUser";
 import { saveProject } from "@/lib/auth/actions";
@@ -153,7 +154,7 @@ export function RenderScreen({ projectId, beforeUrl, afterUrl, roomType }: Props
         </div>
       </div>
 
-      {showSavePaywall && (
+      {!PAYWALL_DISABLED && showSavePaywall && (
         <PaywallModal
           trigger="save_project"
           onClose={() => setShowSavePaywall(false)}

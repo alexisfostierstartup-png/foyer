@@ -58,6 +58,13 @@ export type ElementProfile = {
   condition: "good" | "fair" | "poor";
   movable: boolean;
   dims: ElementDims;
+  // Boîte englobante normalisée 0-1 (renseignée seulement pour la détection d'inventaire
+  // du RENDU, withBbox) → crop des AJOUTS pour le matching image↔image.
+  bbox?: { x: number; y: number; w: number; h: number };
+  // Couleur dominante de l'objet (hex), lue par Gemini → terme couleur ΔE du matching.
+  color_hex?: string;
+  // Attrs structurés V3 (renseignés avec withBbox sur l'inventaire du rendu) → score structuré.
+  attrs?: Record<string, unknown>;
 };
 
 export type ResolvedSupply = {

@@ -7,6 +7,7 @@ import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/create/ProgressBar";
 import { PaywallModal } from "@/components/paywalls/PaywallModal";
+import { PAYWALL_DISABLED } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { PaywallTrigger } from "@/components/paywalls/PaywallModal";
 
@@ -71,7 +72,7 @@ export function GeneratingScreen({ projectId }: { projectId: string }) {
 
   return (
     <>
-    {paywallTrigger && (
+    {!PAYWALL_DISABLED && paywallTrigger && (
       <PaywallModal
         trigger={paywallTrigger}
         onClose={() => { setPaywallTrigger(null); setFailed(true); }}

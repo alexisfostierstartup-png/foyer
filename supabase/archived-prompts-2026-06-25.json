@@ -1,0 +1,80 @@
+[
+  {
+    "id": "16646285-481e-49c9-acf5-b766da83e085",
+    "slug": "audit_application",
+    "purpose": "audit",
+    "conditions": {},
+    "template": "Tu audites l application des décisions dans ce rendu IA.\nImage 1 = photo source. Image 2 = rendu.\n\nDÉCISIONS À VÉRIFIER :\n{{decisionsJson}}\n\nPour chaque élément (mismatch_type \"none\" = conserver, \"surface\" = personnaliser) :\n- \"none\" : l élément est-il visuellement présent et non altéré dans sa forme et matière ?\n- \"surface\" : la modification demandée (action_slug) est-elle visuellement visible ?\n\nRetourne UNIQUEMENT ce JSON (sans markdown) :\n{\"elements\":[{\"element_id\":\"e1\",\"expected\":\"état cible attendu en une phrase\",\"checks\":[{\"action_slug\":\"repaint\",\"applied\":true,\"confidence\":0.9}],\"element_preserved\":true,\"notes\":\"\"}]}\n\nRègles :\n- Inclure UNIQUEMENT les element_id présents dans les décisions fournies\n- element_preserved : true si l élément est reconnaissable et non remplacé dans le rendu\n- checks : vide pour mismatch_type \"none\", une entrée par action_slug pour \"surface\"\n- applied : true uniquement si la modification est CLAIREMENT visible\n- confidence : 0 à 1 — certitude de ton évaluation\n- Ne juge pas la qualité esthétique, uniquement la présence ou l absence des modifications",
+    "provider": "gemini_vision",
+    "is_active": false,
+    "version": 1,
+    "notes": null,
+    "created_at": "2026-06-15T13:23:09.091315+00:00",
+    "updated_at": "2026-06-17T16:03:39.017052+00:00"
+  },
+  {
+    "id": "ca122ce5-5e29-4eac-8a3f-ad0eea9b4f54",
+    "slug": "audit_quality",
+    "purpose": "audit",
+    "conditions": {},
+    "template": "You are auditing an AI interior design render. Image 1 = source photo (original room). Image 2 = AI-generated styled render of the SAME room.\n\nIMPORTANT: This is a style transformation. Walls, floors, furniture appearance, colors, and materials WILL intentionally change. Do NOT penalize for stylistic changes — they are expected and correct.\n\nEvaluate only what should NOT change:\n1. perspectiveMatch (0-10): camera angle and framing identical — same viewpoint, same lens\n2. roomLayout (0-10): structural elements preserved — windows/doors positions, ceiling height, room proportions (NOT their finish or style)\n3. photoRealism (0-10): does Image 2 look like a real interior photograph?\n4. sameRoom: is Image 2 clearly the same physical space (not a completely different room)?\n\nReturn ONLY valid JSON:\n{\n  \"perspectiveMatch\": 0-10,\n  \"roomLayout\": 0-10,\n  \"photoRealism\": 0-10,\n  \"sameRoom\": true/false,\n  \"issues\": [\"specific issues only, empty if none\"],\n  \"overallPass\": true/false\n}\n\noverallPass = true if: perspectiveMatch>=7 AND roomLayout>=7 AND photoRealism>=6 AND sameRoom=true.",
+    "provider": "gemini_vision",
+    "is_active": false,
+    "version": 1,
+    "notes": "Audit qualité post-génération. Compare source et rendu. Score < 7 = rejet.",
+    "created_at": "2026-06-09T14:06:35.296598+00:00",
+    "updated_at": "2026-06-17T06:59:13.437893+00:00"
+  },
+  {
+    "id": "da6c924a-5765-40df-8492-26349dfa3156",
+    "slug": "extract_alterations",
+    "purpose": "alterations",
+    "conditions": {},
+    "template": "This SINGLE image contains TWO photos placed SIDE BY SIDE: the LEFT half = AVANT (original photo), the RIGHT half = APRÈS (final render). Compare the LEFT half against the RIGHT half.\n\nFocus ONLY on the main room in the foreground. IGNORE anything in an adjacent or background room, or seen through a door/window.\n\nDESIGN INTENT (what the user actually decided — use it to avoid false positives):\n{{intent}}\nAn element listed as KEPT, and not mentioned in the user live-edit requests, must NOT be reported as changed — the render redraws it with minor lighting/texture variation, but it is the SAME piece (not a purchase). Only override this if it is OBVIOUSLY a different object.\n\nInspect EACH zone below and COMPARE its appearance on the LEFT vs the RIGHT:\n- Walls & ceiling: paint/color (incl. subtle shifts like white->beige), mouldings, panelling\n- Floor: material or covering\n- CEILING & LIGHTING (look up): ceiling/pendant light, chandelier, spots, wall sconce, floor lamp, table lamp\n- Seating: sofa, armchair, chairs. Tables: coffee, side, dining. Storage: tv stand, dresser, sideboard, bookshelf\n- WALL DECOR: frames, art, posters, mirrors\n- TEXTILES: rug, curtains, cushions\n- Plants & objects\n\nReturn ONLY a valid JSON object:\n{\n  \"alterations\": [\n    {\n      \"element\": \"short label\",\n      \"action\": \"added | replaced | restyled | painted | floor_changed | removed\",\n      \"category\": \"sofa | armchair | chair | coffee_table | side_table | rug | floor | paint | mouldings | lamp | floor_lamp | tv_stand | bookshelf | dresser | nightstand | curtains | plant | other\",\n      \"detail\": \"what specifically changed (before -> after)\",\n      \"shoppingImpact\": \"none | to_buy | to_buy_secondhand | diy_material\"\n    }\n  ]\n}\n\nDECISION RULE — be accurate, not exhaustive. Judge EACH item INDEPENDENTLY: a change to one item (e.g. the sofa turned yellow) does NOT mean a neighbouring item (e.g. an armchair) also changed — verify each one on its own. Differences of lighting, warmth, shadow or rendering sharpness are NOT changes; only a clearly different COLOR (e.g. grey -> green), material, shape or object counts.\n- List an element ONLY if it is CLEARLY DIFFERENT between LEFT and RIGHT: replaced by another object, added, removed, repainted, re-covered, or restyled.\n- If an element looks the SAME in both halves (e.g. the SAME rug, same sofa, same lamp, same wall color), DO NOT list it — even after checking it. Identical = not listed.\n- When unsure whether it truly changed, leave it out.\n\nshoppingImpact:\n- new / replaced furniture, light fixture, rug, curtain, frame, decor -> \"to_buy_secondhand\" (or \"to_buy\").\n- painted walls/ceiling, new flooring, reupholstered, stained wood -> \"diy_material\".\n- removed or only moved -> \"none\".\nOne entry per real change, no duplicates.",
+    "provider": "gemini_vision",
+    "is_active": true,
+    "version": 1,
+    "notes": "Compare source et rendu final, extrait la liste des changements pour alimenter la liste de courses. [backup extract 2026-06-16] [backup extract-v2 2026-06-16] [rewrite compare-strict 2026-06-17]",
+    "created_at": "2026-06-09T14:06:35.296598+00:00",
+    "updated_at": "2026-06-17T08:00:50.940446+00:00"
+  },
+  {
+    "id": "42c5e2f8-b01f-4a00-8d8b-4ac0cf1d38f2",
+    "slug": "gen_shopping_list",
+    "purpose": "shopping",
+    "conditions": {},
+    "template": "You are a French interior design advisor. Look at the rendered image (attached) and generate a shopping list for the user.\n\nSTYLE: {{styleName}} — {{styleMood}}\n\nDETECTED CHANGES (what was added/modified vs the original room):\n{{alterationsJson}}\n\nFor each item with shoppingImpact \"to_buy\", \"to_buy_secondhand\", or \"diy_material\", generate one shopping entry. Look at the image to name the item precisely.\n\nReturn ONLY a valid JSON object:\n{\n  \"shoppingList\": [\n    {\n      \"id\": \"1\",\n      \"name\": \"French product name, specific (e.g. 'Canapé 3 places en tissu naturel écru')\",\n      \"category\": \"sofa|armchair|table|coffee_table|rug|lamp|tv_stand|paint|floor|molding|shelf|mirror|cushion|curtain|plant|other\",\n      \"detail\": \"one line: material, color, style reference visible in the image\",\n      \"priceMin\": 80,\n      \"priceMax\": 350,\n      \"source\": \"secondhand|new|diy|reuse\",\n      \"merchants\": [\n        { \"name\": \"MerchantName\", \"source\": \"secondhand|new|diy|reuse\" }\n      ]\n    }\n  ]\n}\n\nSource values:\n- \"secondhand\": buying used (Selency, Leboncoin, Vinted, Troc de l'Île)\n- \"new\": buying new (IKEA, La Redoute, Maisons du Monde, Alinéa, BUT)\n- \"diy\": materials for DIY work (Leroy Merlin, Castorama, ManoMano)\n- \"reuse\": keeping or repurposing an existing item — name it \"Votre [meuble] actuel\" or \"Peindre l'existant\"\n\nMerchant rules (use ONLY these per source):\n- \"secondhand\": [Selency, Leboncoin, Vinted, Troc de l'Île]\n- \"new\": [IKEA, La Redoute, Maisons du Monde, Alinéa, BUT]\n- \"diy\": [Leroy Merlin, Castorama, ManoMano]\n- \"reuse\": describe the action as the name (e.g. \"Votre canapé actuel refait\", \"Repeindre l'existant\")\n\nPer item: provide 2-3 merchants. For furniture REPLACED (action=\"replaced\" in the alteration), add one \"reuse\" option last so the user can choose to keep and restyle their existing piece.\n\nThe item's top-level \"source\" = the source of the FIRST/recommended merchant.\nPriority: secondhand > new > diy. Never set furniture primary source to \"new\" if secondhand makes sense.\npriceMin/priceMax in euros, realistic for France (for the recommended option).\nList only items where shoppingImpact is not \"none\".",
+    "provider": "gemini_vision",
+    "is_active": false,
+    "version": 1,
+    "notes": "Shopping list from final render + alterations JSON. Returns shoppingList[] with name/category/detail/priceMin/priceMax/source/merchants.",
+    "created_at": "2026-06-09T16:55:15.17725+00:00",
+    "updated_at": "2026-06-17T16:03:39.017052+00:00"
+  },
+  {
+    "id": "e8118b63-4bc5-4473-ae8a-19d1a036a771",
+    "slug": "vision_analyze_full",
+    "purpose": "detection",
+    "conditions": {},
+    "template": "Analyse cette photo de pièce. Style cible : {{styleName}} — {{styleMood}}.\n\nActions DIY disponibles :\n{{allActionsJson}}\n\nIdentifie les éléments significatifs et retourne UNIQUEMENT ce JSON (sans markdown) :\n{\"elements\":[{\"element_id\":\"e1\",\"element\":\"nom\",\"category\":\"sofa|armchair|chair|coffee_table|side_table|nightstand|dresser|bed|lamp|rug|plant|wall|floor|ceiling|window|door|other\",\"description\":\"description visuelle courte\",\"material_family\":\"fabric|wood|metal|stone|glass|plastic|leather|textile|ceramic|other|unknown\",\"surface_features\":[],\"condition\":\"new|good|worn|damaged\",\"movable\":true,\"dims\":{},\"mismatch_type\":\"none|surface|structural\",\"action_slug\":null,\"action_label\":null}]}\n\nRègles :\n- mismatch_type \"none\" : s intègre au style cible → conserver\n- mismatch_type \"surface\" : forme OK mais surface à transformer → choisir l action la plus pertinente dont applies_to_categories contient la catégorie de l élément\n- mismatch_type \"structural\" : incompatible avec le style → remplacer\n- action_slug et action_label : renseigner uniquement si mismatch_type=\"surface\" et qu une action correspondante existe\n- dims : inclure uniquement les dimensions estimables depuis la photo\n- element_id : séquence e1, e2, e3…\n- Ignorer les petits accessoires (coussins isolés, bibelots, cadres)",
+    "provider": "gemini_vision",
+    "is_active": false,
+    "version": 1,
+    "notes": " [déprécié 2026-06-16: remplacé par séparation vision_detect_extended (détection) + verdict_elements (verdict)]",
+    "created_at": "2026-06-15T10:19:28.959187+00:00",
+    "updated_at": "2026-06-16T14:17:05.457568+00:00"
+  },
+  {
+    "id": "20258b3a-f685-4771-b171-0888eec142b9",
+    "slug": "vision_detect",
+    "purpose": "detection",
+    "conditions": {},
+    "template": "Analyze this interior room photo. Return ONLY a JSON object listing what you observe. Do not give any instruction or recommendation — only describe what is present.\n\n{\n  \"roomType\": \"salon | chambre | autre\",\n  \"architecture\": {\n    \"floor\": \"material and condition (e.g. 'worn light wood parquet')\",\n    \"walls\": \"color, material, condition\",\n    \"ceiling\": \"description\",\n    \"windows\": \"count, size, position, light direction\",\n    \"doors\": \"count, position\"\n  },\n  \"detectedElements\": [\n    {\n      \"element\": \"short label (e.g. 'staircase', 'wall mirror', 'fireplace', 'radiator', 'sofa')\",\n      \"type\": \"furniture | architectural | fixture | decor\",\n      \"location\": \"where in the room\",\n      \"description\": \"color, material, style, condition\",\n      \"movable\": true\n    }\n  ],\n  \"qualityWarnings\": [\"e.g. 'too dark', 'blurry', 'partially cropped'\"]\n}\n\nRules:\n- List EVERY visible element: furniture AND architectural features AND fixtures.\n- \"movable\": true for furniture, false for built-in/structural (staircase, fireplace, radiator).\n- Describe only. Do NOT decide what to keep or change.\n- Return ONLY the JSON.",
+    "provider": "gemini_vision",
+    "is_active": true,
+    "version": 1,
+    "notes": "Détection pure : Vision ne décide jamais, il observe.",
+    "created_at": "2026-06-09T14:06:35.296598+00:00",
+    "updated_at": "2026-06-09T14:06:35.296598+00:00"
+  }
+]

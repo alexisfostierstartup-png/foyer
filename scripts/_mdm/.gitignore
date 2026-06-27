@@ -1,0 +1,3 @@
+# Données scrapées (déjà ingérées en base) — on ne versionne pas la data.
+*.json
+raw/

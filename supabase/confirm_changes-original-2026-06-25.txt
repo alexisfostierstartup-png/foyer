@@ -1,0 +1,26 @@
+This SINGLE image contains TWO photos SIDE BY SIDE: the LEFT half = AVANT (original photo), the RIGHT half = APRÈS (final render).
+
+Below is the list of elements detected in the AVANT photo — each has an id, the element description and its category:
+{{candidatesJson}}
+
+For EACH element, compare it on the LEFT (AVANT) vs the RIGHT (APRÈS) and decide whether the render CHANGED it:
+- changed = true  -> in APRÈS it is a clearly DIFFERENT object, OR has a clearly different colour / material / pattern / finish than in AVANT (e.g. a different rug, a repainted or re-textured wall, a new floor, a replaced or restyled table).
+- changed = false -> in APRÈS it is essentially the SAME piece (same object, same colour, same material).
+When changed = true, also return "after": a short description of how that element looks in the APRÈS (RIGHT) image (the new object / colour / material), NOT the AVANT.
+
+For EACH element that is VISIBLE in the APRÈS (RIGHT) photo, ALSO return "bbox": its bounding box IN THE APRÈS (RIGHT) image, as [x, y, w, h] with values between 0 and 1 normalized over the ENTIRE side-by-side image (x = left edge of the box, 0 = far left of the whole image, 1 = far right; y = top edge; w, h = width/height as fractions of the whole image). The box MUST lie in the RIGHT half (APRÈS). Make it TIGHT around the object. If the element is not visible in the APRÈS, omit bbox.
+
+Judge each element INDEPENDENTLY on its own visual merits. Do NOT assume the render keeps things: the render frequently restyles, recolours or replaces several elements at once — including some it was not explicitly asked to change. Conversely, do not invent changes. IGNORE pure differences of lighting, warmth, shadow, camera angle, framing or rendering sharpness — those are NOT changes. Base your decision strictly on the actual object, colour, material or pattern.
+
+ALSO detect ADDITIONS: furniture / decor / lighting clearly PRESENT in the RIGHT (APRÈS) but ABSENT in the LEFT (AVANT) — genuinely NEW items the render added (e.g. a TV, a TV stand, a new lamp). Only list an addition if it is unmistakably new (not in AVANT) and not already one of the elements listed above. List EACH distinct article as its OWN separate entry — NEVER combine two distinct pieces into one: a 2-seat sofa and a 1-seat armchair are TWO separate entries, even with the same fabric and colour. Never write "two X", "a pair of X" or similar as one entry — split into one entry per physical piece.
+
+Return STRICT JSON, nothing else:
+{
+  "results": [
+    { "element_id": "...", "changed": true, "after": "description in APRÈS", "bbox": [0.55, 0.40, 0.20, 0.30] }
+  ],
+  "additions": [
+    { "element": "...", "category": "sofa|armchair|coffee_table|side_table|dining_table|chair|rug|floor|wall|floor_lamp|table_lamp|ceiling_light|tv_stand|bookshelf|sideboard|dresser|nightstand|curtains|plant|frame|other", "detail": "color/material/style" }
+  ]
+}
+results = one entry per element above (use its element_id). "after" describes the element in the APRÈS (RIGHT) image; "bbox" is its box in the APRÈS (RIGHT) image normalized over the whole side-by-side image. additions = only genuinely new items, ONE physical article per entry (never combine a sofa and an armchair into one entry).

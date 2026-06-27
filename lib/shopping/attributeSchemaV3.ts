@@ -1,0 +1,169 @@
+/**
+ * Référentiel d'attributs V3 (vocab EN fermé) — miroir code de la page Notion
+ * « Référentiel liste shopping ». Source de vérité pour l'extraction structurée (Étape 2).
+ * Quand le vocab Notion évolue (promotion de candidats), on met ce fichier à jour.
+ *
+ * NB : sous-ensemble des catégories ayant des produits au catalogue. Poids/conditionnels
+ * gérés côté scoring (pas ici) ; ici on ne garde que clés + types + vocab pour l'extraction.
+ */
+// conditional = l'attribut peut ne PAS s'appliquer (ex. matière des pieds sans pieds, finition
+// métal sur un luminaire en rotin) → l'extraction renvoie "n/a", exclu du score (coverage).
+// hint = courte indication d'extraction injectée dans le prompt (désambiguïse un attribut,
+// ex. distinguer base vs forme des pieds, ou matière de structure vs revêtement).
+export type AttrV3 = { key: string; type: "enum" | "hex"; vocab?: string[]; conditional?: boolean; hint?: string };
+
+export const SCHEMA_V3: Record<string, AttrV3[]> = {
+  sofa: [
+    { key: "seats", type: "enum", vocab: ["1", "2", "3", "4", "5+"] },
+    { key: "configuration", type: "enum", vocab: ["straight", "corner_left", "corner_right", "chaise", "modular", "panoramic", "sofa_bed"] },
+    { key: "color", type: "hex" },
+    { key: "upholstery", type: "enum", vocab: ["fabric", "velvet", "corduroy", "linen", "boucle", "chenille", "leather", "faux_leather"] },
+    { key: "legs_type", type: "enum", vocab: ["tapered", "block", "metal_thin", "plinth", "casters", "none"] },
+    { key: "legs_material", type: "enum", conditional: true, vocab: ["light_wood", "dark_wood", "black_metal", "gold_metal", "chrome_metal"] },
+  ],
+  armchair: [
+    { key: "shape", type: "enum", vocab: ["wingback", "tub", "egg", "scandinavian", "low", "cabriolet", "club", "recliner"] },
+    { key: "color", type: "hex" },
+    { key: "upholstery", type: "enum", vocab: ["fabric", "velvet", "corduroy", "boucle", "linen", "leather", "faux_leather", "rattan_cane"] },
+    // PIEDS éclatés en 2 dimensions distinctes (avant : un seul legs_type qui mélangeait
+    // forme et configuration → faux mismatch "tapered" vs "four_legs").
+    { key: "legs_base", type: "enum", vocab: ["four_legs", "central", "tripod", "sled", "swivel", "rocking", "skirted"], hint: "CONFIGURATION de la base : skirted=jupe/tissu jusqu'au sol sans pieds visibles, central=piètement unique, sled=base luge" },
+    { key: "legs_shape", type: "enum", conditional: true, vocab: ["tapered", "straight", "turned"], hint: "FORME des pieds si pieds distincts visibles (tapered=s'affinent vers le bas, turned=tournés/galbés) ; n/a si base skirted/central" },
+    { key: "frame_material", type: "enum", vocab: ["wood", "metal", "none"], hint: "matière de la STRUCTURE/ACCOUDOIRS apparente : wood=bois visible, none=entièrement rembourré sans structure dure apparente" },
+    { key: "armrests", type: "enum", vocab: ["with", "without"] },
+  ],
+  chair: [
+    { key: "shape", type: "enum", vocab: ["shell", "scandinavian_wood", "medallion", "bistro", "rush_cane", "upholstered", "transparent", "ladder_back"] },
+    { key: "color", type: "hex" },
+    { key: "material", type: "enum", vocab: ["wood", "metal", "plastic", "padded_fabric", "velvet", "leather", "rattan_cane"] },
+    { key: "legs_type", type: "enum", vocab: ["four_legs", "tapered", "cantilever", "central", "wood_splayed"] },
+    { key: "armrests", type: "enum", vocab: ["with", "without"] },
+  ],
+  coffee_table: [
+    { key: "shape", type: "enum", vocab: ["round", "oval", "rectangular", "square", "nesting", "organic"] },
+    { key: "top_material", type: "enum", vocab: ["light_wood", "dark_wood", "oak", "walnut", "white_lacquer", "black", "marble", "glass", "metal", "travertine", "concrete"] },
+    { key: "top_color", type: "hex" },
+    { key: "legs_material", type: "enum", conditional: true, vocab: ["wood", "black_metal", "gold_metal", "chrome_metal", "same_as_top"] },
+    { key: "legs_type", type: "enum", vocab: ["four_legs", "central", "tapered", "metal_thin", "sled", "casters"] },
+    { key: "storage", type: "enum", vocab: ["none", "lower_shelf", "drawers", "lift_top"] },
+  ],
+  side_table: [
+    { key: "shape", type: "enum", vocab: ["round", "square", "rectangular", "irregular"] },
+    { key: "top_material", type: "enum", vocab: ["light_wood", "dark_wood", "white", "black", "marble", "glass", "metal", "rattan"] },
+    { key: "top_color", type: "hex" },
+    { key: "legs_type", type: "enum", vocab: ["four_legs", "central", "tapered", "nesting", "c_shape"] },
+  ],
+  rug: [
+    { key: "pattern", type: "enum", vocab: ["plain", "geometric", "chevron", "berber_diamond", "oriental", "abstract", "striped", "checked"] },
+    { key: "color", type: "hex" },
+    { key: "weave", type: "enum", vocab: ["flatweave", "shaggy", "berber", "tufted", "braided_jute", "kilim", "fringed", "low_velvet"] },
+    { key: "shape", type: "enum", vocab: ["rectangular", "round", "oval", "runner"] },
+    // `material` (laine/synthétique) retiré : invisible sur photo (8/8 unknown au harvest).
+    // `weave` capte déjà la texture. À sourcer du texte produit si besoin.
+  ],
+  tv_stand: [
+    { key: "shape", type: "enum", vocab: ["low_bench", "cabinet", "column", "wall_mounted", "corner"] },
+    { key: "color", type: "hex" },
+    { key: "material", type: "enum", vocab: ["light_wood", "dark_wood", "oak", "walnut", "white", "black", "cane", "metal", "glass", "travertine"] },
+    { key: "storage", type: "enum", vocab: ["doors", "drawers", "open_niches", "mixed"] },
+    { key: "legs", type: "enum", vocab: ["tapered", "metal", "block", "casters", "floor_block", "wall_mounted"] },
+  ],
+  bookshelf: [
+    { key: "shape", type: "enum", vocab: ["tall_bookcase", "wall_shelf", "ladder", "cube", "modular", "narrow_column"] },
+    { key: "color", type: "hex" },
+    { key: "material", type: "enum", vocab: ["light_wood", "dark_wood", "black_metal", "white", "wood_metal_mix", "glass"] },
+    { key: "structure", type: "enum", vocab: ["open", "closed_doors", "mixed"] },
+    { key: "mount", type: "enum", vocab: ["floor", "wall_mounted", "leaning_ladder"] },
+  ],
+  dresser: [
+    { key: "shape", type: "enum", vocab: ["wide_low", "tall_chest", "corner"] },
+    { key: "color", type: "hex" },
+    { key: "material", type: "enum", vocab: ["light_wood", "dark_wood", "oak", "walnut", "white", "black", "cane"] },
+    { key: "drawers", type: "enum", vocab: ["2", "3", "4", "5+"] },
+    { key: "legs", type: "enum", vocab: ["tapered", "straight", "metal", "casters", "plinth"] },
+  ],
+  floor_material: [
+    { key: "type", type: "enum", vocab: ["wood_laminate", "tile", "polished_concrete", "vinyl", "seagrass", "carpet"] },
+    { key: "color", type: "hex" },
+    { key: "pattern", type: "enum", vocab: ["straight_planks", "chevron", "herringbone", "broken_bond", "plain", "cement_tiles"] },
+    { key: "finish", type: "enum", vocab: ["matte", "satin", "gloss", "brushed"] },
+  ],
+  floor_lamp: [
+    // Refonte (harvest : base_material confondait forme et finition) → on sépare
+    // base_shape (la forme du socle) de base_finish (le métal/finition).
+    { key: "structure", type: "enum", vocab: ["arc", "column", "tripod", "reading", "multi_arm"] },
+    { key: "shade_type", type: "enum", vocab: ["fabric_drum", "metal_dome", "rattan_bamboo", "glass_opal", "paper_lantern", "rectangular", "cage", "none"] },
+    { key: "base_shape", type: "enum", vocab: ["disc", "round_weighted", "square", "tripod", "integrated_shelf"] },
+    { key: "base_finish", type: "enum", conditional: true, vocab: ["black_metal", "white_metal", "gold_brass", "chrome", "brushed_metal", "wood"] },
+    { key: "color", type: "hex" },
+  ],
+  pendant_lamp: [
+    { key: "shape", type: "enum", vocab: ["dome", "globe", "cylinder", "cascade", "disc", "cage", "chandelier"] },
+    { key: "shade_material", type: "enum", vocab: ["metal", "rattan_bamboo", "glass_opal", "fabric", "paper_rice", "plastic"] },
+    { key: "color", type: "hex" },
+    { key: "finish", type: "enum", conditional: true, vocab: ["black_matte", "gold_brass", "chrome", "copper", "white", "rattan_rope"] },
+  ],
+  sideboard: [
+    { key: "shape", type: "enum", vocab: ["low_credenza", "tall_hutch", "corner", "modular"] },
+    { key: "color", type: "hex" },
+    { key: "material", type: "enum", vocab: ["light_wood", "dark_wood", "oak", "walnut", "white", "black", "cane", "wood_metal_mix"] },
+    { key: "front", type: "enum", vocab: ["solid_doors", "cane", "glass", "drawers", "mixed"] },
+    { key: "legs", type: "enum", vocab: ["tapered", "straight", "metal", "plinth", "wall_mounted"] },
+  ],
+  dining_table: [
+    { key: "shape", type: "enum", vocab: ["round", "oval", "rectangular", "square", "extendable"] },
+    { key: "top_material", type: "enum", vocab: ["light_wood", "dark_wood", "oak", "walnut", "white_lacquer", "black", "marble", "ceramic", "glass", "metal", "travertine", "concrete"] },
+    { key: "top_color", type: "hex" },
+    { key: "legs_type", type: "enum", vocab: ["four_legs", "central", "trestle", "sled", "u_frame"] },
+    { key: "legs_material", type: "enum", conditional: true, vocab: ["wood", "black_metal", "gold_metal", "chrome_metal", "same_as_top"] },
+  ],
+  // mouldings/batten : `width` (number, gros poids Notion) = spec PRODUIT, non extractible du
+  // rendu → on garde le profil (visuel). Le coverage-aware gère l'absence de width côté rendu.
+  mouldings: [
+    { key: "shape", type: "enum", vocab: ["flat", "cove", "ogee", "dentil", "quarter_round", "ornate_cornice"] },
+  ],
+  batten: [
+    { key: "shape", type: "enum", vocab: ["square", "rectangular", "half_round", "fluted"] },
+  ],
+  default: [
+    { key: "color", type: "hex" },
+    { key: "material", type: "enum", vocab: ["light_wood", "dark_wood", "metal", "fabric", "plastic", "glass", "rattan", "white", "black"] },
+    { key: "shape", type: "enum", vocab: ["horizontal", "vertical", "compact", "rounded", "angular"] },
+  ],
+};
+
+export function getSchemaV3(schema: string): AttrV3[] {
+  return SCHEMA_V3[schema] ?? SCHEMA_V3.default;
+}
+
+/** Mappe une catégorie catalogue vers un schéma V3 (certaines diffèrent). */
+export function schemaForCategory(category: string): string {
+  const map: Record<string, string> = { floor: "floor_material", lamp: "pendant_lamp", mirror: "default" };
+  return map[category] ?? (SCHEMA_V3[category] ? category : "default");
+}
+
+/**
+ * Prompt d'extraction fermée. Distingue "unknown" (s'applique mais indéterminable) de
+ * "n/a" (ne s'applique pas à ce produit) → "n/a" est exclu du score sans polluer la
+ * récolte de vocab (ex. matière des pieds quand il n'y a pas de pieds).
+ */
+export function buildExtractionPrompt(attrs: AttrV3[]): string {
+  const lines = attrs.map((a) => {
+    const base = a.type === "hex" ? `  "${a.key}": "#rrggbb (couleur dominante de l'objet)"` : `  "${a.key}": one of [${a.vocab!.join(", ")}]`;
+    return a.hint ? `${base}  — ${a.hint}` : base;
+  });
+  return (
+    `Décris l'OBJET PRINCIPAL de cette photo produit (ignore le fond/décor). JSON STRICT, ` +
+    `une valeur EXACTE du vocabulaire par clé.\n` +
+    `- Pour les MATIÈRES (matière, matériau), juge l'APPARENCE VISUELLE (ce à quoi ça ` +
+    `ressemble), PAS la construction réelle : un placage / mélaminé / MDF effet bois = "bois" ` +
+    `(light_wood ou dark_wood selon la teinte). N'utilise "unknown" sur une matière que si ` +
+    `l'aspect est vraiment indéterminable.\n` +
+    `- "unknown" si l'attribut S'APPLIQUE mais n'est pas déterminable depuis l'image.\n` +
+    `- "n/a" si l'attribut NE S'APPLIQUE PAS à ce produit (ex. matière des pieds s'il n'y a pas de pieds visibles).\n` +
+    `- PIEDS : si l'objet REPOSE AU SOL sans pieds apparents (canapé bas, socle plein, pieds ` +
+    `cachés sous l'assise), alors legs_type = "none" ET legs_material = "n/a". N'invente PAS ` +
+    `des pieds (ex. "block"/"dark_wood") quand on n'en voit pas.\n` +
+    `{\n${lines.join(",\n")}\n}`
+  );
+}

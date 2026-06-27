@@ -7,9 +7,10 @@ import { ExternalLink, Pencil, Link2, Star, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { ProgressBar } from "@/components/create/ProgressBar";
 import { BeforeAfterSlider } from "@/components/create/BeforeAfterSlider";
-import { ShoppingCard } from "@/components/create/ShoppingCard";
+import { ShoppingCard, useDebug } from "@/components/create/ShoppingCard";
 import { PaywallModal } from "@/components/paywalls/PaywallModal";
 import { cn } from "@/lib/utils";
+import { PAYWALL_DISABLED } from "@/lib/constants";
 import { useUser } from "@/lib/auth/useUser";
 import type { ShoppingItem, ScoreFoyer } from "@/lib/types";
 import type { PaywallTrigger } from "@/components/paywalls/PaywallModal";
@@ -248,6 +249,7 @@ export function FinalScreen({
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>(initialShoppingList);
   const [scoreFoyer, setScoreFoyer] = useState<ScoreFoyer | undefined>(initialScoreFoyer);
   const [refreshing, setRefreshing] = useState(false);
+  const debug = useDebug(); // ?debug=1 → affichage scoring + layout large (sinon design éditorial 480px)
 
   const alterationsList = ((alterations as { alterations?: Alteration[] } | null)
     ?.alterations ?? []) as Alteration[];
@@ -295,6 +297,10 @@ export function FinalScreen({
   }
 
   function handleRestart() {
+    if (PAYWALL_DISABLED) {
+      router.push("/create");
+      return;
+    }
     if (isExpert) {
       router.push("/create");
       return;
@@ -315,7 +321,7 @@ export function FinalScreen({
       <div className="flex flex-1 flex-col">
         <ProgressBar currentStep={5} labels={STEPS} />
 
-        <main className="mx-auto w-full max-w-[480px] flex-1 px-5 pb-24 pt-6">
+        <main className={cn("mx-auto w-full flex-1 px-5 pb-24 pt-6", debug ? "max-w-[820px]" : "max-w-[480px]")}>
           {/* Before / After slider */}
           <BeforeAfterSlider
             before={beforeUrl}
@@ -378,8 +384,8 @@ export function FinalScreen({
             ))}
           </div>
 
-          {/* Refresh button — expert only, visible on shopping tab */}
-          {isExpert && tabIdx === 0 && (
+          {/* Refresh button — visible on shopping tab (recalcule les matchs catalogue) */}
+          {tabIdx === 0 && (
             <button
               type="button"
               onClick={handleRefreshShopping}
@@ -434,7 +440,7 @@ export function FinalScreen({
         </main>
       </div>
 
-      {paywallTrigger && (
+      {!PAYWALL_DISABLED && paywallTrigger && (
         <PaywallModal
           trigger={paywallTrigger}
           onClose={() => setPaywallTrigger(null)}
@@ -500,8 +506,9 @@ function EnhancedListeShoppingTab({
       {activeFamilies.map((family) => {
         const items = byFamily.get(family) ?? [];
         const kept = keptByFamily.get(family) ?? [];
-        const matched = items.filter((i) => i.merchants.length > 0);
-        const unmatched = items.filter((i) => i.merchants.length === 0);
+        // "matched" = a un produit catalogue matché OU un marchand (legacy).
+        const matched = items.filter((i) => (i.matches?.length ?? 0) > 0 || i.merchants.length > 0);
+        const unmatched = items.filter((i) => (i.matches?.length ?? 0) === 0 && i.merchants.length === 0);
         const count = matched.length + kept.length;
 
         return (
