@@ -48,8 +48,3 @@ export const MATCH_MIN_SIMILARITY = 0.25;
 export const MATCH_COLOR_FAMILY_RESTRICT = 1;
 export const MATCH_COLOR_FAMILY_MIN_WEIGHT = 0.15;
 
-// Mode test : la liste de courses finale n'associe PAS de produit catalogue par
-// défaut. Chaque élément à acheter est affiché « À sourcer » avec sa catégorie,
-// matière et couleur (issues de l'audit), pour vérifier le travail de l'audit.
-// Repasser à false pour réactiver le matching catalogue (vraie liste de courses).
-export const SHOPPING_RAW_AUDIT_MODE = true;

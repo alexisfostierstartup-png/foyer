@@ -3,7 +3,6 @@ import type { CatalogCategory, CatalogProduct } from "./catalog";
 import type { ReconciledPlan, BuiltShoppingList, DiyEntry, CatalogEntry, UnmatchedEntry } from "./types";
 import type { ScoreFoyer, ShoppingItem, ShoppingSource } from "@/lib/types";
 import { resolveCatalogCategory, mergeShoppingItems } from "./categories";
-import { SHOPPING_RAW_AUDIT_MODE } from "@/lib/constants";
 
 const ACTION_META: Record<string, { difficulty: "facile" | "intermédiaire" | "avancé"; time_h: number }> = {
   repaint:             { difficulty: "facile",          time_h: 4  },
@@ -28,8 +27,8 @@ function findProduct(
   styleId: string | null,
   preferSecondhand: boolean,
 ): CatalogProduct | null {
-  // Mode audit : pas de produit par défaut → tout part en "À sourcer".
-  if (SHOPPING_RAW_AUDIT_MODE) return null;
+  // Catalogue mock retiré (WoZ) → CATALOG vide → aucun produit par défaut, tout part
+  // en "À sourcer" puis est matché par le vrai catalogue partenaire (partnerMatch.ts).
   let pool = CATALOG.filter((p) => p.category === category);
   if (pool.length === 0) return null;
   if (styleId) {

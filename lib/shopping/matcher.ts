@@ -6,7 +6,6 @@ import { searchLbc, computeLbcHybridScore, type LbcItem } from "@/lib/lbc/search
 import { getLbcCategory, getStyleKeywords } from "@/lib/lbc/categoryMap";
 import type { ShoppingItem, ShoppingSource, ScoreFoyer } from "@/lib/types";
 import { resolveCatalogCategory, mergeShoppingItems } from "./categories";
-import { SHOPPING_RAW_AUDIT_MODE } from "@/lib/constants";
 
 // Re-export pour compatibilité pipeline
 export type Alteration = {
@@ -84,8 +83,7 @@ function findCandidateMock(
   styleId: string | null,
   preferSecondhand: boolean,
 ): CatalogProduct | null {
-  // Mode audit : pas de produit par défaut → tout part en "À sourcer".
-  if (SHOPPING_RAW_AUDIT_MODE) return null;
+  // Catalogue mock retiré (WoZ) → CATALOG vide → null (fallback seulement si Jina down).
   let pool = CATALOG.filter((p) => p.category === category);
   if (pool.length === 0) return null;
   if (styleId) {
