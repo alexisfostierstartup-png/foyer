@@ -13,6 +13,32 @@ import { SCHEMA_V3, schemaForCategory, type AttrV3 } from "./attributeSchemaV3";
 // ΔE au-delà duquel un attribut couleur ne rapporte plus rien (latitude perceptuelle).
 const COLOR_THRESHOLD = 28;
 
+// Score couleur GATÉ par TEINTE : on garde le dégradé ΔE (clair vs foncé) UNIQUEMENT dans un
+// spectre de teinte proche ; une teinte franchement différente → 0 (pas de demi-points).
+//  - 2 quasi-neutres (blanc/gris/noir, chroma faible) → compatibles → dégradé ΔE sur la clarté
+//    (blanc clair plus proche d'un rendu blanc clair = plus de points qu'un blanc foncé/gris).
+//  - 1 neutre + 1 coloré (rendu blanc vs produit vert) → 0.
+//  - 2 colorés → compatibles si l'angle de teinte est PROCHE (un vert accepte vert d'eau / bleu-
+//    vert, mais pas le bleu pur ni le rouge) → dégradé ΔE ; sinon 0.
+const NEUTRAL_CHROMA = 10; // chroma (a*,b*) en-dessous = quasi-neutre (pas de teinte franche)
+const HUE_TOL = 60;        // écart de teinte (°) toléré : vert ↔ vert d'eau/bleu-vert OK, vert ↔ bleu = 0
+export function colorAttrSim(hexA: string, hexB: string): number {
+  const la = hexToLab(hexA), lb = hexToLab(hexB);
+  if (!la || !lb) return 0;
+  const aN = Math.hypot(la[1], la[2]) < NEUTRAL_CHROMA;
+  const bN = Math.hypot(lb[1], lb[2]) < NEUTRAL_CHROMA;
+  let compatible: boolean;
+  if (aN && bN) compatible = true;        // 2 neutres
+  else if (aN !== bN) compatible = false; // neutre vs coloré → 0
+  else {
+    const hueA = (Math.atan2(la[2], la[1]) * 180 / Math.PI + 360) % 360;
+    const hueB = (Math.atan2(lb[2], lb[1]) * 180 / Math.PI + 360) % 360;
+    const dHue = Math.min(Math.abs(hueA - hueB), 360 - Math.abs(hueA - hueB));
+    compatible = dHue <= HUE_TOL;
+  }
+  return compatible ? Math.max(0, 1 - deltaE(la, lb) / COLOR_THRESHOLD) : 0;
+}
+
 // Poids par attribut (sur 100 par catégorie, renorm coverage-aware) — miroir du
 // référentiel Notion. Ajustable. Clé = nom de SCHÉMA V3 (pas la catégorie catalogue).
 export const ATTR_WEIGHTS: Record<string, Record<string, number>> = {
@@ -85,9 +111,7 @@ export function structuredScore(
     }
     let sim: number;
     if (k.toLowerCase().includes("color")) {
-      const la = hexToLab(String(va));
-      const lb = hexToLab(String(vb));
-      sim = la && lb ? Math.max(0, 1 - deltaE(la, lb) / COLOR_THRESHOLD) : 0;
+      sim = colorAttrSim(String(va), String(vb)); // gate teinte + dégradé ΔE
     } else {
       sim = String(va) === String(vb) ? 1 : 0;
     }

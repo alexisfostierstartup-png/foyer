@@ -10,28 +10,40 @@ import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { hexToLab, deltaE } from "@/lib/color";
 import type { ProductMatch } from "@/lib/types";
 
-const WALL_COLORS_PROMPT = `Cette image contient DEUX photos CÔTE À CÔTE : moitié GAUCHE = AVANT (pièce d'origine), moitié DROITE = APRÈS (rendu). Identifie chaque MUR dont la COULEUR DE PEINTURE a CHANGÉ entre AVANT et APRÈS (mur repeint d'une couleur différente). Pour CHAQUE mur repeint, donne sa couleur dans l'APRÈS (DROITE) : son hex (échantillon en MI-TON, sans reflet ni ombre) + un court label (ex. "mur d'accent", "mur du fond"). ⚠️ NE LISTE PAS les murs restés de la même couleur (non repeints). Un mur qui reste blanc/crème/clair — même légèrement plus clair, plus chaud ou plus lumineux dans le rendu — n'est PAS repeint (c'est un simple artefact de rendu) : NE LE LISTE PAS. Ne liste un mur QUE si sa couleur a CLAIREMENT changé : teinte franchement différente, OU nuance nettement plus foncée/saturée. Ne fusionne jamais plusieurs murs de couleurs différentes. Sois fidèle à la teinte ET à la saturation. Ignore plafond, sol, meubles, rideaux, fenêtres. Réponds en JSON STRICT, rien d'autre : {"walls":[{"hex":"#RRGGBB","label":"..."}]}. Si aucun mur n'a changé de couleur : {"walls":[]}.`;
+const WALL_COLORS_PROMPT = `Cette image contient DEUX photos CÔTE À CÔTE : moitié GAUCHE = AVANT (pièce d'origine), moitié DROITE = APRÈS (rendu). Identifie chaque MUR dont la COULEUR DE PEINTURE a possiblement CHANGÉ entre AVANT et APRÈS. Pour CHAQUE mur concerné, donne sa couleur AVANT (GAUCHE) ET APRÈS (DROITE) : hex en MI-TON (sans reflet ni ombre) + un court label (ex. "mur d'accent", "mur du fond"). ⚠️ NE LISTE PAS un mur resté de la même couleur. Un mur qui reste blanc/crème/clair — même légèrement plus clair, plus chaud ou plus lumineux dans le rendu — n'est PAS repeint (artefact de rendu) : NE LE LISTE PAS. Ne fusionne jamais plusieurs murs de couleurs différentes. Sois fidèle à la teinte ET à la saturation, et donne un hex AVANT vraiment représentatif de l'origine. Ignore plafond, sol, meubles, rideaux, fenêtres. Réponds en JSON STRICT, rien d'autre : {"walls":[{"hex_avant":"#RRGGBB","hex_apres":"#RRGGBB","label":"..."}]}. Si aucun mur n'a changé de couleur : {"walls":[]}.`;
 
 const norm = (h: string) => `#${h.trim().replace(/^#/, "").toLowerCase()}`;
+const validHex = (h?: string) => !!h && /^#?[0-9a-fA-F]{6}$/.test(h.trim());
+
+// Buffer anti-bruit : si AVANT et APRÈS sont à ΔE < ce seuil, le mur n'a PAS vraiment été
+// repeint (vision_detect ne renvoie jamais EXACTEMENT le même hex) → on ne propose pas de peinture.
+const WALL_UNCHANGED_DELTAE = 8;
 
 export type WallColor = { hex: string; label: string };
 
-// Compare AVANT|APRÈS (composite) → 1 couleur par mur REPEINT (les murs inchangés sont
-// exclus). Pas de moyenne globale entre murs de couleurs différentes.
+// Compare AVANT|APRÈS (composite) → 1 couleur par mur RÉELLEMENT repeint. Double garde-fou :
+// (1) le prompt n'émet que les murs qui semblent changés ; (2) buffer ΔE avant/après (le hex
+// avant ≈ après = bruit vision → écarté). Pas de moyenne globale entre murs de couleurs ≠.
 export async function getChangedWallColors(composite: ImageInput): Promise<WallColor[]> {
   try {
     const res = await getVisionProvider("gemini_vision").analyze(WALL_COLORS_PROMPT, [composite], {
       model: "gemini-2.5-flash",
     });
-    const walls = (res.parsed as { walls?: Array<{ hex?: string; label?: string }> } | null)?.walls ?? [];
+    const walls = (res.parsed as { walls?: Array<{ hex_avant?: string; hex_apres?: string; hex?: string; label?: string }> } | null)?.walls ?? [];
     const out: WallColor[] = [];
     const seen = new Set<string>();
     for (const w of walls) {
-      if (!w.hex || !/^#?[0-9a-fA-F]{6}$/.test(w.hex.trim())) continue;
-      const hex = norm(w.hex);
-      if (seen.has(hex)) continue;
-      seen.add(hex);
-      out.push({ hex, label: (w.label ?? "mur").trim() || "mur" });
+      const apresRaw = w.hex_apres ?? w.hex; // tolère l'ancien format {hex}
+      if (!validHex(apresRaw)) continue;
+      const apres = norm(apresRaw!);
+      // Buffer : avant ≈ après → mur non repeint (bruit vision) → on saute.
+      if (validHex(w.hex_avant)) {
+        const la = hexToLab(norm(w.hex_avant!)), lb = hexToLab(apres);
+        if (la && lb && deltaE(la, lb) < WALL_UNCHANGED_DELTAE) continue;
+      }
+      if (seen.has(apres)) continue;
+      seen.add(apres);
+      out.push({ hex: apres, label: (w.label ?? "mur").trim() || "mur" });
     }
     return out;
   } catch (e) {
