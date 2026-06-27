@@ -115,11 +115,17 @@ function buildFixedFeaturesSummary(profiles: ElementProfile[]): string {
   const fd = count("french_door"); if (fd) parts.push(`${fd} porte(s)-fenêtre(s)`);
   const d = count("door"); if (d) parts.push(`${d} porte(s)`);
   const wo = count("wall_opening"); if (wo) parts.push(`${wo} ouverture(s)/passage(s) vers une autre pièce`);
-  const KW = /escalier|staircase|stair|chemin|fireplace|radiat|poutre|beam|colonne|column|pilier|pillar/i;
+  // Fixtures FIXES à reproduire à l'identique (jamais déplacer/supprimer/ajouter/recolorer).
+  // ⚠️ inclut le CHAUFFE-EAU/ballon (était absent → la génération le supprimait), et le poêle.
+  const KW = /escalier|staircase|stair|chemin|fireplace|po[êe]le|radiat|chauffe[- ]?eau|water[- ]?heater|ballon|cumulus|poutre|beam|colonne|column|pilier|pillar/i;
   const fixtures = profiles
     .filter((p) => !["window", "french_door", "door", "wall_opening"].includes(p.category) && KW.test(`${p.element} ${p.description}`))
     .map((p) => (p.element || p.category).trim().toLowerCase());
-  parts.push(...new Set(fixtures));
+  // COMPTE par type (ex. "2 radiator") au lieu de dédupliquer → la génération préserve le
+  // NOMBRE exact (sinon elle en ajoute/déplace ; ex. radiateur dupliqué + bougé observé).
+  const counts = new Map<string, number>();
+  for (const f of fixtures) counts.set(f, (counts.get(f) ?? 0) + 1);
+  for (const [name, n] of counts) parts.push(n > 1 ? `${n} ${name}` : name);
   return parts.length ? parts.join(", ") : "—";
 }
 
