@@ -59,11 +59,8 @@ export const COLOR_FAMILIES = [
   "blanc", "beige", "gris", "noir", "marron", "rouge", "orange", "jaune", "vert", "bleu", "violet", "rose",
 ] as const;
 
-/** Classe un hex en famille de couleur (blanc/gris/bleu/…) via teinte + saturation + clarté. */
-export function colorFamily(hex: string | null | undefined): string | null {
-  const rgb = hex ? hexToRgb(hex) : null;
-  if (!rgb) return null;
-  const [h, s, l] = rgbToHsl(rgb[0], rgb[1], rgb[2]);
+/** Classe un point HSL en famille de couleur (blanc/gris/bleu/…) via teinte + saturation + clarté. */
+function classifyHsl(h: number, s: number, l: number): string {
   if (l >= 0.9 && s < 0.18) return "blanc";
   if (l <= 0.12) return "noir";
   if (s < 0.12) return "gris";
@@ -80,4 +77,60 @@ export function colorFamily(hex: string | null | undefined): string | null {
   if (h < 255) return "bleu"; // inclut cyan/canard
   if (h < 290) return "violet";
   return "rose";
+}
+
+/** Classe un hex en famille de couleur (blanc/gris/bleu/…) via teinte + saturation + clarté. */
+export function colorFamily(hex: string | null | undefined): string | null {
+  const rgb = hex ? hexToRgb(hex) : null;
+  if (!rgb) return null;
+  const [h, s, l] = rgbToHsl(rgb[0], rgb[1], rgb[2]);
+  return classifyHsl(h, s, l);
+}
+
+// Marges de frontière : un hex tout près d'un seuil HSL est ambigu (canard = vert|bleu,
+// bleu désaturé ≈ gris…). On échantillonne le classifieur autour du point et on renvoie la
+// famille primaire + AU PLUS une alternative → tolérant aux frontières SANS sur-élargir le
+// filtre (cap à 2). Pur calcul, recalculable à volonté (aucun appel API).
+const HUE_MARGIN = 12;   // ° de part et d'autre d'une borne de teinte
+const SAT_MARGIN = 0.06; // proximité de la ligne gris/chromatique
+const LUM_MARGIN = 0.06; // proximité des bornes blanc/noir
+const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
+
+/** Renvoie 1-2 familles de couleur pour un hex (primaire + alternative si proche d'une frontière). */
+export function colorFamilies(hex: string | null | undefined): string[] {
+  const rgb = hex ? hexToRgb(hex) : null;
+  if (!rgb) return [];
+  const [h, s, l] = rgbToHsl(rgb[0], rgb[1], rgb[2]);
+  const primary = classifyHsl(h, s, l);
+  const perturb: Array<[number, number, number]> = [
+    [HUE_MARGIN, 0, 0], [-HUE_MARGIN, 0, 0],
+    [0, SAT_MARGIN, 0], [0, -SAT_MARGIN, 0],
+    [0, 0, LUM_MARGIN], [0, 0, -LUM_MARGIN],
+  ];
+  for (const [dh, ds, dl] of perturb) {
+    const alt = classifyHsl((h + dh + 360) % 360, clamp01(s + ds), clamp01(l + dl));
+    if (alt !== primary) return [primary, alt]; // primaire + 1ʳᵉ alternative trouvée
+  }
+  return [primary];
+}
+
+// Cluster NEUTRE : blanc/beige/gris/noir + marron (bois) coexistent en déco → ils se
+// recoupent mutuellement. Sinon un rendu lu blanc pur (#ffffff) n'élit AUCUN produit crème
+// (beige) ou bois (marron) → catégorie vidée (vu sur les lits). Les CHROMATIQUES restent
+// stricts (un rendu bleu n'accepte pas un produit vert).
+export const NEUTRAL_FAMILIES = ["blanc", "beige", "gris", "noir", "marron"] as const;
+
+/**
+ * Familles à passer au pré-filtre côté REQUÊTE (couleur du rendu). Si le rendu est neutre,
+ * on étend à tout le cluster neutre (tolérant : garde crème/bois/gris, exclut le chromatique).
+ * Si le rendu est chromatique, on garde ses 1-2 familles (strict). Asymétrique exprès : on
+ * n'étend QUE la requête, pas les produits (un rendu bleu doit toujours exclure le beige).
+ */
+export function colorFamiliesQuery(hex: string | null | undefined): string[] {
+  const fams = colorFamilies(hex);
+  if (fams.length === 0) return [];
+  if (fams.some((f) => (NEUTRAL_FAMILIES as readonly string[]).includes(f))) {
+    return [...new Set([...fams, ...NEUTRAL_FAMILIES])];
+  }
+  return fams;
 }

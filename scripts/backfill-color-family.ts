@@ -1,8 +1,10 @@
 #!/usr/bin/env npx tsx
 /**
- * Peuple metadata.attrs.color_family (blanc/gris/bleu/…) à partir de la couleur STRUCTURÉE
- * (attrs.color ou top_color, Gemini = fiable) — PAS du color_hex (sharp, pollué par la scène).
- * Pur calcul, aucun appel API. Permet le filtre couleur par famille dans l'admin.
+ * Peuple metadata.attrs.color_family (string) ET color_families (array 1-2) à partir de la
+ * couleur STRUCTURÉE (attrs.color/top_color, Gemini = fiable) sinon color_hex (sharp). Pur
+ * calcul, aucun appel API → recalculable à volonté. color_families = pré-filtre couleur du
+ * matching (array-overlap, tolérant aux frontières) ; color_family (singulier) = filtre admin.
+ * Couvre TOUT le catalogue (color_hex à 100% sert de fallback quand attrs absent).
  *
  * Usage : npx tsx scripts/backfill-color-family.ts
  */
@@ -12,13 +14,13 @@ config();
 
 async function main() {
   const { createSupabaseAdmin } = await import("../lib/supabase/server");
-  const { colorFamily } = await import("../lib/color");
+  const { colorFamily, colorFamilies } = await import("../lib/color");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sb = createSupabaseAdmin() as any;
   const PAGE = 1000;
   let from = 0, total = 0, skipped = 0;
   for (;;) {
-    const { data } = await sb.from("partner_products").select("id, metadata").not("metadata->>attrs", "is", null).order("id").range(from, from + PAGE - 1);
+    const { data } = await sb.from("partner_products").select("id, metadata").not("metadata->>color_hex", "is", null).order("id").range(from, from + PAGE - 1);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const rows = (data ?? []) as any[];
     if (rows.length === 0) break;
@@ -29,9 +31,11 @@ async function main() {
         const p = rows[idx++];
         const attrs = p.metadata?.attrs ?? {};
         const hex = attrs.color || attrs.top_color || p.metadata?.color_hex;
-        const fam = colorFamily(typeof hex === "string" ? hex : null);
+        const h = typeof hex === "string" ? hex : null;
+        const fam = colorFamily(h);
+        const fams = colorFamilies(h);
         if (!fam) { skipped++; continue; }
-        await sb.from("partner_products").update({ metadata: { ...p.metadata, attrs: { ...attrs, color_family: fam } } }).eq("id", p.id);
+        await sb.from("partner_products").update({ metadata: { ...p.metadata, attrs: { ...attrs, color_family: fam, color_families: fams } } }).eq("id", p.id);
         total++;
       }
     }));

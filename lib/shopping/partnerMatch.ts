@@ -15,14 +15,19 @@ import {
   computeBatchImageEmbeddingsFromBytes,
 } from "@/lib/embeddings/jina";
 import { withTracking } from "@/lib/tracking";
-import { MATCH_BLEND_ALPHA, MATCH_MIN_SIMILARITY } from "@/lib/constants";
+import {
+  MATCH_BLEND_ALPHA,
+  MATCH_MIN_SIMILARITY,
+  MATCH_COLOR_FAMILY_RESTRICT,
+  MATCH_COLOR_FAMILY_MIN_WEIGHT,
+} from "@/lib/constants";
 import {
   getMatchingWeights,
   minScoreForSource,
   DEFAULT_WEIGHTS,
   type MatchingWeights,
 } from "./matchingConfig";
-import { hexToLab, deltaE } from "@/lib/color";
+import { hexToLab, deltaE, colorFamiliesQuery } from "@/lib/color";
 import { structuredScoreForCategory, wEffForCoverage } from "./attributeScore";
 import type { ProductMatch } from "@/lib/types";
 
@@ -203,17 +208,32 @@ async function rpcBlend(
   category: string,
   topN: number,
   weights: MatchingWeights,
+  elementHex?: string | null,
 ): Promise<ProductMatch[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = createSupabaseAdmin() as any;
-  const { data, error } = await supabase.rpc("match_partner_products_blend", {
-    crop_embedding: cropEmbedding, // null → texte seul côté SQL
-    desc_embedding: descEmbedding,
-    match_category: category,
-    match_count: topN,
-    w_eco_new: weights.image_weight.eco_new,
-    w_secondhand: weights.image_weight.secondhand,
-  });
+  // Pré-filtre couleur (RÉVERSIBLE via MATCH_COLOR_FAMILY_RESTRICT). On bascule sur blend_v2
+  // (filtre par familles de couleur, tolérant) UNIQUEMENT si : flag actif ET catégorie où la
+  // couleur discrimine déjà (poids couleur ≥ seuil) ET couleur de l'élément connue. Sinon →
+  // v1 strictement inchangée (flag à 0 = prod identique). Familles dérivées du hex (pur calcul).
+  const useColorRestrict =
+    MATCH_COLOR_FAMILY_RESTRICT === 1 &&
+    weights.color.weight >= MATCH_COLOR_FAMILY_MIN_WEIGHT &&
+    !!elementHex;
+  const renderFamilies = useColorRestrict ? colorFamiliesQuery(elementHex) : [];
+  const useV2 = renderFamilies.length > 0;
+  const { data, error } = await supabase.rpc(
+    useV2 ? "match_partner_products_blend_v2" : "match_partner_products_blend",
+    {
+      crop_embedding: cropEmbedding, // null → texte seul côté SQL
+      desc_embedding: descEmbedding,
+      match_category: category,
+      match_count: topN,
+      w_eco_new: weights.image_weight.eco_new,
+      w_secondhand: weights.image_weight.secondhand,
+      ...(useV2 ? { render_color_families: renderFamilies } : {}),
+    },
+  );
   if (error) {
     console.warn("[partnerMatch] RPC blend échoué:", error.message);
     return [];
@@ -305,7 +325,7 @@ export async function matchPartnerProductsBlendBatch(
       const weights = weightsByCat.get(cat) ?? DEFAULT_WEIGHTS;
       // pool large pour laisser le re-score structuré + la couleur repêcher un bon produit
       // hors top-N blend. On NE filtre PLUS par seuil ici (le neuf doit toujours sortir).
-      const matches = await rpcBlend(cropByIdx.get(i) ?? null, desc, cat, Math.max(topN, 30), weights);
+      const matches = await rpcBlend(cropByIdx.get(i) ?? null, desc, cat, Math.max(topN, 30), weights, items[i].colorHex);
       // Score RÉFERENTIEL d'abord (final = image·w_eff + structuré·(1−w_eff)) sur TOUT le pool,
       // puis on MARQUE (sans éliminer) le neuf sous le seuil → le top-N neuf sort toujours.
       const scored = await applyReferentialScore(matches, cat, items[i].attrs);
