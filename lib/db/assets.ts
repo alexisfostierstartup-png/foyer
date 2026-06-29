@@ -97,6 +97,9 @@ export type ElementCategory = {
   allowed_actions?: DecisionAction[];
   fixed_lightpoint?: boolean;
   preserve_behind?: boolean;
+  // Mots-clés FR/EN pour le remap déterministe : un élément détecté en "other"
+  // dont l'élément/description matche un de ces mots est reclassé vers ce slug.
+  keywords?: string[];
 };
 
 // Repli si la table assets ne renvoie rien (DB vide / erreur) → la détection ne
@@ -115,6 +118,23 @@ export async function getElementCategories(): Promise<ElementCategory[]> {
     slug: a.slug,
     ...(a.data as Omit<ElementCategory, "slug">),
   }));
+}
+
+/**
+ * Table de remap déterministe pour les fixtures techniques que la détection
+ * range parfois dans "other" (radiateur, chauffe-eau, escalier…). Renvoie les
+ * catégories qui portent des `keywords`, filtrées par type de pièce. La détection
+ * réassigne tout profil "other" dont l'élément/description matche un mot-clé.
+ */
+export async function getCategoryKeywordRemap(
+  roomType?: string,
+): Promise<Array<{ slug: string; keywords: string[] }>> {
+  const cats = await getElementCategories().catch(() => [] as ElementCategory[]);
+  const rt = roomType === "chambre_parentale" ? "chambre" : roomType;
+  return cats
+    .filter((c) => Array.isArray(c.keywords) && c.keywords.length > 0)
+    .filter((c) => !rt || !c.room_types?.length || c.room_types.includes(rt))
+    .map((c) => ({ slug: c.slug, keywords: c.keywords! }));
 }
 
 export async function getAllowedActionsByCategory(): Promise<Map<string, DecisionAction[]>> {

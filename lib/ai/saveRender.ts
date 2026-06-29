@@ -24,7 +24,10 @@ export async function saveRender(
   if (error) throw error;
 
   const { data } = supabase.storage.from("renders").getPublicUrl(filename);
-  return data.publicUrl;
+  // Cache-buster : le nom de fichier est déterministe (upsert) → sans param, une
+  // régénération réécrit le même chemin et le navigateur/CDN sert l'ancienne image
+  // (même URL). Le suffixe ?v=<ts> garantit une URL neuve à chaque rendu.
+  return `${data.publicUrl}?v=${Date.now()}`;
 }
 
 export async function saveSourceImage(

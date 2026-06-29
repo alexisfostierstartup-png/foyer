@@ -16,6 +16,13 @@ const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABA
 // allowed_actions : sous-ensemble de ["keep","customize","replace"] proposé en review
 // pour cette catégorie (défaut = les 3). Ex. assises = pas de "customize" (retapisser
 // trop cher → remplacer), sol = pas de "customize", ouvertures = "keep" seul.
+//
+// keywords (extra) : mots-clés FR/EN pour le REMAP déterministe post-détection. La
+// détection range souvent les fixtures techniques reconnaissables (radiateur,
+// chauffe-eau, escalier) dans "other" ; si l'élément/description matche un de ces
+// mots-clés, on le reclasse vers cette catégorie → la review applique les bonnes
+// actions (ex. chauffe-eau = garder seulement). Ajouter une fixture = ajouter une
+// catégorie + ses keywords ici, zéro code.
 const C = (slug, label_fr, family, rooms, movable, diy_eligible, catalog_category, extra = {}) => ({
   slug,
   data: {
@@ -83,7 +90,17 @@ const CATS = [
   C("decor_object", "Objet déco", "deco", "any", true, false, null, KR),
   // ── ÉLECTROMÉNAGER ──────────────────────────────────────────────────────
   C("television", "Téléviseur", "electromenager", "salon", true, false, null, KR),
-  C("radiator", "Radiateur", "electromenager", "any", false, false, null, { ...K, preserve_behind: true }),
+  C("radiator", "Radiateur", "electromenager", "any", false, false, null, {
+    ...K, preserve_behind: true, keywords: ["radiateur", "radiator", "convecteur"],
+  }),
+  C("water_heater", "Chauffe-eau", "electromenager", "any", false, false, null, {
+    ...K, preserve_behind: true,
+    keywords: ["chauffe-eau", "chauffe eau", "chauffe-eaux", "ballon d'eau", "cumulus", "water heater"],
+  }),
+  // ── FIXTURE STRUCTURELLE (garder ou customiser en surface : peindre/teinter) ─
+  C("staircase", "Escalier", "autre", "any", false, true, null, {
+    ...KC, keywords: ["escalier", "staircase"],
+  }),
   // ── FALLBACK ────────────────────────────────────────────────────────────
   C("other", "Autre", "autre", "any", true, false, "other"),
 ];

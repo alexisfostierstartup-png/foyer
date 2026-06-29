@@ -4,7 +4,7 @@ import sharp from "sharp";
 import { nanoid } from "nanoid";
 import { resolvePrompt } from "@/lib/prompts/engine";
 import { loadStyleContext, loadRoomDefaults, loadRoomRemoveCategories, formatUserInstructions, formatDesignPlan } from "@/lib/prompts/helpers";
-import { getElementCategoryEnum, getElementCategories, getAllowedActionsByCategory } from "@/lib/db/assets";
+import { getElementCategoryEnum, getElementCategories, getAllowedActionsByCategory, getCategoryKeywordRemap, getFloorPresets } from "@/lib/db/assets";
 import type { DecisionAction } from "@/lib/db/assets";
 import { mergeShoppingItems, resolveCatalogCategory } from "@/lib/shopping/categories";
 import { getImageProvider, getVisionProvider } from "./provider";
@@ -197,12 +197,25 @@ async function detectElementProfiles(
     ? (detParsed as RawProfile[])
     : ((detParsed as { elementProfiles?: RawProfile[] } | null)?.elementProfiles ?? []);
 
+  // Remap déterministe : la détection range souvent les fixtures techniques
+  // reconnaissables (radiateur, chauffe-eau, escalier) dans "other" → on les
+  // reclasse vers leur vraie catégorie via les mots-clés DB, pour que la review
+  // applique les bonnes actions (ex. chauffe-eau = garder seul). Data-driven :
+  // ajouter une fixture = ajouter une catégorie + keywords, zéro code ici.
+  const remap = await getCategoryKeywordRemap(roomType);
+  const remapCategory = (category: string, element: string, description: string): string => {
+    if (category !== "other") return category;
+    const hay = `${element} ${description}`.toLowerCase();
+    const hit = remap.find((r) => r.keywords.some((k) => hay.includes(k.toLowerCase())));
+    return hit?.slug ?? category;
+  };
+
   return rawProfiles
     .filter((p) => typeof p.element_id === "string")
     .map((p) => ({
       element_id: p.element_id!,
       element: p.element ?? "",
-      category: p.category ?? "other",
+      category: remapCategory(p.category ?? "other", p.element ?? "", p.description ?? ""),
       description: p.description ?? "",
       color: p.color ?? "",
       material_family: p.material_family ?? "unknown",
@@ -495,8 +508,48 @@ export async function runAnalysisPipeline(projectId: string): Promise<void> {
     return { ...d, mismatch_type: mt as ElementDecision["mismatch_type"], action_slug: null, action_label: null, supply_items: null, qty: null };
   });
 
-  await updateProject(projectId, { element_decisions: clampedDecisions, visionOutput: profiles, ...CLEAR_FINALIZE });
-  console.log(`[pipeline:analyze] saved ${clampedDecisions.length} decisions (2 calls: detection + verdict)`);
+  // ── 7. LIBELLÉ DE CUSTOMISATION ────────────────────────────────────────────
+  // action_label n'est affiché QUE sous "Personnaliser" → il doit TOUJOURS décrire
+  // le "comment" (peindre, teinter…), jamais "Conserver"/"Remplacer - incompatible".
+  // Pour toute catégorie qui autorise "customize", on garantit un libellé d'action
+  // DIY réel (verdict surface, sinon meilleure candidate). Sinon le bouton
+  // Personnaliser n'existe pas → on laisse action_label tel quel.
+  const finalDecisions = clampedDecisions.map((d) => {
+    const allowed = allowedByCat.get(d.category) ?? ["keep", "customize", "replace"];
+    if (!allowed.includes("customize")) return d;
+    if (d.mismatch_type === "surface" && d.action_label) return d; // déjà un vrai "comment"
+    const cands = candidatesByElement.get(d.element_id) ?? [];
+    if (cands.length === 0) return d; // aucune action DIY → rien à proposer
+    return { ...d, action_label: cands[0].label };
+  });
+
+  // ── 8. SOL PILOTÉ PAR LE CHOIX USER ────────────────────────────────────────
+  // La review ("ce qu'on va faire") doit refléter la directive EXPLICITE du sol,
+  // pas seulement le verdict de style. Règle produit : on garde le sol existant
+  // SAUF contre-indication user. floor.change=false → Garder ; floor.change=true →
+  // Remplacer par le revêtement choisi (preset + note), visible dans la description.
+  const floorChoice = project.userConstraints?.floor;
+  const decisionsWithFloor = await (async () => {
+    if (!floorChoice) return finalDecisions;
+    const presetLabel = floorChoice.preset
+      ? (await getFloorPresets()).find((p) => p.slug === floorChoice.preset)?.label ?? null
+      : null;
+    const target = [presetLabel, floorChoice.note?.trim()].filter(Boolean).join(" — ");
+    return finalDecisions.map((d) => {
+      if (d.category !== "floor") return d;
+      if (floorChoice.change) {
+        return {
+          ...d, mismatch_type: "structural" as const, action_slug: null,
+          action_label: null, supply_items: null, qty: null,
+          description: target ? `Remplacer par : ${target}` : d.description,
+        };
+      }
+      return { ...d, mismatch_type: "none" as const, action_slug: null, action_label: null, supply_items: null, qty: null };
+    });
+  })();
+
+  await updateProject(projectId, { element_decisions: decisionsWithFloor, visionOutput: profiles, ...CLEAR_FINALIZE });
+  console.log(`[pipeline:analyze] saved ${decisionsWithFloor.length} decisions (2 calls: detection + verdict)`);
 }
 
 export async function runGenerationPipeline(projectId: string): Promise<void> {
