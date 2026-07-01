@@ -43,6 +43,9 @@ const fraunces = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin"],
   display: "swap",
+  // opsz/SOFT : axes optiques pour le rendu "display" (haut contraste) + vraie italique.
+  axes: ["opsz", "SOFT"],
+  style: ["normal", "italic"],
 });
 
 const inter = Inter({

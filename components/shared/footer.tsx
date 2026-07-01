@@ -22,7 +22,7 @@ export function Footer() {
   return (
     <footer className="mt-auto border-t border-foyer-border bg-foyer-cream px-6 py-8">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 text-[13px] text-foyer-muted sm:flex-row sm:justify-between">
-        <span>© {new Date().getFullYear()} Foyer</span>
+        <span>© {new Date().getFullYear()} Héra</span>
         <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
           {LEGAL_LINKS.map((link) => (
             <Link

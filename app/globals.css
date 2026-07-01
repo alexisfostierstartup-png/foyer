@@ -23,6 +23,20 @@
   --color-foyer-terra: #c0664a;
   --color-foyer-terra-deep: #a8412a;
   --color-foyer-water: #a5b8a0;
+
+  /* Foyer landing v2 — palette éditoriale (réplique Lovable foyer-real-design) */
+  --color-paper: oklch(96.5% 0.012 78);
+  --color-cream: oklch(96.5% 0.012 78);
+  --color-bone: oklch(94% 0.018 80);
+  --color-stone: oklch(88% 0.022 78);
+  --color-ink: oklch(16% 0.014 60);
+  --color-line: oklch(86% 0.018 75);
+  --color-clay: oklch(55% 0.14 148);
+  --color-forest: oklch(34% 0.07 152);
+  --color-sage: oklch(76% 0.08 150);
+  --color-ocre: oklch(74% 0.09 110);
+  --color-terre: oklch(46% 0.1 145);
+
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -149,4 +163,60 @@
   100% {
     transform: translateX(100%);
   }
+}
+/* ---------------------------------------------------------------------------
+ * Foyer landing v2 — utilitaires & overrides scopés (réplique éditoriale)
+ * Les overrides de tokens (warm card/border/muted…) sont limités à .foyer-v2
+ * pour ne pas affecter le reste de l'app.
+ * ------------------------------------------------------------------------- */
+@layer components {
+  .font-display {
+    font-family: var(--font-fraunces), ui-serif, Georgia, serif;
+    letter-spacing: -0.025em;
+    font-variation-settings: "opsz" 144, "SOFT" 50;
+    font-weight: 400;
+    line-height: 0.95;
+  }
+  .shadow-card {
+    box-shadow: 0 1px #120c070a, 0 1px 2px #120c070a, 0 14px 40px -18px #120c072e;
+  }
+  .shadow-card-lg {
+    box-shadow: 0 1px #120c070d, 0 30px 80px -32px #120c074d;
+  }
+  .grain {
+    position: relative;
+  }
+  .grain::after {
+    content: "";
+    pointer-events: none;
+    mix-blend-mode: multiply;
+    opacity: 0.06;
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.6 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.45'/></svg>");
+  }
+}
+
+/* Tokens chauds Lovable, scopés à la landing v2 uniquement.
+ * On (re)définit aussi la palette en variables simples pour les fills SVG
+ * et styles inline qui utilisent var(--bone), var(--clay), var(--sage)… */
+.foyer-v2 {
+  --background: oklch(96.5% 0.012 78);
+  --foreground: oklch(18% 0.012 60);
+  --card: oklch(98.5% 0.008 78);
+  --muted: oklch(94% 0.018 80);
+  --muted-foreground: oklch(45% 0.012 60);
+  --border: oklch(86% 0.018 75);
+
+  --paper: oklch(96.5% 0.012 78);
+  --cream: oklch(96.5% 0.012 78);
+  --bone: oklch(94% 0.018 80);
+  --stone: oklch(88% 0.022 78);
+  --ink: oklch(16% 0.014 60);
+  --line: oklch(86% 0.018 75);
+  --clay: oklch(55% 0.14 148);
+  --forest: oklch(34% 0.07 152);
+  --sage: oklch(76% 0.08 150);
+  --ocre: oklch(74% 0.09 110);
+  --terre: oklch(46% 0.1 145);
 }
