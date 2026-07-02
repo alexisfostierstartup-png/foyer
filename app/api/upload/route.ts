@@ -1,12 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import sharp from "sharp";
 import { nanoid } from "nanoid";
 import { createProject, buildStorageFolder } from "@/lib/storage/projects";
+import { precomputeDetection } from "@/lib/ai/pipeline";
 import { saveSourceImage } from "@/lib/ai/saveRender";
 import { MAX_UPLOAD_BYTES, UPLOAD_MAX_DIMENSION } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 import { getRoomTypes } from "@/lib/db/assets";
 import type { RoomType } from "@/lib/types";
+
+// La réponse est rapide, mais la détection anticipée déclenchée via after()
+// (levier perf B) tourne dans le budget de la route (~20-30 s).
+export const maxDuration = 60;
 
 const ACCEPTED_TYPES = new Set([
   "image/jpeg",
@@ -78,6 +83,11 @@ export async function POST(request: NextRequest) {
       projectId,
       userId ? undefined : anonId,
     );
+
+    // Détection anticipée en fond (levier perf B) : elle ne dépend pas du style,
+    // elle tourne pendant que le user remplit contraintes + style → la review
+    // n'attendra que le verdict (~6-14 s au lieu de ~35 s).
+    after(() => precomputeDetection(project.id));
 
     const res = NextResponse.json({ projectId: project.id, basePhotoUrl });
 

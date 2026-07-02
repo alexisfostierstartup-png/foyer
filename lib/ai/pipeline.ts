@@ -11,6 +11,7 @@ import { getImageProvider, getVisionProvider } from "./provider";
 import { saveRender } from "./saveRender";
 import { logPipelineEvent } from "./logger";
 import { withTracking } from "./track";
+import { isTransientAiError } from "./retry";
 import { getProject, updateProject } from "@/lib/storage/projects";
 import type { DetectedFurniture, UserConstraints, Project, ShoppingItem, ScoreFoyer, RenderAnalysis } from "@/lib/types";
 import { matchAlterationsToCatalog, type Alteration } from "@/lib/shopping/matcher";
@@ -351,6 +352,50 @@ async function resolveElementDecision(
   };
 }
 
+// ── Levier perf B : détection anticipée ─────────────────────────────────────
+// La détection (inventaire factuel de la photo) ne dépend PAS du style — seul le
+// verdict en dépend. On la précalcule dès l'upload (via after()), pendant que le
+// user remplit contraintes + style ; l'analyse la RÉUTILISE si la photo n'a pas
+// changé → la review n'attend plus que le verdict. Dédup en mémoire par photo
+// (analyse lancée pendant le précalcul → même appel partagé).
+const inflightDetection = new Map<string, Promise<ElementProfile[]>>();
+
+async function detectSourceProfilesCached(
+  projectId: string,
+  project: Project,
+  label: string,
+): Promise<ElementProfile[]> {
+  const photoUrl = project.basePhotoUrl;
+  const cached = Array.isArray(project.visionOutput) ? (project.visionOutput as ElementProfile[]) : [];
+  if (cached.length > 0 && project.visionDetectionPhotoUrl === photoUrl) {
+    console.log(`[pipeline:${label}] réutilise ${cached.length} profils détectés (photo inchangée)`);
+    return cached;
+  }
+  const key = `${projectId}:${photoUrl}`;
+  const inflight = inflightDetection.get(key);
+  if (inflight) return inflight;
+  const run = (async () => {
+    const sourceImage = await loadImage(photoUrl);
+    const profiles = await detectElementProfiles(projectId, sourceImage, label, project.roomType);
+    if (profiles.length > 0) {
+      await updateProject(projectId, { visionOutput: profiles, visionDetectionPhotoUrl: photoUrl });
+    }
+    return profiles;
+  })().finally(() => inflightDetection.delete(key));
+  inflightDetection.set(key, run);
+  return run;
+}
+
+/** Fire-and-forget : précalcule la détection dès l'upload (la review n'attendra que le verdict). */
+export function precomputeDetection(projectId: string): void {
+  getProject(projectId)
+    .then((p) => (p?.basePhotoUrl ? detectSourceProfilesCached(projectId, p, "upload-precompute") : []))
+    .then((profiles) => console.log(`[pipeline:precompute:upload] ${profiles.length} profils détectés`))
+    .catch((e: unknown) =>
+      console.warn("[pipeline:precompute:upload] échec (non bloquant):", e instanceof Error ? e.message : e),
+    );
+}
+
 export async function runAnalysisPipeline(projectId: string): Promise<void> {
   const project = await getProject(projectId);
   if (!project) throw new Error(`Project not found: ${projectId}`);
@@ -370,8 +415,9 @@ export async function runAnalysisPipeline(projectId: string): Promise<void> {
 
   // ── 2. APPEL 1 — DÉTECTION (profils par élément, aucun verdict) ────────────
   // Persistée dans visionOutput → réutilisée telle quelle par la génération
-  // (plus de 2e appel Vision sur generate).
-  const profiles = await detectElementProfiles(projectId, sourceImage, "analyze", project.roomType);
+  // (plus de 2e appel Vision sur generate). Si le précalcul upload a déjà tourné
+  // (levier B), on réutilise ses profils → la review n'attend que le verdict.
+  const profiles = await detectSourceProfilesCached(projectId, project, "analyze");
 
   if (profiles.length === 0) {
     await updateProject(projectId, { element_decisions: [], visionOutput: profiles, ...CLEAR_FINALIZE });
@@ -580,8 +626,7 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
     ? (project.visionOutput as ElementProfile[])
     : [];
   if (profiles.length === 0) {
-    profiles = await detectElementProfiles(projectId, sourceImage, "generate", project.roomType);
-    await updateProject(projectId, { visionOutput: profiles });
+    profiles = await detectSourceProfilesCached(projectId, project, "generate");
   } else {
     console.log(`[pipeline:generate] réutilise ${profiles.length} profils de l'analyse (pas de 2e appel Vision)`);
   }
@@ -858,6 +903,24 @@ export async function confirmChanges(
       getVisionProvider(prompt.prompt.provider).analyze(prompt.resolvedTemplate, [composite], {
         model: "gemini-2.5-flash",
       }),
+  ).catch((err: unknown) => {
+    // flash en « high demand » (503 persistant malgré withRetry) : plutôt que de
+    // faire échouer tout le /final, on retombe UNE fois sur le modèle par défaut
+    // du prompt (flash-lite) — audit moins discriminant mais liste utilisable.
+    if (!isTransientAiError(err)) throw err;
+    console.warn(
+      "[pipeline:audit] gemini-2.5-flash indisponible → repli sur le modèle par défaut (audit moins discriminant)",
+    );
+    return withTracking(
+      {
+        step: "audit",
+        projectId,
+        provider: prompt.prompt.provider,
+        requestPayload: { promptName: "confirm_changes", candidates: candidates.length, fallback: "default-model" },
+      },
+      () => getVisionProvider(prompt.prompt.provider).analyze(prompt.resolvedTemplate, [composite]),
+    );
+  }
   );
   const parsed = result.parsed as {
     results?: Array<{ element_id?: string; changed?: boolean; after?: string; bbox?: unknown; attrs?: unknown }>;

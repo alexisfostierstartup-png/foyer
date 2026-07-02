@@ -18,8 +18,13 @@ export default async function FinalPage({
 
   // Renvoie la liste fraîchement calculée → on l'utilise directement, sans
   // dépendre d'une relecture DB qui peut être en retard (réplique) et afficher
-  // une liste vide au 1er chargement.
-  const assets = await ensureFinalAssets(projectId);
+  // une liste vide au 1er chargement. Un échec (ex. Gemini 503 en pic de
+  // demande) ne doit PAS tuer la page : on affiche ce qui est en cache et le
+  // prochain chargement retentera.
+  const assets = await ensureFinalAssets(projectId).catch((e: unknown) => {
+    console.error("[final] calcul liste échoué (page servie sur cache):", e instanceof Error ? e.message : e);
+    return null;
+  });
 
   const updated = await getProject(projectId);
 

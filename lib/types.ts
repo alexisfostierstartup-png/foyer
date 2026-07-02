@@ -160,6 +160,9 @@ export type Project = {
     lighting: string;
   } | null;
   visionOutput?: unknown;
+  // Photo sur laquelle visionOutput a été détecté (clé de cache du précalcul
+  // upload) : re-upload → clé différente → re-détection à l'analyse.
+  visionDetectionPhotoUrl?: string;
   alterations?: unknown;
   shoppingList?: ShoppingItem[];
   scoreFoyer?: ScoreFoyer;
