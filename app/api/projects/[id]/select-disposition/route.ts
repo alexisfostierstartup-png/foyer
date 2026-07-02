@@ -1,5 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getProject, updateProject } from "@/lib/storage/projects";
+import { precomputeFinalAssets } from "@/lib/ai/pipeline";
+
+// Le POST lui-même est instantané, mais le précalcul shopping déclenché via after()
+// tourne dans le budget de la route → même maxDuration que generate/iterate.
+export const maxDuration = 90;
 
 export async function POST(
   request: NextRequest,
@@ -28,6 +33,10 @@ export async function POST(
     scoreFoyer: undefined,
     alterations: undefined,
   });
+
+  // La disposition choisie est le rendu courant → précalcul shopping en fond
+  // pendant que le user la regarde/itère (levier perf 1).
+  after(() => precomputeFinalAssets(id, "select-disposition"));
 
   return NextResponse.json({ ok: true });
 }

@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import { runIterationPipeline } from "@/lib/ai/pipeline";
+import { NextResponse, after } from "next/server";
+import { precomputeFinalAssets, runIterationPipeline } from "@/lib/ai/pipeline";
 import { logPipelineError } from "@/lib/ai/logger";
 
 export const maxDuration = 90;
@@ -17,6 +17,9 @@ export async function POST(
 
   try {
     await runIterationPipeline(id, userRequest.trim());
+    // Recalcul shopping en fond sur le nouveau rendu (levier perf 1). Une itération
+    // suivante déclenche son propre calcul ; l'ancien ne persiste pas (anti-staleness).
+    after(() => precomputeFinalAssets(id, "iterate"));
     return NextResponse.json({ ok: true, projectId: id });
   } catch (err) {
     console.error("[iterate] pipeline error:", err);

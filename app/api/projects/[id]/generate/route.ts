@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { runGenerationPipeline } from "@/lib/ai/pipeline";
+import { NextRequest, NextResponse, after } from "next/server";
+import { precomputeFinalAssets, runGenerationPipeline } from "@/lib/ai/pipeline";
 import { createClient } from "@/lib/supabase/server";
 import { checkAndConsumeCredit } from "@/lib/auth/actions";
 import { logPipelineError } from "@/lib/ai/logger";
@@ -57,6 +57,10 @@ export async function POST(
 
   try {
     await runGenerationPipeline(id);
+
+    // Précalcul shopping en fond pendant que le user regarde son rendu → l'étape
+    // liste de courses est perçue ~0 s (levier perf 1).
+    after(() => precomputeFinalAssets(id, "generate"));
 
     const res = NextResponse.json({ ok: true, projectId: id });
 

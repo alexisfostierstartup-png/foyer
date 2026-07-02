@@ -1,6 +1,14 @@
 # Point 4 — Optimisation perf du pipeline (NOTE pour plus tard)
 
-> Statut : **analysé, chiffré, PAS implémenté.** À lancer sur GO explicite du user.
+> Statut 2026-07-02 : **leviers 1 et 2 IMPLÉMENTÉS** + un levier A découvert à
+> l'implémentation (paralléliser audit ∥ couleurs murs ∥ inventaire dans analyzeRender,
+> ils étaient séquentiels alors qu'indépendants : -8 à -12 s réels). Leviers 3 et 4 en
+> attente. Correction au levier 2 : `movable` doit RESTER émis (reconcileRenderAdditions
+> filtre dessus) — seuls material_family/surface_features/condition/dims sont omis.
+> Levier 1 : déclenché via after() en fin de generate/iterate/select-disposition, avec
+> dédup par projet+rendu et gardes anti-staleness (itération pendant un calcul en cours).
+> Idée B (non retenue pour l'instant) : précalculer la DÉTECTION à l'upload (elle ne
+> dépend pas du style — seul le verdict en dépend) → review perçue ~6 s au lieu de 13-20 s.
 > Contexte : entre soumission photo et liste de courses, ~3-4 min ressentis. Cette note
 > garde tout l'historique pour reprendre sans re-creuser.
 

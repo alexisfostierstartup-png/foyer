@@ -157,6 +157,16 @@ const BBOX_SUFFIX =
   "w,h = largeur/hauteur en fraction de l'image), cadre SERRÉ autour de l'objet ; " +
   '(2) "color_hex": la couleur DOMINANTE de l\'objet (pas du fond/sol) en hexadécimal "#rrggbb".';
 
+// Inventaire du RENDU (matching shopping) : les champs DIY ne servent qu'à l'analyse
+// de l'ORIGINE (verdict/actions), pas ici. Les omettre réduit les tokens de sortie —
+// la latence d'un appel vision y est proportionnelle (~28 s → objectif ~15 s).
+// `movable` reste ÉMIS : reconcileRenderAdditions filtre dessus (le parseur mettrait
+// true par défaut, mais on perdrait le filtre des éléments fixes).
+const LEAN_INVENTORY_SUFFIX =
+  "\n\nSORTIE ALLÉGÉE : pour CET inventaire, OMETS complètement les champs " +
+  '"material_family", "surface_features", "condition" et "dims" de chaque élément ' +
+  '(ne les émets pas du tout). Conserve bien "movable" et tous les autres champs.';
+
 async function detectElementProfiles(
   projectId: string,
   sourceImage: ImageInput,
@@ -170,9 +180,10 @@ async function detectElementProfiles(
   const categories = await getElementCategoryEnum(roomType);
   const detPrompt = await resolvePrompt("vision_detect_extended", { categories }, { strict: false });
   // withBbox = inventaire du rendu : on émet AUSSI les attrs V3 (tous les meubles du rendu
-  // sont des achats potentiels) → score structuré pour les AJOUTS (pièces vides).
+  // sont des achats potentiels) → score structuré pour les AJOUTS (pièces vides), et on
+  // OMET les champs DIY (lean) : cet inventaire ne sert qu'au matching.
   const template = opts?.withBbox
-    ? detPrompt.resolvedTemplate + BBOX_SUFFIX + buildAttrsInstruction()
+    ? detPrompt.resolvedTemplate + BBOX_SUFFIX + buildAttrsInstruction() + LEAN_INVENTORY_SUFFIX
     : detPrompt.resolvedTemplate;
   const detResult = await withTracking(
     {
@@ -965,21 +976,61 @@ export async function computeRenderAdditions(
  * Au refresh, si le rendu n'a pas changé, on RÉUTILISE le cache A → 0 appel Gemini, on ne
  * refait que B (rapide). Le rendu change → A est recalculé.
  */
+// Dédup en mémoire des calculs /final : clé projet+rendu. Le précalcul en fond
+// (precomputeFinalAssets) et un user qui ouvre le shopping pendant qu'il tourne
+// PARTAGENT le même calcul au lieu de le doubler. Clé par RENDU : une itération
+// pendant un calcul en cours relance un calcul frais pour le nouveau rendu.
+// Best-effort (par process) — la correction en écriture est assurée par les
+// gardes anti-staleness ci-dessous, pas par cette Map.
+const inflightFinalAssets = new Map<string, Promise<ShoppingAssets | null>>();
+
 export async function ensureFinalAssets(projectId: string): Promise<ShoppingAssets | null> {
   const project = await getProject(projectId);
   if (!project?.generatedRenderUrl) return null;
   if (project.shoppingList) {
     return { shoppingList: project.shoppingList, scoreFoyer: project.scoreFoyer as ScoreFoyer };
   }
+  const key = `${projectId}:${project.generatedRenderUrl}`;
+  const inflight = inflightFinalAssets.get(key);
+  if (inflight) return inflight;
+  const run = ensureFinalAssetsInner(projectId, project).finally(() => inflightFinalAssets.delete(key));
+  inflightFinalAssets.set(key, run);
+  return run;
+}
+
+async function ensureFinalAssetsInner(projectId: string, project: Project): Promise<ShoppingAssets | null> {
   // Analyse vision : réutilisée tant que le rendu est le même (sinon recalcul + re-cache).
   let analysis = project.renderAnalysis;
   if (!analysis || analysis.renderUrl !== project.generatedRenderUrl) {
     analysis = await analyzeRender(projectId, project);
-    await updateProject(projectId, { renderAnalysis: analysis });
+    // Anti-staleness : si le rendu a changé pendant l'analyse (itération), on ne
+    // persiste pas — on écraserait un cache plus frais. Le résultat reste retourné
+    // (l'appelant interactif regarde forcément le rendu qu'il vient de demander).
+    const current = await getProject(projectId);
+    if (current?.generatedRenderUrl === analysis.renderUrl) {
+      await updateProject(projectId, { renderAnalysis: analysis });
+    }
   } else {
     console.log("[pipeline:final] analyse vision RÉUTILISÉE (rendu inchangé) → re-rank seul, 0 appel Gemini");
   }
   return buildMatchesAndScore(projectId, project, analysis);
+}
+
+/**
+ * Levier perf 1 — précalcul fire-and-forget de la liste shopping, déclenché en fin
+ * de generate/iterate/select-disposition (via after() dans les routes) : le calcul
+ * tourne pendant que le user regarde son rendu → shopping perçu ~0 s à l'arrivée.
+ */
+export function precomputeFinalAssets(projectId: string, trigger: string): void {
+  ensureFinalAssets(projectId)
+    .then((r) =>
+      console.log(
+        `[pipeline:precompute:${trigger}] ${r ? `${r.shoppingList.length} items prêts` : "skip (pas de rendu)"}`,
+      ),
+    )
+    .catch((e: unknown) =>
+      console.warn(`[pipeline:precompute:${trigger}] échec (non bloquant):`, e instanceof Error ? e.message : e),
+    );
 }
 
 // ── Phase A : ANALYSE VISION (Gemini) — cacheable, indépendante des poids ────────────────
@@ -1012,22 +1063,37 @@ async function analyzeRender(projectId: string, project: Project): Promise<Rende
   // Couleurs des murs REPEINTS (diff avant/après) — calculées ici (vision) puis cachées ;
   // le matching peinture (matchPaintByColor, Jina) reste en phase B.
   let wallColors: WallColor[] = [];
+
+  // Les TROIS passes vision sont indépendantes (l'inventaire consomme candidates,
+  // pas le résultat de l'audit) → parallèle. Wall-clock ≈ la plus lente (l'inventaire)
+  // au lieu de la somme. L'échec de l'inventaire est encodé en {ok:false} pour rester
+  // rattrapable après coup (fallback additions de l'audit), sans unhandled rejection.
+  const taxonomyPromise = getElementCategories()
+    .catch(() => [])
+    .then((cats) => new Map(cats.map((c) => [c.slug, c.catalog_category])));
+  const additionsPromise = taxonomyPromise
+    .then((tax) => computeRenderAdditions(projectId, renderUrl, project.roomType, candidates, tax))
+    .then((adds) => ({ ok: true as const, adds }))
+    .catch((e: unknown) => ({ ok: false as const, e }));
+
   if (project.basePhotoUrl) {
     const comp = await buildBeforeAfterComposite(project.basePhotoUrl, renderUrl);
     const compBuf = comp.buffer as unknown as ImageInput;
-    const r = await confirmChanges(projectId, candidates, compBuf, comp.afterLeftFrac, comp.afterWidthFrac);
+    // Même composite → audit + murs repeints (getChangedWallColors ne renvoie QUE ce qui a changé).
+    const [r, wallColorsRes] = await Promise.all([
+      confirmChanges(projectId, candidates, compBuf, comp.afterLeftFrac, comp.afterWidthFrac),
+      getChangedWallColors(compBuf).catch((e: unknown) => {
+        console.warn("[paint] détection couleurs murs échouée:", e instanceof Error ? e.message : e);
+        return [] as WallColor[];
+      }),
+    ]);
     appliedIds = r.appliedIds;
     judgedIds = r.judgedIds;
     additions = r.additions;
     afterById = r.afterById;
     bboxById = r.bboxById;
     r.attrsById.forEach((v, k) => elementAttrsById.set(k, v));
-    // Même composite → murs repeints (getChangedWallColors ne renvoie QUE ce qui a changé).
-    try {
-      wallColors = await getChangedWallColors(compBuf);
-    } catch (e) {
-      console.warn("[paint] détection couleurs murs échouée:", e instanceof Error ? e.message : e);
-    }
+    wallColors = wallColorsRes;
   }
 
   // La LISTE reflète le RENDU, pas seulement les décisions initiales :
@@ -1063,15 +1129,16 @@ async function analyzeRender(projectId: string, project: Project): Promise<Rende
   });
 
   // Taxonomie DB → résolution catégorie unique (build + matcher), + non-matchés visibles.
-  const elementCategories = await getElementCategories().catch(() => []);
-  const taxonomy = new Map(elementCategories.map((c) => [c.slug, c.catalog_category]));
+  const taxonomy = await taxonomyPromise;
 
-  // ADDITIONS robustes : inventaire complet du RENDU (vision pleine résolution) réconcilié
-  // avec l'AVANT, au lieu du sous-prompt "additions" de l'audit qui rate parfois un meuble
-  // évident (canapé/tapis sur pièce vide). +1 appel vision. Fallback = additions de l'audit.
+  // ADDITIONS robustes : inventaire complet du RENDU (vision pleine résolution, lancé en
+  // parallèle de l'audit ci-dessus) réconcilié avec l'AVANT, au lieu du sous-prompt
+  // "additions" de l'audit qui rate parfois un meuble évident (canapé/tapis sur pièce
+  // vide). +1 appel vision. Fallback = additions de l'audit.
   let additionsToUse = additions;
-  try {
-    additionsToUse = await computeRenderAdditions(projectId, renderUrl, project.roomType, candidates, taxonomy);
+  const invRes = await additionsPromise;
+  if (invRes.ok) {
+    additionsToUse = invRes.adds;
     // bbox des ajouts (détectées sur le rendu) → bboxById, pour qu'ils obtiennent un crop
     // comme les candidats (matching image↔image au lieu de texte seul).
     for (const a of additionsToUse) {
@@ -1079,8 +1146,8 @@ async function analyzeRender(projectId: string, project: Project): Promise<Rende
       if (a.element_id && a.color_hex) elementHexById.set(a.element_id, a.color_hex);
       if (a.element_id && a.attrs) elementAttrsById.set(a.element_id, a.attrs);
     }
-  } catch (e) {
-    console.warn("[pipeline:final] détection rendu échouée, fallback additions audit:", e instanceof Error ? e.message : e);
+  } else {
+    console.warn("[pipeline:final] détection rendu échouée, fallback additions audit:", invRes.e instanceof Error ? invRes.e.message : invRes.e);
   }
 
   const plan = reconcilePlan(effective, { elements: [] }, { repairAlreadyUsed: false });
@@ -1231,7 +1298,15 @@ async function buildMatchesAndScore(
     ),
   };
 
-  await updateProject(projectId, { shoppingList, scoreFoyer, builtShoppingList: built });
+  // Anti-staleness (précalcul en fond) : si le rendu a changé pendant le matching
+  // (itération), on ne persiste pas une liste calculée sur l'ancien rendu — le
+  // CLEAR_FINALIZE de l'itération vient de vider shoppingList, l'écraser la figerait.
+  const current = await getProject(projectId);
+  if (current?.generatedRenderUrl === analysis.renderUrl) {
+    await updateProject(projectId, { shoppingList, scoreFoyer, builtShoppingList: built });
+  } else {
+    console.log("[pipeline:final] rendu changé pendant le matching → liste non persistée (stale)");
+  }
   console.log(`[pipeline:final] (matching) ${shoppingList.length} items scorés`);
   return { shoppingList, scoreFoyer };
 }
