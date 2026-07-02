@@ -111,11 +111,11 @@
     "slug": "quiet-luxury",
     "data": {
       "name": "Quiet luxury",
-      "description": "Bouclé, laiton discret, monochromes profonds. Le luxe qui ne dit pas son nom.",
-      "palette": ["#B7A794", "#1E2A3C", "#4A3628", "#B29054", "#E9E1D2"],
+      "description": "Bleu nuit laqué, bouclé, laiton discret. Le luxe qui ne dit pas son nom.",
+      "palette": ["#1E2A3C", "#B7A794", "#4A3628", "#B29054", "#E9E1D2"],
       "materials": ["bouclé", "smooth leather", "lacquered wood panelling", "smoked glass", "brushed brass", "natural stone"],
-      "mood": "hushed five-star suite, tonal monochrome layering, texture over pattern, jewel-like discreet lighting, tailored sculptural furniture, no clutter",
-      "signature": ["monolithic curved bouclé sofa", "lacquered boiserie panelling", "smoked glass globe lighting", "leather-wrapped platform bed", "discreet brass details"],
+      "mood": "hushed five-star suite, deep ink-navy and espresso tones, walls in lacquered panelling or rich dark paint, tonal layering, texture over pattern, jewel-like discreet lighting, tailored sculptural furniture, no clutter",
+      "signature": ["deep navy-blue lacquered boiserie or feature walls", "monolithic curved bouclé sofa", "smoked glass globe lighting", "leather-wrapped platform bed", "discreet brass details"],
       "moodboardUrl": "/moodboards/quiet-luxury_1.jpg"
     }
   },

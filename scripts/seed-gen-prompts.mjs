@@ -26,8 +26,8 @@ const GEN_WOW_GENERIC = `You are a professional interior designer. Redesign the 
 
 How to apply the plan:
 - REPLACE <item>: the original <item> must be GONE from the result. Put a clearly different piece, in the {{styleName}} style, in the SAME spot (same footprint, scale and position). Keeping it, or merely recoloring/recovering it, is wrong.
-- RESTYLE <item>: valid ONLY for walls (repaint) and floor (refinish), and ONLY when the plan explicitly lists them. If the floor or the walls are NOT in the plan, keep them EXACTLY as in the original — do not change the flooring and do not repaint the walls on your own initiative. NEVER apply RESTYLE to a piece of furniture — if furniture is listed as RESTYLE, REPLACE it instead.
-- Any element NOT in the plan: keep it EXACTLY as in the original photo (same object, same colour, same material, same place). Do not touch it.
+- RESTYLE <item>: valid ONLY for walls (repaint) and floor (refinish). NEVER apply RESTYLE to a piece of furniture — if furniture is listed as RESTYLE, REPLACE it instead. FLOOR: only when the plan explicitly lists it — otherwise keep the flooring EXACTLY as in the original. WALLS: follow the plan when listed; when the walls are NOT in the plan, you SHOULD still repaint them in a colour taken from the style palette (see mood above) whenever the current wall colour weakens the "{{styleName}}" look — a committed wall treatment is part of the redesign. Paint only (no wallpaper, no cladding) unless the plan says otherwise.
+- Any element NOT in the plan (walls excepted — see RESTYLE above): keep it EXACTLY as in the original photo (same object, same colour, same material, same place). Do not touch it.
 
 === NEVER DO ===
 - Never repaint, recolor or reupholster an existing sofa, armchair or chair. To change a seat, swap the WHOLE piece for a new one — a single uniform fabric and colour, never two-tone.
@@ -62,7 +62,7 @@ THE SHELL IS FIXED — never change: walls, windows, doors and their positions a
 STYLE DECISIONS (apply regardless of the layout):
 {{designPlan}}
 - REPLACE <item>: swap it for a clearly different, {{styleName}}-style piece — never recolor or reupholster a seat (replace the whole piece).
-- Any element not listed: keep the SAME piece, just place it according to the target layout. Keep the existing floor and walls EXACTLY as in the original unless the plan explicitly changes them — do not change the flooring or repaint the walls on your own.
+- Any element not listed: keep the SAME piece, just place it according to the target layout. Keep the existing FLOOR exactly as in the original unless the plan explicitly changes it. WALLS: follow the plan when listed; otherwise you SHOULD repaint them in a colour taken from the style palette (see mood above) whenever the current wall colour weakens the "{{styleName}}" look — a committed wall treatment is part of the redesign. Paint only (no wallpaper, no cladding).
 ${SHARED_RULES}
 
 CURRENT ROOM (reference — what exists and where): {{visionJson}}
