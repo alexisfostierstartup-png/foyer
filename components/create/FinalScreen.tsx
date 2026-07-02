@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ExternalLink, Pencil, Link2, Star, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -229,6 +229,9 @@ type Props = {
   visionOutput?: unknown;
   alterations?: unknown;
   liveEditsUsed?: number;
+  // Liste en cours de calcul en fond : la page s'affiche immédiatement et
+  // polle /shopping-status jusqu'à l'arrivée de la liste.
+  pendingList?: boolean;
 };
 
 export function FinalScreen({
@@ -239,6 +242,7 @@ export function FinalScreen({
   scoreFoyer: initialScoreFoyer,
   alterations,
   liveEditsUsed = 0,
+  pendingList = false,
 }: Props) {
   const router = useRouter();
   const { user, profile, wallet } = useUser();
@@ -249,6 +253,49 @@ export function FinalScreen({
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>(initialShoppingList);
   const [scoreFoyer, setScoreFoyer] = useState<ScoreFoyer | undefined>(initialScoreFoyer);
   const [refreshing, setRefreshing] = useState(false);
+  const [listPending, setListPending] = useState(pendingList);
+
+  // Mode « préparation » : la liste se calcule en fond (déclenchée par la page) —
+  // on polle le statut jusqu'à son arrivée. Le statut relance lui-même un calcul
+  // si le précédent est mort (bail expiré) → auto-réparant. Timeout ~2 min.
+  useEffect(() => {
+    if (!listPending) return;
+    let stopped = false;
+    let polls = 0;
+    const interval = setInterval(async () => {
+      polls += 1;
+      try {
+        const res = await fetch(`/api/projects/${projectId}/shopping-status`);
+        if (!res.ok) throw new Error(String(res.status));
+        const data = (await res.json()) as {
+          ready: boolean;
+          shoppingList?: ShoppingItem[];
+          scoreFoyer?: ScoreFoyer;
+        };
+        if (stopped) return;
+        if (data.ready && data.shoppingList) {
+          stopped = true;
+          clearInterval(interval);
+          setShoppingList(data.shoppingList);
+          if (data.scoreFoyer) setScoreFoyer(data.scoreFoyer);
+          setListPending(false);
+          return;
+        }
+      } catch {
+        // transitoire : on retentera au tick suivant
+      }
+      if (polls >= 48 && !stopped) {
+        stopped = true;
+        clearInterval(interval);
+        setListPending(false);
+        toast.error("La liste met plus de temps que prévu — utilisez « Rafraichir la liste ».");
+      }
+    }, 2500);
+    return () => {
+      stopped = true;
+      clearInterval(interval);
+    };
+  }, [listPending, projectId]);
   const debug = useDebug(); // ?debug=1 → affichage scoring + layout large (sinon design éditorial 480px)
 
   const alterationsList = ((alterations as { alterations?: Alteration[] } | null)
@@ -385,7 +432,7 @@ export function FinalScreen({
           </div>
 
           {/* Refresh button — visible on shopping tab (recalcule les matchs catalogue) */}
-          {tabIdx === 0 && (
+          {tabIdx === 0 && !listPending && (
             <button
               type="button"
               onClick={handleRefreshShopping}
@@ -397,7 +444,40 @@ export function FinalScreen({
             </button>
           )}
 
+          {/* Liste en préparation (calcul en fond) — squelette + polling */}
+          {listPending && (
+            <div className="mt-5 duration-300 animate-in fade-in">
+              <div className="flex items-center gap-2.5 rounded-xl border border-foyer-border bg-white px-4 py-3">
+                <RefreshCw className="size-4 animate-spin text-foyer-sage" aria-hidden />
+                <div>
+                  <p className="text-[13px] font-medium text-foyer-ink">
+                    Liste de courses en préparation…
+                  </p>
+                  <p className="text-[12px] text-foyer-muted">
+                    On analyse votre rendu et cherche les meilleures pièces.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 space-y-3" aria-hidden>
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="flex animate-pulse items-center gap-3 rounded-xl border border-foyer-border bg-white p-3"
+                    style={{ animationDelay: `${i * 150}ms` }}
+                  >
+                    <div className="size-16 shrink-0 rounded-lg bg-foyer-border/60" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3 w-2/3 rounded bg-foyer-border/60" />
+                      <div className="h-3 w-1/3 rounded bg-foyer-border/40" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Sliding content */}
+          {!listPending && (
           <div className="mt-5 overflow-hidden">
             <div
               className="flex transition-transform duration-300 ease-out"
@@ -420,6 +500,7 @@ export function FinalScreen({
               </div>
             </div>
           </div>
+          )}
 
           {/* Actions */}
           <div className="mt-8 flex flex-col gap-3">

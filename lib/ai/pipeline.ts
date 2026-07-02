@@ -1047,11 +1047,32 @@ export async function computeRenderAdditions(
 // gardes anti-staleness ci-dessous, pas par cette Map.
 const inflightFinalAssets = new Map<string, Promise<ShoppingAssets | null>>();
 
-export async function ensureFinalAssets(projectId: string): Promise<ShoppingAssets | null> {
+// Bail DB considéré actif (calcul en cours dans un autre process/lambda) s'il
+// date de moins que le budget maxDuration des routes de calcul.
+const FINAL_ASSETS_LEASE_MS = 90_000;
+
+function isFinalAssetsComputing(project: Project): boolean {
+  return (
+    project.finalAssetsRenderUrl === project.generatedRenderUrl &&
+    !!project.finalAssetsStartedAt &&
+    Date.now() - Date.parse(project.finalAssetsStartedAt) < FINAL_ASSETS_LEASE_MS
+  );
+}
+
+export async function ensureFinalAssets(
+  projectId: string,
+  opts?: { skipIfComputing?: boolean },
+): Promise<ShoppingAssets | null> {
   const project = await getProject(projectId);
   if (!project?.generatedRenderUrl) return null;
   if (project.shoppingList) {
     return { shoppingList: project.shoppingList, scoreFoyer: project.scoreFoyer as ScoreFoyer };
+  }
+  // Un autre process calcule déjà cette liste (bail DB frais) → les déclencheurs
+  // fire-and-forget s'abstiennent au lieu de doubler le compute (et le coût).
+  if (opts?.skipIfComputing && isFinalAssetsComputing(project)) {
+    console.log("[pipeline:final] calcul déjà en cours (bail DB) → skip");
+    return null;
   }
   const key = `${projectId}:${project.generatedRenderUrl}`;
   const inflight = inflightFinalAssets.get(key);
@@ -1062,6 +1083,12 @@ export async function ensureFinalAssets(projectId: string): Promise<ShoppingAsse
 }
 
 async function ensureFinalAssetsInner(projectId: string, project: Project): Promise<ShoppingAssets | null> {
+  // Pose le bail (best-effort, pas transactionnel : les gardes anti-staleness
+  // assurent la correction ; le bail évite seulement le double compute).
+  await updateProject(projectId, {
+    finalAssetsStartedAt: new Date().toISOString(),
+    finalAssetsRenderUrl: project.generatedRenderUrl ?? undefined,
+  });
   // Analyse vision : réutilisée tant que le rendu est le même (sinon recalcul + re-cache).
   let analysis = project.renderAnalysis;
   if (!analysis || analysis.renderUrl !== project.generatedRenderUrl) {
@@ -1085,7 +1112,7 @@ async function ensureFinalAssetsInner(projectId: string, project: Project): Prom
  * tourne pendant que le user regarde son rendu → shopping perçu ~0 s à l'arrivée.
  */
 export function precomputeFinalAssets(projectId: string, trigger: string): void {
-  ensureFinalAssets(projectId)
+  ensureFinalAssets(projectId, { skipIfComputing: true })
     .then((r) =>
       console.log(
         `[pipeline:precompute:${trigger}] ${r ? `${r.shoppingList.length} items prêts` : "skip (pas de rendu)"}`,

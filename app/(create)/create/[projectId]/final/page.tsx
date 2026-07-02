@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { getProject } from "@/lib/storage/projects";
 import { FinalScreen } from "@/components/create/FinalScreen";
-import { ensureFinalAssets } from "@/lib/ai/pipeline";
+import { precomputeFinalAssets } from "@/lib/ai/pipeline";
 
 export const maxDuration = 90;
 
@@ -16,28 +17,27 @@ export default async function FinalPage({
   if (!project) redirect("/create");
   if (!project.generatedRenderUrl) redirect(`/create/${projectId}`);
 
-  // Renvoie la liste fraîchement calculée → on l'utilise directement, sans
-  // dépendre d'une relecture DB qui peut être en retard (réplique) et afficher
-  // une liste vide au 1er chargement. Un échec (ex. Gemini 503 en pic de
-  // demande) ne doit PAS tuer la page : on affiche ce qui est en cache et le
-  // prochain chargement retentera.
-  const assets = await ensureFinalAssets(projectId).catch((e: unknown) => {
-    console.error("[final] calcul liste échoué (page servie sur cache):", e instanceof Error ? e.message : e);
-    return null;
-  });
-
-  const updated = await getProject(projectId);
+  // La page ne BLOQUE plus sur le calcul de la liste (30-50 s de page blanche) :
+  //  - liste en cache (précalcul de fond terminé) → rendu complet immédiat ;
+  //  - sinon → rendu immédiat en mode « préparation » : le calcul continue/part
+  //    en fond (bail DB anti-doublon) et FinalScreen polle /shopping-status
+  //    jusqu'à l'arrivée de la liste.
+  const pendingList = !project.shoppingList;
+  if (pendingList) {
+    after(() => precomputeFinalAssets(projectId, "final-page"));
+  }
 
   return (
     <FinalScreen
       projectId={projectId}
-      beforeUrl={updated!.basePhotoUrl}
-      afterUrl={updated!.generatedRenderUrl!}
-      shoppingList={assets?.shoppingList ?? updated?.shoppingList ?? []}
-      scoreFoyer={assets?.scoreFoyer ?? updated?.scoreFoyer}
-      visionOutput={updated?.visionOutput}
-      alterations={updated?.alterations}
-      liveEditsUsed={updated?.live_edits_used ?? 0}
+      beforeUrl={project.basePhotoUrl}
+      afterUrl={project.generatedRenderUrl!}
+      shoppingList={project.shoppingList ?? []}
+      scoreFoyer={project.scoreFoyer}
+      visionOutput={project.visionOutput}
+      alterations={project.alterations}
+      liveEditsUsed={project.live_edits_used ?? 0}
+      pendingList={pendingList}
     />
   );
 }
