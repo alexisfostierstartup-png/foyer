@@ -70,6 +70,15 @@ ces champs ne sont pas lus en aval du render_inventory — a priori non.)
 > non bloquante (squelette + polling), le SSE bout-en-bout ne vaut plus son coût de chantier.
 > Alternative légère si on veut du progressif : persister la liste en DEUX vagues (items de
 > l'audit d'abord ~12 s, additions de l'inventaire ensuite) — réutilise le polling existant.
+>
+> **Cache implicite Gemini : testé le 2026-07-02, mort** (`scripts/bench-implicit-cache.mjs`) :
+> 0 token caché quel que soit l'ordre des parts ([texte,image] vs [image,texte]). La mesure
+> montre surtout que le coût fixe (~7-9 s) n'est PAS le prefill de tokens (prompt ~1,3k tok,
+> sortie ~160 tok) mais l'ENCODAGE VISION de l'image en HIGH — incompressible par cache,
+> streaming ou lean. Seuls leviers restants dessus : mediaResolution MEDIUM (à VALIDER par un
+> A/B qualité sur de vrais rendus avant de conclure que ça dégrade) ou attendre des heures
+> moins congestionnées. Jina warm-up ajouté dans ensureFinalAssetsInner (cold start ~4 s
+> recouvert par la phase vision).
 Aujourd'hui `generateContent` attend la réponse COMPLÈTE (mur de 28 s). Gemini supporte
 `generateContentStream` → tokens au fil de l'eau. → parser l'array JSON incrémentalement
 (chaque `{…},` complet), lancer **son** match dès qu'un élément tombe, pousser vers l'UI (SSE).

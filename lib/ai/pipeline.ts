@@ -12,6 +12,7 @@ import { saveRender } from "./saveRender";
 import { logPipelineEvent } from "./logger";
 import { withTracking } from "./track";
 import { isTransientAiError } from "./retry";
+import { computeTextEmbedding } from "@/lib/embeddings/jina";
 import { getProject, updateProject } from "@/lib/storage/projects";
 import type { DetectedFurniture, UserConstraints, Project, ShoppingItem, ScoreFoyer, RenderAnalysis } from "@/lib/types";
 import { matchAlterationsToCatalog, type Alteration } from "@/lib/shopping/matcher";
@@ -1089,6 +1090,9 @@ async function ensureFinalAssetsInner(projectId: string, project: Project): Prom
     finalAssetsStartedAt: new Date().toISOString(),
     finalAssetsRenderUrl: project.generatedRenderUrl ?? undefined,
   });
+  // Réchauffe Jina pendant la phase vision (~15 s) : le cold start (~4 s) est
+  // sinon payé au PREMIER embedding du matching. Fire-and-forget, sans await.
+  computeTextEmbedding("warmup").catch(() => {});
   // Analyse vision : réutilisée tant que le rendu est le même (sinon recalcul + re-cache).
   let analysis = project.renderAnalysis;
   if (!analysis || analysis.renderUrl !== project.generatedRenderUrl) {
