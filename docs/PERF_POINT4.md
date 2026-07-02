@@ -60,6 +60,16 @@ render_inventory → moins de tokens de sortie → **plus rapide ET moins cher**
 ces champs ne sont pas lus en aval du render_inventory — a priori non.)
 
 ### Levier 3 — Streaming élément-par-élément (le plus « magique »)
+
+> **MESURÉ le 2026-07-02** (`scripts/bench-stream-inventory.mjs`, prompt inventaire lean réel,
+> photo réelle, flash-lite HIGH) : stream 9 éléments / 11,6 s — **1er chunk à 8,3 s**, 1er
+> élément à 8,7 s, dernier à 11,6 s ; bloquant : 13,0 s. Verdict : depuis le levier 2 (lean),
+> ~70 % de la latence est le PREFILL image (avant le 1er token), que le streaming ne compresse
+> pas. Gain réel ≈ la queue de génération (~3-8 s selon le nb d'éléments), pas le « 5-8 s au
+> lieu de 28 s » estimé quand la sortie faisait 6-7k tokens. Avec la page /final désormais
+> non bloquante (squelette + polling), le SSE bout-en-bout ne vaut plus son coût de chantier.
+> Alternative légère si on veut du progressif : persister la liste en DEUX vagues (items de
+> l'audit d'abord ~12 s, additions de l'inventaire ensuite) — réutilise le polling existant.
 Aujourd'hui `generateContent` attend la réponse COMPLÈTE (mur de 28 s). Gemini supporte
 `generateContentStream` → tokens au fil de l'eau. → parser l'array JSON incrémentalement
 (chaque `{…},` complet), lancer **son** match dès qu'un élément tombe, pousser vers l'UI (SSE).
