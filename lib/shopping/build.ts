@@ -32,7 +32,7 @@ function findProduct(
   let pool = CATALOG.filter((p) => p.category === category);
   if (pool.length === 0) return null;
   if (styleId) {
-    const styled = pool.filter((p) => p.styleAffinity.includes(styleId as never));
+    const styled = pool.filter((p) => p.styleAffinity.includes(styleId));
     if (styled.length > 0) pool = styled;
   }
   if (preferSecondhand) {

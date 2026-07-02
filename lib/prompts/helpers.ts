@@ -18,9 +18,12 @@ export async function loadStyleContext(
   if (error || !data) throw new Error(`Style not found: ${styleId}`);
 
   const d = data.data as AmbianceData;
+  const signature = d.signature?.length
+    ? `. signature elements: ${d.signature.join(", ")}`
+    : "";
   return {
     styleName: d.name,
-    styleMood: `${d.mood}. palette: ${d.palette.join(", ")}. materials: ${d.materials.join(", ")}`,
+    styleMood: `${d.mood}. palette: ${d.palette.join(", ")}. materials: ${d.materials.join(", ")}${signature}`,
   };
 }
 

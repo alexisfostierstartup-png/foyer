@@ -10,13 +10,14 @@ import {
 } from "@/components/demo/primitives";
 import type { UserChoices } from "@/components/demo/demo-types";
 
+// Sous-ensemble des ambiances canoniques (data/styles.json) pour la démo.
 const AMBIANCES = [
-  { id: "doux", name: "Doux", palette: ["#F5EFE6", "#E5DCC3", "#A8957A"] },
-  { id: "brut", name: "Brut", palette: ["#2B2723", "#5C4B3C", "#A18671"] },
-  { id: "bois-clair", name: "Bois clair", palette: ["#FFFFFF", "#E8DFD0", "#C9B89A"] },
-  { id: "vintage", name: "Vintage", palette: ["#C9853E", "#3D6B7C", "#F4E8D8"] },
-  { id: "mediterraneen", name: "Méditerranéen", palette: ["#F4EDE0", "#C6855C", "#7A8B6F"] },
-  { id: "bohemian", name: "Bohemian", palette: ["#C8703A", "#E8C896", "#5C4632"] },
+  { id: "scandinave", name: "Scandinave", palette: ["#F3EFE6", "#D3AE7C", "#C9BCA8"] },
+  { id: "japandi", name: "Japandi", palette: ["#DDD3C2", "#6C4E32", "#2E2A26"] },
+  { id: "boheme", name: "Bohème", palette: ["#C9A97E", "#B4602F", "#F0E3D2"] },
+  { id: "mid-century", name: "Mid-century", palette: ["#6B4226", "#D9A23B", "#C65D2E"] },
+  { id: "mediterraneen", name: "Méditerranéen", palette: ["#F5F1E8", "#2C5BA8", "#B96A3E"] },
+  { id: "haussmannien", name: "Haussmannien", palette: ["#F4F1E9", "#C89B5F", "#14513B"] },
 ];
 
 export function StyleScreen({

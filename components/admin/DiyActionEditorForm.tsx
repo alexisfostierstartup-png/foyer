@@ -5,15 +5,15 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { CodeTextarea } from "./CodeTextarea";
 import type { DiyAction } from "@/lib/diy/types";
+import stylesData from "@/data/styles.json";
 
 type Props = {
   action?: DiyAction;
 };
 
-const STYLE_IDS = [
-  "doux", "brut", "bois-clair", "vintage", "mediterraneen",
-  "bohemian", "scandinave", "industriel", "classique", "minimaliste",
-];
+// Slugs canoniques (data/styles.json). Les clés legacy éventuelles présentes
+// sur une action existante restent éditables via le JSON brut.
+const STYLE_IDS = (stylesData as { slug: string }[]).map((s) => s.slug);
 
 const EMPTY_AFFINITY = Object.fromEntries(STYLE_IDS.map((s) => [s, 0.5]));
 

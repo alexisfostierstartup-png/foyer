@@ -671,6 +671,10 @@ export type AmbianceData = {
   palette: string[]
   materials: string[]
   mood: string
+  // Éléments iconiques du style, injectés dans le prompt de génération.
+  signature?: string[]
+  // Image moodboard (public/moodboards). Repli : /moodboards/<slug>.svg.
+  moodboardUrl?: string
 }
 
 export type RoomDefaultsData = {

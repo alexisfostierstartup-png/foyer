@@ -10,14 +10,16 @@ const supabase = createClient<Database>(
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
-const ambiances = [
-  { slug: "doux", data: { name: "Doux", description: "Lumière tamisée, matériaux naturels. Une pièce où l'on souffle.", palette: ["#F5EFE6", "#E5DCC3", "#A8957A"], materials: ["lin écru", "chêne blanc", "céramique blanche", "laine douce"], mood: "calm, bright, natural materials, warm daylight, soft tones" } },
-  { slug: "brut", data: { name: "Brut", description: "Métal noir, bois foncé, contrastes francs.", palette: ["#2B2723", "#5C4B3C", "#A18671"], materials: ["métal noir mat", "noyer foncé", "cuir brun", "béton lissé"], mood: "contrasted, industrial soft, masculine sober" } },
-  { slug: "bois-clair", data: { name: "Bois clair", description: "Chêne blanc, blanc cassé, tons crayeux.", palette: ["#FFFFFF", "#E8DFD0", "#C9B89A"], materials: ["chêne blanc", "lin blanc", "céramique écrue", "laiton brossé"], mood: "pure, bright, light natural materials, modern scandinavian" } },
-  { slug: "vintage", data: { name: "Vintage", description: "Mid-century, couleurs saturées, courbes douces.", palette: ["#C9853E", "#3D6B7C", "#F4E8D8"], materials: ["noyer", "velours moutarde", "laiton", "verre fumé"], mood: "mid-century, retro chic, curves, saturated contrasts" } },
-  { slug: "mediterraneen", data: { name: "Méditerranéen", description: "Blanc cassé, terre cuite, lin froissé.", palette: ["#F4EDE0", "#C6855C", "#7A8B6F"], materials: ["terre cuite", "lin brut", "bois peint", "céramique émaillée"], mood: "bright, salty, raw materials, warm simplicity" } },
-  { slug: "bohemian", data: { name: "Bohemian", description: "Rotin, ocre, motifs ethniques.", palette: ["#C8703A", "#E8C896", "#5C4632"], materials: ["rotin", "lin brut", "jute", "céramique artisanale"], mood: "warm, layered, travel, artisanal materials" } },
-];
+// Source canonique des ambiances : data/styles.json (aussi utilisée pour la
+// validation API). Modifier un style = éditer le JSON puis relancer ce seed.
+import stylesData from "../../data/styles.json";
+
+const ambiances = stylesData as { slug: string; data: Json }[];
+
+// Anciens slugs v0 remplacés par le set canonique (mediterraneen est réutilisé).
+// On les désactive au lieu de les supprimer : les vieux projets restent résolubles
+// par loadStyleContext (qui ne filtre pas is_active).
+const LEGACY_AMBIANCE_SLUGS = ["doux", "brut", "bois-clair", "vintage", "bohemian"];
 
 const roomDefaults = [
   { slug: "salon", data: { label: "Salon", expectedFurniture: ["canapé", "table basse", "meuble TV", "tapis", "fauteuil", "lampe", "bibliothèque", "accessoires déco"], englishFurniture: "sofa, coffee table, TV stand with TV, rug, armchair, floor lamp, bookshelf, decorative accessories" } },
@@ -65,6 +67,14 @@ async function upsertAssets(
 async function seed() {
   console.log("Seeding design assets…");
   await upsertAssets("ambiance", ambiances);
+
+  const { error: legacyErr } = await supabase
+    .from("assets")
+    .update({ is_active: false })
+    .eq("category", "ambiance")
+    .in("slug", LEGACY_AMBIANCE_SLUGS);
+  if (legacyErr) throw new Error(`legacy ambiance deactivation: ${legacyErr.message}`);
+  console.log(`  ✓ ${LEGACY_AMBIANCE_SLUGS.length} legacy ambiances désactivées`);
   await upsertAssets("room_defaults", roomDefaults);
   await upsertAssets("floor_preset", floorPresets);
   await upsertAssets("wall_palette", wallPalettes);

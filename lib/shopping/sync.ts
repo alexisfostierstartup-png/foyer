@@ -66,15 +66,28 @@ function detectEcoLabel(description: string, name: string): string {
 }
 
 // ── Style affinity heuristic ─────────────────────────────────────────────────
+// Slugs alignés sur data/styles.json (set canonique 18 styles).
 function detectStyleAffinity(name: string, description: string): string[] {
   const text = `${name} ${description}`.toLowerCase();
   const styles: string[] = [];
-  if (/scandinave|nordique|chêne|bois clair|hêtre/.test(text)) styles.push("bois-clair");
-  if (/lin|coton|naturel|doux|pastel|beige/.test(text)) styles.push("doux");
-  if (/industriel|béton|métal|loft|acier/.test(text)) styles.push("brut");
-  if (/vintage|retro|années 6|années 7|mid-century|pieds compas/.test(text)) styles.push("vintage");
-  if (/méditerranée|provençal|céramique|mosaïque/.test(text)) styles.push("mediterraneen");
-  if (/boho|bohème|rotin|macramé|raphia/.test(text)) styles.push("bohemian");
+  if (/scandinave|nordique|chêne clair|bois clair|hêtre/.test(text)) styles.push("scandinave");
+  if (/japandi|zen|cannage|travertin|épuré/.test(text)) styles.push("japandi");
+  if (/bohème|jute|macramé|raphia|terracotta|pampa/.test(text)) styles.push("boheme");
+  if (/boho|rotin|osier|bouclette|plante/.test(text)) styles.push("boho");
+  if (/vintage|retro|années 5|années 6|mid-century|pieds compas|teck/.test(text)) styles.push("mid-century");
+  if (/industriel|béton|métal noir|loft|acier|atelier/.test(text)) styles.push("industriel");
+  if (/méditerranée|provençal|mosaïque|zellige|azulejo|terre cuite/.test(text)) styles.push("mediterraneen");
+  if (/haussmann|moulure|marbre blanc|doré|chevron|point de hongrie/.test(text)) styles.push("haussmannien");
+  if (/wabi|chaux|grès|bois brut|lin froissé|artisanal/.test(text)) styles.push("wabi-sabi");
+  if (/bouclette|verre fumé|laiton brossé|travertin|minimaliste chic/.test(text)) styles.push("quiet-luxury");
+  if (/art déco|art deco|cannelé|émeraude|marbre noir|velours/.test(text)) styles.push("art-deco");
+  if (/anglais|chintz|fleuri|liberty|acajou|campagne/.test(text)) styles.push("cottage-anglais");
+  if (/chesterfield|capitonné|cuir cognac|bibliothèque|écritoire/.test(text)) styles.push("dark-academia");
+  if (/kilim|cactus|adobe|poterie|berbère|ethnique/.test(text)) styles.push("desert");
+  if (/années 7|seventies|chrome|velours côtelé|space age|orange brûlé/.test(text)) styles.push("seventies");
+  if (/color block|colorblock|arche|multicolore|graphique/.test(text)) styles.push("color-block");
+  if (/memphis|terrazzo|années 8|postmoderne|zigzag/.test(text)) styles.push("memphis");
+  if (/maximaliste|éclectique|baroque|persan|galerie/.test(text)) styles.push("maximaliste");
   return styles;
 }
 

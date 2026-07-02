@@ -19,13 +19,9 @@ export type CatalogCategory =
   | "floor_material"
   | "other";
 
-export type StyleAffinity =
-  | "doux"
-  | "brut"
-  | "bois-clair"
-  | "vintage"
-  | "mediterraneen"
-  | "bohemian";
+// Slug de style (voir data/styles.json). Union ouverte : les styles sont
+// data-driven, ajouter un style ne doit pas exiger d'éditer ce type.
+export type StyleAffinity = string;
 
 export type CatalogSource = "secondhand" | "eco_new";
 

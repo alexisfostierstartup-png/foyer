@@ -1,56 +1,218 @@
 [
   {
-    "id": "doux",
-    "name": "Doux",
-    "description": "Lumière tamisée, matériaux naturels. Une pièce où l'on souffle.",
-    "paletteHex": ["#F5EFE6", "#E5DCC3", "#A8957A"],
-    "materials": ["lin écru", "chêne blanc", "céramique blanche", "laine douce"],
-    "mood": "calme, lumineux, matériaux naturels, atmosphère paisible",
-    "moodboardUrl": "/moodboards/doux.svg"
+    "slug": "scandinave",
+    "data": {
+      "name": "Scandinave",
+      "description": "Bois blond, blanc chaud, lignes simples. L'essentiel, baigné de lumière.",
+      "palette": ["#F3EFE6", "#D3AE7C", "#C9BCA8", "#E0D4BF", "#9AA286"],
+      "materials": ["pale oak", "wool bouclé", "washed linen", "rattan", "light stone"],
+      "mood": "calm nordic simplicity, soft diffuse daylight, warm white walls, pale wood, uncluttered functional furniture, cozy hygge textures",
+      "signature": ["pale oak furniture with clean lines", "chunky wool rug with fringe", "paper or linen pendant shades", "dried botanicals in ceramic vases", "near-absence of saturated color"],
+      "moodboardUrl": "/moodboards/scandinave_1.jpg"
+    }
   },
   {
-    "id": "brut",
-    "name": "Brut",
-    "description": "Métal noir, bois foncé, contrastes francs. Pour les pièces qui ont du caractère.",
-    "paletteHex": ["#2B2723", "#5C4B3C", "#A18671"],
-    "materials": ["métal noir mat", "noyer foncé", "cuir brun", "béton lisse"],
-    "mood": "contrasté, industriel doux, masculin sobre",
-    "moodboardUrl": "/moodboards/brut.svg"
+    "slug": "japandi",
+    "data": {
+      "name": "Japandi",
+      "description": "L'épure japonaise, la chaleur scandinave. Noyer, noir, silence.",
+      "palette": ["#DDD3C2", "#6C4E32", "#2E2A26", "#6F7455", "#E7DCC6"],
+      "materials": ["slatted walnut", "bouclé", "travertine", "washi paper", "smoked glass", "jute"],
+      "mood": "zen warm minimalism, hushed atmosphere, low warm light, disciplined negative space, low-slung curved furniture, japanese-scandinavian fusion",
+      "signature": ["fluted or slatted walnut wood", "black accents punctuating beige", "organic-shaped travertine coffee table", "paper globe lantern", "ikebana-style branch arrangement"],
+      "moodboardUrl": "/moodboards/japandi_1.jpg"
+    }
   },
   {
-    "id": "bois-clair",
-    "name": "Bois clair",
-    "description": "Chêne blanc, blanc cassé, tons crayeux. L'épure scandinave revisitée.",
-    "paletteHex": ["#FFFFFF", "#E8DFD0", "#C9B89A"],
-    "materials": ["chêne blanc", "lin blanc", "céramique écrue", "laiton brossé"],
-    "mood": "épuré, lumineux, matériaux naturels clairs, scandinave moderne",
-    "moodboardUrl": "/moodboards/bois-clair.svg"
+    "slug": "boheme",
+    "data": {
+      "name": "Bohème",
+      "description": "Rotin, terracotta, lumière dorée. Des textiles superposés qui racontent un voyage.",
+      "palette": ["#C9A97E", "#B4602F", "#F0E3D2", "#8A9B6E", "#D8B98F"],
+      "materials": ["rattan", "jute", "washed linen", "chunky knit wool", "warm rustic wood", "handmade ceramics"],
+      "mood": "warm layered bohemian, golden-hour light, terracotta and sand tones, relaxed low seating, artisanal collected feel",
+      "signature": ["woven rattan pendant lights", "layered jute rugs and knit throws", "dried pampas grass", "organic terracotta wall art", "floor cushions and poufs"],
+      "moodboardUrl": "/moodboards/boheme_1.jpg"
+    }
   },
   {
-    "id": "vintage",
-    "name": "Vintage",
-    "description": "Mid-century, couleurs saturées, courbes douces. L'élégance des années 60.",
-    "paletteHex": ["#C9853E", "#3D6B7C", "#F4E8D8"],
-    "materials": ["noyer", "velours moutarde", "laiton", "verre fumé"],
-    "mood": "mid-century, rétro chic, courbes, contrastes colorés",
-    "moodboardUrl": "/moodboards/vintage.svg"
+    "slug": "boho",
+    "data": {
+      "name": "Urban jungle",
+      "description": "Des plantes partout, du bouclé crème, de la pierre claire. Une serre à vivre.",
+      "palette": ["#F2EAD9", "#4E7A46", "#97A97C", "#C0603A", "#D19B3F"],
+      "materials": ["cream bouclé", "travertine", "rattan", "jute", "sage zellige", "brass"],
+      "mood": "fresh plant-filled modern boho, bright natural daylight, sage green and cream, curved bouclé furniture, lush trailing greenery everywhere",
+      "signature": ["abundant live plants including a plant wall", "curved cream bouclé sectional", "round travertine coffee tables", "organic-wave patterned rug", "woven baskets as planters"],
+      "moodboardUrl": "/moodboards/boho_1.jpg"
+    }
   },
   {
-    "id": "mediterraneen",
-    "name": "Méditerranéen",
-    "description": "Blanc cassé, terre cuite, lin froissé. La douceur du Sud.",
-    "paletteHex": ["#F4EDE0", "#C6855C", "#7A8B6F"],
-    "materials": ["terre cuite", "lin brut", "bois peint", "céramique émaillée"],
-    "mood": "lumineux, salin, matériaux bruts, simplicité chaleureuse",
-    "moodboardUrl": "/moodboards/mediterraneen.svg"
+    "slug": "mid-century",
+    "data": {
+      "name": "Mid-century",
+      "description": "Noyer, courbes, laiton. L'élégance des années 50-60, remise au présent.",
+      "palette": ["#6B4226", "#D9A23B", "#C65D2E", "#EFE6D2", "#7A7A4C"],
+      "materials": ["walnut", "teak", "cognac leather", "corduroy", "brass", "smoked glass"],
+      "mood": "retro 1950s-60s modern, walnut wood with tapered legs, mustard and burnt orange accents, warm brass lighting, nostalgic hi-fi comfort",
+      "signature": ["walnut credenza with tapered legs", "brass sputnik chandelier or arc floor lamp", "cognac leather lounge chair", "record player and vinyl display", "geometric mid-century wall art"],
+      "moodboardUrl": "/moodboards/mid-century_2.jpg"
+    }
   },
   {
-    "id": "bohemian",
-    "name": "Bohemian",
-    "description": "Rotin, ocre, motifs ethniques. Pour les pièces qui racontent un voyage.",
-    "paletteHex": ["#C8703A", "#E8C896", "#5C4632"],
-    "materials": ["rotin", "lin brut", "jute", "céramique artisanale"],
-    "mood": "chaleureux, chargé, voyage, matériaux artisanaux",
-    "moodboardUrl": "/moodboards/bohemian.svg"
+    "slug": "industriel",
+    "data": {
+      "name": "Industriel",
+      "description": "Brique, béton, acier noir, cuir camel. L'âme d'un loft d'atelier.",
+      "palette": ["#8A4A32", "#2B2B2B", "#9A9A96", "#B26E3C", "#E8A34F"],
+      "materials": ["exposed brick", "raw concrete", "blackened steel", "tufted camel leather", "reclaimed wood", "jute"],
+      "mood": "raw loft atmosphere, exposed structure as decor, dramatic warm bulb lighting, bold contrast of black steel and cognac leather",
+      "signature": ["exposed brick or raw concrete wall", "black steel beams and open shelving", "camel tufted leather modular sofa", "Edison filament pendant lights", "chunky reclaimed-wood coffee table"],
+      "moodboardUrl": "/moodboards/industriel_1.jpg"
+    }
+  },
+  {
+    "slug": "mediterraneen",
+    "data": {
+      "name": "Méditerranéen",
+      "description": "Blanc chaulé, bleu d'Égée, terre cuite. La lumière du Sud, une maison de vacances.",
+      "palette": ["#F5F1E8", "#2C5BA8", "#B96A3E", "#C89C64", "#7FA9CF"],
+      "materials": ["rough whitewashed plaster", "terracotta", "patterned azulejo tiles", "wood beams", "wicker", "washed linen"],
+      "mood": "sun-drenched greek-island feel, whitewashed walls, cobalt blue accents, arched openings, breezy holiday lightness",
+      "signature": ["blue and white ceramics collections", "arched doors and niches", "terracotta urns with olive trees", "exposed wood ceiling beams", "azulejo patterned tiles"],
+      "moodboardUrl": "/moodboards/mediterraneen_1.jpg"
+    }
+  },
+  {
+    "slug": "haussmannien",
+    "data": {
+      "name": "Haussmannien",
+      "description": "Moulures, point de Hongrie, cheminée en marbre. Paris, réinventé au présent.",
+      "palette": ["#F4F1E9", "#C89B5F", "#14513B", "#A15C2F", "#C3A15C"],
+      "materials": ["sculpted plaster mouldings", "herringbone oak parquet", "marble", "emerald velvet", "cognac leather", "brass and glass"],
+      "mood": "elegant parisian apartment, ornate cornices and ceiling roses, tall french windows flooding light, classical shell furnished with modern pieces",
+      "signature": ["ornate plaster mouldings and ceiling rose", "point-de-hongrie herringbone parquet", "marble fireplace with gilt mirror", "emerald velvet sofa", "modern furniture contrasting the classical envelope"],
+      "moodboardUrl": "/moodboards/haussmannien_1.jpg"
+    }
+  },
+  {
+    "slug": "wabi-sabi",
+    "data": {
+      "name": "Wabi-sabi",
+      "description": "Plâtre brut, bois massif, lin froissé. La beauté de l'imparfait, le calme du vide.",
+      "palette": ["#C9BEAC", "#E3D8C4", "#B98E5F", "#8A8068", "#3A352E"],
+      "materials": ["rough clay plaster", "raw live-edge wood", "crumpled linen", "stoneware", "woven rattan"],
+      "mood": "contemplative silence, hazy diffuse sunbeams, visible texture and imperfection, earthy monochrome, handcrafted organic forms",
+      "signature": ["mottled limewash plaster walls", "monumental live-edge wood slab table", "giant woven rattan sphere pendant", "stoneware urns with dried branches", "monolithic low linen sofa"],
+      "moodboardUrl": "/moodboards/wabi-sabi_1.jpg"
+    }
+  },
+  {
+    "slug": "quiet-luxury",
+    "data": {
+      "name": "Quiet luxury",
+      "description": "Bouclé, laiton discret, monochromes profonds. Le luxe qui ne dit pas son nom.",
+      "palette": ["#B7A794", "#1E2A3C", "#4A3628", "#B29054", "#E9E1D2"],
+      "materials": ["bouclé", "smooth leather", "lacquered wood panelling", "smoked glass", "brushed brass", "natural stone"],
+      "mood": "hushed five-star suite, tonal monochrome layering, texture over pattern, jewel-like discreet lighting, tailored sculptural furniture, no clutter",
+      "signature": ["monolithic curved bouclé sofa", "lacquered boiserie panelling", "smoked glass globe lighting", "leather-wrapped platform bed", "discreet brass details"],
+      "moodboardUrl": "/moodboards/quiet-luxury_1.jpg"
+    }
+  },
+  {
+    "slug": "art-deco",
+    "data": {
+      "name": "Art déco",
+      "description": "Vert émeraude, laiton, velours. Le faste géométrique des années 20.",
+      "palette": ["#14624A", "#C9A24B", "#8C3A2B", "#0F2E2B", "#C46A5F"],
+      "materials": ["channel-tufted velvet", "brass inlay", "black marble", "lacquered fluted wood", "satin"],
+      "mood": "theatrical gatsby-era opulence, emerald and gold pairing, geometric glamour, warm brass lighting, bold curved silhouettes",
+      "signature": ["gold geometric wall linework with arches and sunbursts", "channel-tufted velvet sofa", "black marble coffee table", "brass sputnik globe chandelier", "fluted lacquered cabinetry"],
+      "moodboardUrl": "/moodboards/art-deco_1.jpg"
+    }
+  },
+  {
+    "slug": "cottage-anglais",
+    "data": {
+      "name": "Cottage anglais",
+      "description": "Papier peint fleuri, boiseries sauge, meubles chinés. Le charme de la campagne anglaise.",
+      "palette": ["#7D8B62", "#F2EBDA", "#D9A1A6", "#6E4A2F", "#C9D6BE"],
+      "materials": ["floral wallpaper", "painted wainscot panelling", "aged walnut", "antique brass", "chintz", "needlepoint textiles"],
+      "mood": "genteel english countryside nostalgia, floral-on-floral layering, soft daylight with small shaded lamps, collected-antique charm",
+      "signature": ["botanical floral wallpaper", "two-tone painted wainscot with dado rail", "antique mahogany chests and dressers", "fresh garden flowers in vases", "displayed floral china"],
+      "moodboardUrl": "/moodboards/cottage-anglais_1.jpg"
+    }
+  },
+  {
+    "slug": "dark-academia",
+    "data": {
+      "name": "Dark academia",
+      "description": "Boiseries sombres, cuir cognac, livres anciens. L'atmosphère d'une bibliothèque anglaise.",
+      "palette": ["#1E2D2F", "#3B2A20", "#9C5F2E", "#B08D4A", "#3A4032"],
+      "materials": ["dark painted panelling", "tufted cognac leather", "aged plaster", "brass", "old books", "worn persian rugs"],
+      "mood": "nocturnal scholarly atmosphere, candlelight and low sconces, near-black walls with ornate cornices, moody antique elegance",
+      "signature": ["floor-to-ceiling bookshelves with old books", "antique oil paintings in gilt frames", "tufted cognac leather seating", "dark herringbone floors", "antique writing desk"],
+      "moodboardUrl": "/moodboards/dark-academia_1.jpg"
+    }
+  },
+  {
+    "slug": "desert",
+    "data": {
+      "name": "Désert",
+      "description": "Plâtre sculpté, terre cuite, cactus. La sérénité minérale du Sud-Ouest.",
+      "palette": ["#EFE6D8", "#C2703E", "#D9BE9C", "#7C8A5F", "#A65E38"],
+      "materials": ["smooth adobe plaster", "raw chunky wood", "clay pottery", "kilim textiles", "rattan", "concrete"],
+      "mood": "arid serene southwest desert home, intense direct sunlight and long shadows, sculpted plaster forms, earthy terracotta and sage",
+      "signature": ["sculptural adobe fireplace and niches", "living cacti in clay pots", "kilim and carved-pattern rugs", "terracotta-dyed textile wall art", "dried grasses in urns"],
+      "moodboardUrl": "/moodboards/desert_1.jpg"
+    }
+  },
+  {
+    "slug": "seventies",
+    "data": {
+      "name": "Seventies",
+      "description": "Orange brûlé, velours côtelé, chrome. Le groove optimiste des années 70.",
+      "palette": ["#D2622A", "#D9A33A", "#3E7D6C", "#E9A8A0", "#7C4A2A"],
+      "materials": ["tufted corduroy", "velvet", "chrome and glass", "cane and rattan", "lacquer", "terrazzo"],
+      "mood": "groovy optimistic retro-pop, burnt orange first, sunny warm light with glowing glass globes, low modular seating, playful curves",
+      "signature": ["low tufted modular sofa in burnt orange", "mushroom and globe lamps", "checkerboard and wavy-pattern rugs", "chrome and glass furniture", "gallery of retro graphic posters"],
+      "moodboardUrl": "/moodboards/seventies_1.jpg"
+    }
+  },
+  {
+    "slug": "color-block",
+    "data": {
+      "name": "Color block",
+      "description": "Arches peintes, duos de couleurs franches. Les murs deviennent un graphisme.",
+      "palette": ["#D95B2A", "#2F5D45", "#F1E8D7", "#E8A11B", "#1F5FAD"],
+      "materials": ["matte paint supergraphics", "velvet", "fluted wood", "brass", "marble"],
+      "mood": "playful graphic optimism, bright even daylight, giant painted color fields and arches, complementary color duos, rounded pill silhouettes",
+      "signature": ["supergraphic painted arches continuing onto the ceiling", "complementary color pairing like orange and green", "arched niches and painted door surrounds", "color-matched accessories", "curved rounded furniture"],
+      "moodboardUrl": "/moodboards/color-block_1.jpg"
+    }
+  },
+  {
+    "slug": "memphis",
+    "data": {
+      "name": "Memphis",
+      "description": "Terrazzo, zigzags, couleurs pop. L'exubérance ludique des années 80.",
+      "palette": ["#F0A5B8", "#E03C31", "#2FA8A0", "#F2C230", "#2456C4"],
+      "materials": ["terrazzo", "high-gloss lacquer", "matte painted geometry", "bouclé", "colored acrylic"],
+      "mood": "playful 80s memphis pop design, toy-like geometric primitives, bright studio light, primary-plus-pastel color clash, cartoon energy",
+      "signature": ["terrazzo surfaces with colored speckle", "zigzag and squiggle motifs", "stacked geometric arches", "blob-stack sphere lamps", "pill-shaped poufs"],
+      "moodboardUrl": "/moodboards/memphis_1.jpg"
+    }
+  },
+  {
+    "slug": "maximaliste",
+    "data": {
+      "name": "Maximaliste",
+      "description": "Velours, galeries de cadres, couleurs saturées. Plus, c'est plus.",
+      "palette": ["#D9A62E", "#1F7A4D", "#D0342C", "#17747E", "#D14E8A"],
+      "materials": ["tufted velvet", "lacquered wood", "persian rugs", "colored glass", "carved wood", "brass"],
+      "mood": "exuberant more-is-more eclecticism, saturated complementary color clashes, dense curated collections, joyful pattern mixing",
+      "signature": ["velvet chesterfield sofa in a bold color", "dense gallery wall", "rainbow-ordered bookshelves", "colored glass lamps", "mixed patterned upholstery"],
+      "moodboardUrl": "/moodboards/maximaliste_1.jpg"
+    }
   }
 ]

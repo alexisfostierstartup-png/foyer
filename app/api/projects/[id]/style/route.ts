@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { getProject, updateProject } from "@/lib/storage/projects";
 import stylesData from "@/data/styles.json";
-import type { Style } from "@/lib/types";
 
-const STYLE_IDS = new Set((stylesData as Style[]).map((s) => s.id));
+const STYLE_IDS = new Set((stylesData as { slug: string }[]).map((s) => s.slug));
 
 export async function POST(
   request: Request,

@@ -57,6 +57,7 @@ function mapAmbianceRow(a: { id: string; slug: string; data: unknown }): Style {
     palette: string[];
     materials: string[];
     mood: string;
+    moodboardUrl?: string;
   };
   return {
     id: a.slug,
@@ -65,7 +66,7 @@ function mapAmbianceRow(a: { id: string; slug: string; data: unknown }): Style {
     paletteHex: d.palette,
     materials: d.materials,
     mood: d.mood,
-    moodboardUrl: `/moodboards/${a.slug}.svg`,
+    moodboardUrl: d.moodboardUrl ?? `/moodboards/${a.slug}.svg`,
   };
 }
 

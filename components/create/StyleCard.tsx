@@ -37,11 +37,14 @@ export function StyleCard({ style, selected, onSelect }: StyleCardProps) {
         )}
       </div>
 
-      <div className="flex flex-1 flex-col gap-2 p-3">
+      <div className="flex flex-1 flex-col gap-1.5 p-3">
         <span className="font-serif text-[18px] leading-tight text-foyer-ink">
           {style.name}
         </span>
-        <div className="mt-auto flex gap-1.5">
+        <p className="line-clamp-2 text-[12px] leading-snug text-foyer-muted">
+          {style.description}
+        </p>
+        <div className="mt-auto flex gap-1.5 pt-1">
           {style.paletteHex.slice(0, 3).map((hex) => (
             <span
               key={hex}
