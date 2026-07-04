@@ -41,12 +41,15 @@ export async function POST(req: Request) {
   );
   await createRenders(renders);
 
-  // Fire-and-forget background runner
+  // Fire-and-forget background runner.
+  // ⚠️ La route cible /api/pro/jobs/[jobId]/run N'EXISTE PAS actuellement → cet
+  // appel échoue toujours (le job reste en attente). On loggue au lieu d'avaler
+  // silencieusement l'erreur, le temps que le runner soit implémenté.
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   fetch(`${baseUrl}/api/pro/jobs/${job.id}/run`, {
     method: "POST",
     headers: { "x-internal-key": process.env.INTERNAL_API_KEY ?? "foyer-internal" },
-  }).catch(() => {});
+  }).catch((e) => console.warn(`[pro/jobs] runner trigger failed for job ${job.id}:`, e instanceof Error ? e.message : e));
 
   return NextResponse.json({ jobId: job.id });
 }

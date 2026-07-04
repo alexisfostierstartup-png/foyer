@@ -281,8 +281,11 @@ export async function matchAlterationsHybrid(
   return results;
 }
 
-// ── Ancien matcher (catalogue statique) ─────────────────────────────────────
-// Conservé pour rollback via USE_HYBRID_MATCHING=false
+// ── Matcher des additions (nets-new) → catalogue ────────────────────────────
+// ACTIF : appelé par analyzeRender (pipeline) pour matcher les meubles ajoutés
+// par la génération. Le catalogue mocké statique étant vide (WoZ), les vrais
+// matchs viennent du catalogue partenaire (partnerMatch) ; cette fonction gère
+// surtout la résolution de catégorie et les items non matchés.
 export function matchAlterationsToCatalog(
   alterations: Alteration[],
   styleId: string | null,
@@ -301,29 +304,3 @@ export function matchAlterationsToCatalog(
   return mergeShoppingItems(items);
 }
 
-// ── Eco advice ───────────────────────────────────────────────────────────────
-const RSE_ADVICE: Partial<Record<CatalogCategory, string>> = {
-  floor_material: "Alternative durable : béton ciré sur chape existante = moins de déchets de chantier.",
-  paint: "Optez pour une peinture à l'eau labellisée NF Environnement — VOC réduits, moins de pollution intérieure.",
-  mouldings: "Les moulures en MDF recyclé sont plus légères et génèrent moins de déchets que le bois massif.",
-};
-
-export function getEcoAdvice(category: CatalogCategory): string | null {
-  return RSE_ADVICE[category] ?? null;
-}
-
-// ── Score Foyer (inchangé) ───────────────────────────────────────────────────
-export function computeScoreFoyer(
-  alterations: Alteration[],
-  shoppingList: ShoppingItem[],
-): ScoreFoyer {
-  const kept = alterations.filter((a) => a.shoppingImpact === "none").length;
-  const secondhand = shoppingList.filter((i) => i.source === "secondhand").length;
-  const ecoNew = shoppingList.filter((i) => i.source !== "secondhand" && i.merchants.length > 0).length;
-  const co2SavedKg = kept * 30 + secondhand * 20 + ecoNew * 5;
-  const totalEstimated = shoppingList.reduce(
-    (sum, item) => sum + ((item.priceMin + item.priceMax) / 2) * (item.quantity ?? 1),
-    0,
-  );
-  return { kept, secondhand, ecoNew, co2SavedKg, totalEstimated };
-}

@@ -1,12 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
+import { safeEqual } from "@/lib/security/compare";
 
 const ADMIN_COOKIE = "admin_session";
 
 function isAdminAuthenticated(req: NextRequest): boolean {
   const cookie = req.cookies.get(ADMIN_COOKIE);
   const token = process.env.ADMIN_SESSION_TOKEN;
-  return !!token && !!cookie && cookie.value === token;
+  return !!token && !!cookie && safeEqual(cookie.value, token);
 }
 
 export async function middleware(req: NextRequest) {

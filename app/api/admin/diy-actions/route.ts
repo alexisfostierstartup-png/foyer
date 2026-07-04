@@ -23,11 +23,30 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ actions: data });
 }
 
+// Champs insérables (aligné sur la whitelist du PATCH [id] + slug à la création).
+// Évite le mass-assignment (colonnes internes id/created_at/… non écrasables).
+const INSERTABLE_FIELDS = [
+  "slug", "label", "label_en", "applies_to_categories",
+  "requires", "excludes", "qty_formula", "qty_unit",
+  "style_affinity", "supplies_template", "is_active",
+];
+
 export async function POST(request: NextRequest) {
-  const body = await request.json();
+  const body = (await request.json()) as Record<string, unknown>;
+  const row: Record<string, unknown> = {};
+  for (const key of INSERTABLE_FIELDS) {
+    if (key in body) row[key] = body[key];
+  }
+  if (!row.slug) {
+    return NextResponse.json({ error: "slug requis" }, { status: 400 });
+  }
+
   const { data, error } = await createSupabaseAdmin()
     .from("diy_actions")
-    .insert(body)
+    // row est filtré par INSERTABLE_FIELDS + slug garanti ci-dessus ; cast car le
+    // type d'insert généré exige des champs que la whitelist rend optionnels.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .insert(row as any)
     .select()
     .single();
 

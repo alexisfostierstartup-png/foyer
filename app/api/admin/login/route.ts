@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { safeEqual } from "@/lib/security/compare";
 
 export async function POST(req: NextRequest) {
   const { password } = (await req.json()) as { password: string };
 
-  if (!password || password !== process.env.ADMIN_PASSWORD) {
+  if (!password || !safeEqual(password, process.env.ADMIN_PASSWORD)) {
     return NextResponse.json({ error: "Invalid password" }, { status: 401 });
   }
 

@@ -32,7 +32,7 @@ import type { ElementProfile, ElementDecision, DiyAction } from "@/lib/diy/types
 // que le rendu ou les décisions changent, pour que la liste soit recalculée sur
 // l'état courant (sinon elle reste figée : ex. matériel DIY sur une table déjà
 // remplacée, ou liste basée sur un rendu antérieur à l'itération).
-const CLEAR_FINALIZE: Partial<Project> = {
+export const CLEAR_FINALIZE: Partial<Project> = {
   applicationAudit: undefined,
   reconciledPlan: undefined,
   builtShoppingList: undefined,

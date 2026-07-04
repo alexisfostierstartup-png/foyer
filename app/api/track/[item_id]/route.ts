@@ -1,12 +1,27 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 
+// Anti open-redirect : n'accepte qu'une URL http(s) absolue et externe. Bloque
+// javascript:/data:/relatif et le protocol-relative (//evil). L'URL résolue en
+// base (affiliate_url/product_url) reste prioritaire ; `dest` n'est qu'un repli.
+function safeExternalUrl(raw: string | null): string | null {
+  if (!raw) return null;
+  let u: URL;
+  try {
+    u = new URL(raw);
+  } catch {
+    return null;
+  }
+  if (u.protocol !== "http:" && u.protocol !== "https:") return null;
+  return u.toString();
+}
+
 export async function GET(
   req: Request,
   ctx: { params: Promise<{ item_id: string }> },
 ) {
   const { item_id } = await ctx.params;
-  const dest = new URL(req.url).searchParams.get("dest");
+  const dest = safeExternalUrl(new URL(req.url).searchParams.get("dest"));
 
   let redirectUrl = dest ?? "/";
 
