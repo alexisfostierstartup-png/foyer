@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { checkAndConsumeCredit } from "@/lib/auth/actions";
 import { logPipelineError } from "@/lib/ai/logger";
 import { PAYWALL_DISABLED } from "@/lib/constants";
+import { getClientIp, checkRateLimit, RATE_LIMITED_BODY } from "@/lib/security/rateLimit";
 
 export const maxDuration = 90;
 
@@ -12,6 +13,11 @@ export async function POST(
   ctx: { params: Promise<{ id: string }> },
 ) {
   const { id } = await ctx.params;
+
+  // Rate limit par IP : 3 générations d'image par appel.
+  if (!(await checkRateLimit(getClientIp(request), "generate", 12))) {
+    return NextResponse.json(RATE_LIMITED_BODY, { status: 429 });
+  }
 
   // Même garde-fou crédits que /generate (1 appel image).
   const supabase = await createClient();

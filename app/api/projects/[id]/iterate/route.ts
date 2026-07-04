@@ -1,6 +1,7 @@
 import { NextResponse, after } from "next/server";
 import { precomputeFinalAssets, runIterationPipeline } from "@/lib/ai/pipeline";
 import { logPipelineError } from "@/lib/ai/logger";
+import { getClientIp, checkRateLimit, RATE_LIMITED_BODY } from "@/lib/security/rateLimit";
 
 export const maxDuration = 90;
 
@@ -9,6 +10,13 @@ export async function POST(
   ctx: { params: Promise<{ id: string }> },
 ) {
   const { id } = await ctx.params;
+
+  // Rate limit par IP : les itérations déclenchent une génération d'image (coût
+  // Gemini) et la route n'a pas d'auth → seul garde-fou anti-abus anonyme.
+  if (!(await checkRateLimit(getClientIp(request), "iterate", 25))) {
+    return NextResponse.json(RATE_LIMITED_BODY, { status: 429 });
+  }
+
   const { userRequest } = (await request.json()) as { userRequest: string };
 
   if (!userRequest?.trim()) {

@@ -7,6 +7,7 @@ import { saveSourceImage } from "@/lib/ai/saveRender";
 import { MAX_UPLOAD_BYTES, UPLOAD_MAX_DIMENSION } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 import { getRoomTypes } from "@/lib/db/assets";
+import { getClientIp, checkRateLimit, RATE_LIMITED_BODY } from "@/lib/security/rateLimit";
 import type { RoomType } from "@/lib/types";
 
 // La réponse est rapide, mais la détection anticipée déclenchée via after()
@@ -22,6 +23,11 @@ const ACCEPTED_TYPES = new Set([
 ]);
 
 export async function POST(request: NextRequest) {
+  // Rate limit par IP : l'upload crée un projet + déclenche la détection Gemini.
+  if (!(await checkRateLimit(getClientIp(request), "upload", 40))) {
+    return NextResponse.json(RATE_LIMITED_BODY, { status: 429 });
+  }
+
   let formData: FormData;
   try {
     formData = await request.formData();

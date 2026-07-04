@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { checkAndConsumeCredit } from "@/lib/auth/actions";
 import { logPipelineError } from "@/lib/ai/logger";
 import { PAYWALL_DISABLED } from "@/lib/constants";
+import { getClientIp, checkRateLimit, RATE_LIMITED_BODY } from "@/lib/security/rateLimit";
 
 export const maxDuration = 90;
 
@@ -34,6 +35,12 @@ export async function POST(
   ctx: { params: Promise<{ id: string }> },
 ) {
   const { id } = await ctx.params;
+
+  // Rate limit par IP : garde-fou anti-abus de génération (coût Gemini) pour les
+  // requêtes non authentifiées, en complément du gating crédit.
+  if (!(await checkRateLimit(getClientIp(request), "generate", 20))) {
+    return NextResponse.json(RATE_LIMITED_BODY, { status: 429 });
+  }
 
   // Credit check
   const supabase = await createClient();
