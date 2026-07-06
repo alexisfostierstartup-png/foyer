@@ -146,6 +146,9 @@ export type Project = {
   selectedStyleId: string | null;
   generatedRenderUrl: string | null;
   firstRenderUrl?: string;
+  // Rendu EXPERT : la disposition choisie régénérée avec les VRAIS produits du
+  // catalogue (gros meubles) intégrés (flux /expert-create).
+  expertRenderUrl?: string | null;
   // "3 dispositions" : 3 rendus distincts (feature experts), parmi lesquels le
   // user en choisit un (qui devient generatedRenderUrl).
   dispositionsRenderUrls?: string[];
