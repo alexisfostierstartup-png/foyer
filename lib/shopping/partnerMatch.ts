@@ -19,7 +19,6 @@ import {
   MATCH_BLEND_ALPHA,
   MATCH_MIN_SIMILARITY,
   MATCH_COLOR_FAMILY_RESTRICT,
-  MATCH_COLOR_FAMILY_MIN_WEIGHT,
 } from "@/lib/constants";
 import {
   getMatchingWeights,
@@ -27,7 +26,7 @@ import {
   DEFAULT_WEIGHTS,
   type MatchingWeights,
 } from "./matchingConfig";
-import { hexToLab, deltaE, colorFamiliesQuery } from "@/lib/color";
+import { colorFamiliesQuery } from "@/lib/color";
 import { structuredScoreForCategory, wEffForCoverage } from "./attributeScore";
 import type { ProductMatch } from "@/lib/types";
 
@@ -137,28 +136,6 @@ function mapRowBlend(r: any): ProductMatch {
 
 // Re-ranking COULEUR (hex/ΔE) : bonus/malus selon la proximité perceptuelle entre la
 // couleur de l'ÉLÉMENT (lue par Gemini sur le rendu) et celle du PRODUIT. Pas un match
-// exact : latitude réglable (threshold). colorScore∈[0,1] → bonus = w·(2·score−1) ∈ [−w,+w].
-// Couleur inconnue (produit ou élément) → pas de bonus (neutre). Mute le score affiché.
-function applyColorRerank(
-  matches: ProductMatch[],
-  elementHex: string | null | undefined,
-  weights: MatchingWeights,
-): ProductMatch[] {
-  const w = weights.color.weight;
-  const eLab = elementHex ? hexToLab(elementHex) : null;
-  if (!eLab || w <= 0) return matches;
-  for (const m of matches) {
-    const pLab = m.colorHex ? hexToLab(m.colorHex) : null;
-    if (!pLab) continue;
-    const dE = deltaE(eLab, pLab);
-    m.colorDeltaE = Math.round(dE * 10) / 10;
-    const colorScore = Math.max(0, 1 - dE / weights.color.threshold);
-    const bonus = w * (2 * colorScore - 1);
-    m.similarity = Math.max(0, Math.min(1, Math.round((m.similarity + bonus) * 1000) / 1000));
-  }
-  return matches.sort((a, b) => b.similarity - a.similarity);
-}
-
 // SCORE RÉFERENTIEL (Étape 2, formule Notion) : remplace le blend+bonus additifs par la
 // combinaison pondérée  final = cos(image) · w_eff + texte_structuré · (1 − w_eff).
 //  - texte_structuré = score d'attrs V3 (couleur conditionnelle + motif + forme…) ; si aucun
@@ -212,13 +189,15 @@ async function rpcBlend(
 ): Promise<ProductMatch[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = createSupabaseAdmin() as any;
-  // Pré-filtre couleur (RÉVERSIBLE via MATCH_COLOR_FAMILY_RESTRICT). On bascule sur blend_v2
-  // (filtre par familles de couleur, tolérant) UNIQUEMENT si : flag actif ET catégorie où la
-  // couleur discrimine déjà (poids couleur ≥ seuil) ET couleur de l'élément connue. Sinon →
-  // v1 strictement inchangée (flag à 0 = prod identique). Familles dérivées du hex (pur calcul).
+  // Pré-filtre couleur = GARDE-FOU (un rendu bleu ne doit JAMAIS matcher du rouge, quelle que
+  // soit la catégorie). On bascule sur blend_v2 (filtre par familles, tolérant) dès que le flag
+  // est actif ET la couleur de l'élément connue — SANS bridage par poids (le poids ne gouverne
+  // plus que le RANKING fin via les attrs, pas le garde-fou). Réversible via
+  // MATCH_COLOR_FAMILY_RESTRICT=0 (flag à 0 = prod v1 identique). Les familles restent STRICTES
+  // (seule l'adjacence de frontière ±12° de colorFamiliesQuery s'applique) → bleu marine (bleu
+  // profond) n'entre pas dans le pool d'un rendu vert. Familles dérivées du hex (pur calcul).
   const useColorRestrict =
     MATCH_COLOR_FAMILY_RESTRICT === 1 &&
-    weights.color.weight >= MATCH_COLOR_FAMILY_MIN_WEIGHT &&
     !!elementHex;
   const renderFamilies = useColorRestrict ? colorFamiliesQuery(elementHex) : [];
   const useV2 = renderFamilies.length > 0;
@@ -322,6 +301,10 @@ export async function matchPartnerProductsBlendBatch(
       const cat = cats[i];
       const desc = descByIdx.get(i);
       if (!cat || !desc) return [];
+      // Le SOL est re-matché à part par matchFloorProductsBlend (filtre matériau) dans le
+      // pipeline, qui ÉCRASE ces matches → inutile de le calculer ici (économise 1 embedding
+      // crop + 1 RPC par sol).
+      if (cat === "floor") return [];
       const weights = weightsByCat.get(cat) ?? DEFAULT_WEIGHTS;
       // pool large pour laisser le re-score structuré + la couleur repêcher un bon produit
       // hors top-N blend. On NE filtre PLUS par seuil ici (le neuf doit toujours sortir).
@@ -368,9 +351,11 @@ export async function matchFloorProductsBlend(
   // calcule structScore + le final référentiel image·w + struct·(1−w). La couleur est déjà
   // l'attribut 'color' (poids 30) du schéma floor_material → plus besoin du color-rerank séparé
   // (qui double-comptait la couleur). Le filtre MATÉRIAU dur reste appliqué AVANT.
-  const flagged = flagOrFilterByThreshold(filtered.length > 0 ? filtered : pool, weights);
-  const scored = await applyReferentialScore(flagged, "floor", attrs);
-  return scored.slice(0, topN);
+  // SCORE référentiel D'ABORD (il réécrit similarity), PUIS flag/filtre sur le score final —
+  // sinon belowThreshold serait calculé sur un score périmé (l'ordre inverse était un bug).
+  const scored = await applyReferentialScore(filtered.length > 0 ? filtered : pool, "floor", attrs);
+  const flagged = flagOrFilterByThreshold(scored, weights);
+  return flagged.slice(0, topN);
 }
 
 /** Batch : UN seul appel Jina (toutes les descriptions shoppables), puis RPC en parallèle. */

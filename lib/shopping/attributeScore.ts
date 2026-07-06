@@ -65,9 +65,12 @@ export const ATTR_WEIGHTS: Record<string, Record<string, number>> = {
   // matériau dur le gère déjà en amont.
   floor_material: { color: 45, type: 35, pattern: 15, finish: 5 },
   floor_lamp: { structure: 25, shade_type: 25, base_shape: 15, base_finish: 20, color: 15 },
-  pendant_lamp: { shape: 35, shade_material: 25, color: 25, finish: 15 },
+  // number_of_bulbs (1 vs 3 vs 4+) et mount (suspendu vs plafonnier) sont très discriminants
+  // pour un luminaire → scorés. (legs_color / fixation_color restent hors scoring : bruités.)
+  pendant_lamp: { shape: 28, shade_material: 20, color: 22, finish: 10, number_of_bulbs: 12, mount: 8 },
   sideboard: { shape: 30, color: 20, material: 20, front: 20, legs: 10 },
-  dining_table: { shape: 30, top_material: 20, top_color: 15, legs_type: 20, legs_material: 15 },
+  // number_of_people (2/4/6/8+) estime la taille : une 8-places ≠ une 2-places → discriminant.
+  dining_table: { shape: 28, top_material: 18, top_color: 14, legs_type: 18, legs_material: 12, number_of_people: 10 },
   mouldings: { shape: 70 }, // width (number, 30) omis : non extractible du rendu
   batten: { shape: 30 }, // width (number, 70) omis : non extractible du rendu
   default: { color: 45, material: 30, shape: 25 },
