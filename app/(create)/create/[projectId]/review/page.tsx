@@ -6,10 +6,15 @@ import type { ElementDecision } from "@/lib/diy/types";
 
 export default async function ReviewPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ projectId: string }>;
+  searchParams: Promise<{ vres?: string }>;
 }) {
   const { projectId } = await params;
+  // ?vres=medium|high → A/B de la résolution du verdict (perf). Défaut : non fourni.
+  const { vres } = await searchParams;
+  const verdictRes = vres === "medium" || vres === "high" ? vres : undefined;
 
   const project = await getProject(projectId);
   if (!project) redirect("/create");
@@ -31,6 +36,7 @@ export default async function ReviewPage({
       initialDecisions={(project.element_decisions as ElementDecision[] | undefined) ?? null}
       allowedByCategory={Object.fromEntries(allowedByCategory)}
       familyByCategory={familyByCategory}
+      verdictRes={verdictRes}
     />
   );
 }

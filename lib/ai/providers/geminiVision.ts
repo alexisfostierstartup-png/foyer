@@ -38,8 +38,11 @@ export class GeminiVisionProvider implements VisionProvider {
             // nuances de couleur subtiles comme blanc→beige).
             temperature: 0,
             // chaîne littérale (et non l'enum) pour éviter tout souci de
-            // résolution de l'enum dans le bundle Next/Turbopack.
-            mediaResolution: "MEDIA_RESOLUTION_HIGH" as MediaResolution,
+            // résolution de l'enum dans le bundle Next/Turbopack. MEDIUM = plus
+            // rapide (moins de tokens image) quand le détail fin n'est pas requis.
+            mediaResolution: (opts?.mediaResolution === "medium"
+              ? "MEDIA_RESOLUTION_MEDIUM"
+              : "MEDIA_RESOLUTION_HIGH") as MediaResolution,
           },
         }),
       { label: `vision ${model}` },

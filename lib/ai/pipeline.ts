@@ -397,7 +397,17 @@ export function precomputeDetection(projectId: string): void {
     );
 }
 
-export async function runAnalysisPipeline(projectId: string): Promise<void> {
+// Résolution du verdict (2e appel vision). Défaut : env VERDICT_MEDIA_RESOLUTION
+// (high|medium), sinon "high". La route /analyze peut la surcharger par requête
+// (?vres=medium) pour A/B tester HIGH vs MEDIUM sans redéploiement.
+export function defaultVerdictResolution(): "high" | "medium" {
+  return process.env.VERDICT_MEDIA_RESOLUTION === "medium" ? "medium" : "high";
+}
+
+export async function runAnalysisPipeline(
+  projectId: string,
+  opts?: { verdictResolution?: "high" | "medium" },
+): Promise<void> {
   const project = await getProject(projectId);
   if (!project) throw new Error(`Project not found: ${projectId}`);
   if (!project.basePhotoUrl || !project.selectedStyleId) {
@@ -474,9 +484,12 @@ export async function runAnalysisPipeline(projectId: string): Promise<void> {
       provider: verdictPrompt.prompt.provider,
       requestPayload: { promptName: "verdict_elements", prompt: verdictPrompt.resolvedTemplate.slice(0, 5000) },
     },
-    () => getVisionProvider(verdictPrompt.prompt.provider).analyze(verdictPrompt.resolvedTemplate, [sourceImage]),
+    () =>
+      getVisionProvider(verdictPrompt.prompt.provider).analyze(verdictPrompt.resolvedTemplate, [sourceImage], {
+        mediaResolution: opts?.verdictResolution ?? defaultVerdictResolution(),
+      }),
   );
-  console.log(`[pipeline:analyze] verdict: ${Date.now() - tVerdict}ms`);
+  console.log(`[pipeline:analyze] verdict: ${Date.now() - tVerdict}ms (res=${opts?.verdictResolution ?? defaultVerdictResolution()})`);
   await logPipelineEvent({
     project_id: projectId,
     event: "detection",

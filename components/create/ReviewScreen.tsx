@@ -46,9 +46,11 @@ type Props = {
   initialDecisions?: ElementDecision[] | null;
   allowedByCategory?: Record<string, Array<"keep" | "customize" | "replace">>;
   familyByCategory?: Record<string, string>;
+  /** ?vres=medium|high propagé depuis l'URL → surcharge la résolution du verdict. */
+  verdictRes?: "medium" | "high";
 };
 
-export function ReviewScreen({ projectId, initialDecisions, allowedByCategory, familyByCategory }: Props) {
+export function ReviewScreen({ projectId, initialDecisions, allowedByCategory, familyByCategory, verdictRes }: Props) {
   const router = useRouter();
   const [decisions, setDecisions] = useState<ElementDecision[]>(
     initialDecisions ?? [],
@@ -65,9 +67,10 @@ export function ReviewScreen({ projectId, initialDecisions, allowedByCategory, f
     (async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/projects/${projectId}/analyze`, {
-          method: "POST",
-        });
+        const res = await fetch(
+          `/api/projects/${projectId}/analyze${verdictRes ? `?vres=${verdictRes}` : ""}`,
+          { method: "POST" },
+        );
         if (!res.ok) {
           const body = await res.json().catch(() => ({})) as { error?: string };
           throw new Error(body.error ?? "Analyse échouée");

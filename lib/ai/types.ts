@@ -50,6 +50,10 @@ export type VisionOptions = {
   /** Surcharge le modèle pour cet appel (ex: "gemini-2.5-flash" pour une
    *  confirmation visuelle exigeante). Défaut: le modèle du provider. */
   model?: string;
+  /** Résolution d'analyse image. "high" (défaut) = MEDIA_RESOLUTION_HIGH (détaillé
+   *  mais plus lent) ; "medium" = plus rapide, suffisant quand les éléments sont
+   *  déjà décrits en texte (ex. verdict). */
+  mediaResolution?: "high" | "medium";
 };
 
 export interface VisionProvider {

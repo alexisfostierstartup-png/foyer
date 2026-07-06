@@ -17,8 +17,12 @@ export async function POST(
     return NextResponse.json(RATE_LIMITED_BODY, { status: 429 });
   }
 
+  // ?vres=medium|high → surcharge la résolution du verdict (A/B perf). Sinon défaut env.
+  const vres = _request.nextUrl.searchParams.get("vres");
+  const verdictResolution = vres === "medium" ? "medium" : vres === "high" ? "high" : undefined;
+
   try {
-    await runAnalysisPipeline(id);
+    await runAnalysisPipeline(id, { verdictResolution });
     return NextResponse.json({ ok: true, projectId: id });
   } catch (err) {
     console.error("[analyze] pipeline error:", err);
