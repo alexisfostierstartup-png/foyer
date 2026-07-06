@@ -696,10 +696,14 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
 // architectural type "mur", "coin", "fenêtre") : citer l'archi poussait le modèle
 // à déplacer l'escalier / inventer une fenêtre. La coquille reste verrouillée par
 // les règles + le compte exact du prompt.
+// Les briefs décrivent UNIQUEMENT l'agencement, JAMAIS des meubles précis : nommer
+// « sofa/coffee table » mettait un salon dans une chambre. Le mobilier vient de
+// {{roomType}} + {{furnitureDefaults}} du prompt. On évite aussi « ouvert / open up /
+// airy » que le modèle image interprète comme des modifications d'architecture.
 const DISPOSITION_BRIEFS = [
-  "Layout 1 — convivial : group the seating closely around the coffee table, sofa and armchair facing each other for an intimate conversation area.",
-  "Layout 2 — ouvert : orient the main sofa toward the brightest part of the room and float the seating slightly away from the walls to open up the central circulation.",
-  "Layout 3 — aéré : spread the furniture out for an open, airy feel — generous spacing and circulation, seating loosely arranged across the room.",
+  "Layout 1 — centré: gather this room's main furniture into a close, functional grouping around its natural focal point, keeping clear circulation around it. Only the movable furniture placement changes.",
+  "Layout 2 — le long des murs: place the largest piece against the longest solid wall and arrange the other pieces to keep a wide, clear central walkway. Only the movable furniture placement changes; the room, its walls and openings stay identical.",
+  "Layout 3 — espacé: spread the movable furniture with generous spacing for easy circulation, pieces set mostly along the walls to leave the centre free. Only the furniture placement changes; do not alter the room itself.",
 ];
 
 /**
