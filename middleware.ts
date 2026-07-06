@@ -71,6 +71,15 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/auth?tab=signin", req.url));
   }
 
+  // Flag debug perf : ?vres=medium|high posé n'importe où dans le flux devient
+  // COLLANT (cookie) → survit aux redirections upload→style→review. La route
+  // /analyze lit ce cookie (le query param direct reste prioritaire). ?vres=high
+  // remet HIGH. Cookie de session (pas de maxAge).
+  const vres = req.nextUrl.searchParams.get("vres");
+  if (vres === "medium" || vres === "high") {
+    response.cookies.set("foyer_vres", vres, { sameSite: "lax", path: "/" });
+  }
+
   return response;
 }
 

@@ -17,8 +17,11 @@ export async function POST(
     return NextResponse.json(RATE_LIMITED_BODY, { status: 429 });
   }
 
-  // ?vres=medium|high → surcharge la résolution du verdict (A/B perf). Sinon défaut env.
-  const vres = _request.nextUrl.searchParams.get("vres");
+  // Résolution verdict (A/B perf) : query param direct, sinon cookie collant
+  // foyer_vres (posé par le middleware quand ?vres=… est vu dans le flux), sinon
+  // défaut env. Query > cookie > env.
+  const vres =
+    _request.nextUrl.searchParams.get("vres") ?? _request.cookies.get("foyer_vres")?.value;
   const verdictResolution = vres === "medium" ? "medium" : vres === "high" ? "high" : undefined;
 
   try {
