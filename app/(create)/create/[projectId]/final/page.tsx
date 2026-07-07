@@ -27,11 +27,17 @@ export default async function FinalPage({
     after(() => precomputeFinalAssets(projectId, "final-page"));
   }
 
+  // Expert : la liste de courses montre le rendu RÉEL (produits intégrés), pas le fictif.
+  const displayRenderUrl =
+    project.mode === "expert" && project.expertRenderUrl
+      ? project.expertRenderUrl
+      : project.generatedRenderUrl!;
+
   return (
     <FinalScreen
       projectId={projectId}
       beforeUrl={project.basePhotoUrl}
-      afterUrl={project.generatedRenderUrl!}
+      afterUrl={displayRenderUrl}
       shoppingList={project.shoppingList ?? []}
       scoreFoyer={project.scoreFoyer}
       visionOutput={project.visionOutput}

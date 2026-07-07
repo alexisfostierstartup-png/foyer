@@ -20,12 +20,9 @@ type Props = {
   beforeUrl: string;
   afterUrl: string;
   roomType: RoomType;
-  // Flux expert : le terminal "J'adore" mène au rendu expert (loop supplémentaire)
-  // au lieu de la liste shopping standard.
-  expert?: boolean;
 };
 
-export function RenderScreen({ projectId, beforeUrl, afterUrl, roomType, expert = false }: Props) {
+export function RenderScreen({ projectId, beforeUrl, afterUrl, roomType }: Props) {
   const router = useRouter();
   const { user, profile } = useUser();
   const [navigating, setNavigating] = useState<"final" | "iterate" | null>(null);
@@ -35,11 +32,7 @@ export function RenderScreen({ projectId, beforeUrl, afterUrl, roomType, expert 
   function go(dest: "final" | "iterate") {
     setNavigating(dest);
     router.push(
-      dest === "final"
-        ? expert
-          ? `/create/${projectId}/expert`
-          : `/create/${projectId}/final`
-        : `/create/${projectId}/iterate`,
+      dest === "final" ? `/create/${projectId}/final` : `/create/${projectId}/iterate`,
     );
   }
 

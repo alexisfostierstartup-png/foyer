@@ -367,4 +367,33 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
   return url;
 }
 
+/**
+ * Itération EXPERT (sol / peinture) : on édite le RENDU RÉEL (expertRenderUrl),
+ * pas le rendu fictif. On applique UNIQUEMENT la demande user (ex. « sol en
+ * parquet chêne clair », « murs bleu canard ») en préservant tout le reste
+ * (meubles intégrés, agencement, architecture). Self-contained : ne touche pas
+ * au matching du rendu fictif. Sol/peinture sont hors-scope du rendu expert
+ * (CUSTOMIZE_EXCLUDE) → c'est ICI qu'on les applique, par-dessus.
+ */
+export async function runExpertIteration(projectId: string, userRequest: string): Promise<string> {
+  const project = await getProject(projectId);
+  if (!project) throw new Error(`Project not found: ${projectId}`);
+  const parentUrl = project.expertRenderUrl;
+  if (!parentUrl) throw new Error("Pas de rendu expert à affiner.");
+
+  const prompt =
+    `Apply ONLY the following change to this room photo: ${userRequest}. ` +
+    `Keep EVERYTHING ELSE exactly as it is — all furniture and its exact positions, all decor, ` +
+    `the layout, the windows, doors, ceiling, lighting, and the SAME camera angle and framing. ` +
+    `Only change what the request explicitly asks (e.g. the floor or the wall paint). Preserve the ` +
+    `exact perspective and a photorealistic look with natural lighting and contact shadows.`;
+
+  const { buffer, mimeType } = await callNb2(prompt, [await toDataUri(parentUrl)]);
+  const n = (project.iterationCount ?? 0) + 1;
+  const url = await saveRender(buffer, project.storageFolder, mimeType, `iterate_${n}`);
+  await updateProject(projectId, { expertRenderUrl: url, iterationCount: n });
+  console.log(`[expert] ${projectId} : itération expert #${n} sauvegardée`);
+  return url;
+}
+
 export { EXPERT_CATEGORIES, selectExpertPieces };

@@ -13,10 +13,16 @@ export default async function IteratePage({
   if (!project) redirect("/create");
   if (!project.generatedRenderUrl) redirect(`/create/${projectId}`);
 
+  // Expert : on itère sur le rendu RÉEL (produits intégrés), pas le fictif.
+  const isExpert = project.mode === "expert";
+  const currentRenderUrl =
+    isExpert && project.expertRenderUrl ? project.expertRenderUrl : project.generatedRenderUrl;
+
   return (
     <IterateScreen
       projectId={projectId}
-      currentRenderUrl={project.generatedRenderUrl}
+      currentRenderUrl={currentRenderUrl}
+      expert={isExpert}
     />
   );
 }

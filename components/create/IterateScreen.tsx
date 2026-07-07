@@ -59,9 +59,9 @@ function buildUserRequest(
   return parts.join(". ");
 }
 
-type Props = { projectId: string; currentRenderUrl: string };
+type Props = { projectId: string; currentRenderUrl: string; expert?: boolean };
 
-export function IterateScreen({ projectId, currentRenderUrl }: Props) {
+export function IterateScreen({ projectId, currentRenderUrl, expert = false }: Props) {
   const router = useRouter();
   const [openCat, setOpenCat] = useState<string | null>(null);
   const [selections, setSelections] = useState<Record<string, string[]>>({});
@@ -96,7 +96,8 @@ export function IterateScreen({ projectId, currentRenderUrl }: Props) {
         setLoading(false);
         return;
       }
-      router.push(`/create/${projectId}/final`);
+      // Expert : on revient au rendu RÉEL (mis à jour) ; standard : liste shopping.
+      router.push(expert ? `/create/${projectId}/expert` : `/create/${projectId}/final`);
     } catch {
       toast.error("L'itération a échoué. Réessayez.");
       setLoading(false);

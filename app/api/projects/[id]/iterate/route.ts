@@ -1,5 +1,7 @@
 import { NextResponse, after } from "next/server";
 import { precomputeFinalAssets, runIterationPipeline } from "@/lib/ai/pipeline";
+import { runExpertIteration } from "@/lib/ai/expert";
+import { getProject } from "@/lib/storage/projects";
 import { logPipelineError } from "@/lib/ai/logger";
 import { getClientIp, checkRateLimit, RATE_LIMITED_BODY } from "@/lib/security/rateLimit";
 
@@ -24,6 +26,15 @@ export async function POST(
   }
 
   try {
+    // Flux expert : on itère (sol/peinture) sur le RENDU RÉEL (expertRenderUrl),
+    // pas le fictif — et la shopping list étant pilotée par les décisions, pas de
+    // recompute matching (qui repartirait du rendu fictif).
+    const project = await getProject(id);
+    if (project?.mode === "expert") {
+      await runExpertIteration(id, userRequest.trim());
+      return NextResponse.json({ ok: true, projectId: id });
+    }
+
     await runIterationPipeline(id, userRequest.trim());
     // Recalcul shopping en fond sur le nouveau rendu (levier perf 1). Une itération
     // suivante déclenche son propre calcul ; l'ancien ne persiste pas (anti-staleness).

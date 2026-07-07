@@ -76,6 +76,25 @@ ex. `fal-ai/birefnet`) avant le swap. Le catalogue a un mix des deux types d'ima
 prompts sur-blindés (fights the image) ; 6+ références d'un coup sur le vieux modèle ; Seedream
 / FLUX Kontext en pleine image (recomposent la pièce, look IA, produit approximatif).
 
+## Flux UX (2026-07-07) : le fake n'est plus montré
+
+`import photo → style → RENDU RÉEL direct → 2 options`. Le rendu fictif (« fake ») est
+toujours généré (il pilote le matching → décisions/shopping) mais **jamais affiché** : à la fin
+de la génération, `app/(create)/create/[projectId]/page.tsx` **redirige le mode expert vers
+`/expert`** (au lieu du `RenderScreen` qui montrait le fake). L'`ExpertScreen` affiche :
+- le **rendu réel** en grand ; **le fake au SURVOL** (ou maintien tactile, bouton « Voir le rendu
+  IA ») pour visualiser la dérive ; pendant la génération, on montre la **photo de base** (jamais
+  le fake par défaut).
+- les vrais produits intégrés (mini-liste).
+- **2 options** : « Ma liste de courses » (→ `/final`, montre aussi le rendu réel) et « Affiner le
+  sol ou la peinture » (→ `/iterate`).
+
+**Itération expert** (`runExpertIteration`, `lib/ai/expert.ts`) : l'API `/iterate` est mode-aware
+→ en expert elle édite le **rendu RÉEL** (`expertRenderUrl`), pas le fictif, applique la demande
+(sol/peinture — justement hors-scope du rendu expert, donc appliqués ICI par-dessus) en gardant
+meubles + agencement, et revient sur `/expert`. Pas de recompute matching (shopping = décisions).
+Validé end-to-end : rendu réel puis « sol parquet foncé » → sol changé, meubles préservés.
+
 ## Le flux `/expert-create` (implémenté)
 
 Vrai flux **alternatif** (route séparée, pas un bouton en fin de flux standard). Même UploadForm

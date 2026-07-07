@@ -33,7 +33,8 @@ export default async function ExpertPage({
   return (
     <ExpertScreen
       projectId={projectId}
-      beforeUrl={project.basePhotoUrl}
+      basePhotoUrl={project.basePhotoUrl}
+      fakeUrl={project.generatedRenderUrl}
       initialExpertUrl={project.expertRenderUrl}
       products={pieces.map((p) => ({ category: p.category, name: p.name, imageUrl: p.imageUrl }))}
     />
