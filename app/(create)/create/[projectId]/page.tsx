@@ -19,6 +19,7 @@ export default async function ProjectPage({
       beforeUrl={project.basePhotoUrl}
       afterUrl={project.generatedRenderUrl}
       roomType={project.roomType}
+      expert={project.mode === "expert"}
     />
   );
 }

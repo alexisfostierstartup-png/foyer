@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ExternalLink, Pencil, Link2, Star, RefreshCw, Sparkles } from "lucide-react";
+import { ExternalLink, Pencil, Link2, Star, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { ProgressBar } from "@/components/create/ProgressBar";
 import { BeforeAfterSlider } from "@/components/create/BeforeAfterSlider";
@@ -504,12 +504,6 @@ export function FinalScreen({
 
           {/* Actions */}
           <div className="mt-8 flex flex-col gap-3">
-            <Link
-              href={`/create/${projectId}/expert`}
-              className="flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-foyer-ink font-medium text-white transition-all hover:-translate-y-0.5"
-            >
-              <Sparkles className="size-4" aria-hidden /> Rendu expert — avec les vrais meubles
-            </Link>
             <Link
               href={`/create/${projectId}/iterate`}
               className="flex h-[52px] w-full items-center justify-center rounded-full border border-foyer-border font-medium text-foyer-ink transition-colors hover:bg-foyer-border/30"

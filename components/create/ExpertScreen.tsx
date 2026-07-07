@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2, Sparkles, ArrowLeft } from "lucide-react";
@@ -20,6 +20,16 @@ export function ExpertScreen({ projectId, beforeUrl, initialExpertUrl, products 
   const router = useRouter();
   const [expertUrl, setExpertUrl] = useState<string | null>(initialExpertUrl ?? null);
   const [loading, setLoading] = useState(false);
+  const startedRef = useRef(false);
+
+  // Loop expert : dès l'arrivée, on génère automatiquement (sauf si déjà fait ou
+  // s'il n'y a aucun gros meuble à intégrer).
+  useEffect(() => {
+    if (startedRef.current || expertUrl || products.length === 0) return;
+    startedRef.current = true;
+    void generate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function generate() {
     setLoading(true);

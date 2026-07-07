@@ -1,8 +1,16 @@
-import { redirect } from "next/navigation";
+import { getFloorPresets, getRoomTypes } from "@/lib/db/assets";
+import { UploadForm } from "@/components/create/UploadForm";
 
-// Entrée du flux expert. Le rendu expert reprend une disposition existante (il faut
-// d'abord une pièce + un rendu), donc on démarre le parcours standard ; le rendu
-// expert est proposé en fin de parcours (écran final → "Rendu expert").
-export default function ExpertCreatePage() {
-  redirect("/create");
+export const dynamic = "force-dynamic";
+
+// Flux EXPERT : même parcours UI/UX que /create (upload → style → review →
+// rendu), mais le projet est marqué "expert" → le terminal ajoute le loop de
+// rendu avec les vrais meubles du catalogue.
+export default async function ExpertCreatePage() {
+  const [floorPresets, roomTypes] = await Promise.all([
+    getFloorPresets(),
+    getRoomTypes(),
+  ]);
+
+  return <UploadForm floorPresets={floorPresets} roomTypes={roomTypes} expert />;
 }

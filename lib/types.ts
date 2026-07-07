@@ -144,6 +144,9 @@ export type Project = {
   roomType: RoomType;
   basePhotoUrl: string;
   selectedStyleId: string | null;
+  // Flux emprunté : "expert" (/expert-create) ajoute le loop de rendu avec les
+  // vrais meubles du catalogue. Défaut/absent = flux standard (/create).
+  mode?: "standard" | "expert";
   generatedRenderUrl: string | null;
   firstRenderUrl?: string;
   // Rendu EXPERT : la disposition choisie régénérée avec les VRAIS produits du
