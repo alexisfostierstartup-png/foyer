@@ -9,6 +9,17 @@ import { ProgressBar } from "@/components/create/ProgressBar";
 import { BeforeAfterSlider } from "@/components/create/BeforeAfterSlider";
 import { ShoppingCard, useDebug } from "@/components/create/ShoppingCard";
 import { ExpertOverridesProvider } from "@/components/create/expertOverrides";
+
+// Libellé lisible d'une référence custom (clé = catégorie ou elementId type "sofa_1").
+const REF_LABELS: Record<string, string> = {
+  sofa: "Canapé", armchair: "Fauteuil", coffee_table: "Table basse", dining_table: "Table à manger",
+  chair: "Chaise", rug: "Tapis", tv_stand: "Meuble TV", sideboard: "Buffet", bookshelf: "Bibliothèque",
+  bed: "Lit", nightstand: "Table de nuit", dresser: "Commode", side_table: "Table d'appoint",
+};
+function refLabel(key: string): string {
+  const cat = key.replace(/_\d+$/, ""); // "sofa_1" → "sofa"
+  return REF_LABELS[cat] ?? cat.replace(/_/g, " ");
+}
 import { PaywallModal } from "@/components/paywalls/PaywallModal";
 import { cn } from "@/lib/utils";
 import { PAYWALL_DISABLED } from "@/lib/constants";
@@ -528,6 +539,45 @@ export function FinalScreen({
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Vos références (produits fournis par URL/JPEG) — mode expert */}
+          {expertMode && tabIdx === 0 && !listPending && Object.keys(cust).length > 0 && (
+            <div className="mt-5">
+              <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-foyer-sage">
+                Vos références
+              </p>
+              <ul className="flex flex-col gap-2">
+                {Object.entries(cust).map(([key, cp]) => (
+                  <li key={key} className="flex items-center gap-3 rounded-2xl border border-foyer-border bg-white p-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={cp.imageUrl} alt="" className="size-14 shrink-0 rounded-xl border border-foyer-border object-cover" />
+                    <div className="min-w-0 flex-1">
+                      <p className="line-clamp-2 text-[14px] font-medium text-foyer-ink">{cp.name ?? refLabel(key)}</p>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[12px] text-foyer-muted">
+                        <span className="rounded-full bg-foyer-sage/15 px-2 py-0.5 font-medium text-foyer-sage">{refLabel(key)}</span>
+                        {cp.merchant && <span>{cp.merchant}</span>}
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-1.5">
+                      <span className="font-serif text-[16px] text-foyer-ink">{cp.price != null ? `${cp.price} €` : "–"}</span>
+                      <div className="flex items-center gap-1.5">
+                        {cp.url && (
+                          <a href={cp.url} target="_blank" rel="noreferrer"
+                            className="flex items-center gap-1 rounded-full border border-foyer-border px-2.5 py-1 text-[13px] text-foyer-ink transition-colors hover:bg-foyer-cream">
+                            <ExternalLink className="size-3" aria-hidden />Voir
+                          </a>
+                        )}
+                        <button type="button" onClick={() => setCustomProduct(key, null)}
+                          className="rounded-full border border-foyer-border px-2.5 py-1 text-[13px] text-foyer-muted transition-colors hover:text-foyer-ink">
+                          Retirer
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 
