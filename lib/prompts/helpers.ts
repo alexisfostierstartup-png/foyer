@@ -2,12 +2,23 @@ import { createSupabaseAdmin } from "@/lib/supabase/server";
 import type {
   AmbianceData,
   FloorPresetData,
+  StyleColorway,
   WallPaletteData,
 } from "@/lib/db/database.types";
 
+export type StyleContextOptions = {
+  // Index de déclinaison colorée (rotation à la régénération). 0 = déclinaison
+  // par défaut → styleMood inchangé. Modulo le nombre de déclinaisons du style.
+  colorwayIndex?: number;
+  // true quand le user a choisi explicitement une couleur de murs
+  // (walls.repaint) : la déclinaison ne touche alors pas aux murs.
+  lockWalls?: boolean;
+};
+
 export async function loadStyleContext(
   styleId: string,
-): Promise<{ styleName: string; styleMood: string }> {
+  opts?: StyleContextOptions,
+): Promise<{ styleName: string; styleMood: string; colorwaySlug?: string }> {
   const { data, error } = await createSupabaseAdmin()
     .from("assets")
     .select("data")
@@ -21,9 +32,38 @@ export async function loadStyleContext(
   const signature = d.signature?.length
     ? `. signature elements: ${d.signature.join(", ")}`
     : "";
+
+  const colorway = buildColorwayDirective(d.colorways ?? [], opts);
+
   return {
     styleName: d.name,
-    styleMood: `${d.mood}. palette: ${d.palette.join(", ")}. materials: ${d.materials.join(", ")}${signature}`,
+    styleMood: `${d.mood}. palette: ${d.palette.join(", ")}. materials: ${d.materials.join(", ")}${signature}${colorway.part}`,
+    colorwaySlug: colorway.slug,
+  };
+}
+
+/**
+ * Déclinaison colorée : une seule ligne d'orientation couleur ajoutée au
+ * styleMood, sans toucher à l'identité (matériaux/formes/signatures restent
+ * ceux du mood). Index 0 (ou modulo retombant sur 0) = déclinaison par défaut
+ * → aucune ligne. lockWalls retire la consigne murs (choix user explicite).
+ */
+export function buildColorwayDirective(
+  colorways: StyleColorway[],
+  opts?: StyleContextOptions,
+): { part: string; slug?: string } {
+  if (colorways.length === 0) return { part: "" };
+  const idx = (opts?.colorwayIndex ?? 0) % colorways.length;
+  const cw = colorways[idx];
+  if (idx === 0 || !cw) return { part: "" };
+  const parts = [
+    ...(cw.walls && !opts?.lockWalls ? [cw.walls] : []),
+    ...(cw.accents ? [cw.accents] : []),
+  ];
+  if (parts.length === 0) return { part: "" };
+  return {
+    part: `. Colour direction for THIS render (same materials and furniture shapes as the style, only the colour story changes — overrides the default palette hues): ${parts.join("; ")}`,
+    slug: cw.slug,
   };
 }
 

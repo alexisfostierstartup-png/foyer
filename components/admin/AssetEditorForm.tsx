@@ -8,6 +8,8 @@ import { createAsset, updateAsset, toggleAssetActive } from "@/lib/admin/actions
 
 // ─── Per-category data fields ───────────────────────────────────────────────
 
+type ColorwayRow = { slug: string; label: string; walls?: string; accents?: string };
+
 function AmbianceFields({
   data,
   onChange,
@@ -21,6 +23,13 @@ function AmbianceFields({
 
   const palette = (data.palette as string[] | undefined) ?? [];
   const materials = (data.materials as string[] | undefined) ?? [];
+  const signature = (data.signature as string[] | undefined) ?? [];
+  const colorways = (data.colorways as ColorwayRow[] | undefined) ?? [];
+
+  function updateColorway(i: number, key: keyof ColorwayRow, value: string) {
+    const next = colorways.map((c, j) => (j === i ? { ...c, [key]: value } : c));
+    update("colorways", next);
+  }
 
   return (
     <>
@@ -50,6 +59,64 @@ function AmbianceFields({
           className={inputCls + " font-mono text-xs"}
           placeholder="linen\nwood\nceramic"
         />
+      </Field>
+      <Field label="Signature (un élément par ligne, anglais — injecté dans le prompt)">
+        <textarea
+          value={signature.join("\n")}
+          onChange={(e) => update("signature", e.target.value.split("\n").map((s) => s.trim()).filter(Boolean))}
+          rows={4}
+          className={inputCls + " font-mono text-xs"}
+          placeholder="pale oak furniture with clean lines\npaper or linen pendant shades"
+        />
+      </Field>
+      <Field label="Déclinaisons couleur — rotation à la régénération ; la 1re est la version par défaut (mood inchangé)">
+        <div className="space-y-3">
+          {colorways.map((cw, i) => (
+            <div key={i} className="rounded-lg border border-foyer-border p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-foyer-muted w-5">{i === 0 ? "①" : `${i + 1}.`}</span>
+                <input
+                  value={cw.slug}
+                  onChange={(e) => updateColorway(i, "slug", e.target.value)}
+                  placeholder="slug"
+                  className={inputCls + " font-mono text-xs flex-1"}
+                />
+                <input
+                  value={cw.label}
+                  onChange={(e) => updateColorway(i, "label", e.target.value)}
+                  placeholder="Label FR"
+                  className={inputCls + " text-xs flex-1"}
+                />
+                <button
+                  type="button"
+                  onClick={() => update("colorways", colorways.filter((_, j) => j !== i))}
+                  className="text-xs text-foyer-terra hover:underline shrink-0"
+                >
+                  Retirer
+                </button>
+              </div>
+              <input
+                value={cw.walls ?? ""}
+                onChange={(e) => updateColorway(i, "walls", e.target.value)}
+                placeholder="Murs (anglais, ex: repaint the walls in a muted sage green)"
+                className={inputCls + " font-mono text-xs"}
+              />
+              <input
+                value={cw.accents ?? ""}
+                onChange={(e) => updateColorway(i, "accents", e.target.value)}
+                placeholder="Accents (anglais, ex: sage and olive textile accents on cream furniture)"
+                className={inputCls + " font-mono text-xs"}
+              />
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => update("colorways", [...colorways, { slug: "", label: "", walls: "", accents: "" }])}
+            className="text-sm text-foyer-ink underline underline-offset-2"
+          >
+            + Ajouter une déclinaison
+          </button>
+        </div>
       </Field>
     </>
   );
@@ -257,7 +324,7 @@ type Props = {
 };
 
 const DEFAULT_DATA: Record<string, Record<string, unknown>> = {
-  ambiance: { name: "", description: "", palette: [], materials: [], mood: "" },
+  ambiance: { name: "", description: "", palette: [], materials: [], mood: "", signature: [], colorways: [] },
   room_defaults: { englishFurniture: "", removeCategories: [] },
   floor_preset: { label: "", description: "" },
   wall_palette: { label: "", hex: "", description: "" },

@@ -8,6 +8,12 @@
       "materials": ["pale oak", "wool bouclé", "washed linen", "rattan", "light stone"],
       "mood": "calm nordic simplicity, soft diffuse daylight, warm white walls, pale wood, uncluttered functional furniture, cozy hygge textures",
       "signature": ["pale oak furniture with clean lines", "chunky wool rug with fringe", "paper or linen pendant shades", "dried botanicals in ceramic vases", "near-absence of saturated color"],
+      "colorways": [
+        { "slug": "blond", "label": "Blond classique", "walls": "warm white walls", "accents": "cream, pale wood and soft greige textile accents" },
+        { "slug": "sauge", "label": "Sauge", "walls": "repaint the walls in a muted sage green", "accents": "sage and olive textile accents on cream furniture" },
+        { "slug": "bleu-nordique", "label": "Bleu nordique", "walls": "repaint the walls in a soft misty blue-grey", "accents": "slate-blue and indigo textile accents on off-white furniture" },
+        { "slug": "terre", "label": "Terre", "walls": "warm sand-white walls", "accents": "muted terracotta and ochre accents in cushions, throws and wall art" }
+      ],
       "moodboardUrl": "/moodboards/scandinave_1.jpg"
     }
   },

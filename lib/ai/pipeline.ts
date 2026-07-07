@@ -3,7 +3,7 @@ import path from "path";
 import sharp from "sharp";
 import { nanoid } from "nanoid";
 import { resolvePrompt } from "@/lib/prompts/engine";
-import { loadStyleContext, loadRoomDefaults, loadRoomRemoveCategories, formatUserInstructions, formatDesignPlan } from "@/lib/prompts/helpers";
+import { loadStyleContext, loadRoomDefaults, loadRoomRemoveCategories, formatUserInstructions, formatDesignPlan, type UserChoicesInput } from "@/lib/prompts/helpers";
 import { getElementCategoryEnum, getElementCategories, getAllowedActionsByCategory, getCategoryKeywordRemap, getFloorPresets } from "@/lib/db/assets";
 import type { DecisionAction } from "@/lib/db/assets";
 import { mergeShoppingItems, resolveCatalogCategory } from "@/lib/shopping/categories";
@@ -14,6 +14,7 @@ import { withTracking } from "./track";
 import { isTransientAiError } from "./retry";
 import { computeTextEmbedding } from "@/lib/embeddings/jina";
 import { getProject, updateProject } from "@/lib/storage/projects";
+import { createSupabaseAdmin } from "@/lib/supabase/server";
 import type { DetectedFurniture, UserConstraints, Project, ShoppingItem, ScoreFoyer, RenderAnalysis } from "@/lib/types";
 import { matchAlterationsToCatalog, type Alteration } from "@/lib/shopping/matcher";
 import { reconcilePlan } from "@/lib/shopping/reconcile";
@@ -623,6 +624,24 @@ export async function runAnalysisPipeline(
   console.log(`[pipeline:analyze] saved ${decisionsWithFloor.length} decisions (2 calls: detection + verdict)`);
 }
 
+// Nombre de générations "premier rendu" déjà effectuées pour ce projet
+// (pipeline_logs). Sert d'index de rotation des déclinaisons colorées : le
+// user qui régénère obtient une histoire de couleur différente à chaque essai
+// (déterministe — l'aléatoire pur peut retomber deux fois sur la même).
+async function countGenerationRenders(projectId: string): Promise<number> {
+  const { count, error } = await createSupabaseAdmin()
+    .from("pipeline_logs")
+    .select("id", { count: "exact", head: true })
+    .eq("project_id", projectId)
+    .eq("event", "generate")
+    .eq("step", "first-render");
+  if (error) {
+    console.error("[pipeline] countGenerationRenders failed, colorway par défaut:", error.message);
+    return 0;
+  }
+  return count ?? 0;
+}
+
 export async function runGenerationPipeline(projectId: string): Promise<void> {
   const project = await getProject(projectId);
   if (!project) throw new Error(`Project not found: ${projectId}`);
@@ -646,10 +665,16 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
   }
   await updateProject(projectId, { detectedFurniture: profilesToFurniture(profiles) });
 
-  // 2. Style context
-  const { styleName, styleMood } = await loadStyleContext(project.selectedStyleId);
+  // 2. Style context — la déclinaison colorée tourne avec le nombre de
+  // générations déjà faites (1re génération = déclinaison par défaut).
+  const choices: UserChoicesInput = project.userConstraints ? constraintsToChoices(project.userConstraints) : {};
+  const colorwayIndex = await countGenerationRenders(projectId);
+  const { styleName, styleMood, colorwaySlug } = await loadStyleContext(project.selectedStyleId, {
+    colorwayIndex,
+    lockWalls: Boolean(choices.walls?.repaint),
+  });
+  if (colorwaySlug) console.log(`[pipeline:generate] déclinaison couleur: ${colorwaySlug} (gen #${colorwayIndex + 1})`);
   const furnitureDefaults = await loadRoomDefaults(project.roomType);
-  const choices = project.userConstraints ? constraintsToChoices(project.userConstraints) : {};
   const userInstructions = await formatUserInstructions(choices);
 
   // 3. Generation
@@ -701,6 +726,7 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
     provider: genResult.providerUsed,
     duration_ms: genResult.durationMs,
     render_url: renderUrl,
+    metadata: colorwaySlug ? { colorway: colorwaySlug } : null,
   });
 }
 
@@ -739,9 +765,15 @@ export async function runDispositionsPipeline(projectId: string): Promise<string
     await updateProject(projectId, { visionOutput: profiles });
   }
 
-  const { styleName, styleMood } = await loadStyleContext(project.selectedStyleId);
+  // Les 3 dispositions font varier l'AGENCEMENT uniquement : on garde la
+  // déclinaison couleur du dernier rendu généré (pas deux variables à la fois
+  // dans un même choix).
+  const choices: UserChoicesInput = project.userConstraints ? constraintsToChoices(project.userConstraints) : {};
+  const { styleName, styleMood } = await loadStyleContext(project.selectedStyleId, {
+    colorwayIndex: Math.max(0, (await countGenerationRenders(projectId)) - 1),
+    lockWalls: Boolean(choices.walls?.repaint),
+  });
   const furnitureDefaults = await loadRoomDefaults(project.roomType);
-  const choices = project.userConstraints ? constraintsToChoices(project.userConstraints) : {};
   const userInstructions = await formatUserInstructions(choices);
   const designPlan = formatDesignPlan(project.element_decisions);
 

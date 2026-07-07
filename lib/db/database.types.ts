@@ -665,6 +665,21 @@ export type TablesUpdate<T extends keyof DefaultSchema["Tables"]> =
 
 export type RoomType = "salon" | "chambre"
 
+// Déclinaison colorée d'un style : même identité (matériaux, formes,
+// signatures), seule l'histoire de couleur change. L'entrée [0] est la
+// déclinaison par défaut, déjà encodée dans mood/palette → aucune ligne
+// ajoutée au prompt pour elle.
+export type StyleColorway = {
+  slug: string
+  // Label FR affiché (admin, et à terme UI user).
+  label: string
+  // Consigne murs (anglais, pour le prompt). Ignorée si le user a choisi
+  // explicitement une couleur de murs (walls.repaint).
+  walls?: string
+  // Consigne accents textiles/décor (anglais, pour le prompt).
+  accents?: string
+}
+
 export type AmbianceData = {
   name: string
   description: string
@@ -673,6 +688,8 @@ export type AmbianceData = {
   mood: string
   // Éléments iconiques du style, injectés dans le prompt de génération.
   signature?: string[]
+  // Déclinaisons colorées — rotation à la régénération d'un même projet.
+  colorways?: StyleColorway[]
   // Image moodboard (public/moodboards). Repli : /moodboards/<slug>.svg.
   moodboardUrl?: string
 }
