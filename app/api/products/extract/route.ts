@@ -10,16 +10,43 @@ export const maxDuration = 60;
 // Best-effort : JSON-LD Product d'abord (MdM, La Redoute, Cdiscount…), puis fallback
 // Open Graph (og:image/og:title). Si rien d'exploitable → { ok:false } et l'UI propose
 // d'importer un JPEG directement (on NE génère JAMAIS un rendu avec une image bidon).
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: "&", quot: '"', apos: "'", nbsp: " ", lt: "<", gt: ">",
+  eacute: "é", egrave: "è", ecirc: "ê", euml: "ë", agrave: "à", acirc: "â", auml: "ä",
+  ugrave: "ù", ucirc: "û", uuml: "ü", ocirc: "ô", ouml: "ö", icirc: "î", iuml: "ï",
+  ccedil: "ç", ntilde: "ñ", oelig: "œ", aelig: "æ", deg: "°", euro: "€", hellip: "…",
+  laquo: "«", raquo: "»", rsquo: "'", lsquo: "'", ldquo: '"', rdquo: '"', ndash: "–", mdash: "—",
+};
+
+// Décode les entités HTML — indispensable AUSSI sur l'imageUrl (ex. Roche Bobois expose
+// une URL de render avec `&amp;` dans le JSON-LD → sans décodage l'URL est cassée et le
+// serveur renvoie une image PAR DÉFAUT ≠ le produit → rendu halluciné).
 function decodeEntities(s: string): string {
   return s
     .replace(/&#(\d+);/g, (_, d) => String.fromCharCode(Number(d)))
     .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;/g, "'")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&(l|g)t;/g, (_, c) => (c === "l" ? "<" : ">"))
+    .replace(/&([a-z0-9]+);/gi, (m, n) => NAMED_ENTITIES[n.toLowerCase()] ?? m)
     .trim();
+}
+
+// GARDE-FOU anti-hallucination : on ne renvoie une image que si on arrive VRAIMENT à
+// la récupérer comme image (statut 200 + content-type image/*). Sinon → échec propre,
+// l'user importe un JPEG. Le user peut coller 1000+ sites → jamais de rendu sur du vide.
+async function isReachableImage(url: string): Promise<boolean> {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 12_000);
+    const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" }, signal: ctrl.signal });
+    clearTimeout(t);
+    if (!res.ok) return false;
+    const ct = res.headers.get("content-type") ?? "";
+    if (!ct.startsWith("image/")) return false;
+    // On lit quelques octets pour confirmer un vrai contenu image (pas un corps vide/HTML).
+    const buf = Buffer.from(await res.arrayBuffer());
+    return buf.length > 512;
+  } catch {
+    return false;
+  }
 }
 
 function ogFallback(html: string): { imageUrl?: string; name?: string } {
@@ -87,6 +114,13 @@ export async function POST(request: NextRequest) {
         { ok: false, error: "no_image", host },
         { status: 200 },
       );
+    }
+
+    imageUrl = decodeEntities(imageUrl); // ← fix critique : &amp; dans l'URL
+
+    // On CONFIRME que l'image est récupérable avant de la proposer (anti-hallucination).
+    if (!(await isReachableImage(imageUrl))) {
+      return NextResponse.json({ ok: false, error: "image_unreachable", host }, { status: 200 });
     }
 
     const clean = name ? decodeEntities(name) : null;

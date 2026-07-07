@@ -151,6 +151,42 @@ async function toDataUri(url: string): Promise<string> {
   return `data:image/jpeg;base64,${buf.toString("base64")}`;
 }
 
+/** Vrais octets d'image ? (magic bytes JPEG/PNG/WEBP/GIF) — garde-fou anti-garbage. */
+function looksLikeImage(b: Buffer): boolean {
+  if (b.length < 512) return false;
+  if (b[0] === 0xff && b[1] === 0xd8) return true; // jpeg
+  if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return true; // png
+  if (b.slice(0, 4).toString("ascii") === "RIFF" && b.slice(8, 12).toString("ascii") === "WEBP") return true; // webp
+  if (b.slice(0, 3).toString("ascii") === "GIF") return true; // gif
+  return false;
+}
+
+/**
+ * Image produit → data-URI, MAIS null si on n'arrive pas à récupérer une VRAIE image.
+ * Anti-hallucination : jamais de garbage envoyé à NB2 (le user peut coller 1000+ sites).
+ */
+async function toValidProductUri(url: string): Promise<string | null> {
+  try {
+    let buf: Buffer;
+    let ct = "";
+    if (url.startsWith("/") || url.includes("supabase")) {
+      buf = await fetchImageBytes(url);
+    } else {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 15_000);
+      const r = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" }, signal: ctrl.signal });
+      clearTimeout(t);
+      if (!r.ok) return null;
+      ct = r.headers.get("content-type") ?? "";
+      buf = Buffer.from(await r.arrayBuffer());
+    }
+    if (!(ct.startsWith("image/") || looksLikeImage(buf))) return null;
+    return `data:image/jpeg;base64,${buf.toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
+
 const FAL_ENDPOINT = "https://fal.run/fal-ai/nano-banana-2/edit";
 
 async function callNb2(prompt: string, imageUris: string[]): Promise<{ buffer: Buffer; mimeType: string }> {
@@ -351,11 +387,21 @@ async function swapOnFake(
   fakeUrl: string,
   pieces: Piece[],
   roomType: RoomType,
-): Promise<{ buffer: Buffer; mimeType: string }> {
+): Promise<{ buffer: Buffer; mimeType: string } | null> {
   const room = ROOM_LABEL[roomType] ?? "room";
+  // On VALIDE chaque image produit ; on ne garde que les vraies images (anti-garbage).
+  const fakeUri = await toDataUri(fakeUrl);
+  const validated: { p: Piece; uri: string }[] = [];
+  for (const p of pieces) {
+    const uri = await toValidProductUri(p.imageUrl);
+    if (uri) validated.push({ p, uri });
+    else console.warn(`[expert] image produit injoignable, meuble ignoré: ${p.category} ${p.imageUrl.slice(0, 80)}`);
+  }
+  if (validated.length === 0) return null; // aucune image valide → on ne rend rien (fallback = fake)
+
   // Pluriel-safe : une catégorie peut représenter plusieurs pièces identiques (ex.
   // 4 chaises) → on demande de remplacer CHAQUE pièce de ce type par le même produit.
-  const mapping = pieces.map((p, i) => `every ${p.noun} → image ${i + 2}`).join(", ");
+  const mapping = validated.map((v, i) => `every ${v.p.noun} → image ${i + 2}`).join(", ");
   const prompt =
     `This is a beautifully styled photo of a ${room}. Replace ONLY the large furniture with its ` +
     `matching real catalog product, using each product's EXACT appearance from its reference image ` +
@@ -371,11 +417,7 @@ async function swapOnFake(
     `decor, the curtains, the wall colors and finishes, the ceiling, the window, the floor, and the ` +
     `entire styling, lighting and camera framing. Preserve the exact exposure and white balance. ` +
     `Photorealistic.`;
-  const [fakeUri, ...refUris] = await Promise.all([
-    toDataUri(fakeUrl),
-    ...pieces.map((p) => toDataUri(p.imageUrl)),
-  ]);
-  return callNb2(prompt, [fakeUri, ...refUris]);
+  return callNb2(prompt, [fakeUri, ...validated.map((v) => v.uri)]);
 }
 
 /**
@@ -411,7 +453,14 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
   console.log(
     `[expert] ${projectId} : swap-sur-fake — ${pieces.length} meubles (${pieces.map((p) => p.category).join(", ")})`,
   );
-  const { buffer, mimeType } = await swapOnFake(project.generatedRenderUrl, pieces, project.roomType);
+  const result = await swapOnFake(project.generatedRenderUrl, pieces, project.roomType);
+  if (!result) {
+    // Aucune image produit valide → on NE génère PAS (anti-hallucination) : rendu = fake.
+    console.warn(`[expert] ${projectId} : aucune image produit valide → rendu réel = fake`);
+    await updateProject(projectId, { expertRenderUrl: project.generatedRenderUrl });
+    return project.generatedRenderUrl;
+  }
+  const { buffer, mimeType } = result;
 
   const url = await saveRender(buffer, project.storageFolder, mimeType, "expert");
   await updateProject(projectId, { expertRenderUrl: url });
