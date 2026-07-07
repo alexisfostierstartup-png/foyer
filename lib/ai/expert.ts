@@ -375,7 +375,11 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
   const overrides = (project.productOverrides ?? {}) as Record<string, number>;
   const pieces = selectExpertPieces(shoppingList, overrides);
   if (pieces.length === 0) {
-    throw new Error("Aucun gros meuble matché dans la liste shopping.");
+    // Rien à remplacer (tous les meubles gardés, pièce déjà bien meublée) → le rendu
+    // réel = le fake tel quel (pas de 400 : c'est un résultat légitime).
+    console.log(`[expert] ${projectId} : aucun gros meuble à swapper → rendu réel = fake`);
+    await updateProject(projectId, { expertRenderUrl: project.generatedRenderUrl });
+    return project.generatedRenderUrl;
   }
 
   console.log(
