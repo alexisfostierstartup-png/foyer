@@ -216,6 +216,11 @@ export function formatDesignPlan(
   // Regroupe les éléments identiques (même type d'action + catégorie + description)
   // → UNE ligne avec compteur. Un plan court et sans répétition est bien mieux
   // suivi par le modèle image (ex. 4 chaises identiques = 1 instruction, pas 4).
+  // NB (banc DIY beta 2026-07-07) : NE PAS regrouper les RESTYLE de descriptions
+  // différentes — la ligne groupée ×2 énumérée dégrade la conformité (0-1/2 vs
+  // 1/2 en lignes séparées). Limite modèle : ~1 restyle fiable par catégorie et
+  // par rendu ; la 2e cible similaire relève de l'itération (ou d'une future
+  // boucle audit→retouche).
   type G = { d: (typeof decisions)[number]; count: number };
   const groups = new Map<string, G>();
   for (const d of decisions) {

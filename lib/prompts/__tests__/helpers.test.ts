@@ -42,6 +42,24 @@ describe("formatDesignPlan", () => {
     ]);
     expect(plan).toBe("");
   });
+
+  it("beta : les RESTYLE de descriptions différentes restent des lignes séparées (le groupage ×2 dégrade la conformité — banc 2026-07-07)", () => {
+    const decisions = [
+      { category: "bookshelf", description: "Bibliothèque sombre mur gauche", mismatch_type: "surface" as const, action_slug: "repaint", action_label: "Repeindre en blanc cassé", qty: 2, qty_unit: "L" },
+      { category: "bookshelf", description: "Bibliothèque sombre près de la fenêtre", mismatch_type: "surface" as const, action_slug: "repaint", action_label: "Repeindre en blanc cassé", qty: 1, qty_unit: "L" },
+    ];
+    expect(formatDesignPlan(decisions).split("\n")).toHaveLength(2);
+    expect(formatDesignPlan(decisions, { renderableSlugs: new Set(["repaint"]) }).split("\n")).toHaveLength(2);
+  });
+
+  it("beta : surface non renderable → dégradée en REPLACE image", () => {
+    const plan = formatDesignPlan(
+      [{ category: "sofa", description: "Canapé beige", mismatch_type: "surface", action_slug: "slipcover_seat", action_label: "Housse écrue", qty: null, qty_unit: null }],
+      { renderableSlugs: new Set(["repaint"]) },
+    );
+    expect(plan).toContain("REPLACE");
+    expect(plan).not.toContain("RESTYLE");
+  });
 });
 
 describe("buildColorwayDirective", () => {
