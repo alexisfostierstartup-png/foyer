@@ -341,11 +341,14 @@ async function swapOnFake(
     `and orientation as the piece it replaces. When several identical pieces of the same type exist ` +
     `(e.g. dining chairs or bar stools), replace EVERY ONE of them with that same product and keep ` +
     `the same count; remove the old pieces: ${mapping}. Keep EVERYTHING ELSE strictly identical to ` +
-    `this photo — do NOT change, re-tint, restyle or move anything other than the furniture listed ` +
-    `above: all wall art and frames, mirrors, lamps and light fixtures, plants, vases, cushions, ` +
-    `books, tableware and small decor, the curtains, the wall colors and finishes, the ceiling, the ` +
-    `window, the floor, and the entire styling, lighting and camera framing. Preserve the exact ` +
-    `exposure and white balance. Photorealistic.`;
+    `this photo — do NOT change, re-tint, restyle, move OR REMOVE anything other than the furniture ` +
+    `listed above. In particular, KEEP every other furniture piece exactly where it is, even next ` +
+    `to a replaced one (e.g. if you replace the bar stools, KEEP the bar/high table they surround; ` +
+    `if you replace dining chairs, KEEP the dining table). Also keep unchanged: all wall art and ` +
+    `frames, mirrors, lamps and light fixtures, plants, vases, cushions, books, tableware and small ` +
+    `decor, the curtains, the wall colors and finishes, the ceiling, the window, the floor, and the ` +
+    `entire styling, lighting and camera framing. Preserve the exact exposure and white balance. ` +
+    `Photorealistic.`;
   const [fakeUri, ...refUris] = await Promise.all([
     toDataUri(fakeUrl),
     ...pieces.map((p) => toDataUri(p.imageUrl)),
