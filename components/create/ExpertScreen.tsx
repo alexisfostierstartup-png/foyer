@@ -76,11 +76,7 @@ export function ExpertScreen({ projectId, basePhotoUrl, initialExpertUrl, fakeUr
         Les vrais produits de votre liste, intégrés dans votre pièce.
       </p>
 
-      <div
-        className="relative mt-6 overflow-hidden rounded-2xl border border-foyer-border bg-white"
-        onMouseEnter={() => expertUrl && setShowFake(true)}
-        onMouseLeave={() => setShowFake(false)}
-      >
+      <div className="relative mt-6 overflow-hidden rounded-2xl border border-foyer-border bg-white">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={mainSrc} alt={showFake ? "Rendu IA d'origine" : "Rendu réel"} className="w-full" />
 
@@ -94,20 +90,18 @@ export function ExpertScreen({ projectId, basePhotoUrl, initialExpertUrl, fakeUr
         {expertUrl && (
           <button
             type="button"
-            // Tactile : maintien pour voir le rendu IA (pas de survol sur mobile).
-            onPointerDown={() => setShowFake(true)}
-            onPointerUp={() => setShowFake(false)}
-            onPointerLeave={() => setShowFake(false)}
+            // Clic pour basculer réel ↔ rendu IA (voir la dérive).
+            onClick={() => setShowFake((v) => !v)}
             className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full bg-foyer-ink/75 px-3 py-1.5 text-[12px] font-medium text-white backdrop-blur transition-opacity hover:bg-foyer-ink"
           >
             <Eye className="size-3.5" aria-hidden />
-            {showFake ? "Rendu IA" : "Voir le rendu IA"}
+            {showFake ? "Voir le rendu réel" : "Voir le rendu IA"}
           </button>
         )}
       </div>
       {expertUrl && (
         <p className="mt-2 text-center text-[12px] text-foyer-muted">
-          Survolez (ou maintenez) pour comparer avec le rendu IA d&apos;origine.
+          Cliquez pour comparer avec le rendu IA d&apos;origine.
         </p>
       )}
 
