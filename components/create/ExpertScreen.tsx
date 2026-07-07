@@ -3,9 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, Sparkles, ArrowLeft } from "lucide-react";
+import { Loader2, Sparkles, ArrowLeft, ShoppingBag, RotateCcw } from "lucide-react";
 import { BeforeAfterSlider } from "@/components/create/BeforeAfterSlider";
-import { cn } from "@/lib/utils";
 
 type ExpertProduct = { category: string; name: string; imageUrl: string };
 
@@ -66,8 +65,8 @@ export function ExpertScreen({ projectId, beforeUrl, initialExpertUrl, products 
         Votre pièce avec les vrais meubles
       </h1>
       <p className="mt-2 text-sm text-foyer-muted">
-        On remplace les gros meubles de votre rendu par les produits réels du catalogue,
-        sans changer la pièce.
+        On vide votre pièce de son mobilier puis on l&apos;aménage avec les vrais gros meubles
+        du catalogue — mêmes murs, fenêtres et sol que votre photo.
       </p>
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-foyer-border bg-white">
@@ -80,7 +79,7 @@ export function ExpertScreen({ projectId, beforeUrl, initialExpertUrl, products 
       </div>
       {expertUrl && (
         <p className="mt-2 text-center text-[12px] text-foyer-muted">
-          Glissez pour comparer — à gauche votre rendu, à droite avec les vrais produits.
+          Glissez pour comparer — à gauche votre pièce, à droite meublée avec les vrais produits.
         </p>
       )}
 
@@ -101,28 +100,37 @@ export function ExpertScreen({ projectId, beforeUrl, initialExpertUrl, products 
         </>
       )}
 
-      <div className="sticky bottom-0 mt-8 border-t border-foyer-border bg-foyer-cream/95 py-3 backdrop-blur">
-        <button
-          type="button"
-          disabled={loading}
-          onClick={generate}
-          className={cn(
-            "flex h-[52px] w-full items-center justify-center gap-2 rounded-full font-medium transition-all",
-            loading
-              ? "cursor-not-allowed bg-foyer-border text-foyer-muted"
-              : "bg-foyer-sage text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] hover:-translate-y-0.5",
-          )}
-        >
-          {loading ? (
-            <>
-              <Loader2 className="size-5 animate-spin" aria-hidden /> Génération…
-            </>
-          ) : expertUrl ? (
-            "Régénérer le rendu expert"
-          ) : (
-            "Générer le rendu expert"
-          )}
-        </button>
+      <div className="sticky bottom-0 mt-8 flex flex-col gap-2.5 border-t border-foyer-border bg-foyer-cream/95 py-3 backdrop-blur">
+        {loading ? (
+          <div className="flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-foyer-border font-medium text-foyer-muted">
+            <Loader2 className="size-5 animate-spin" aria-hidden /> Génération du rendu…
+          </div>
+        ) : expertUrl ? (
+          <>
+            <button
+              type="button"
+              onClick={() => router.push(`/create/${projectId}/final`)}
+              className="flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-foyer-sage font-medium text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:-translate-y-0.5"
+            >
+              <ShoppingBag className="size-5" aria-hidden /> Voir ma liste de courses
+            </button>
+            <button
+              type="button"
+              onClick={generate}
+              className="flex h-11 w-full items-center justify-center gap-1.5 text-sm font-medium text-foyer-muted transition-colors hover:text-foyer-ink"
+            >
+              <RotateCcw className="size-4" aria-hidden /> Régénérer un autre agencement
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={generate}
+            className="flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-foyer-sage font-medium text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:-translate-y-0.5"
+          >
+            Générer le rendu expert
+          </button>
+        )}
       </div>
     </div>
   );

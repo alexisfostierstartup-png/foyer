@@ -1,7 +1,26 @@
-# Mode expert — blueprint (validé par spikes, 2026-07-06)
+# Mode expert — blueprint (implémenté, 2026-07-07)
 
 > Objectif : un rendu **de la même pièce** avec les **vrais meubles du catalogue**, sans
-> look IA. Pour un tier **payant**. Architecture prouvée par spikes ; PAS encore implémentée.
+> look IA. Pour un tier **payant**.
+
+## Architecture retenue : VIDER → MEUBLER (2026-07-07)
+
+Le rendu expert ne swappe plus les meubles d'un rendu fictif (ça gardait/dupliquait l'ancien
+meuble : bug « 2 meubles TV »). Il part de la **photo de base** et procède en 2 étapes NB2 :
+
+1. **Vider** (`emptyRoom`) — on retire tout le mobilier amovible de la photo de base, en
+   conservant l'architecture et les éléments non remplacés : murs + couleur, alcôves, moulures,
+   fenêtres, **rideaux**, portes, radiateurs, **parquet**, plafond + luminaires. Nécessaire car
+   **les photos ne sont pas toujours vides** (annonces déjà meublées / staging). Le résultat
+   (`emptyShellUrl`) est **mis en cache** (la photo de base ne change jamais) et **précalculé
+   en fond dès l'upload** en mode expert (`after()` dans `/api/upload`) → à l'écran expert il ne
+   reste que l'étape « meubler ».
+2. **Meubler** (`furnishRoom`) — 1 appel NB2 = coquille vide + N images produit + prompt de
+   mapping. Partir du vide **élimine par construction** le bug du meuble fictif conservé.
+
+Validé par loops de test (2026-07-07) : chambre + 2 salons sur photo vide, + cas photo meublée
+(mid-century) vidée puis re-meublée, + end-to-end via l'endpoint réel (31 s les 2 étapes, ~20 s
+quand la coquille est précalculée). Fichiers : `lib/ai/expert.ts`, `POST /api/projects/[id]/expert-render`.
 
 ## La recette validée (le cœur)
 
@@ -35,34 +54,51 @@ ex. `fal-ai/birefnet`) avant le swap. Le catalogue a un mix des deux types d'ima
 prompts sur-blindés (fights the image) ; 6+ références d'un coup sur le vieux modèle ; Seedream
 / FLUX Kontext en pleine image (recomposent la pièce, look IA, produit approximatif).
 
-## Le flux `/create-expert`
+## Le flux `/expert-create` (implémenté)
 
-Même UI/UX que `/create`, avec l'inversion de pipeline (idée user, validée) :
-1. Photo pièce + style (comme le flux standard).
-2. **Curation produits** : on choisit les vrais produits catalogue par catégorie attendue
-   (canapé, table basse, meuble TV, tapis…) selon room_defaults + style + affinité. On peut
-   partir de la disposition standard (matching render-driven existant) OU curer directement.
-3. **Rendu expert** : 1 appel NB2 = base + images des produits choisis (prioriser sofa/tables
-   > déco > peinture, ~jusqu'à ce que la qualité tienne) → la pièce avec les vrais meubles.
-4. **Liste shopping = déterministe** : on SAIT ce qu'on a mis → plus besoin de re-détecter le
-   rendu. Fiabilité + perf.
-5. **Feature « URL produit imposé »** : le user colle un lien ; on récupère l'image (OG/scrape)
-   et on l'ajoute comme référence dans le swap.
+Vrai flux **alternatif** (route séparée, pas un bouton en fin de flux standard). Même UploadForm
+en mode expert → `project.mode='expert'`. Parcours style/review/generate **partagé** avec
+`/create` (le rendu standard pilote le matching → `shoppingList`). Terminal mode-aware : sur le
+`RenderScreen`, « J'adore » → `/create/[id]/expert` (au lieu de `/final`).
+
+Écran expert (`ExpertScreen` + `app/(create)/create/[projectId]/expert/page.tsx`) :
+1. Calcule la `shoppingList` si besoin (`ensureFinalAssets`, on saute `/final`).
+2. `selectExpertPieces` : gros meubles matchés (whitelist `EXPERT_CATEGORIES`), 1 par catégorie,
+   priorisés, plafond 8. V1 = SEULEMENT gros meubles (canapé/tables/tapis/meuble TV/lit/etc.),
+   exclut déco/peinture/sol/luminaires.
+3. **Auto-génère** le rendu (vider → meubler). « Avant » du slider = **photo de base** ; « après »
+   = pièce meublée avec les vrais produits.
+4. CTA principal **« Voir ma liste de courses »** (→ `/final`) ; secondaire « Régénérer un autre
+   agencement » (NB2 a de la variance → nouvelle disposition).
+
+À faire (cf. Chantiers) : « URL produit imposé » (coller un lien → image en réf) ; inversion du
+matching (curation au lieu de render-driven).
 
 ## Coût / perf
 - ~1 appel NB2 par rendu (multi-meubles) : ~$0,05-0,13, ~20 s. Marginal vs le volume standard.
 - Tier premium → coût acceptable.
 
+## Prompt de meuble : préserver l'expo
+Sans garde-fou, NB2 surexpose/délave parfois la scène (constaté sur salon3). Le prompt
+`furnishPrompt` impose désormais : *« Preserve the EXACT lighting, exposure, white balance and
+colors of the input photo — do not brighten, wash out or over-expose. »* → corrige le délavé.
+
 ## Chantiers ouverts
+- **Intégration dès le 1er rendu (inversion pipeline)** : aujourd'hui le matching reste piloté
+  par le rendu standard fictif (le flux partagé le génère → shoppingList → écran expert vide+
+  meuble). L'idéal (demande user) : curer les produits directement (room_defaults + style) et
+  faire du rendu vide+meublé LE premier rendu, sans passer par le fictif. Nécessite un chemin de
+  matching « curation » (pas render-driven). Non fait — à cadrer.
 - **Alternative à Gemini (dépendance)** : NON résolu. Seedream (non-Google) recompose → pas un
-  fallback à qualité égale. À tester : **FLUX.2 edit** (`fal-ai/flux-2-pro/edit`). Sinon,
-  garder Gemini pour la qualité expert + un fallback **dégradé** (Seedream/FLUX) seulement en
-  cas de 503. Voir `docs/FALLBACK_PROVIDERS.md`.
-- **Nombre max de références** avant que NB2 sature (tester 4-6-8 meubles en un appel).
-- **Ratio** : NB2 peut sortir carré ; vérifier/forcer le paysage (paramètre aspect fal).
-- **Le fauteuil s'est re-stylé tout seul** dans le one-shot (hors cibles) : à cadrer si on veut
-  garder certains meubles intacts.
-- Env : `FAL_API_KEY` (Seedream + FLUX), `GPT_API_KEY` (option). Clé Gemini déjà là.
+  fallback à qualité égale. À tester : **FLUX.2 edit** (`fal-ai/flux-2-pro/edit`). Sinon, garder
+  NB2 pour la qualité + fallback dégradé seulement en 503. Voir `docs/FALLBACK_PROVIDERS.md`.
+- **Packshots** : la qualité produit dépend d'une image de référence sur fond neutre (cf. plus
+  haut). Prévoir sélection `_packshot` ou détourage `fal-ai/birefnet` pour les réfs d'ambiance.
+- **Petits ajouts hors-réf** : NB2 ajoute parfois un petit cadre / livre déco (mineur). À cadrer
+  si gênant.
+- **Ratio** : NB2 préserve le ratio d'entrée (photo paysage → sortie paysage). OK pour les
+  photos réelles ; carré seulement si l'entrée est portrait.
+- Env : `FAL_API_KEY` (NB2 + fallbacks), `GPT_API_KEY` (option). Clé Gemini déjà là.
 
 ## Lien avec l'existant
 - Le flux standard (`/create`) reste inchangé — l'expert est une route séparée.

@@ -149,9 +149,14 @@ export type Project = {
   mode?: "standard" | "expert";
   generatedRenderUrl: string | null;
   firstRenderUrl?: string;
-  // Rendu EXPERT : la disposition choisie régénérée avec les VRAIS produits du
-  // catalogue (gros meubles) intégrés (flux /expert-create).
+  // Rendu EXPERT : la pièce VIDÉE de son mobilier amovible (murs/fenêtres/parquet/
+  // rideaux conservés) puis MEUBLÉE avec les VRAIS produits du catalogue (gros
+  // meubles) — flux /expert-create.
   expertRenderUrl?: string | null;
+  // Coquille vide de la pièce (mobilier retiré, architecture conservée) — étape 1
+  // du rendu expert. Mise en cache : la photo de base ne change jamais, on ne la
+  // re-vide donc pas à chaque régénération.
+  emptyShellUrl?: string | null;
   // "3 dispositions" : 3 rendus distincts (feature experts), parmi lesquels le
   // user en choisit un (qui devient generatedRenderUrl).
   dispositionsRenderUrls?: string[];

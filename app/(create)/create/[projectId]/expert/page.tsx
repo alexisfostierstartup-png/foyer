@@ -16,7 +16,9 @@ export default async function ExpertPage({
   const { projectId } = await params;
   const project = await getProject(projectId);
   if (!project) redirect("/create");
-  // Le rendu expert reprend la disposition choisie : il faut un rendu de base.
+  // Le rendu expert part de la PHOTO DE BASE (vidée puis meublée), mais il a
+  // besoin du matching : celui-ci est piloté par le rendu standard, donc on
+  // exige qu'un rendu ait été généré (garantit que le flux a bien tourné).
   if (!project.generatedRenderUrl) redirect(`/create/${projectId}`);
 
   // Le flux expert saute l'écran /final : on calcule ici la liste shopping (matching)
@@ -31,7 +33,7 @@ export default async function ExpertPage({
   return (
     <ExpertScreen
       projectId={projectId}
-      beforeUrl={project.generatedRenderUrl}
+      beforeUrl={project.basePhotoUrl}
       initialExpertUrl={project.expertRenderUrl}
       products={pieces.map((p) => ({ category: p.category, name: p.name, imageUrl: p.imageUrl }))}
     />
