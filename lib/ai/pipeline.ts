@@ -286,6 +286,7 @@ type VerdictInput = {
   mismatch_type: "none" | "surface" | "structural";
   action_slug: string | null;
   action_label: string | null;
+  action_label_en?: string | null;
 };
 
 // Fournitures DIY conservées dans la shopping list pour l'instant : seulement les
@@ -349,6 +350,7 @@ export async function resolveElementDecision(
     mismatch_type: verdict.mismatch_type,
     action_slug: verdict.action_slug,
     action_label: verdict.action_label,
+    action_label_en: verdict.action_label_en ?? null,
     qty,
     qty_unit: action?.qty_unit ?? null,
     supply_items,
@@ -478,9 +480,13 @@ export async function runAnalysisPipeline(
   );
 
   // ── 4. APPEL 2 — VERDICT (keep/customize/replace, parmi les candidates) ────
+  // Beta : variante à labels MONO-instruction — les « X ou Y » du verdict
+  // produisent des rendus ambigus (plafond « ton sur ton » peint en navy,
+  // « verre fumé » interprété en dôme miroir — projet JwnjVV3W).
+  const verdictSlug = diyOpts ? "verdict_elements_diy_beta" : "verdict_elements";
   const tVerdict = Date.now();
   const verdictPrompt = await resolvePrompt(
-    "verdict_elements",
+    verdictSlug,
     { styleName, styleMood, elementsJson, candidateActionsJson },
     { strict: false },
   );
@@ -489,7 +495,7 @@ export async function runAnalysisPipeline(
       step: "verdict",
       projectId,
       provider: verdictPrompt.prompt.provider,
-      requestPayload: { promptName: "verdict_elements", prompt: verdictPrompt.resolvedTemplate.slice(0, 5000) },
+      requestPayload: { promptName: verdictSlug, prompt: verdictPrompt.resolvedTemplate.slice(0, 5000) },
     },
     () =>
       getVisionProvider(verdictPrompt.prompt.provider).analyze(verdictPrompt.resolvedTemplate, [sourceImage], {
@@ -510,6 +516,8 @@ export async function runAnalysisPipeline(
     mismatch_type: "none" | "surface" | "structural";
     action_slug: string | null;
     action_label: string | null;
+    // Verdict beta uniquement : label anglais pour le prompt image.
+    action_label_en?: string | null;
   };
   const vParsed = verdictResult.parsed;
   const rawDecisions: VerdictDecision[] = Array.isArray(vParsed)
@@ -556,7 +564,13 @@ export async function runAnalysisPipeline(
       }
 
       return resolveElementDecision(
-        { element_id: profile.element_id, mismatch_type: mismatch, action_slug: actionSlug, action_label: actionLabel },
+        {
+          element_id: profile.element_id,
+          mismatch_type: mismatch,
+          action_slug: actionSlug,
+          action_label: actionLabel,
+          action_label_en: v?.action_label_en ?? null,
+        },
         profile,
         actionMap,
       );
@@ -589,7 +603,7 @@ export async function runAnalysisPipeline(
       : allowed.includes("customize") ? "customize"
       : "keep";
     const mt = target === "keep" ? "none" : target === "customize" ? "surface" : "structural";
-    return { ...d, mismatch_type: mt as ElementDecision["mismatch_type"], action_slug: null, action_label: null, supply_items: null, qty: null };
+    return { ...d, mismatch_type: mt as ElementDecision["mismatch_type"], action_slug: null, action_label: null, action_label_en: null, supply_items: null, qty: null };
   });
 
   // ── 7. LIBELLÉ DE CUSTOMISATION ────────────────────────────────────────────
@@ -762,10 +776,14 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
 // « sofa/coffee table » mettait un salon dans une chambre. Le mobilier vient de
 // {{roomType}} + {{furnitureDefaults}} du prompt. On évite aussi « ouvert / open up /
 // airy » que le modèle image interprète comme des modifications d'architecture.
+// 3 variations GENUINEMENT distinctes : chacune combine un agencement ET une
+// direction HORS-mobilier (couleur murale dans la palette + déco), pour éviter les
+// jumeaux + la recolorisation forcée du mobilier. Le style et les meubles (identité +
+// couleur vraie) restent constants ; c'est le mur/la déco/le layout qui varient.
 const DISPOSITION_BRIEFS = [
-  "Layout 1 — centré: gather this room's main furniture into a close, functional grouping around its natural focal point, keeping clear circulation around it. Only the movable furniture placement changes.",
-  "Layout 2 — le long des murs: place the largest piece against the longest solid wall and arrange the other pieces to keep a wide, clear central walkway. Only the movable furniture placement changes; the room, its walls and openings stay identical.",
-  "Layout 3 — espacé: spread the movable furniture with generous spacing for easy circulation, pieces set mostly along the walls to leave the centre free. Only the furniture placement changes; do not alter the room itself.",
+  "Variation A — centré & signature: gather the movable furniture into a close functional grouping around the room's focal point, clear circulation around it. Walls in the DEEPEST / signature colour of the style palette; restrained, tonal decor.",
+  "Variation B — le long des murs, clair & naturel: place the largest piece against the longest solid wall, keep a wide clear central walkway. Paint the walls in a LIGHT airy neutral FROM THE STYLE PALETTE (off-white, greige, sand — different from variation A); layer warm natural textures and a little more decor (a plant, a throw, art).",
+  "Variation C — espacé, chaleureux/accent: spread the furniture along the walls leaving the centre free, generous circulation. Give the walls a WARMER mid-tone or a subtle TWO-TONE / single-accent-wall treatment taken from the style palette (distinct from A and B); add one statement decor piece.",
 ];
 
 /**

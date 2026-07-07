@@ -97,6 +97,10 @@ export type ElementDecision = {
   mismatch_type: MismatchType;
   action_slug: string | null;
   action_label: string | null;
+  // Version ANGLAISE du label (verdict beta) — injectée verbatim dans le prompt
+  // image à la place du label FR (banc : teintes bois 0/4 en FR vs 2/2 en EN).
+  // Le label FR reste la version affichée en review. Absent en flux standard.
+  action_label_en?: string | null;
   qty: number | null;
   qty_unit: string | null;
   supply_items: ResolvedSupply[] | null;

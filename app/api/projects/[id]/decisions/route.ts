@@ -73,6 +73,7 @@ export async function PATCH(
               mismatch_type: "surface",
               action_slug: best.slug,
               action_label: `${best.label} — finition accordée au style`,
+              action_label_en: `${best.label_en ?? best.label} — finish matched to the style`,
             },
             profile,
             actionMap,

@@ -70,6 +70,49 @@ describe("formatDesignPlan", () => {
     expect(plan).not.toContain("REPLACE");
   });
 
+  it("beta : la petite déco à remplacer est groupée en 1 ligne récapitulative (standard : inchangé)", () => {
+    const decisions = [
+      { category: "decor_object", description: "Vase blanc", mismatch_type: "structural" as const, action_slug: null, action_label: null, qty: null, qty_unit: null },
+      { category: "decor_object", description: "Bol blanc", mismatch_type: "structural" as const, action_slug: null, action_label: null, qty: null, qty_unit: null },
+      { category: "frame", description: "Cadre abstrait", mismatch_type: "structural" as const, action_slug: null, action_label: null, qty: null, qty_unit: null },
+      { category: "sofa", description: "Canapé crème", mismatch_type: "structural" as const, action_slug: null, action_label: null, qty: null, qty_unit: null },
+    ];
+    const beta = formatDesignPlan(decisions, { renderableSlugs: new Set() });
+    const lines = beta.split("\n");
+    expect(lines).toHaveLength(2); // canapé + groupe déco
+    expect(beta).toContain("small decor as a group (3 items");
+    expect(beta).toContain("Vase blanc");
+    // Standard : pas de groupage déco
+    expect(formatDesignPlan(decisions).split("\n")).toHaveLength(4);
+  });
+
+  it("beta : murs partageant le même label → 1 ligne « the walls » ; REPLACE compact avec « identical »", () => {
+    const decisions = [
+      { category: "wall", description: "Mur vert sauge", mismatch_type: "surface" as const, action_slug: "repaint", action_label: "Repeindre en bleu encre", qty: 30, qty_unit: "L" },
+      { category: "wall", description: "Mur blanc cassé", mismatch_type: "surface" as const, action_slug: "repaint", action_label: "Repeindre en bleu encre", qty: 25, qty_unit: "L" },
+      { category: "chair", description: "Chaise beige", mismatch_type: "structural" as const, action_slug: null, action_label: null, qty: null, qty_unit: null },
+      { category: "chair", description: "Chaise beige", mismatch_type: "structural" as const, action_slug: null, action_label: null, qty: null, qty_unit: null },
+    ];
+    const beta = formatDesignPlan(decisions, { renderableSlugs: new Set(["repaint"]) });
+    const lines = beta.split("\n");
+    expect(lines).toHaveLength(2);
+    expect(lines.find((l) => l.includes("the walls"))).toContain("RESTYLE");
+    const chairs = lines.find((l) => l.includes("Chaise"));
+    expect(chairs).toContain("all 2 identical");
+    expect(chairs).toContain("Never the original recolored");
+  });
+
+  it("beta : le label ANGLAIS prime dans le plan (fallback FR) ; standard : FR", () => {
+    const decisions = [
+      { category: "dining_table", description: "Table bois clair", mismatch_type: "surface" as const, action_slug: "stain_wood", action_label: "Teinter le bois en espresso", action_label_en: "Stain the wood dark espresso", qty: null, qty_unit: null },
+    ];
+    const beta = formatDesignPlan(decisions, { renderableSlugs: new Set(["stain_wood"]) });
+    expect(beta).toContain("Stain the wood dark espresso");
+    expect(beta).not.toContain("Teinter");
+    const standard = formatDesignPlan(decisions);
+    expect(standard).toContain("Teinter le bois en espresso");
+  });
+
   it("beta : mur/sol/plafond → toujours RESTYLE, même avec action non renderable", () => {
     const plan = formatDesignPlan(
       [
