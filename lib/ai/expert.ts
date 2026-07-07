@@ -129,26 +129,39 @@ async function emptyRoom(photoUrl: string): Promise<{ buffer: Buffer; mimeType: 
 // Recette validée : image de référence + prompt MINIMAL (ne jamais décrire la
 // forme d'un meuble — le texte écrase l'image). On mappe chaque produit à son
 // image, on impose "exactement un de chaque", on fige l'architecture et l'expo.
-// On N'IMPOSE PAS le placement (Gemini agence très bien seul, testé) : on lui donne
-// juste une contrainte de containment (le seul vrai levier — sans elle, il posait
-// le meuble TV à cheval sur un mur).
+// On N'IMPOSE PAS de placement rigide par meuble (Gemini agence très bien seul),
+// mais on lui donne des RÈGLES FONCTIONNELLES : sans elles, il posait le meuble TV
+// à cheval sur une porte, ou le canapé devant une ouverture, ou rien face à la TV.
+// Testé 5 tirages/5 acceptables avec ces règles (vs cas inacceptables sans).
 function furnishPrompt(pieces: Piece[], roomType: RoomType): string {
   const room = ROOM_LABEL[roomType] ?? "room";
   const list = pieces.map((p, i) => `the ${p.noun} in image ${i + 2}`).join(", ");
   return (
     `This is a photo of a REAL EMPTY ${room}. Furnish it realistically by ADDING these ` +
     `furniture products — EXACTLY ONE of each — using each product's exact appearance from its ` +
-    `reference image and IGNORING the reference backgrounds: ${list}. Arrange them the way a ` +
-    `professional interior stylist would, in a comfortable balanced layout, at correct ` +
-    `real-world scale with natural contact shadows. EVERY piece must rest fully inside the room, ` +
-    `flat on the floor and flush against a wall where appropriate — NO piece may overlap, cross ` +
-    `or pass through a wall, doorway, window or alcove edge, and none may float or be clipped by ` +
-    `the frame. Keep the room's ARCHITECTURE and fixed elements EXACTLY as photographed: walls, ` +
-    `wall recesses/alcoves, windows, curtains, doors, radiators, the floor, the ceiling and ` +
-    `light fixtures, and the SAME camera angle and framing. Do NOT add, remove, move or alter ` +
-    `any wall, window, door or opening, and do NOT add any furniture or decor that is not in the ` +
-    `reference images. Preserve the EXACT lighting, exposure, white balance and colors of the ` +
-    `input photo — do not brighten, wash out or over-expose the scene. Photorealistic.`
+    `reference image and IGNORING the reference backgrounds: ${list}. Arrange them like a ` +
+    `professional interior stylist into a FUNCTIONAL ${room} layout, at correct real-world scale ` +
+    `with natural contact shadows.\n` +
+    `FUNCTIONAL RULES (critical):\n` +
+    `1. Keep EVERY door, doorway and open passage to another room completely clear and visible — ` +
+    `NEVER place any furniture in front of, across or covering a door, doorway or open passage, ` +
+    `and never block circulation.\n` +
+    `2. If a TV / TV stand is included, stand it against a SOLID wall segment that has NO door and ` +
+    `NO window on it — never over a door, doorway or window (a shallow wall recess facing the ` +
+    `seating is fine).\n` +
+    `3. Arrange the main seating (sofa, armchair) to FACE the focal point — the TV if there is ` +
+    `one — forming a conversation area around the rug and coffee table (coffee table on the rug ` +
+    `between the seating and the TV).\n` +
+    `4. Push the large pieces (sofa, TV stand, bookshelf, bed) back flush against walls, keeping ` +
+    `the centre and all passages open.\n` +
+    `Every piece must rest fully inside the room, flat on the floor — NO piece may overlap, cross ` +
+    `or pass through a wall, door, window or opening, and none may float or be clipped by the ` +
+    `frame. Keep the room's ARCHITECTURE and fixed elements EXACTLY as photographed (walls, wall ` +
+    `recesses/alcoves, doors, windows, curtains, radiators, the floor, the ceiling and light ` +
+    `fixtures) and the SAME camera angle and framing. Do NOT add, remove, move or alter any wall, ` +
+    `window, door or opening, and do NOT add any furniture or decor not in the references. ` +
+    `Preserve the EXACT lighting, exposure, white balance and colors of the input photo — do not ` +
+    `brighten, wash out or over-expose the scene. Photorealistic.`
   );
 }
 

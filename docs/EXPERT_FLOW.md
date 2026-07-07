@@ -78,16 +78,21 @@ matching (curation au lieu de render-driven).
 - ~1 appel NB2 par rendu (multi-meubles) : ~$0,05-0,13, ~20 s. Marginal vs le volume standard.
 - Tier premium → coût acceptable.
 
-## Prompt de meuble : containment > placement imposé
-- **On N'IMPOSE PAS le placement par meuble.** Testé (2026-07-07) : à qualité égale, Gemini
-  agence très bien seul (2 tirages propres, canapé/fauteuil/biblio/tapis/table cohérents). Le
-  placement par catégorie a été retiré (moins de variables, plus scalable — choix user).
-- **Le seul vrai levier = la contrainte de containment.** Le meuble TV ressortait à cheval sur
-  un mur/alcôve quand cette règle manquait. `furnishPrompt` impose : *« EVERY piece must rest
-  fully inside the room, flat on the floor and flush against a wall where appropriate — NO piece
-  may overlap, cross or pass through a wall, doorway, window or alcove edge. »*
-- **Expo** : *« Preserve the EXACT lighting, exposure, white balance and colors… do not brighten,
-  wash out or over-expose. »* → corrige le délavé constaté sur un salon.
+## Prompt de meuble : règles FONCTIONNELLES (pas de placement rigide)
+- **Pas de placement rigide par meuble** (choix user, plus scalable), mais le containment seul
+  ne suffit pas : il empêche de traverser un mur mais pas les fautes fonctionnelles (meuble TV
+  sur une porte, canapé devant une ouverture, rien face à la TV). `furnishPrompt` impose donc 4
+  RÈGLES FONCTIONNELLES :
+  1. Portes / passages toujours dégagés (jamais de meuble devant/à cheval sur une porte ou une
+     ouverture vers une autre pièce).
+  2. TV/meuble TV contre un mur PLEIN (sans porte ni fenêtre) — niche peu profonde OK.
+  3. Assises (canapé, fauteuil) tournées vers la TV → coin conversation autour du tapis + table.
+  4. Grosses pièces repoussées contre les murs, centre + passages dégagés.
+  + containment (chaque pièce entièrement dans la pièce, à plat, aucune traversée mur/porte/
+  fenêtre/ouverture) + préservation expo/balance des blancs (corrige le délavé).
+- **Fiabilité testée (2026-07-07)** : 5 tirages / 5 acceptables avec ces règles (plusieurs avec
+  canapé face TV + passage dégagé), vs cas inacceptables sans (meuble TV sur porte). Validé aussi
+  via l'endpoint réel. La variance résiduelle est couverte par le bouton « Régénérer ».
 
 ## Chantiers ouverts
 - **Intégration dès le 1er rendu (inversion pipeline)** : aujourd'hui le matching reste piloté
