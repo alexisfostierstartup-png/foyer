@@ -156,6 +156,12 @@ export type Project = {
   // Flux emprunté : "expert" (/expert-create) ajoute le loop de rendu avec les
   // vrais meubles du catalogue. Défaut/absent = flux standard (/create).
   mode?: "standard" | "expert";
+  // Flux DIY beta (?diy=beta à la création) : actions beta + niveaux +
+  // exclusions dures de style + RESTYLE meuble visible (prompt variant).
+  // Absent = flux standard, bit à bit identique. Persisté sur le projet pour
+  // suivre toute sa vie (analyse, re-générations, shopping) sans contamination
+  // entre projets d'un même navigateur.
+  diyMode?: "beta";
   generatedRenderUrl: string | null;
   firstRenderUrl?: string;
   // Rendu EXPERT : la pièce VIDÉE de son mobilier amovible (murs/fenêtres/parquet/

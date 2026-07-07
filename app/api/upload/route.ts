@@ -95,6 +95,13 @@ export async function POST(request: NextRequest) {
       await updateProject(project.id, { mode: "expert" });
     }
 
+    // Flux DIY beta (?diy=beta sur /create) : persiste le flag sur le projet —
+    // il suit toute sa vie (analyse, re-générations, shopping), aucune
+    // contamination entre projets d'un même navigateur.
+    if (formData.get("diy") === "beta") {
+      await updateProject(project.id, { diyMode: "beta" });
+    }
+
     // Détection anticipée en fond (levier perf B) : elle ne dépend pas du style,
     // elle tourne pendant que le user remplit contraintes + style → la review
     // n'attendra que le verdict (~6-14 s au lieu de ~35 s).

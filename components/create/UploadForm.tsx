@@ -45,9 +45,11 @@ type Props = {
   // Flux expert (/expert-create) : même UI, mais le projet est créé en mode
   // "expert" → le terminal ajoute le rendu avec les vrais meubles.
   expert?: boolean;
+  // Flux DIY beta (/create?diy=beta) : flag persisté sur le projet à l'upload.
+  diyBeta?: boolean;
 };
 
-export function UploadForm({ floorPresets, roomTypes, expert = false }: Props) {
+export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = false }: Props) {
   const router = useRouter();
   const [roomType, setRoomType] = useState<RoomType | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -83,6 +85,7 @@ export function UploadForm({ floorPresets, roomTypes, expert = false }: Props) {
       formData.append("file", file);
       formData.append("roomType", roomType);
       if (expert) formData.append("mode", "expert");
+      if (diyBeta) formData.append("diy", "beta");
 
       const res = await fetch("/api/upload", { method: "POST", body: formData });
 

@@ -198,10 +198,18 @@ export function formatDesignPlan(
     description?: string;
     category: string;
     mismatch_type: "none" | "surface" | "structural";
+    action_slug?: string | null;
     action_label?: string | null;
     qty?: number | null;
     qty_unit?: string | null;
   }> | null | undefined,
+  opts?: {
+    // Mode DIY beta : slugs d'actions dont le rendu fidèle est validé.
+    // Une customisation (surface) dont l'action n'est PAS renderable est
+    // dégradée en REPLACE dans le plan image (comportement standard) — la
+    // shopping list, elle, garde bien les fournitures de customisation.
+    renderableSlugs?: Set<string>;
+  },
 ): string {
   if (!decisions?.length) return "";
 
@@ -223,7 +231,13 @@ export function formatDesignPlan(
     const what = (d.description?.trim() || d.category).replace(/\s+/g, " ");
     const many = count > 1;
     const tag = many ? ` (×${count})` : "";
-    if (d.mismatch_type === "surface") {
+    // Mode beta : une surface dont l'action n'est pas rendable fidèlement
+    // (ex. housse, poignées) est présentée au modèle image comme un REPLACE
+    // (rendu approximatif assumé) — la décision et ses fournitures restent
+    // une customisation côté review/shopping.
+    const surfaceRenderable =
+      !opts?.renderableSlugs || (d.action_slug != null && opts.renderableSlugs.has(d.action_slug));
+    if (d.mismatch_type === "surface" && surfaceRenderable) {
       const qty = d.qty && d.qty_unit ? ` (≈ ${d.qty} ${d.qty_unit})` : "";
       lines.push(
         `- RESTYLE ${what}${tag}: ${d.action_label ?? "personnaliser la finition pour s'accorder au style"}${qty}. Keep shape, size and position.`,

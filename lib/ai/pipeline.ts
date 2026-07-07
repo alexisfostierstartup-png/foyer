@@ -25,7 +25,7 @@ import { schemaForCategory } from "@/lib/shopping/attributeSchemaV3";
 import { extractCrop, type Bbox } from "@/lib/shopping/crop";
 import { matchPaintByColor, getChangedWallColors, type WallColor } from "@/lib/shopping/paintMatch";
 import type { ImageInput } from "./types";
-import { getAllDiyActions, getCandidateActions } from "@/lib/diy/rules";
+import { getAllDiyActions, getCandidateActions, getRenderableActionSlugs } from "@/lib/diy/rules";
 import { evalQtyFormula, getStandardDims } from "@/lib/diy/quantities";
 import type { ElementProfile, ElementDecision, DiyAction } from "@/lib/diy/types";
 
@@ -418,9 +418,13 @@ export async function runAnalysisPipeline(
   const sourceImage = await loadImage(project.basePhotoUrl);
 
   // 1. Fetch actions + style context in parallel (no Gemini)
+  // Flux DIY beta (?diy=beta à la création) : actions beta + beta_categories +
+  // filtre niveau + exclusions dures de style. Sinon comportement historique.
+  const diyOpts = project.diyMode === "beta" ? ({ mode: "beta" } as const) : undefined;
+  if (diyOpts) console.log(`[pipeline:analyze] mode DIY beta actif (projet ${projectId})`);
   const styleId = project.selectedStyleId;
   const [allActions, { styleName, styleMood }] = await Promise.all([
-    getAllDiyActions(),
+    getAllDiyActions(diyOpts),
     loadStyleContext(styleId),
   ]);
   const actionMap = new Map(allActions.map((a) => [a.slug, a]));
@@ -442,7 +446,7 @@ export async function runAnalysisPipeline(
   const candidatesByElement = new Map<string, DiyAction[]>();
   await Promise.all(
     profiles.map(async (p) => {
-      candidatesByElement.set(p.element_id, await getCandidateActions(p, styleId));
+      candidatesByElement.set(p.element_id, await getCandidateActions(p, styleId, diyOpts));
     }),
   );
 
@@ -568,6 +572,12 @@ export async function runAnalysisPipeline(
     none: "keep", surface: "customize", structural: "replace",
   };
   const clampedDecisions = decisions.map((d) => {
+    // Mode beta : le filtre déterministe des candidats (catégories ∪ beta_categories
+    // + requires + level + exclusions style) fait foi. Si une customisation a
+    // survécu avec une action VALIDE, on ne la clampe pas — la taxo statique
+    // allowed_actions (ex. assise = jamais customize) reflète l'exemption du flux
+    // standard, que le beta teste précisément.
+    if (diyOpts && d.mismatch_type === "surface" && d.action_slug) return d;
     const allowed = allowedByCat.get(d.category) ?? ["keep", "customize", "replace"];
     const requested = ACTION_OF[d.mismatch_type];
     if (allowed.includes(requested)) return d;
@@ -680,7 +690,13 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
   // 3. Generation
   // Plan de design issu des décisions par élément (après review) → injecté dans
   // le prompt pour que l'image reflète réellement keep/customize/replace.
-  const designPlan = formatDesignPlan(project.element_decisions);
+  // Mode DIY beta : les customisations rendables restent des RESTYLE visibles
+  // (variante de prompt sélectionnée via ctx.diyMode) ; les non-rendables sont
+  // dégradées en REPLACE dans le plan image.
+  const designPlan = formatDesignPlan(
+    project.element_decisions,
+    project.diyMode === "beta" ? { renderableSlugs: await getRenderableActionSlugs() } : undefined,
+  );
   const removeCategories = await loadRoomRemoveCategories(project.roomType);
 
   const genCtx = {
@@ -696,11 +712,16 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
     designPlan: designPlan || "None — restyle freely to fit the style.",
   };
 
+  // Flux DIY beta : variante de prompt sous slug dédié (RESTYLE meuble en
+  // place). NB : la contrainte uniq_prompts_active (un actif par slug+purpose)
+  // empêche la coexistence par `conditions` — d'où le slug séparé.
+  const genSlug = project.diyMode === "beta" ? "gen_wow_generic_diy_beta" : "gen_wow_generic";
+
   const t1 = Date.now();
-  const genPrompt = await resolvePrompt("gen_wow_generic", genCtx, { strict: false });
+  const genPrompt = await resolvePrompt(genSlug, genCtx, { strict: false });
   const genResult = await withTracking(
     { step: "generation", projectId, provider: genPrompt.prompt.provider,
-      requestPayload: { promptName: "gen_wow_generic", prompt: genPrompt.resolvedTemplate.slice(0, 5000) } },
+      requestPayload: { promptName: genSlug, prompt: genPrompt.resolvedTemplate.slice(0, 5000) } },
     () => getImageProvider(genPrompt.prompt.provider).generateFromText(genPrompt.resolvedTemplate, sourceImage),
   );
   console.log(`[pipeline:generate] generation: ${Date.now() - t1}ms, ${Math.round(genResult.imageBuffer.length / 1024)}KB`);
@@ -775,7 +796,10 @@ export async function runDispositionsPipeline(projectId: string): Promise<string
   });
   const furnitureDefaults = await loadRoomDefaults(project.roomType);
   const userInstructions = await formatUserInstructions(choices);
-  const designPlan = formatDesignPlan(project.element_decisions);
+  const designPlan = formatDesignPlan(
+    project.element_decisions,
+    project.diyMode === "beta" ? { renderableSlugs: await getRenderableActionSlugs() } : undefined,
+  );
 
   const removeCategories = await loadRoomRemoveCategories(project.roomType);
 
@@ -791,18 +815,21 @@ export async function runDispositionsPipeline(projectId: string): Promise<string
     designPlan: designPlan || "None — restyle freely to fit the style.",
   };
 
+  // Flux DIY beta : variante sous slug dédié (cf. runGenerationPipeline).
+  const dispoSlug = project.diyMode === "beta" ? "gen_wow_3_dispositions_diy_beta" : "gen_wow_3_dispositions";
+
   // 3 générations en parallèle (1 par brief).
   const urls = await Promise.all(
     DISPOSITION_BRIEFS.map(async (dispositionBrief, i) => {
       const t1 = Date.now();
       const genPrompt = await resolvePrompt(
-        "gen_wow_3_dispositions",
+        dispoSlug,
         { ...baseCtx, dispositionBrief },
         { strict: false },
       );
       const result = await withTracking(
         { step: "generation", projectId, provider: genPrompt.prompt.provider,
-          requestPayload: { promptName: "gen_wow_3_dispositions", disposition: i + 1, prompt: genPrompt.resolvedTemplate.slice(0, 5000) } },
+          requestPayload: { promptName: dispoSlug, disposition: i + 1, prompt: genPrompt.resolvedTemplate.slice(0, 5000) } },
         () => getImageProvider(genPrompt.prompt.provider).generateFromText(genPrompt.resolvedTemplate, sourceImage),
       );
       console.log(`[pipeline:dispositions] #${i + 1} ${Date.now() - t1}ms`);

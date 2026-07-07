@@ -5,7 +5,7 @@ vi.mock("@/lib/supabase/server", () => ({
   createSupabaseAdmin: vi.fn(),
 }));
 
-import { getCandidateActions } from "../rules";
+import { filterCandidateActions, getCandidateActions } from "../rules";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import type { DiyAction, ElementProfile } from "../types";
 
@@ -23,6 +23,10 @@ const mockActions: DiyAction[] = [
     style_affinity: { doux: 0.9, brut: 0.6, "bois-clair": 0.7 },
     supplies_template: null,
     is_active: true,
+    level: 1,
+    renderable: true,
+    beta: false,
+    beta_categories: [],
   },
   {
     id: "2",
@@ -37,6 +41,10 @@ const mockActions: DiyAction[] = [
     style_affinity: { doux: 0.85, brut: 0.2, "bois-clair": 0.4 },
     supplies_template: null,
     is_active: true,
+    level: 1,
+    renderable: true,
+    beta: false,
+    beta_categories: [],
   },
   {
     id: "3",
@@ -51,6 +59,10 @@ const mockActions: DiyAction[] = [
     style_affinity: { doux: 0.9, brut: 0.3, "bois-clair": 0.5 },
     supplies_template: null,
     is_active: true,
+    level: 3,
+    renderable: false,
+    beta: false,
+    beta_categories: [],
   },
 ];
 
@@ -195,5 +207,78 @@ describe("getCandidateActions", () => {
 
     const result = await getCandidateActions(sofaProfile, "doux");
     expect(result).toHaveLength(0);
+  });
+});
+
+describe("filterCandidateActions — mode DIY beta", () => {
+  const betaAction: DiyAction = {
+    ...mockActions[0],
+    id: "10",
+    slug: "slat_wall",
+    applies_to_categories: ["wall"],
+    requires: {},
+    excludes: {},
+    is_active: false,
+    beta: true,
+    level: 1,
+    style_affinity: { japandi: 0.9, memphis: -1 },
+    beta_categories: [],
+  };
+  const levelTwoAction: DiyAction = {
+    ...betaAction,
+    id: "11",
+    slug: "fresco_wall",
+    level: 2,
+    style_affinity: {},
+  };
+  const withBetaCats: DiyAction = {
+    ...mockActions[0],
+    id: "12",
+    slug: "repaint",
+    applies_to_categories: ["wall"],
+    beta_categories: ["sideboard"],
+    requires: {},
+    excludes: {},
+    style_affinity: {},
+  };
+  const sideboardProfile: ElementProfile = {
+    ...wallProfile,
+    element_id: "sideboard_1",
+    category: "sideboard",
+    material_family: "wood",
+  };
+
+  it("standard : ignore beta_categories (candidats inchangés)", () => {
+    const res = filterCandidateActions([withBetaCats], sideboardProfile, "japandi");
+    expect(res).toHaveLength(0);
+  });
+
+  it("beta : merge beta_categories dans le match catégorie", () => {
+    const res = filterCandidateActions([withBetaCats], sideboardProfile, "japandi", { mode: "beta" });
+    expect(res.map((a) => a.slug)).toContain("repaint");
+  });
+
+  it("beta : filtre level ≤ maxLevel (défaut néophyte = 1)", () => {
+    const res = filterCandidateActions([betaAction, levelTwoAction], wallProfile, "japandi", { mode: "beta" });
+    expect(res.map((a) => a.slug)).toEqual(["slat_wall"]);
+    const res2 = filterCandidateActions([betaAction, levelTwoAction], wallProfile, "japandi", { mode: "beta", maxLevel: 2 });
+    expect(res2.map((a) => a.slug).sort()).toEqual(["fresco_wall", "slat_wall"]);
+  });
+
+  it("beta : affinité négative = exclusion dure pour ce style", () => {
+    const japandi = filterCandidateActions([betaAction], wallProfile, "japandi", { mode: "beta" });
+    expect(japandi).toHaveLength(1);
+    const memphis = filterCandidateActions([betaAction], wallProfile, "memphis", { mode: "beta" });
+    expect(memphis).toHaveLength(0);
+  });
+
+  it("standard : l'affinité négative ne filtre PAS (tri seulement)", () => {
+    const res = filterCandidateActions([betaAction], wallProfile, "memphis");
+    expect(res).toHaveLength(1);
+  });
+
+  it("standard : le level ne filtre PAS", () => {
+    const res = filterCandidateActions([levelTwoAction], wallProfile, "japandi");
+    expect(res).toHaveLength(1);
   });
 });

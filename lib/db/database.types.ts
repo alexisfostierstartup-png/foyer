@@ -119,6 +119,10 @@ export type Database = {
           style_affinity: Json
           supplies_template: Json | null
           is_active: boolean
+          level: number
+          renderable: boolean
+          beta: boolean
+          beta_categories: string[]
           created_at: string
           updated_at: string
         }
@@ -135,6 +139,10 @@ export type Database = {
           style_affinity?: Json
           supplies_template?: Json | null
           is_active?: boolean
+          level?: number
+          renderable?: boolean
+          beta?: boolean
+          beta_categories?: string[]
           created_at?: string
           updated_at?: string
         }
@@ -151,6 +159,10 @@ export type Database = {
           style_affinity?: Json
           supplies_template?: Json | null
           is_active?: boolean
+          level?: number
+          renderable?: boolean
+          beta?: boolean
+          beta_categories?: string[]
           created_at?: string
           updated_at?: string
         }
