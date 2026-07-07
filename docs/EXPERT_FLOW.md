@@ -78,10 +78,16 @@ matching (curation au lieu de render-driven).
 - ~1 appel NB2 par rendu (multi-meubles) : ~$0,05-0,13, ~20 s. Marginal vs le volume standard.
 - Tier premium → coût acceptable.
 
-## Prompt de meuble : préserver l'expo
-Sans garde-fou, NB2 surexpose/délave parfois la scène (constaté sur salon3). Le prompt
-`furnishPrompt` impose désormais : *« Preserve the EXACT lighting, exposure, white balance and
-colors of the input photo — do not brighten, wash out or over-expose. »* → corrige le délavé.
+## Prompt de meuble : containment > placement imposé
+- **On N'IMPOSE PAS le placement par meuble.** Testé (2026-07-07) : à qualité égale, Gemini
+  agence très bien seul (2 tirages propres, canapé/fauteuil/biblio/tapis/table cohérents). Le
+  placement par catégorie a été retiré (moins de variables, plus scalable — choix user).
+- **Le seul vrai levier = la contrainte de containment.** Le meuble TV ressortait à cheval sur
+  un mur/alcôve quand cette règle manquait. `furnishPrompt` impose : *« EVERY piece must rest
+  fully inside the room, flat on the floor and flush against a wall where appropriate — NO piece
+  may overlap, cross or pass through a wall, doorway, window or alcove edge. »*
+- **Expo** : *« Preserve the EXACT lighting, exposure, white balance and colors… do not brighten,
+  wash out or over-expose. »* → corrige le délavé constaté sur un salon.
 
 ## Chantiers ouverts
 - **Intégration dès le 1er rendu (inversion pipeline)** : aujourd'hui le matching reste piloté
