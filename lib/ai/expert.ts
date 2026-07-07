@@ -1,7 +1,7 @@
 import { getProject, updateProject } from "@/lib/storage/projects";
 import { fetchImageBytes } from "@/lib/ai/pipeline";
 import { saveRender } from "@/lib/ai/saveRender";
-import type { RoomType, ShoppingItem } from "@/lib/types";
+import type { RoomType, ShoppingItem, CustomProduct } from "@/lib/types";
 import type { ElementDecision } from "@/lib/diy/types";
 
 // ── Gros meubles à intégrer au rendu expert ─────────────────────────────────
@@ -95,26 +95,48 @@ type Piece = { category: string; noun: string; imageUrl: string; name: string };
 /**
  * Sélectionne les gros meubles matchés (image produit dispo), par priorité.
  * `overrides[elementId]` = produit alternatif choisi (défaut 0) — « liste alternative ».
+ * `customProducts[elementId|category]` = produit SUR-MESURE de l'user (URL/JPEG) →
+ * prioritaire sur le matching ; s'il vise une catégorie absente de la liste (choix à
+ * l'upload), on l'ajoute comme pièce à part entière.
  */
 function selectExpertPieces(
   shoppingList: ShoppingItem[],
   overrides: Record<string, number> = {},
+  customProducts: Record<string, CustomProduct> = {},
 ): Piece[] {
   const priority = new Map(EXPERT_CATEGORIES.map((c, i) => [c as string, i]));
-  return shoppingList
+  const pieces = shoppingList
     .map((it) => {
       const cat = it.category;
       if (it.source === "diy" || !isReplaceableFurniture(cat)) return null;
       const noun = CATEGORY_NOUN[cat] ?? cat.replace(/_/g, " ");
+      // Priorité au produit custom de l'user (par elementId puis par catégorie).
+      const cp = (it.elementId ? customProducts[it.elementId] : undefined) ?? customProducts[cat];
       const idx = (it.elementId && overrides[it.elementId]) || 0;
       const match = it.matches?.[idx] ?? it.matches?.[0];
-      const imageUrl = match?.primary_image_url ?? it.imgUrl;
+      const imageUrl = cp?.imageUrl ?? match?.primary_image_url ?? it.imgUrl;
       if (!imageUrl) return null;
-      return { category: cat, noun, imageUrl, name: match?.name ?? it.name, _p: priority.get(cat) ?? 99 };
+      return {
+        category: cat,
+        noun,
+        imageUrl,
+        name: cp?.name ?? match?.name ?? it.name,
+        _p: priority.get(cat) ?? 99,
+      };
     })
     .filter((x): x is Piece & { _p: number } => x !== null)
     // dédup par catégorie (une ligne par type de meuble)
-    .filter((x, i, arr) => arr.findIndex((y) => y.category === x.category) === i)
+    .filter((x, i, arr) => arr.findIndex((y) => y.category === x.category) === i);
+
+  // Produits custom visant une CATÉGORIE absente de la liste (choisis dès l'upload) :
+  // on les ajoute comme pièces (la clé est une catégorie connue, pas un elementId).
+  for (const [key, cp] of Object.entries(customProducts)) {
+    if (!cp?.imageUrl || !CATEGORY_NOUN[key] || !isReplaceableFurniture(key)) continue;
+    if (pieces.some((p) => p.category === key)) continue;
+    pieces.push({ category: key, noun: CATEGORY_NOUN[key], imageUrl: cp.imageUrl, name: cp.name ?? CATEGORY_NOUN[key], _p: priority.get(key) ?? 99 });
+  }
+
+  return pieces
     .sort((a, b) => a._p - b._p)
     .slice(0, MAX_PIECES)
     .map(({ category, noun, imageUrl, name }) => ({ category, noun, imageUrl, name }));
@@ -376,7 +398,8 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
 
   const shoppingList = (project.shoppingList ?? []) as ShoppingItem[];
   const overrides = (project.productOverrides ?? {}) as Record<string, number>;
-  const pieces = selectExpertPieces(shoppingList, overrides);
+  const customProducts = (project.customProducts ?? {}) as Record<string, CustomProduct>;
+  const pieces = selectExpertPieces(shoppingList, overrides, customProducts);
   if (pieces.length === 0) {
     // Rien à remplacer (tous les meubles gardés, pièce déjà bien meublée) → le rendu
     // réel = le fake tel quel (pas de 400 : c'est un résultat légitime).

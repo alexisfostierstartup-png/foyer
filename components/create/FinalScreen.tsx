@@ -13,7 +13,7 @@ import { PaywallModal } from "@/components/paywalls/PaywallModal";
 import { cn } from "@/lib/utils";
 import { PAYWALL_DISABLED } from "@/lib/constants";
 import { useUser } from "@/lib/auth/useUser";
-import type { ShoppingItem, ScoreFoyer } from "@/lib/types";
+import type { ShoppingItem, ScoreFoyer, CustomProduct } from "@/lib/types";
 import type { PaywallTrigger } from "@/components/paywalls/PaywallModal";
 
 const STEPS = ["Photo", "Style", "Mobilier", "Rendu", "Projet"];
@@ -237,6 +237,7 @@ type Props = {
   // produits alternatifs (accumulés) + bouton « Nouveau rendu avec les (x) éléments ».
   expertMode?: boolean;
   productOverrides?: Record<string, number> | null;
+  customProducts?: Record<string, CustomProduct> | null;
 };
 
 export function FinalScreen({
@@ -250,6 +251,7 @@ export function FinalScreen({
   pendingList = false,
   expertMode = false,
   productOverrides = null,
+  customProducts = null,
 }: Props) {
   const router = useRouter();
   const { user, profile, wallet } = useUser();
@@ -315,14 +317,25 @@ export function FinalScreen({
   // On accumule les choix de produits alternatifs SANS re-render à chaque clic ;
   // un seul bouton relance le rendu avec les (x) éléments modifiés.
   const rendered = productOverrides ?? {};
+  const renderedCustom = customProducts ?? {};
   const [sel, setSel] = useState<Record<string, number>>(() => ({ ...rendered }));
+  const [cust, setCust] = useState<Record<string, CustomProduct>>(() => ({ ...renderedCustom }));
   const [rerendering, setRerendering] = useState(false);
   const chooseProduct = (elementId: string, idx: number) =>
     setSel((prev) => ({ ...prev, [elementId]: idx }));
-  // x = nb d'éléments dont le produit choisi diffère de celui du rendu actuel.
-  const changedCount = Array.from(
-    new Set([...Object.keys(sel), ...Object.keys(rendered)]),
-  ).filter((k) => (sel[k] ?? 0) !== (rendered[k] ?? 0)).length;
+  const setCustomProduct = (elementId: string, cp: CustomProduct | null) =>
+    setCust((prev) => {
+      const next = { ...prev };
+      if (cp) next[elementId] = cp;
+      else delete next[elementId];
+      return next;
+    });
+  // x = nb d'éléments dont le produit choisi (index OU sur-mesure) diffère du rendu.
+  const changedIdx = Array.from(new Set([...Object.keys(sel), ...Object.keys(rendered)]))
+    .filter((k) => (sel[k] ?? 0) !== (rendered[k] ?? 0));
+  const changedCustom = Array.from(new Set([...Object.keys(cust), ...Object.keys(renderedCustom)]))
+    .filter((k) => (cust[k]?.imageUrl ?? "") !== (renderedCustom[k]?.imageUrl ?? ""));
+  const changedCount = new Set([...changedIdx, ...changedCustom]).size;
 
   async function handleNewRender() {
     if (changedCount < 1 || rerendering) return;
@@ -331,7 +344,7 @@ export function FinalScreen({
       const res = await fetch(`/api/projects/${projectId}/product-overrides`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ overrides: sel }),
+        body: JSON.stringify({ overrides: sel, customProducts: cust }),
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => null)) as { error?: string } | null;
@@ -406,7 +419,7 @@ export function FinalScreen({
   }
 
   return (
-    <ExpertOverridesProvider value={{ enabled: expertMode, selected: sel, choose: chooseProduct }}>
+    <ExpertOverridesProvider value={{ enabled: expertMode, selected: sel, choose: chooseProduct, custom: cust, setCustom: setCustomProduct }}>
       <div className="flex flex-1 flex-col">
         <ProgressBar currentStep={5} labels={STEPS} />
 

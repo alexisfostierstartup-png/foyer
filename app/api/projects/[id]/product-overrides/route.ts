@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runExpertRenderPipeline } from "@/lib/ai/expert";
 import { updateProject } from "@/lib/storage/projects";
+import type { CustomProduct } from "@/lib/types";
 import { logPipelineError } from "@/lib/ai/logger";
 import { isTransientAiError } from "@/lib/ai/retry";
 import { getClientIp, checkRateLimit, RATE_LIMITED_BODY } from "@/lib/security/rateLimit";
@@ -21,9 +22,14 @@ export async function POST(
   }
 
   let overrides: Record<string, number>;
+  let customProducts: Record<string, CustomProduct> = {};
   try {
-    const body = (await request.json()) as { overrides?: Record<string, number> };
+    const body = (await request.json()) as {
+      overrides?: Record<string, number>;
+      customProducts?: Record<string, CustomProduct>;
+    };
     overrides = body.overrides ?? {};
+    customProducts = body.customProducts ?? {};
   } catch {
     return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
   }
@@ -32,9 +38,16 @@ export async function POST(
   for (const [k, v] of Object.entries(overrides)) {
     if (typeof v === "number" && Number.isInteger(v) && v >= 0) clean[k] = v;
   }
+  // Garde-fou custom : imageUrl http(s) obligatoire.
+  const cleanCustom: Record<string, CustomProduct> = {};
+  for (const [k, v] of Object.entries(customProducts)) {
+    if (v && typeof v.imageUrl === "string" && /^https?:\/\//.test(v.imageUrl)) {
+      cleanCustom[k] = { imageUrl: v.imageUrl, name: v.name ?? null, price: v.price ?? null, url: v.url ?? null, merchant: v.merchant ?? null };
+    }
+  }
 
   try {
-    await updateProject(id, { productOverrides: clean });
+    await updateProject(id, { productOverrides: clean, customProducts: cleanCustom });
     const url = await runExpertRenderPipeline(id);
     return NextResponse.json({ ok: true, projectId: id, expertRenderUrl: url });
   } catch (err) {

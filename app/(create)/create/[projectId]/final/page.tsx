@@ -46,6 +46,7 @@ export default async function FinalPage({
       pendingList={pendingList}
       expertMode={project.mode === "expert"}
       productOverrides={project.productOverrides ?? null}
+      customProducts={project.customProducts ?? null}
     />
   );
 }

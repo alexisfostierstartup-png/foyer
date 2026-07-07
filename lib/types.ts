@@ -36,6 +36,15 @@ export type UserConstraints = {
 
 export type ShoppingSource = "reuse" | "secondhand" | "new" | "diy";
 
+// Produit choisi par l'user (URL extraite ou JPEG importé) pour un élément/catégorie.
+export type CustomProduct = {
+  imageUrl: string;        // image du produit (extraite de l'URL ou uploadée)
+  name?: string | null;
+  price?: number | null;
+  url?: string | null;     // lien source si fourni
+  merchant?: string | null;
+};
+
 export type ShoppingMerchant = {
   name: string;
   source: ShoppingSource;
@@ -184,6 +193,10 @@ export type Project = {
   // « liste de courses alternative »). elementId → index dans `matches` (0 = meilleur).
   // Le rendu expert utilise ce produit au lieu de matches[0] pour cet élément.
   productOverrides?: Record<string, number> | null;
+  // Produit SUR-MESURE fourni par l'user (URL collée → image extraite, ou JPEG
+  // importé). Clé = elementId (choix à la liste shopping) OU catégorie (choix dès
+  // l'upload, avant détection). Prioritaire sur le matching pour cet élément/catégorie.
+  customProducts?: Record<string, CustomProduct> | null;
   scoreFoyer?: ScoreFoyer;
   userConstraints: UserConstraints | null;
   element_decisions?: import("./diy/types").ElementDecision[] | null;

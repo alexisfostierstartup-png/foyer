@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Sofa, Table, CircleDot, LampFloor, Tv, Frame, Grid2x2, BookOpen, Shrub,
-  PaintBucket, Package, Pencil, Check, ExternalLink, type LucideIcon,
+  PaintBucket, Package, Pencil, Check, ExternalLink, Link2, Upload, Loader2, X, type LucideIcon,
 } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import type { ShoppingItem, ShoppingSource, ProductMatch } from "@/lib/types";
+import type { ShoppingItem, ShoppingSource, ProductMatch, CustomProduct } from "@/lib/types";
 import { useExpertOverrides, affectsRender } from "@/components/create/expertOverrides";
 
 const CATEGORY_ICON: Record<string, LucideIcon> = {
@@ -154,6 +155,107 @@ function Thumb({ url, alt, fallback }: { url: string | null; alt: string; fallba
   );
 }
 
+// « Indiquer votre référence » : URL → extraction produit ; si l'extraction échoue
+// (site non lisible), on propose d'importer un JPEG directement (jamais de rendu bidon).
+function CustomRefInput({ onPicked }: { onPicked: (cp: CustomProduct) => void }) {
+  const [url, setUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function extract() {
+    const u = url.trim();
+    if (!u || loading) return;
+    setLoading(true);
+    setFailed(false);
+    try {
+      const res = await fetch("/api/products/extract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: u }),
+      });
+      const d = (await res.json()) as { ok?: boolean; product?: CustomProduct & { category?: string } };
+      if (d.ok && d.product?.imageUrl) {
+        onPicked({ imageUrl: d.product.imageUrl, name: d.product.name, price: d.product.price, url: d.product.url, merchant: d.product.merchant });
+        setUrl("");
+      } else {
+        setFailed(true);
+      }
+    } catch {
+      setFailed(true);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function uploadJpeg(file: File) {
+    setLoading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/products/upload-image", { method: "POST", body: fd });
+      const d = (await res.json()) as { ok?: boolean; imageUrl?: string; error?: string };
+      if (d.ok && d.imageUrl) {
+        onPicked({ imageUrl: d.imageUrl });
+        setFailed(false);
+        setUrl("");
+      } else {
+        toast.error(d.error ?? "Import échoué.");
+      }
+    } catch {
+      toast.error("Import échoué.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="mt-3 rounded-xl border border-dashed border-foyer-border bg-foyer-cream/40 p-3">
+      <p className="mb-2 flex items-center gap-1.5 text-[12px] font-medium text-foyer-ink">
+        <Link2 className="size-3.5 text-foyer-sage" aria-hidden /> Indiquer votre référence
+      </p>
+      <div className="flex items-center gap-2">
+        <input
+          type="url"
+          inputMode="url"
+          value={url}
+          onChange={(e) => { setUrl(e.target.value); setFailed(false); }}
+          onKeyDown={(e) => e.key === "Enter" && extract()}
+          placeholder="www."
+          className="min-w-0 flex-1 rounded-lg border border-foyer-border bg-white px-3 py-2 text-[13px] outline-none placeholder:text-foyer-muted focus:border-foyer-sage"
+        />
+        <button
+          type="button"
+          onClick={extract}
+          disabled={loading || !url.trim()}
+          className="flex h-[36px] shrink-0 items-center gap-1.5 rounded-lg bg-foyer-sage px-3 text-[13px] font-medium text-white transition-colors hover:bg-foyer-sage/90 disabled:opacity-50"
+        >
+          {loading ? <Loader2 className="size-3.5 animate-spin" aria-hidden /> : "Ajouter"}
+        </button>
+      </div>
+      {failed && (
+        <div className="mt-2 rounded-lg bg-foyer-ochre/10 px-3 py-2 text-[12px] leading-relaxed text-foyer-ink">
+          Impossible de récupérer le produit depuis ce lien.{" "}
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="inline-flex items-center gap-1 font-medium text-foyer-sage underline"
+          >
+            <Upload className="size-3" aria-hidden /> Importez plutôt une photo (JPG)
+          </button>
+        </div>
+      )}
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadJpeg(f); e.target.value = ""; }}
+      />
+    </div>
+  );
+}
+
 export function ShoppingCard({ item }: { item: ShoppingItem }) {
   const [open, setOpen] = useState(false);
   const [localSelIdx, setLocalSelIdx] = useState(0);
@@ -164,19 +266,48 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
   const ov = useExpertOverrides();
   const controlled = !!ov?.enabled && affectsRender(item);
   const selIdx = controlled ? (ov!.selected[item.elementId!] ?? 0) : localSelIdx;
+  // Produit sur-mesure choisi par l'user (URL/JPEG) → prioritaire à l'affichage.
+  const customPick = controlled && item.elementId ? ov!.custom[item.elementId] : undefined;
   const choose = (i: number) => {
-    if (controlled) ov!.choose(item.elementId!, i);
+    if (controlled) { ov!.choose(item.elementId!, i); ov!.setCustom(item.elementId!, null); }
     else setLocalSelIdx(i);
     setOpen(false);
   };
+  const pickCustom = (cp: CustomProduct) => { if (controlled) { ov!.setCustom(item.elementId!, cp); setOpen(false); } };
 
   const Icon = CATEGORY_ICON[item.category] ?? Package;
   const matches = item.matches ?? [];
   const best = matches[selIdx];
+  const canModify = controlled || matches.length > 1;
 
   return (
     <div className="rounded-2xl border border-foyer-border bg-white p-3">
-      {best ? (
+      {customPick ? (
+        <div className="flex items-center gap-4">
+          <Thumb url={customPick.imageUrl} alt={customPick.name ?? "Votre référence"} fallback={Icon} />
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <p className="line-clamp-2 text-[15px] font-medium text-foyer-ink">{customPick.name ?? "Votre référence"}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-foyer-sage/15 px-2 py-0.5 text-[11px] font-medium text-foyer-sage">Votre référence</span>
+              {customPick.merchant && <span className="text-[13px] text-foyer-muted">{customPick.merchant}</span>}
+            </div>
+          </div>
+          <div className="flex shrink-0 flex-col items-end gap-1.5">
+            <span className="font-serif text-[17px] text-foyer-ink">{customPick.price != null ? `${customPick.price} €` : "–"}</span>
+            <div className="flex items-center gap-1.5">
+              <button type="button" onClick={() => ov!.setCustom(item.elementId!, null)} title="Retirer"
+                className="flex items-center gap-1 rounded-full border border-foyer-border px-2.5 py-1 text-[13px] text-foyer-muted transition-colors hover:text-foyer-ink">
+                <X className="size-3" aria-hidden />Retirer
+              </button>
+              <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open}
+                className={cn("flex items-center gap-1 rounded-full border px-2.5 py-1 text-[13px] transition-colors",
+                  open ? "border-foyer-ink text-foyer-ink" : "border-foyer-border text-foyer-muted hover:text-foyer-ink")}>
+                <Pencil className="size-3" aria-hidden />Modifier
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : best ? (
         <div className="flex items-center gap-4">
           <Thumb url={best.primary_image_url} alt={best.name} fallback={Icon} />
 
@@ -203,7 +334,7 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
                   <ExternalLink className="size-3" aria-hidden />Voir
                 </a>
               )}
-              {matches.length > 1 && (
+              {canModify && (
                 <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open}
                   className={cn("flex items-center gap-1 rounded-full border px-2.5 py-1 text-[13px] transition-colors",
                     open ? "border-foyer-ink text-foyer-ink" : "border-foyer-border text-foyer-muted hover:text-foyer-ink")}>
@@ -221,14 +352,24 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
             <p className="line-clamp-2 text-[15px] font-medium text-foyer-ink">{item.name}</p>
             <span className="text-[13px] text-foyer-muted">À sourcer</span>
           </div>
+          {controlled && (
+            <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open}
+              className={cn("flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[13px] transition-colors",
+                open ? "border-foyer-ink text-foyer-ink" : "border-foyer-border text-foyer-muted hover:text-foyer-ink")}>
+              <Pencil className="size-3" aria-hidden />Indiquer
+            </button>
+          )}
         </div>
       )}
 
-      {/* Alternatives (top 2-4) */}
-      {open && matches.length > 1 && (
+      {/* Panneau : produit sur-mesure (URL/JPEG) + alternatives matchées */}
+      {open && (controlled || matches.length > 1) && (
         <div className="mt-3 border-t border-foyer-border pt-3">
-          <p className="mb-2 text-[12px] font-medium uppercase tracking-[0.08em] text-foyer-muted">
-            Autres produits
+          {controlled && <CustomRefInput onPicked={pickCustom} />}
+          {matches.length > 1 && (
+          <>
+          <p className="mb-2 mt-3 text-[12px] font-medium uppercase tracking-[0.08em] text-foyer-muted">
+            Ou choisir un autre produit
           </p>
           <ul className="flex flex-col gap-2">
             {matches.map((m, i) => (
@@ -255,6 +396,8 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
               </li>
             ))}
           </ul>
+          </>
+          )}
         </div>
       )}
 
