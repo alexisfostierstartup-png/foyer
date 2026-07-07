@@ -40,7 +40,44 @@ const CATEGORY_NOUN: Record<string, string> = {
   bed: "bed",
   nightstand: "nightstand",
   bench: "bench",
+  chair: "chair",
+  dining_chair: "dining chair",
+  bar_table: "bar table",
+  bar_stool: "bar stool",
+  stool: "stool",
+  ottoman: "ottoman",
+  pouf: "pouf",
+  desk: "desk",
+  console_table: "console table",
+  console: "console table",
+  cabinet: "cabinet",
+  wardrobe: "wardrobe",
+  chest: "chest of drawers",
+  tv: "TV",
+  buffet: "sideboard",
 };
+
+// Ce qu'on NE remplace PAS par un produit catalogue dans le rendu (v1) : petite
+// déco, textile, luminaires, architecture/fixes. Approche BLOCKLIST (extensible :
+// tout meuble non listé ici EST remplaçable — pas de whitelist à faire grossir).
+const NON_REPLACEABLE = new Set([
+  // déco / accessoires
+  "cushion", "pillow", "throw", "frame", "artwork", "art", "painting", "poster", "mirror",
+  "plant", "vase", "book", "books", "decor", "decoration", "tableware", "clock", "candle",
+  // luminaires
+  "lamp", "floor_lamp", "table_lamp", "ceiling_light", "pendant", "pendant_lamp", "wall_light",
+  "sconce", "chandelier", "light",
+  // textile / ouvertures souples
+  "curtains", "curtain", "blinds", "drapes",
+  // architecture / éléments fixes
+  "wall", "floor", "ceiling", "window", "door", "radiator", "stairs", "staircase", "fireplace",
+  "beam", "column", "pillar", "heater", "water_heater", "molding", "moulding",
+]);
+
+/** Un élément est-il un MEUBLE remplaçable par un vrai produit ? (tout sauf blocklist) */
+function isReplaceableFurniture(category: string): boolean {
+  return !NON_REPLACEABLE.has(category);
+}
 
 // Type de pièce → libellé anglais pour le prompt (le modèle agence mieux s'il sait
 // quelle pièce il meuble).
@@ -67,11 +104,12 @@ function selectExpertPieces(
   return shoppingList
     .map((it) => {
       const cat = it.category;
-      const noun = CATEGORY_NOUN[cat];
+      if (it.source === "diy" || !isReplaceableFurniture(cat)) return null;
+      const noun = CATEGORY_NOUN[cat] ?? cat.replace(/_/g, " ");
       const idx = (it.elementId && overrides[it.elementId]) || 0;
       const match = it.matches?.[idx] ?? it.matches?.[0];
-      const imageUrl = match?.primary_image_url;
-      if (!noun || !imageUrl) return null;
+      const imageUrl = match?.primary_image_url ?? it.imgUrl;
+      if (!imageUrl) return null;
       return { category: cat, noun, imageUrl, name: match?.name ?? it.name, _p: priority.get(cat) ?? 99 };
     })
     .filter((x): x is Piece & { _p: number } => x !== null)
@@ -144,25 +182,38 @@ const NON_FURNITURE = new Set([
   "wall", "floor", "ceiling", "window", "door", "curtain", "stairs", "radiator", "fireplace",
 ]);
 
-type ReplaceItem = { noun: string; description: string; imageUrl: string };
+type ReplaceItem = { noun: string; description: string; imageUrl: string; count: number };
 type CustomizeItem = { noun: string; description: string; instruction: string };
-type ExpertPlan = { replace: ReplaceItem[]; customize: CustomizeItem[]; hasFurniture: boolean };
+// Restyle = modif STYLÉE non-meuble (mur repeint, luminaire changé, sol, textile,
+// déco) décidée à la review → appliquée en TEXTE (pas de produit) pour que le rendu
+// réel retrouve le style du fake (sinon ces éléments reviennent à la photo de base).
+type RestyleItem = { noun: string; instruction: string };
+type ExpertPlan = {
+  replace: ReplaceItem[];
+  customize: CustomizeItem[];
+  restyle: RestyleItem[];
+  hasFurniture: boolean;
+};
 
 /**
- * Image du vrai produit matché pour un élément à remplacer (via son element_id).
- * `overrides[elementId]` = index du produit ALTERNATIF choisi par l'user (défaut 0
- * = meilleur match) → « liste de courses alternative ».
+ * Image du vrai produit matché pour un élément à remplacer.
+ * 1) via son element_id ; 2) fallback même CATÉGORIE (ex. 4 chaises identiques →
+ * 1 seule ligne shopping `chair_1` → sert pour chaque chaise).
+ * `overrides[elementId]` = index du produit ALTERNATIF choisi (défaut 0 = meilleur).
  */
 function productImageForElement(
   elementId: string,
+  category: string,
   shoppingList: ShoppingItem[],
   overrides: Record<string, number>,
 ): string | null {
-  const it = shoppingList.find(
-    (i) => i.elementId === elementId && i.source !== "diy" && (i.matches?.[0]?.primary_image_url || i.imgUrl),
-  );
+  const hasImg = (i: ShoppingItem) =>
+    i.source !== "diy" && (i.matches?.[0]?.primary_image_url || i.imgUrl);
+  const it =
+    shoppingList.find((i) => i.elementId === elementId && hasImg(i)) ??
+    shoppingList.find((i) => i.category === category && hasImg(i));
   if (!it) return null;
-  const idx = overrides[elementId] ?? 0;
+  const idx = (it.elementId && overrides[it.elementId]) || 0;
   const chosen = it.matches?.[idx] ?? it.matches?.[0];
   return chosen?.primary_image_url ?? it.imgUrl ?? null;
 }
@@ -175,29 +226,41 @@ function buildExpertPlan(
 ): ExpertPlan {
   const replace: ReplaceItem[] = [];
   const customize: CustomizeItem[] = [];
+  const restyle: RestyleItem[] = [];
   let hasFurniture = false;
 
   for (const d of decisions) {
     if (!NON_FURNITURE.has(d.category)) hasFurniture = true;
     const action = MISMATCH_TO_ACTION[d.mismatch_type];
+    if (action === "keep") continue; // gardé → "keep everything else" s'en charge.
     const noun = CATEGORY_NOUN[d.category] ?? d.category.replace(/_/g, " ");
     const description = d.description ?? "";
 
-    if (action === "replace") {
-      // v1 : on ne remplace que les gros meubles (on a des produits catalogue).
-      if (!EXPERT_CATEGORIES.includes(d.category as (typeof EXPERT_CATEGORIES)[number])) continue;
-      const imageUrl = productImageForElement(d.element_id, shoppingList, overrides);
-      if (imageUrl) replace.push({ noun, description, imageUrl });
-    } else if (action === "customize") {
-      // Customisation d'un meuble existant : on applique la consigne DIY (action_label)
-      // telle quelle. Hors scope : peinture murale, sol, architecture (v1).
-      if (CUSTOMIZE_EXCLUDE.has(d.category)) continue;
-      if (!d.action_label) continue;
-      customize.push({ noun, description, instruction: d.action_label });
+    if (isReplaceableFurniture(d.category)) {
+      // MEUBLE : replace = vrai produit ; customize = consigne DIY (teinter, retapisser…).
+      if (action === "replace") {
+        const imageUrl = productImageForElement(d.element_id, d.category, shoppingList, overrides);
+        if (imageUrl) replace.push({ noun, description, imageUrl, count: 1 });
+        // pas de produit → on ne touche pas (le meuble existant est conservé).
+      } else if (d.action_label) {
+        customize.push({ noun, description, instruction: d.action_label });
+      }
+    } else if (d.action_label && !/garder|conserver|^keep/i.test(d.action_label)) {
+      // NON-meuble modifié (mur, luminaire, sol, textile, déco) : on applique la consigne
+      // stylée en texte → le rendu réel retrouve le style du fake (mur repeint, pendant…).
+      restyle.push({ noun, instruction: d.action_label });
     }
-    // keep : rien à faire, "keep everything else" s'en charge.
   }
-  return { replace, customize, hasFurniture };
+
+  // Dédup : plusieurs éléments identiques (ex. 4 chaises → même produit) → 1 seule
+  // entrée ×N, pour ne pas envoyer 4 fois la même image ni décrire 4 fois la pièce.
+  const merged: ReplaceItem[] = [];
+  for (const r of replace) {
+    const ex = merged.find((m) => m.imageUrl === r.imageUrl);
+    if (ex) ex.count += 1;
+    else merged.push({ ...r });
+  }
+  return { replace: merged, customize, restyle, hasFurniture };
 }
 
 /** Prompt d'édition sélective : on ne touche QUE replace + customize, on garde le reste. */
@@ -213,10 +276,14 @@ function selectiveEditPrompt(plan: ExpertPlan, roomType: RoomType, refBase: numb
     blocks.push(
       `REPLACE these existing pieces — swap each with its catalog product shown in the given image ` +
         `(use the product's EXACT appearance, IGNORE its reference background), keeping the SAME ` +
-        `position, footprint, size and orientation as the piece it replaces; keep EXACTLY ONE of each ` +
-        `and remove the old one:\n` +
+        `position, footprint, size, orientation and COUNT as the piece(s) it replaces, and remove ` +
+        `the old one(s):\n` +
         plan.replace
-          .map((r, i) => `- the existing ${r.noun}${r.description ? ` (${r.description})` : ""} → image ${refBase + i}`)
+          .map((r, i) =>
+            r.count > 1
+              ? `- ALL ${r.count} ${r.noun}s → image ${refBase + i} (replace every one of them with this same product model, keep the same number)`
+              : `- the existing ${r.noun}${r.description ? ` (${r.description})` : ""} → image ${refBase + i}`,
+          )
           .join("\n"),
     );
   }
@@ -252,31 +319,33 @@ async function selectiveEdit(
   return callNb2(prompt, [baseUri, ...refUris]);
 }
 
-// ── Pièce VIDE : swap sur le rendu fictif (garde la déco stylée) ─────────────
-// Meubler une pièce vide from scratch donne un rendu PAUVRE (mur nu, zéro déco).
-// On part donc du rendu fictif — qui a toute la déco stylée (œuvre, miroir,
-// lampes, plantes, coussins, vases) — et on n'y remplace QUE les GROS meubles par
-// les vrais produits. Philosophie : RÉEL pour les grosses pièces (dures à trouver,
-// chères) ; la petite déco (vase, cadre, vaisselle) reste générique/stylée car
-// facile à trouver partout → rendu plus vendeur.
+// ── Swap sur le rendu fictif (garde tout le style, remplace les gros meubles) ─
+// On part du rendu fictif — qui porte tout le style validé (murs, luminaires, déco,
+// customisations telles que le fake les a rendues) — et on n'y remplace QUE les
+// GROS meubles par les vrais produits. Le reste est conservé À L'IDENTIQUE.
+// Philosophie : RÉEL pour les grosses pièces (dures à trouver, chères) ; le style et
+// la petite déco (vase, cadre, vaisselle) restent ceux du fake → rendu vendeur.
 async function swapOnFake(
   fakeUrl: string,
   pieces: Piece[],
   roomType: RoomType,
 ): Promise<{ buffer: Buffer; mimeType: string }> {
   const room = ROOM_LABEL[roomType] ?? "room";
-  const mapping = pieces.map((p, i) => `the ${p.noun} → image ${i + 2}`).join(", ");
+  // Pluriel-safe : une catégorie peut représenter plusieurs pièces identiques (ex.
+  // 4 chaises) → on demande de remplacer CHAQUE pièce de ce type par le même produit.
+  const mapping = pieces.map((p, i) => `every ${p.noun} → image ${i + 2}`).join(", ");
   const prompt =
     `This is a beautifully styled photo of a ${room}. Replace ONLY the large furniture with its ` +
     `matching real catalog product, using each product's EXACT appearance from its reference image ` +
     `(IGNORE the reference backgrounds), keeping each at the EXACT same position, footprint, size ` +
-    `and orientation as the piece it replaces — keep EXACTLY ONE of each and remove the old one: ` +
-    `${mapping}. Keep EVERYTHING ELSE strictly identical to this photo: all wall art and frames, ` +
-    `mirrors, lamps, plants, vases, cushions, books, tableware and small decorative accessories, ` +
-    `the curtains, the wall colors, the ceiling, the window, the floor, and the entire styling, ` +
-    `lighting and camera framing. Do NOT remove or move any decor. You may keep or lightly enhance ` +
-    `the small tasteful styling accessories to make the room inviting, but do NOT add or alter any ` +
-    `furniture beyond the replacements. Preserve the exact exposure and white balance. Photorealistic.`;
+    `and orientation as the piece it replaces. When several identical pieces of the same type exist ` +
+    `(e.g. dining chairs or bar stools), replace EVERY ONE of them with that same product and keep ` +
+    `the same count; remove the old pieces: ${mapping}. Keep EVERYTHING ELSE strictly identical to ` +
+    `this photo — do NOT change, re-tint, restyle or move anything other than the furniture listed ` +
+    `above: all wall art and frames, mirrors, lamps and light fixtures, plants, vases, cushions, ` +
+    `books, tableware and small decor, the curtains, the wall colors and finishes, the ceiling, the ` +
+    `window, the floor, and the entire styling, lighting and camera framing. Preserve the exact ` +
+    `exposure and white balance. Photorealistic.`;
   const [fakeUri, ...refUris] = await Promise.all([
     toDataUri(fakeUrl),
     ...pieces.map((p) => toDataUri(p.imageUrl)),
@@ -285,53 +354,36 @@ async function swapOnFake(
 }
 
 /**
- * Pipeline rendu EXPERT — piloté par element_decisions (keep/customize/replace).
- * • Pièce MEUBLÉE (des meubles détectés) → édition SÉLECTIVE de la photo de base :
- *   on remplace les meubles `replace` par les vrais produits, on customise les
- *   `customize` (action_label DIY appliquée verbatim), et on GARDE tout le reste
- *   (les `keep`, la déco, l'agencement). L'user retrouve ses meubles conservés.
- * • Pièce VIDE (aucun meuble détecté) → swap sur le rendu fictif : on garde sa déco
- *   stylée (rendu vendeur) et on n'y remplace que les GROS meubles par les vrais
- *   produits (meubler une pièce vide from scratch donnait un rendu pauvre).
- * Un seul appel NB2 dans les deux cas.
+ * Pipeline rendu EXPERT — UNIFIÉ « swap sur le fake » (pièce vide ET meublée).
+ * On part du RENDU FICTIF (qui porte déjà tout le style validé : murs repeints,
+ * luminaires changés, déco, customisations telles que le fake les a rendues) et on
+ * n'y remplace QUE les gros meubles par les VRAIS produits matchés. Le reste du fake
+ * est conservé À L'IDENTIQUE → le rendu réel = le fake, avec les vrais meubles.
+ * Principe clé : le rendu réel SUIT le fake (pas les décisions brutes) — si le fake a
+ * choisi de ne pas re-teinter un meuble, on le garde tel quel. Un seul appel NB2.
+ * (Remplace l'ancien « édition sélective sur photo de base + consignes texte » qui
+ * divergeait du fake et perdait son style.)
  */
 export async function runExpertRenderPipeline(projectId: string): Promise<string> {
   const project = await getProject(projectId);
   if (!project) throw new Error(`Project not found: ${projectId}`);
-  if (!project.basePhotoUrl) throw new Error("Pas de photo de base — recommencez la création.");
-
-  const shoppingList = (project.shoppingList ?? []) as ShoppingItem[];
-  const decisions = (project.element_decisions ?? []) as ElementDecision[];
-  const overrides = (project.productOverrides ?? {}) as Record<string, number>;
-  const plan = buildExpertPlan(decisions, shoppingList, overrides);
-
-  let result: { buffer: Buffer; mimeType: string };
-
-  if (plan.hasFurniture) {
-    // Pièce meublée → édition sélective sur la photo de base.
-    if (plan.replace.length === 0 && plan.customize.length === 0) {
-      throw new Error("Aucun gros meuble à remplacer ou customiser.");
-    }
-    console.log(
-      `[expert] ${projectId} : sélectif — ${plan.replace.length} replace, ${plan.customize.length} customize`,
-    );
-    result = await selectiveEdit(project.basePhotoUrl, plan, project.roomType);
-  } else {
-    // Pièce vide → swap sur le rendu fictif (garde la déco stylée, remplace les gros meubles).
-    const pieces = selectExpertPieces(shoppingList, overrides);
-    if (pieces.length === 0) {
-      throw new Error("Aucun gros meuble matché dans la liste shopping.");
-    }
-    if (!project.generatedRenderUrl) {
-      throw new Error("Pas de rendu de base — lancez d'abord une génération.");
-    }
-    console.log(
-      `[expert] ${projectId} : swap-sur-fake — ${pieces.length} meubles (${pieces.map((p) => p.category).join(", ")})`,
-    );
-    result = await swapOnFake(project.generatedRenderUrl, pieces, project.roomType);
+  if (!project.generatedRenderUrl) {
+    throw new Error("Pas de rendu de base — lancez d'abord une génération.");
   }
 
-  const url = await saveRender(result.buffer, project.storageFolder, result.mimeType, "expert");
+  const shoppingList = (project.shoppingList ?? []) as ShoppingItem[];
+  const overrides = (project.productOverrides ?? {}) as Record<string, number>;
+  const pieces = selectExpertPieces(shoppingList, overrides);
+  if (pieces.length === 0) {
+    throw new Error("Aucun gros meuble matché dans la liste shopping.");
+  }
+
+  console.log(
+    `[expert] ${projectId} : swap-sur-fake — ${pieces.length} meubles (${pieces.map((p) => p.category).join(", ")})`,
+  );
+  const { buffer, mimeType } = await swapOnFake(project.generatedRenderUrl, pieces, project.roomType);
+
+  const url = await saveRender(buffer, project.storageFolder, mimeType, "expert");
   await updateProject(projectId, { expertRenderUrl: url });
   console.log(`[expert] ${projectId} : rendu expert sauvegardé`);
   return url;
