@@ -93,34 +93,35 @@ export async function POST(request: NextRequest) {
       product_url: url,
     });
 
-    let imageUrl: string | undefined;
+    let candidates: string[] = [];
     let name: string | undefined;
     let price: number | null = null;
 
     if (!("error" in p)) {
-      imageUrl = p.primary_image_url;
+      candidates = p.image_urls?.length ? p.image_urls : [p.primary_image_url];
       name = p.name;
       price = p.price;
     } else {
       // 2) Fallback Open Graph.
       const og = ogFallback(html);
-      imageUrl = og.imageUrl;
+      if (og.imageUrl) candidates = [og.imageUrl];
       name = og.name;
     }
 
-    if (!imageUrl) {
-      // Échec propre : on ne peut pas récupérer l'image → l'UI bascule sur import JPEG.
-      return NextResponse.json(
-        { ok: false, error: "no_image", host },
-        { status: 200 },
-      );
+    // On PRÉFÈRE le packshot principal : on déprioritise les crops zoom/détail/texture
+    // (ex. Roche Bobois met en 1er un gros plan de la maille → mauvais pour l'intégration).
+    const DETAIL = /zoom|detail|swatch|texture|vignette|thumb|closeup|_d\d|matiere/i;
+    candidates = [...new Set(candidates.filter(Boolean).map(decodeEntities))]
+      .sort((a, b) => (DETAIL.test(a) ? 1 : 0) - (DETAIL.test(b) ? 1 : 0));
+
+    // On garde la 1re image RÉELLEMENT récupérable (anti-hallucination).
+    let imageUrl: string | undefined;
+    for (const c of candidates) {
+      if (await isReachableImage(c)) { imageUrl = c; break; }
     }
-
-    imageUrl = decodeEntities(imageUrl); // ← fix critique : &amp; dans l'URL
-
-    // On CONFIRME que l'image est récupérable avant de la proposer (anti-hallucination).
-    if (!(await isReachableImage(imageUrl))) {
-      return NextResponse.json({ ok: false, error: "image_unreachable", host }, { status: 200 });
+    if (!imageUrl) {
+      // Échec propre : aucune image exploitable → l'UI bascule sur import JPEG.
+      return NextResponse.json({ ok: false, error: "no_image", host }, { status: 200 });
     }
 
     const clean = name ? decodeEntities(name) : null;
