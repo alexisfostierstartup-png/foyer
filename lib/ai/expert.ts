@@ -129,15 +129,21 @@ async function emptyRoom(photoUrl: string): Promise<{ buffer: Buffer; mimeType: 
 // Recette validée : image de référence + prompt MINIMAL (ne jamais décrire la
 // forme d'un meuble — le texte écrase l'image). On mappe chaque produit à son
 // image, on impose "exactement un de chaque", on fige l'architecture et l'expo.
+// On N'IMPOSE PAS le placement (Gemini agence très bien seul, testé) : on lui donne
+// juste une contrainte de containment (le seul vrai levier — sans elle, il posait
+// le meuble TV à cheval sur un mur).
 function furnishPrompt(pieces: Piece[], roomType: RoomType): string {
   const room = ROOM_LABEL[roomType] ?? "room";
   const list = pieces.map((p, i) => `the ${p.noun} in image ${i + 2}`).join(", ");
   return (
     `This is a photo of a REAL EMPTY ${room}. Furnish it realistically by ADDING these ` +
-    `furniture products, using each product's exact appearance from its reference image and ` +
-    `IGNORING the reference backgrounds: ${list}. Place EXACTLY ONE of each, arranged the way a ` +
-    `professional would stage this ${room}, with correct real-world scale and natural contact ` +
-    `shadows. Keep the room's ARCHITECTURE and fixed elements EXACTLY as photographed: walls, ` +
+    `furniture products — EXACTLY ONE of each — using each product's exact appearance from its ` +
+    `reference image and IGNORING the reference backgrounds: ${list}. Arrange them the way a ` +
+    `professional interior stylist would, in a comfortable balanced layout, at correct ` +
+    `real-world scale with natural contact shadows. EVERY piece must rest fully inside the room, ` +
+    `flat on the floor and flush against a wall where appropriate — NO piece may overlap, cross ` +
+    `or pass through a wall, doorway, window or alcove edge, and none may float or be clipped by ` +
+    `the frame. Keep the room's ARCHITECTURE and fixed elements EXACTLY as photographed: walls, ` +
     `wall recesses/alcoves, windows, curtains, doors, radiators, the floor, the ceiling and ` +
     `light fixtures, and the SAME camera angle and framing. Do NOT add, remove, move or alter ` +
     `any wall, window, door or opening, and do NOT add any furniture or decor that is not in the ` +
