@@ -3,7 +3,6 @@ import sharp from "sharp";
 import { nanoid } from "nanoid";
 import { createProject, buildStorageFolder, updateProject } from "@/lib/storage/projects";
 import { precomputeDetection } from "@/lib/ai/pipeline";
-import { ensureEmptyShell } from "@/lib/ai/expert";
 import { saveSourceImage } from "@/lib/ai/saveRender";
 import { MAX_UPLOAD_BYTES, UPLOAD_MAX_DIMENSION } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
@@ -92,13 +91,8 @@ export async function POST(request: NextRequest) {
     );
 
     // Flux expert (/expert-create) : marque le projet → terminal = rendu expert.
-    const isExpert = formData.get("mode") === "expert";
-    if (isExpert) {
+    if (formData.get("mode") === "expert") {
       await updateProject(project.id, { mode: "expert" });
-      // Perf : la coquille vide (photo de base vidée de son mobilier) ne dépend
-      // ni du style ni du matching. On la précalcule en fond pendant que le user
-      // remplit le flux → à l'écran expert, il ne reste que l'étape "meubler".
-      after(() => ensureEmptyShell(project.id).catch(() => {}));
     }
 
     // Détection anticipée en fond (levier perf B) : elle ne dépend pas du style,

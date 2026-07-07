@@ -19,30 +19,25 @@ meublée ou vide (détection : présence d'au moins un élément meublé dans le
   - `keep` (+ toute la déco/plantes/lampes/agencement/architecture) → conservé via « keep everything
     else exactly ». **L'user retrouve ses meubles gardés/customisés.**
   - Élimine par construction le bug du meuble dupliqué (on édite la vraie photo, pas un rendu fictif).
-- **Pièce VIDE (aucun meuble détecté) → fallback VIDER→MEUBLER** (`ensureEmptyShell` + `furnishRoom`) :
-  la photo de base (vide) est meublée avec les produits matchés (`selectExpertPieces`).
+- **Pièce VIDE (aucun meuble détecté) → SWAP SUR LE RENDU FICTIF** (`swapOnFake`) : meubler une
+  pièce vide « from scratch » donnait un rendu PAUVRE (mur nu, zéro déco). On part donc du rendu
+  fictif — qui a toute la déco stylée (œuvre, miroir, lampes, plantes, coussins, vases) — et on n'y
+  remplace QUE les gros meubles par les vrais produits (`selectExpertPieces`, respecte les overrides).
+  **Philosophie (user) : RÉEL pour les grosses pièces** (dures à trouver, chères = la valeur) ; la
+  **petite déco reste générique/stylée** (vase, cadre, vaisselle faciles à trouver partout) → rendu
+  vendeur. Validé end-to-end (5 gros meubles swappés, déco conservée). L'ancien « vider→meubler »
+  (emptyRoom/furnishRoom/ensureEmptyShell) est SUPPRIMÉ.
 
 Validé end-to-end via l'endpoint réel (2026-07-07) : cas meublé (canapé=replace → vrai produit,
 table=customize → repeinte jaune, buffet=keep → conservé, + déco/plantes/lampes/agencement intacts)
 en 1 appel ~20 s. Fichiers : `lib/ai/expert.ts`, `POST /api/projects/[id]/expert-render`.
 
-### Ancien fallback : VIDER → MEUBLER (chemin pièce vide)
+### Historique — VIDER→MEUBLER (abandonné 2026-07-07)
 
-Le chemin pièce-vide part de la **photo de base** et procède en 2 étapes NB2 :
-
-1. **Vider** (`emptyRoom`) — on retire tout le mobilier amovible de la photo de base, en
-   conservant l'architecture et les éléments non remplacés : murs + couleur, alcôves, moulures,
-   fenêtres, **rideaux**, portes, radiateurs, **parquet**, plafond + luminaires. Nécessaire car
-   **les photos ne sont pas toujours vides** (annonces déjà meublées / staging). Le résultat
-   (`emptyShellUrl`) est **mis en cache** (la photo de base ne change jamais) et **précalculé
-   en fond dès l'upload** en mode expert (`after()` dans `/api/upload`) → à l'écran expert il ne
-   reste que l'étape « meubler ».
-2. **Meubler** (`furnishRoom`) — 1 appel NB2 = coquille vide + N images produit + prompt de
-   mapping. Partir du vide **élimine par construction** le bug du meuble fictif conservé.
-
-Validé par loops de test (2026-07-07) : chambre + 2 salons sur photo vide, + cas photo meublée
-(mid-century) vidée puis re-meublée, + end-to-end via l'endpoint réel (31 s les 2 étapes, ~20 s
-quand la coquille est précalculée). Fichiers : `lib/ai/expert.ts`, `POST /api/projects/[id]/expert-render`.
+Étape intermédiaire (avant swap-on-fake) : on vidait la photo de base puis on la meublait avec les
+produits (fallback pièce vide, avec règles fonctionnelles de placement). Ça marchait mais donnait un
+rendu **pauvre** (pièce vide → mur nu, pas de déco stylée). Remplacé par `swapOnFake`. Code
+(`emptyRoom`/`furnishRoom`/`ensureEmptyShell` + précalcul coquille à l'upload) SUPPRIMÉ.
 
 ## La recette validée (le cœur)
 

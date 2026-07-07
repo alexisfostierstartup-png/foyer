@@ -55,14 +55,21 @@ const MAX_PIECES = 8;
 
 type Piece = { category: string; noun: string; imageUrl: string; name: string };
 
-/** Sélectionne les gros meubles matchés (image produit dispo), par priorité. */
-function selectExpertPieces(shoppingList: ShoppingItem[]): Piece[] {
+/**
+ * Sélectionne les gros meubles matchés (image produit dispo), par priorité.
+ * `overrides[elementId]` = produit alternatif choisi (défaut 0) — « liste alternative ».
+ */
+function selectExpertPieces(
+  shoppingList: ShoppingItem[],
+  overrides: Record<string, number> = {},
+): Piece[] {
   const priority = new Map(EXPERT_CATEGORIES.map((c, i) => [c as string, i]));
   return shoppingList
     .map((it) => {
       const cat = it.category;
       const noun = CATEGORY_NOUN[cat];
-      const match = it.matches?.[0];
+      const idx = (it.elementId && overrides[it.elementId]) || 0;
+      const match = it.matches?.[idx] ?? it.matches?.[0];
       const imageUrl = match?.primary_image_url;
       if (!noun || !imageUrl) return null;
       return { category: cat, noun, imageUrl, name: match?.name ?? it.name, _p: priority.get(cat) ?? 99 };
@@ -105,94 +112,6 @@ async function callNb2(prompt: string, imageUris: string[]): Promise<{ buffer: B
   const out = await fetch(outUrl);
   const mimeType = out.headers.get("content-type")?.split(";")[0] ?? "image/png";
   return { buffer: Buffer.from(await out.arrayBuffer()), mimeType };
-}
-
-// ── Étape 1 : vider la pièce ────────────────────────────────────────────────
-// La photo de base n'est PAS toujours vide (annonces déjà meublées / staging).
-// On retire tout le mobilier amovible mais on conserve l'architecture et les
-// éléments non remplacés (murs + couleur, alcôves, moulures, fenêtres, RIDEAUX,
-// portes, radiateurs, PARQUET, plafond + luminaires). Résultat = coquille nue.
-const EMPTY_PROMPT =
-  `Remove ALL movable furniture and freestanding objects from this room — every sofa, ` +
-  `armchair, chair, table, bed, rug, shelf, bookcase, sideboard, dresser, lamp, plant, ` +
-  `framed art, mirror, cushion, book and decorative item — to reveal the room COMPLETELY ` +
-  `EMPTY, as if photographed before anyone moved in. Keep the ARCHITECTURE and permanent ` +
-  `elements EXACTLY as they are: the walls and their exact paint colors, wall recesses and ` +
-  `alcoves, mouldings, windows, curtains, doors, radiators, the floor, the ceiling and any ` +
-  `ceiling-mounted light fixture, and the SAME camera angle and framing. Do not change wall ` +
-  `color, do not add anything, do not alter the exposure. Photorealistic empty room.`;
-
-async function emptyRoom(photoUrl: string): Promise<{ buffer: Buffer; mimeType: string }> {
-  return callNb2(EMPTY_PROMPT, [await toDataUri(photoUrl)]);
-}
-
-// ── Étape 2 : meubler avec les vrais produits ───────────────────────────────
-// Recette validée : image de référence + prompt MINIMAL (ne jamais décrire la
-// forme d'un meuble — le texte écrase l'image). On mappe chaque produit à son
-// image, on impose "exactement un de chaque", on fige l'architecture et l'expo.
-// On N'IMPOSE PAS de placement rigide par meuble (Gemini agence très bien seul),
-// mais on lui donne des RÈGLES FONCTIONNELLES : sans elles, il posait le meuble TV
-// à cheval sur une porte, ou le canapé devant une ouverture, ou rien face à la TV.
-// Testé 5 tirages/5 acceptables avec ces règles (vs cas inacceptables sans).
-function furnishPrompt(pieces: Piece[], roomType: RoomType): string {
-  const room = ROOM_LABEL[roomType] ?? "room";
-  const list = pieces.map((p, i) => `the ${p.noun} in image ${i + 2}`).join(", ");
-  return (
-    `This is a photo of a REAL EMPTY ${room}. Furnish it realistically by ADDING these ` +
-    `furniture products — EXACTLY ONE of each — using each product's exact appearance from its ` +
-    `reference image and IGNORING the reference backgrounds: ${list}. Arrange them like a ` +
-    `professional interior stylist into a FUNCTIONAL ${room} layout, at correct real-world scale ` +
-    `with natural contact shadows.\n` +
-    `FUNCTIONAL RULES (critical):\n` +
-    `1. Keep EVERY door, doorway and open passage to another room completely clear and visible — ` +
-    `NEVER place any furniture in front of, across or covering a door, doorway or open passage, ` +
-    `and never block circulation.\n` +
-    `2. If a TV / TV stand is included, stand it against a SOLID wall segment that has NO door and ` +
-    `NO window on it — never over a door, doorway or window (a shallow wall recess facing the ` +
-    `seating is fine).\n` +
-    `3. Arrange the main seating (sofa, armchair) to FACE the focal point — the TV if there is ` +
-    `one — forming a conversation area around the rug and coffee table (coffee table on the rug ` +
-    `between the seating and the TV).\n` +
-    `4. Push the large pieces (sofa, TV stand, bookshelf, bed) back flush against walls, keeping ` +
-    `the centre and all passages open.\n` +
-    `Every piece must rest fully inside the room, flat on the floor — NO piece may overlap, cross ` +
-    `or pass through a wall, door, window or opening, and none may float or be clipped by the ` +
-    `frame. Keep the room's ARCHITECTURE and fixed elements EXACTLY as photographed (walls, wall ` +
-    `recesses/alcoves, doors, windows, curtains, radiators, the floor, the ceiling and light ` +
-    `fixtures) and the SAME camera angle and framing. Do NOT add, remove, move or alter any wall, ` +
-    `window, door or opening, and do NOT add any furniture or decor not in the references. ` +
-    `Preserve the EXACT lighting, exposure, white balance and colors of the input photo — do not ` +
-    `brighten, wash out or over-expose the scene. Photorealistic.`
-  );
-}
-
-async function furnishRoom(
-  shellUrl: string,
-  pieces: Piece[],
-  roomType: RoomType,
-): Promise<{ buffer: Buffer; mimeType: string }> {
-  const [shellUri, ...refUris] = await Promise.all([
-    toDataUri(shellUrl),
-    ...pieces.map((p) => toDataUri(p.imageUrl)),
-  ]);
-  return callNb2(furnishPrompt(pieces, roomType), [shellUri, ...refUris]);
-}
-
-/**
- * Coquille vide de la pièce, mise en cache. La photo de base ne changeant jamais,
- * on ne la re-vide pas à chaque régénération du rendu expert.
- */
-export async function ensureEmptyShell(projectId: string): Promise<string> {
-  const project = await getProject(projectId);
-  if (!project) throw new Error(`Project not found: ${projectId}`);
-  if (project.emptyShellUrl) return project.emptyShellUrl;
-  if (!project.basePhotoUrl) throw new Error("Pas de photo de base.");
-
-  const { buffer, mimeType } = await emptyRoom(project.basePhotoUrl);
-  const url = await saveRender(buffer, project.storageFolder, mimeType, "empty");
-  await updateProject(projectId, { emptyShellUrl: url });
-  console.log(`[expert] ${projectId} : coquille vide générée`);
-  return url;
 }
 
 // ── Édition SÉLECTIVE pilotée par element_decisions ─────────────────────────
@@ -333,14 +252,47 @@ async function selectiveEdit(
   return callNb2(prompt, [baseUri, ...refUris]);
 }
 
+// ── Pièce VIDE : swap sur le rendu fictif (garde la déco stylée) ─────────────
+// Meubler une pièce vide from scratch donne un rendu PAUVRE (mur nu, zéro déco).
+// On part donc du rendu fictif — qui a toute la déco stylée (œuvre, miroir,
+// lampes, plantes, coussins, vases) — et on n'y remplace QUE les GROS meubles par
+// les vrais produits. Philosophie : RÉEL pour les grosses pièces (dures à trouver,
+// chères) ; la petite déco (vase, cadre, vaisselle) reste générique/stylée car
+// facile à trouver partout → rendu plus vendeur.
+async function swapOnFake(
+  fakeUrl: string,
+  pieces: Piece[],
+  roomType: RoomType,
+): Promise<{ buffer: Buffer; mimeType: string }> {
+  const room = ROOM_LABEL[roomType] ?? "room";
+  const mapping = pieces.map((p, i) => `the ${p.noun} → image ${i + 2}`).join(", ");
+  const prompt =
+    `This is a beautifully styled photo of a ${room}. Replace ONLY the large furniture with its ` +
+    `matching real catalog product, using each product's EXACT appearance from its reference image ` +
+    `(IGNORE the reference backgrounds), keeping each at the EXACT same position, footprint, size ` +
+    `and orientation as the piece it replaces — keep EXACTLY ONE of each and remove the old one: ` +
+    `${mapping}. Keep EVERYTHING ELSE strictly identical to this photo: all wall art and frames, ` +
+    `mirrors, lamps, plants, vases, cushions, books, tableware and small decorative accessories, ` +
+    `the curtains, the wall colors, the ceiling, the window, the floor, and the entire styling, ` +
+    `lighting and camera framing. Do NOT remove or move any decor. You may keep or lightly enhance ` +
+    `the small tasteful styling accessories to make the room inviting, but do NOT add or alter any ` +
+    `furniture beyond the replacements. Preserve the exact exposure and white balance. Photorealistic.`;
+  const [fakeUri, ...refUris] = await Promise.all([
+    toDataUri(fakeUrl),
+    ...pieces.map((p) => toDataUri(p.imageUrl)),
+  ]);
+  return callNb2(prompt, [fakeUri, ...refUris]);
+}
+
 /**
  * Pipeline rendu EXPERT — piloté par element_decisions (keep/customize/replace).
  * • Pièce MEUBLÉE (des meubles détectés) → édition SÉLECTIVE de la photo de base :
  *   on remplace les meubles `replace` par les vrais produits, on customise les
  *   `customize` (action_label DIY appliquée verbatim), et on GARDE tout le reste
  *   (les `keep`, la déco, l'agencement). L'user retrouve ses meubles conservés.
- * • Pièce VIDE (aucun meuble détecté) → on vide (no-op) puis on meuble avec les
- *   produits matchés (fallback vider→meubler).
+ * • Pièce VIDE (aucun meuble détecté) → swap sur le rendu fictif : on garde sa déco
+ *   stylée (rendu vendeur) et on n'y remplace que les GROS meubles par les vrais
+ *   produits (meubler une pièce vide from scratch donnait un rendu pauvre).
  * Un seul appel NB2 dans les deux cas.
  */
 export async function runExpertRenderPipeline(projectId: string): Promise<string> {
@@ -365,16 +317,18 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
     );
     result = await selectiveEdit(project.basePhotoUrl, plan, project.roomType);
   } else {
-    // Pièce vide → vider (no-op sur photo déjà vide) puis meubler avec les produits.
-    const pieces = selectExpertPieces(shoppingList);
+    // Pièce vide → swap sur le rendu fictif (garde la déco stylée, remplace les gros meubles).
+    const pieces = selectExpertPieces(shoppingList, overrides);
     if (pieces.length === 0) {
       throw new Error("Aucun gros meuble matché dans la liste shopping.");
     }
+    if (!project.generatedRenderUrl) {
+      throw new Error("Pas de rendu de base — lancez d'abord une génération.");
+    }
     console.log(
-      `[expert] ${projectId} : vide→meubler — ${pieces.length} meubles (${pieces.map((p) => p.category).join(", ")})`,
+      `[expert] ${projectId} : swap-sur-fake — ${pieces.length} meubles (${pieces.map((p) => p.category).join(", ")})`,
     );
-    const shellUrl = await ensureEmptyShell(projectId);
-    result = await furnishRoom(shellUrl, pieces, project.roomType);
+    result = await swapOnFake(project.generatedRenderUrl, pieces, project.roomType);
   }
 
   const url = await saveRender(result.buffer, project.storageFolder, result.mimeType, "expert");

@@ -25,7 +25,7 @@ export async function POST(
     await logPipelineError(id, "expert-render", err);
     const msg = err instanceof Error ? err.message : String(err);
     // Erreurs "métier" (pas de photo / pas de meuble) → 400, message tel quel.
-    if (/photo de base|gros meuble|Project not found/.test(msg)) {
+    if (/photo de base|rendu de base|gros meuble|Project not found/.test(msg)) {
       return NextResponse.json({ error: msg }, { status: 400 });
     }
     const message = isTransientAiError(err)

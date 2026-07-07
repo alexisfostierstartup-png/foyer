@@ -28,7 +28,7 @@ export default async function ExpertPage({
     const assets = await ensureFinalAssets(projectId).catch(() => null);
     shoppingList = assets?.shoppingList ?? shoppingList;
   }
-  const pieces = selectExpertPieces(shoppingList);
+  const pieces = selectExpertPieces(shoppingList, project.productOverrides ?? {});
 
   return (
     <ExpertScreen
