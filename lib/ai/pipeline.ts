@@ -292,7 +292,9 @@ type VerdictInput = {
 // matériaux cœur (peinture, moulures, tasseaux). Le reste est filtré (cf. plus bas).
 const KEPT_SUPPLY_RE = /peinture|moulure|tasseau/i;
 
-async function resolveElementDecision(
+// Exporté : aussi utilisé par la route decisions (override review → attache
+// l'action candidate en mode DIY beta, avec fournitures/quantités résolues).
+export async function resolveElementDecision(
   verdict: VerdictInput,
   profile: ElementProfile,
   actionMap: Map<string, DiyAction>,

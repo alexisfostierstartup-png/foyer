@@ -187,6 +187,10 @@ export async function formatUserInstructions(
   return lines.join("\n");
 }
 
+// Surfaces architecturales : RESTYLE toujours valide, REPLACE jamais (on ne
+// « remplace » pas un mur par une pièce différente au même emplacement).
+const ARCH_SURFACE_CATEGORIES = new Set(["wall", "floor", "ceiling"]);
+
 /**
  * Transforme les décisions par élément (après review) en un plan lisible pour
  * les prompts image (génération + itération). On n'inclut que les éléments
@@ -236,12 +240,21 @@ export function formatDesignPlan(
     const what = (d.description?.trim() || d.category).replace(/\s+/g, " ");
     const many = count > 1;
     const tag = many ? ` (×${count})` : "";
-    // Mode beta : une surface dont l'action n'est pas rendable fidèlement
+    // Mode beta : une surface dont l'action est CONNUE comme non rendable
     // (ex. housse, poignées) est présentée au modèle image comme un REPLACE
     // (rendu approximatif assumé) — la décision et ses fournitures restent
-    // une customisation côté review/shopping.
+    // une customisation côté review/shopping. Deux exceptions (bug projet
+    // vLkE2sZ5… : « REPLACE Mur ocre / Plafond blanc — do NOT recolor ») :
+    //  - action_slug ABSENT (override user sans action) → RESTYLE générique,
+    //    comme en flux standard — jamais un REPLACE qui contredit l'intention ;
+    //  - surfaces architecturales (mur/sol/plafond) → toujours RESTYLE, la
+    //    sémantique REPLACE (« nouvelle pièce, même emplacement ») n'existe pas.
+    const isArchSurface = ARCH_SURFACE_CATEGORIES.has(d.category);
     const surfaceRenderable =
-      !opts?.renderableSlugs || (d.action_slug != null && opts.renderableSlugs.has(d.action_slug));
+      !opts?.renderableSlugs ||
+      isArchSurface ||
+      d.action_slug == null ||
+      opts.renderableSlugs.has(d.action_slug);
     if (d.mismatch_type === "surface" && surfaceRenderable) {
       const qty = d.qty && d.qty_unit ? ` (≈ ${d.qty} ${d.qty_unit})` : "";
       lines.push(

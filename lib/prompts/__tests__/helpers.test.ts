@@ -60,6 +60,32 @@ describe("formatDesignPlan", () => {
     expect(plan).toContain("REPLACE");
     expect(plan).not.toContain("RESTYLE");
   });
+
+  it("beta : surface SANS action (override user) → RESTYLE générique, jamais REPLACE (bug vLkE2sZ5)", () => {
+    const plan = formatDesignPlan(
+      [{ category: "dining_table", description: "Table à manger en bois", mismatch_type: "surface", action_slug: null, action_label: null, qty: null, qty_unit: null }],
+      { renderableSlugs: new Set(["repaint"]) },
+    );
+    expect(plan).toContain("RESTYLE");
+    expect(plan).not.toContain("REPLACE");
+  });
+
+  it("beta : mur/sol/plafond → toujours RESTYLE, même avec action non renderable", () => {
+    const plan = formatDesignPlan(
+      [
+        { category: "wall", description: "Mur ocre", mismatch_type: "surface", action_slug: "wallpaper", action_label: "Papier peint géométrique", qty: null, qty_unit: null },
+        { category: "ceiling", description: "Plafond blanc", mismatch_type: "surface", action_slug: null, action_label: null, qty: null, qty_unit: null },
+        { category: "floor", description: "Parquet gris", mismatch_type: "surface", action_slug: "paint_floor", action_label: "Peindre le sol", qty: null, qty_unit: null },
+      ],
+      { renderableSlugs: new Set(["repaint", "paint_floor"]) },
+    );
+    const lines = plan.split("\n");
+    expect(lines).toHaveLength(3);
+    for (const line of lines) {
+      expect(line).toContain("RESTYLE");
+      expect(line).not.toContain("REPLACE");
+    }
+  });
 });
 
 describe("buildColorwayDirective", () => {
