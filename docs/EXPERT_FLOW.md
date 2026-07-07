@@ -3,7 +3,29 @@
 > Objectif : un rendu **de la même pièce** avec les **vrais meubles du catalogue**, sans
 > look IA. Pour un tier **payant**.
 
-## Architecture retenue : SÉLECTIF PILOTÉ PAR `element_decisions` (2026-07-07)
+## Architecture retenue : SWAP-ON-FAKE UNIFIÉ (2026-07-07, commit `586a705`)
+
+Un SEUL chemin (pièce vide ET meublée). On part du **rendu fictif** (`generatedRenderUrl`) — qui
+porte déjà TOUT le style validé (murs, luminaires, déco, customisations telles que le fake les a
+rendues) — et on n'y remplace QUE les gros meubles par les vrais produits (`swapOnFake`). Le reste
+est conservé à l'identique.
+
+**Principe clé : le rendu réel SUIT le fake, pas les décisions brutes.** Si le fake a choisi
+d'ignorer une teinte DIY (ex. tv_stand laissé clair), on le garde tel quel. Ré-appliquer les
+consignes en texte (ancienne « édition sélective ») divergeait du fake et cassait son style (mur
+redevenu gris, pendant d'origine restitué). D'où l'abandon du sélectif-sur-photo-de-base.
+
+- `swapOnFake` : `every {noun} → image N` (gère les meubles multiples, ex. 4 chaises → même produit).
+- Meubles remplaçables = **blocklist** (tout meuble sauf déco/textile/architecture/luminaires),
+  extensible ; fallback produit même-catégorie (4 chaises = 1 ligne shopping `chair_1`).
+- Fallback : rien à swapper (pièce déjà meublée, tout gardé) → rendu réel = fake (pas de 400).
+- `selectExpertPieces` respecte les `productOverrides` (liste de courses alternative).
+
+Validé 4 pièces via l'endpoint réel : Jz (4 tabourets swappés + styling), K0j5 (mur terracotta +
+pendant rotin + tv_stand clair conservés + meubles réels), pièce vide damier (meublée, sol/poutre
+préservés), open-plan all-kept (fallback = fake).
+
+## ~~Ancien : sélectif piloté par `element_decisions`~~ (abandonné)
 
 Le rendu expert honore, **par élément**, l'action DIY décidée à la review (`project.element_decisions`).
 Le mapping est celui du flux standard (`ACTION_OF`) : `mismatch_type` `none`→**keep**, `surface`→
