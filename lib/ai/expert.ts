@@ -2,6 +2,7 @@ import { getProject, updateProject } from "@/lib/storage/projects";
 import { fetchImageBytes } from "@/lib/ai/pipeline";
 import { saveRender } from "@/lib/ai/saveRender";
 import type { RoomType, ShoppingItem } from "@/lib/types";
+import type { ElementDecision } from "@/lib/diy/types";
 
 // ── Gros meubles à intégrer au rendu expert ─────────────────────────────────
 // V1 : SEULEMENT les gros éléments principaux. Exclus volontairement : déco,
@@ -194,13 +195,138 @@ export async function ensureEmptyShell(projectId: string): Promise<string> {
   return url;
 }
 
+// ── Édition SÉLECTIVE pilotée par element_decisions ─────────────────────────
+// Le vrai modèle : chaque meuble détecté a une action DIY (element_decisions).
+//   mismatch_type "none" → KEEP (on le retrouve tel quel)
+//   mismatch_type "surface" → CUSTOMIZE (on applique action_label : peindre, teinter…)
+//   mismatch_type "structural" → REPLACE (on le swap par le vrai produit matché)
+// On édite la PHOTO DE BASE en un seul appel : on ne touche QUE les pièces listées,
+// tout le reste (déco, plantes, lampes, agencement, architecture) est conservé.
+// C'est du sélectif par élément → l'user retrouve ses meubles gardés/customisés.
+
+// mismatch_type → action haut niveau (identique au flux standard, ACTION_OF).
+const MISMATCH_TO_ACTION: Record<ElementDecision["mismatch_type"], "keep" | "customize" | "replace"> = {
+  none: "keep",
+  surface: "customize",
+  structural: "replace",
+};
+
+// Catégories qu'on NE customise PAS en v1 (peinture/sol/architecture hors scope —
+// v1 = gros meubles). Une customisation sur ces catégories est ignorée (laissée telle
+// quelle), le scope peinture/sol viendra plus tard.
+const CUSTOMIZE_EXCLUDE = new Set([
+  "wall", "floor", "ceiling", "window", "door", "curtain", "stairs", "radiator", "fireplace",
+]);
+
+// Détection meublé vs vide : catégories NON meublées (architecture/surfaces). S'il
+// existe au moins un élément meublé détecté → pièce meublée → édition sélective ;
+// sinon → pièce vide → on vide (no-op) puis on meuble avec les produits.
+const NON_FURNITURE = new Set([
+  "wall", "floor", "ceiling", "window", "door", "curtain", "stairs", "radiator", "fireplace",
+]);
+
+type ReplaceItem = { noun: string; description: string; imageUrl: string };
+type CustomizeItem = { noun: string; description: string; instruction: string };
+type ExpertPlan = { replace: ReplaceItem[]; customize: CustomizeItem[]; hasFurniture: boolean };
+
+/** Image du vrai produit matché pour un élément à remplacer (via son element_id). */
+function productImageForElement(elementId: string, shoppingList: ShoppingItem[]): string | null {
+  const it = shoppingList.find(
+    (i) => i.elementId === elementId && i.source !== "diy" && (i.matches?.[0]?.primary_image_url || i.imgUrl),
+  );
+  return it ? (it.matches?.[0]?.primary_image_url ?? it.imgUrl ?? null) : null;
+}
+
+/** Construit le plan d'édition (replace/customize) à partir des décisions. */
+function buildExpertPlan(decisions: ElementDecision[], shoppingList: ShoppingItem[]): ExpertPlan {
+  const replace: ReplaceItem[] = [];
+  const customize: CustomizeItem[] = [];
+  let hasFurniture = false;
+
+  for (const d of decisions) {
+    if (!NON_FURNITURE.has(d.category)) hasFurniture = true;
+    const action = MISMATCH_TO_ACTION[d.mismatch_type];
+    const noun = CATEGORY_NOUN[d.category] ?? d.category.replace(/_/g, " ");
+    const description = d.description ?? "";
+
+    if (action === "replace") {
+      // v1 : on ne remplace que les gros meubles (on a des produits catalogue).
+      if (!EXPERT_CATEGORIES.includes(d.category as (typeof EXPERT_CATEGORIES)[number])) continue;
+      const imageUrl = productImageForElement(d.element_id, shoppingList);
+      if (imageUrl) replace.push({ noun, description, imageUrl });
+    } else if (action === "customize") {
+      // Customisation d'un meuble existant : on applique la consigne DIY (action_label)
+      // telle quelle. Hors scope : peinture murale, sol, architecture (v1).
+      if (CUSTOMIZE_EXCLUDE.has(d.category)) continue;
+      if (!d.action_label) continue;
+      customize.push({ noun, description, instruction: d.action_label });
+    }
+    // keep : rien à faire, "keep everything else" s'en charge.
+  }
+  return { replace, customize, hasFurniture };
+}
+
+/** Prompt d'édition sélective : on ne touche QUE replace + customize, on garde le reste. */
+function selectiveEditPrompt(plan: ExpertPlan, roomType: RoomType, refBase: number): string {
+  const room = ROOM_LABEL[roomType] ?? "room";
+  const blocks: string[] = [
+    `This photo shows a real furnished ${room}. Make ONLY the changes listed below and keep ` +
+      `ABSOLUTELY EVERYTHING ELSE identical to the original photo — every other piece of furniture, ` +
+      `all decor, plants, artwork, lamps, rugs, the wall colors, the floor, windows, doors, ceiling, ` +
+      `lighting, and the exact same layout and camera framing.`,
+  ];
+  if (plan.replace.length) {
+    blocks.push(
+      `REPLACE these existing pieces — swap each with its catalog product shown in the given image ` +
+        `(use the product's EXACT appearance, IGNORE its reference background), keeping the SAME ` +
+        `position, footprint, size and orientation as the piece it replaces; keep EXACTLY ONE of each ` +
+        `and remove the old one:\n` +
+        plan.replace
+          .map((r, i) => `- the existing ${r.noun}${r.description ? ` (${r.description})` : ""} → image ${refBase + i}`)
+          .join("\n"),
+    );
+  }
+  if (plan.customize.length) {
+    blocks.push(
+      `CUSTOMIZE these existing pieces IN PLACE — keep their EXACT shape, size, position and ` +
+        `orientation, and change ONLY what each instruction says:\n` +
+        plan.customize
+          .map((c) => `- the ${c.noun}${c.description ? ` (${c.description})` : ""}: ${c.instruction}`)
+          .join("\n"),
+    );
+  }
+  blocks.push(
+    `Do not add or remove any furniture or decor other than the replacements above. Preserve the ` +
+      `EXACT lighting, exposure, white balance and colors of the original photo. Photorealistic, ` +
+      `natural contact shadows.`,
+  );
+  return blocks.join("\n\n");
+}
+
+/** Édition sélective de la photo de base (replace en place + customize). */
+async function selectiveEdit(
+  basePhotoUrl: string,
+  plan: ExpertPlan,
+  roomType: RoomType,
+): Promise<{ buffer: Buffer; mimeType: string }> {
+  const refBase = 2; // image 1 = photo de base ; les produits replace commencent à 2
+  const prompt = selectiveEditPrompt(plan, roomType, refBase);
+  const [baseUri, ...refUris] = await Promise.all([
+    toDataUri(basePhotoUrl),
+    ...plan.replace.map((r) => toDataUri(r.imageUrl)),
+  ]);
+  return callNb2(prompt, [baseUri, ...refUris]);
+}
+
 /**
- * Pipeline rendu EXPERT (vider → meubler) : on part de la PHOTO DE BASE (pas du
- * rendu fictif), on la vide de son mobilier amovible en conservant l'architecture
- * et les éléments non remplacés (rideaux, parquet…), puis on la meuble avec les
- * VRAIS gros meubles matchés du catalogue, en un seul appel (image de référence +
- * prompt minimal). Partir du vide élimine par construction le bug du meuble fictif
- * conservé/dupliqué. Nécessite un projet avec photo de base + liste shopping matchée.
+ * Pipeline rendu EXPERT — piloté par element_decisions (keep/customize/replace).
+ * • Pièce MEUBLÉE (des meubles détectés) → édition SÉLECTIVE de la photo de base :
+ *   on remplace les meubles `replace` par les vrais produits, on customise les
+ *   `customize` (action_label DIY appliquée verbatim), et on GARDE tout le reste
+ *   (les `keep`, la déco, l'agencement). L'user retrouve ses meubles conservés.
+ * • Pièce VIDE (aucun meuble détecté) → on vide (no-op) puis on meuble avec les
+ *   produits matchés (fallback vider→meubler).
+ * Un seul appel NB2 dans les deux cas.
  */
 export async function runExpertRenderPipeline(projectId: string): Promise<string> {
   const project = await getProject(projectId);
@@ -208,17 +334,34 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
   if (!project.basePhotoUrl) throw new Error("Pas de photo de base — recommencez la création.");
 
   const shoppingList = (project.shoppingList ?? []) as ShoppingItem[];
-  const pieces = selectExpertPieces(shoppingList);
-  if (pieces.length === 0) {
-    throw new Error("Aucun gros meuble matché dans la liste shopping.");
-  }
-  console.log(
-    `[expert] ${projectId} : ${pieces.length} meubles → ${pieces.map((p) => p.category).join(", ")}`,
-  );
+  const decisions = (project.element_decisions ?? []) as ElementDecision[];
+  const plan = buildExpertPlan(decisions, shoppingList);
 
-  const shellUrl = await ensureEmptyShell(projectId);
-  const { buffer, mimeType } = await furnishRoom(shellUrl, pieces, project.roomType);
-  const url = await saveRender(buffer, project.storageFolder, mimeType, "expert");
+  let result: { buffer: Buffer; mimeType: string };
+
+  if (plan.hasFurniture) {
+    // Pièce meublée → édition sélective sur la photo de base.
+    if (plan.replace.length === 0 && plan.customize.length === 0) {
+      throw new Error("Aucun gros meuble à remplacer ou customiser.");
+    }
+    console.log(
+      `[expert] ${projectId} : sélectif — ${plan.replace.length} replace, ${plan.customize.length} customize`,
+    );
+    result = await selectiveEdit(project.basePhotoUrl, plan, project.roomType);
+  } else {
+    // Pièce vide → vider (no-op sur photo déjà vide) puis meubler avec les produits.
+    const pieces = selectExpertPieces(shoppingList);
+    if (pieces.length === 0) {
+      throw new Error("Aucun gros meuble matché dans la liste shopping.");
+    }
+    console.log(
+      `[expert] ${projectId} : vide→meubler — ${pieces.length} meubles (${pieces.map((p) => p.category).join(", ")})`,
+    );
+    const shellUrl = await ensureEmptyShell(projectId);
+    result = await furnishRoom(shellUrl, pieces, project.roomType);
+  }
+
+  const url = await saveRender(result.buffer, project.storageFolder, result.mimeType, "expert");
   await updateProject(projectId, { expertRenderUrl: url });
   console.log(`[expert] ${projectId} : rendu expert sauvegardé`);
   return url;

@@ -3,10 +3,32 @@
 > Objectif : un rendu **de la même pièce** avec les **vrais meubles du catalogue**, sans
 > look IA. Pour un tier **payant**.
 
-## Architecture retenue : VIDER → MEUBLER (2026-07-07)
+## Architecture retenue : SÉLECTIF PILOTÉ PAR `element_decisions` (2026-07-07)
 
-Le rendu expert ne swappe plus les meubles d'un rendu fictif (ça gardait/dupliquait l'ancien
-meuble : bug « 2 meubles TV »). Il part de la **photo de base** et procède en 2 étapes NB2 :
+Le rendu expert honore, **par élément**, l'action DIY décidée à la review (`project.element_decisions`).
+Le mapping est celui du flux standard (`ACTION_OF`) : `mismatch_type` `none`→**keep**, `surface`→
+**customize**, `structural`→**replace**. Un seul appel NB2, deux chemins selon que la pièce est
+meublée ou vide (détection : présence d'au moins un élément meublé dans les décisions) :
+
+- **Pièce MEUBLÉE → édition SÉLECTIVE de la photo de base** (`selectiveEdit`) :
+  - `replace` (gros meuble) → swappé en place par le VRAI produit matché. Lien élément→produit via
+    `ShoppingItem.elementId` (= `element_id`) → `matches[0].primary_image_url` (fallback `imgUrl`).
+  - `customize` → on applique la consigne `action_label` **verbatim** (ex. « Repeindre la table en
+    jaune moutarde », « Teinter le bois en noyer foncé ») ; forme/position conservées. Hors scope v1 :
+    mur/sol/architecture (`CUSTOMIZE_EXCLUDE`).
+  - `keep` (+ toute la déco/plantes/lampes/agencement/architecture) → conservé via « keep everything
+    else exactly ». **L'user retrouve ses meubles gardés/customisés.**
+  - Élimine par construction le bug du meuble dupliqué (on édite la vraie photo, pas un rendu fictif).
+- **Pièce VIDE (aucun meuble détecté) → fallback VIDER→MEUBLER** (`ensureEmptyShell` + `furnishRoom`) :
+  la photo de base (vide) est meublée avec les produits matchés (`selectExpertPieces`).
+
+Validé end-to-end via l'endpoint réel (2026-07-07) : cas meublé (canapé=replace → vrai produit,
+table=customize → repeinte jaune, buffet=keep → conservé, + déco/plantes/lampes/agencement intacts)
+en 1 appel ~20 s. Fichiers : `lib/ai/expert.ts`, `POST /api/projects/[id]/expert-render`.
+
+### Ancien fallback : VIDER → MEUBLER (chemin pièce vide)
+
+Le chemin pièce-vide part de la **photo de base** et procède en 2 étapes NB2 :
 
 1. **Vider** (`emptyRoom`) — on retire tout le mobilier amovible de la photo de base, en
    conservant l'architecture et les éléments non remplacés : murs + couleur, alcôves, moulures,
