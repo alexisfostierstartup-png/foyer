@@ -89,6 +89,17 @@ de la génération, `app/(create)/create/[projectId]/page.tsx` **redirige le mod
 - **2 options** : « Ma liste de courses » (→ `/final`, montre aussi le rendu réel) et « Affiner le
   sol ou la peinture » (→ `/iterate`).
 
+### Liste de courses alternative (changer les meubles) — batch, un seul re-render
+Sur `/final` en mode expert, chaque ligne « gros meuble » avec plusieurs `matches` laisse choisir un
+produit **alternatif** (bouton « Modifier » → « Choisir »). Les choix sont **accumulés côté client
+sans re-render** (contexte `ExpertOverridesProvider` ; `ShoppingCard` devient contrôlé via
+`affectsRender`). Une barre fixe **« Nouveau rendu avec les (x) éléments modifiés »** (cliquable
+seulement si `x ≥ 1`) POST `/api/projects/[id]/product-overrides` : persiste `project.productOverrides`
+(`elementId → index dans matches`) puis relance UN SEUL `runExpertRenderPipeline` (qui prend
+`matches[override]` au lieu de `matches[0]`), et renvoie sur `/expert`. Validé end-to-end (override
+sofa_1→1 → le rendu utilise le produit alternatif). `x` = nb d'éléments dont le choix diffère du rendu
+courant (baseline = `productOverrides` persistés → repasse à 0 après re-render).
+
 **Itération expert** (`runExpertIteration`, `lib/ai/expert.ts`) : l'API `/iterate` est mode-aware
 → en expert elle édite le **rendu RÉEL** (`expertRenderUrl`), pas le fictif, applique la demande
 (sol/peinture — justement hors-scope du rendu expert, donc appliqués ICI par-dessus) en gardant

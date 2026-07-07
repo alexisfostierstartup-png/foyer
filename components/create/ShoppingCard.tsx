@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ShoppingItem, ShoppingSource, ProductMatch } from "@/lib/types";
+import { useExpertOverrides, affectsRender } from "@/components/create/expertOverrides";
 
 const CATEGORY_ICON: Record<string, LucideIcon> = {
   sofa: Sofa, armchair: Sofa,
@@ -155,8 +156,19 @@ function Thumb({ url, alt, fallback }: { url: string | null; alt: string; fallba
 
 export function ShoppingCard({ item }: { item: ShoppingItem }) {
   const [open, setOpen] = useState(false);
-  const [selIdx, setSelIdx] = useState(0);
+  const [localSelIdx, setLocalSelIdx] = useState(0);
   const debug = useDebug();
+
+  // Rendu expert : la sélection d'un produit alternatif est CONTRÔLÉE par le
+  // contexte (pour accumuler les modifs → un seul re-render). Sinon locale/visuelle.
+  const ov = useExpertOverrides();
+  const controlled = !!ov?.enabled && affectsRender(item);
+  const selIdx = controlled ? (ov!.selected[item.elementId!] ?? 0) : localSelIdx;
+  const choose = (i: number) => {
+    if (controlled) ov!.choose(item.elementId!, i);
+    else setLocalSelIdx(i);
+    setOpen(false);
+  };
 
   const Icon = CATEGORY_ICON[item.category] ?? Package;
   const matches = item.matches ?? [];
@@ -234,7 +246,7 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <span className="text-[14px] text-foyer-ink">{m.price != null ? `${m.price} €` : "–"}</span>
-                  <button type="button" disabled={i === selIdx} onClick={() => { setSelIdx(i); setOpen(false); }}
+                  <button type="button" disabled={i === selIdx} onClick={() => choose(i)}
                     className={cn("flex items-center gap-1 rounded-full px-3 py-1 text-[13px] font-medium transition-colors",
                       i === selIdx ? "cursor-default bg-foyer-sage/15 text-foyer-sage" : "bg-foyer-sage text-white hover:bg-foyer-sage/90")}>
                     {i === selIdx ? <><Check className="size-3.5" aria-hidden />Choisi</> : "Choisir"}

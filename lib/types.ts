@@ -180,6 +180,10 @@ export type Project = {
   finalAssetsRenderUrl?: string;
   alterations?: unknown;
   shoppingList?: ShoppingItem[];
+  // Rendu expert : produit alternatif choisi par l'user pour un élément (option
+  // « liste de courses alternative »). elementId → index dans `matches` (0 = meilleur).
+  // Le rendu expert utilise ce produit au lieu de matches[0] pour cet élément.
+  productOverrides?: Record<string, number> | null;
   scoreFoyer?: ScoreFoyer;
   userConstraints: UserConstraints | null;
   element_decisions?: import("./diy/types").ElementDecision[] | null;

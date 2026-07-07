@@ -44,6 +44,8 @@ export default async function FinalPage({
       alterations={project.alterations}
       liveEditsUsed={project.live_edits_used ?? 0}
       pendingList={pendingList}
+      expertMode={project.mode === "expert"}
+      productOverrides={project.productOverrides ?? null}
     />
   );
 }

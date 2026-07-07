@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ExternalLink, Pencil, Link2, Star, RefreshCw } from "lucide-react";
+import { ExternalLink, Pencil, Link2, Star, RefreshCw, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { ProgressBar } from "@/components/create/ProgressBar";
 import { BeforeAfterSlider } from "@/components/create/BeforeAfterSlider";
 import { ShoppingCard, useDebug } from "@/components/create/ShoppingCard";
+import { ExpertOverridesProvider } from "@/components/create/expertOverrides";
 import { PaywallModal } from "@/components/paywalls/PaywallModal";
 import { cn } from "@/lib/utils";
 import { PAYWALL_DISABLED } from "@/lib/constants";
@@ -232,6 +233,10 @@ type Props = {
   // Liste en cours de calcul en fond : la page s'affiche immédiatement et
   // polle /shopping-status jusqu'à l'arrivée de la liste.
   pendingList?: boolean;
+  // Projet en mode expert → active la « liste de courses alternative » : choix de
+  // produits alternatifs (accumulés) + bouton « Nouveau rendu avec les (x) éléments ».
+  expertMode?: boolean;
+  productOverrides?: Record<string, number> | null;
 };
 
 export function FinalScreen({
@@ -243,6 +248,8 @@ export function FinalScreen({
   alterations,
   liveEditsUsed = 0,
   pendingList = false,
+  expertMode = false,
+  productOverrides = null,
 }: Props) {
   const router = useRouter();
   const { user, profile, wallet } = useUser();
@@ -304,6 +311,41 @@ export function FinalScreen({
   const isExpert = profile?.plan === "expert" || profile?.plan === "pro";
   const hasCredits = (wallet?.balance ?? 0) > 0;
 
+  // ── Liste de courses alternative (mode expert) ─────────────────────────────
+  // On accumule les choix de produits alternatifs SANS re-render à chaque clic ;
+  // un seul bouton relance le rendu avec les (x) éléments modifiés.
+  const rendered = productOverrides ?? {};
+  const [sel, setSel] = useState<Record<string, number>>(() => ({ ...rendered }));
+  const [rerendering, setRerendering] = useState(false);
+  const chooseProduct = (elementId: string, idx: number) =>
+    setSel((prev) => ({ ...prev, [elementId]: idx }));
+  // x = nb d'éléments dont le produit choisi diffère de celui du rendu actuel.
+  const changedCount = Array.from(
+    new Set([...Object.keys(sel), ...Object.keys(rendered)]),
+  ).filter((k) => (sel[k] ?? 0) !== (rendered[k] ?? 0)).length;
+
+  async function handleNewRender() {
+    if (changedCount < 1 || rerendering) return;
+    setRerendering(true);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/product-overrides`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ overrides: sel }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        toast.error(data?.error ?? "Le nouveau rendu a échoué. Réessayez.");
+        setRerendering(false);
+        return;
+      }
+      router.push(`/create/${projectId}/expert`);
+    } catch {
+      toast.error("Le nouveau rendu a échoué. Réessayez.");
+      setRerendering(false);
+    }
+  }
+
   function handleLiveEdit() {
     if (isExpert) {
       toast.info("Édition live Expert — sélectionnez un élément (coming soon).");
@@ -364,11 +406,11 @@ export function FinalScreen({
   }
 
   return (
-    <>
+    <ExpertOverridesProvider value={{ enabled: expertMode, selected: sel, choose: chooseProduct }}>
       <div className="flex flex-1 flex-col">
         <ProgressBar currentStep={5} labels={STEPS} />
 
-        <main className={cn("mx-auto w-full flex-1 px-5 pb-24 pt-6", debug ? "max-w-[820px]" : "max-w-[480px]")}>
+        <main className={cn("mx-auto w-full flex-1 px-5 pt-6", debug ? "max-w-[820px]" : "max-w-[480px]", expertMode ? "pb-32" : "pb-24")}>
           {/* Before / After slider */}
           <BeforeAfterSlider
             before={beforeUrl}
@@ -521,13 +563,42 @@ export function FinalScreen({
         </main>
       </div>
 
+      {/* Mode expert : barre « Nouveau rendu » — accumule les modifs, un seul re-render. */}
+      {expertMode && (
+        <div className="fixed inset-x-0 bottom-0 border-t border-foyer-border bg-foyer-cream/95 px-5 py-3 backdrop-blur">
+          <div className="mx-auto flex max-w-[480px] flex-col gap-1">
+            <button
+              type="button"
+              disabled={changedCount < 1 || rerendering}
+              onClick={handleNewRender}
+              className={cn(
+                "flex h-[52px] w-full items-center justify-center gap-2 rounded-full font-medium transition-all",
+                changedCount < 1 || rerendering
+                  ? "cursor-not-allowed bg-foyer-border text-foyer-muted"
+                  : "bg-foyer-sage text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] hover:-translate-y-0.5",
+              )}
+            >
+              {rerendering ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" aria-hidden /> Nouveau rendu en cours…
+                </>
+              ) : changedCount >= 1 ? (
+                `Nouveau rendu avec les ${changedCount} élément${changedCount > 1 ? "s" : ""} modifié${changedCount > 1 ? "s" : ""}`
+              ) : (
+                "Choisissez un produit alternatif pour relancer un rendu"
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
       {!PAYWALL_DISABLED && paywallTrigger && (
         <PaywallModal
           trigger={paywallTrigger}
           onClose={() => setPaywallTrigger(null)}
         />
       )}
-    </>
+    </ExpertOverridesProvider>
   );
 }
 

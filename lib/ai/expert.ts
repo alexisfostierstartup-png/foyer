@@ -229,16 +229,31 @@ type ReplaceItem = { noun: string; description: string; imageUrl: string };
 type CustomizeItem = { noun: string; description: string; instruction: string };
 type ExpertPlan = { replace: ReplaceItem[]; customize: CustomizeItem[]; hasFurniture: boolean };
 
-/** Image du vrai produit matché pour un élément à remplacer (via son element_id). */
-function productImageForElement(elementId: string, shoppingList: ShoppingItem[]): string | null {
+/**
+ * Image du vrai produit matché pour un élément à remplacer (via son element_id).
+ * `overrides[elementId]` = index du produit ALTERNATIF choisi par l'user (défaut 0
+ * = meilleur match) → « liste de courses alternative ».
+ */
+function productImageForElement(
+  elementId: string,
+  shoppingList: ShoppingItem[],
+  overrides: Record<string, number>,
+): string | null {
   const it = shoppingList.find(
     (i) => i.elementId === elementId && i.source !== "diy" && (i.matches?.[0]?.primary_image_url || i.imgUrl),
   );
-  return it ? (it.matches?.[0]?.primary_image_url ?? it.imgUrl ?? null) : null;
+  if (!it) return null;
+  const idx = overrides[elementId] ?? 0;
+  const chosen = it.matches?.[idx] ?? it.matches?.[0];
+  return chosen?.primary_image_url ?? it.imgUrl ?? null;
 }
 
 /** Construit le plan d'édition (replace/customize) à partir des décisions. */
-function buildExpertPlan(decisions: ElementDecision[], shoppingList: ShoppingItem[]): ExpertPlan {
+function buildExpertPlan(
+  decisions: ElementDecision[],
+  shoppingList: ShoppingItem[],
+  overrides: Record<string, number>,
+): ExpertPlan {
   const replace: ReplaceItem[] = [];
   const customize: CustomizeItem[] = [];
   let hasFurniture = false;
@@ -252,7 +267,7 @@ function buildExpertPlan(decisions: ElementDecision[], shoppingList: ShoppingIte
     if (action === "replace") {
       // v1 : on ne remplace que les gros meubles (on a des produits catalogue).
       if (!EXPERT_CATEGORIES.includes(d.category as (typeof EXPERT_CATEGORIES)[number])) continue;
-      const imageUrl = productImageForElement(d.element_id, shoppingList);
+      const imageUrl = productImageForElement(d.element_id, shoppingList, overrides);
       if (imageUrl) replace.push({ noun, description, imageUrl });
     } else if (action === "customize") {
       // Customisation d'un meuble existant : on applique la consigne DIY (action_label)
@@ -335,7 +350,8 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
 
   const shoppingList = (project.shoppingList ?? []) as ShoppingItem[];
   const decisions = (project.element_decisions ?? []) as ElementDecision[];
-  const plan = buildExpertPlan(decisions, shoppingList);
+  const overrides = (project.productOverrides ?? {}) as Record<string, number>;
+  const plan = buildExpertPlan(decisions, shoppingList, overrides);
 
   let result: { buffer: Buffer; mimeType: string };
 
