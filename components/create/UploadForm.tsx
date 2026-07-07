@@ -12,9 +12,26 @@ import {
   initialChoices,
   type UserChoices,
 } from "@/components/demo/demo-types";
-import type { RoomType } from "@/lib/types";
+import { CustomRefInput } from "@/components/create/CustomRefInput";
+import type { RoomType, CustomProduct } from "@/lib/types";
 
 const STEPS = ["Photo", "Style", "Mobilier", "Rendu", "Projet"];
+
+// Gros meubles proposés pour « indiquer votre référence » à l'upload (flux expert).
+const UPLOAD_FURNITURE: { slug: string; label: string }[] = [
+  { slug: "sofa", label: "Canapé" },
+  { slug: "armchair", label: "Fauteuil" },
+  { slug: "coffee_table", label: "Table basse" },
+  { slug: "dining_table", label: "Table à manger" },
+  { slug: "chair", label: "Chaise" },
+  { slug: "rug", label: "Tapis" },
+  { slug: "tv_stand", label: "Meuble TV" },
+  { slug: "sideboard", label: "Buffet" },
+  { slug: "bookshelf", label: "Bibliothèque" },
+  { slug: "bed", label: "Lit" },
+  { slug: "nightstand", label: "Table de nuit" },
+  { slug: "dresser", label: "Commode" },
+];
 
 const TIPS = [
   { icon: Frame, text: "Cadrez large (un mur entier visible)" },
@@ -41,6 +58,10 @@ export function UploadForm({ floorPresets, roomTypes, expert = false }: Props) {
     roomType: null,
   });
   const [continuing, setContinuing] = useState(false);
+  // Flux expert — « j'ai déjà un meuble précis en tête » : produit fourni par URL/JPEG,
+  // par catégorie, pré-injecté dès l'upload (utilisé au rendu à la place du matching).
+  const [customProducts, setCustomProducts] = useState<Record<string, CustomProduct>>({});
+  const [selCat, setSelCat] = useState<string>("sofa");
 
   async function handleFileSelect(file: File | undefined) {
     if (!file) return;
@@ -99,6 +120,7 @@ export function UploadForm({ floorPresets, roomTypes, expert = false }: Props) {
           floor: choices.floor,
           walls: choices.walls,
           accessories: choices.accessories,
+          ...(Object.keys(customProducts).length ? { customProducts } : {}),
         }),
       });
     } catch {
@@ -258,6 +280,43 @@ export function UploadForm({ floorPresets, roomTypes, expert = false }: Props) {
               floorPresets={floorPresets}
               furnitureItems={roomType ? (roomTypes.find((r) => r.slug === roomType)?.furniture ?? []) : []}
             />
+
+            {/* Flux expert : indiquer un meuble précis dès l'upload (URL ou JPEG). */}
+            {expert && (
+              <div className="mt-5 rounded-2xl border border-foyer-border bg-white p-4">
+                <p className="text-[14px] font-medium text-foyer-ink">Vous avez déjà un meuble en tête ?</p>
+                <p className="mt-0.5 text-[13px] text-foyer-muted">
+                  Collez le lien du produit (ou importez sa photo) et on l&apos;intègre à votre rendu.
+                </p>
+                <div className="mt-3 flex items-center gap-2">
+                  <select
+                    value={selCat}
+                    onChange={(e) => setSelCat(e.target.value)}
+                    className="rounded-lg border border-foyer-border bg-white px-2.5 py-2 text-[13px] text-foyer-ink outline-none focus:border-foyer-sage"
+                  >
+                    {UPLOAD_FURNITURE.map((f) => (
+                      <option key={f.slug} value={f.slug}>{f.label}</option>
+                    ))}
+                  </select>
+                  <span className="text-[13px] text-foyer-muted">→ votre référence :</span>
+                </div>
+                <div className="mt-2">
+                  <CustomRefInput onPicked={(cp) => setCustomProducts((p) => ({ ...p, [selCat]: cp }))} />
+                </div>
+                {Object.keys(customProducts).length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {Object.entries(customProducts).map(([cat, cp]) => (
+                      <span key={cat} className="flex items-center gap-1.5 rounded-full border border-foyer-border bg-foyer-cream/60 py-1 pl-1 pr-2 text-[12px]">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={cp.imageUrl} alt="" className="size-6 rounded-full object-cover" />
+                        {UPLOAD_FURNITURE.find((f) => f.slug === cat)?.label ?? cat}
+                        <button type="button" onClick={() => setCustomProducts((p) => { const n = { ...p }; delete n[cat]; return n; })} className="text-foyer-muted hover:text-foyer-ink" aria-label="Retirer">✕</button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </main>
