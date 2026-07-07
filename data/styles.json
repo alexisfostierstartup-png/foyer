@@ -26,6 +26,12 @@
       "materials": ["slatted walnut", "bouclé", "travertine", "washi paper", "smoked glass", "jute"],
       "mood": "zen warm minimalism, hushed atmosphere, low warm light, disciplined negative space, low-slung curved furniture, japanese-scandinavian fusion",
       "signature": ["fluted or slatted walnut wood", "black accents punctuating beige", "organic-shaped travertine coffee table", "paper globe lantern", "ikebana-style branch arrangement"],
+      "colorways": [
+        {"slug": "sable-noyer", "label": "Sable & noyer", "walls": "warm greige walls", "accents": "beige and walnut tones punctuated with black"},
+        {"slug": "vert-the", "label": "Vert thé", "walls": "repaint the walls in a soft warm grey-green", "accents": "moss and tea-green textiles on beige furniture, black accents kept"},
+        {"slug": "encre", "label": "Encre", "walls": "repaint the walls in a deep warm charcoal", "accents": "ink-dark walls warmed by beige bouclé and walnut, low warm light"},
+        {"slug": "brume", "label": "Brume", "walls": "pale warm off-white walls", "accents": "misty washed-out beige tones with smoked oak and black lines"}
+      ],
       "moodboardUrl": "/moodboards/japandi_1.jpg"
     }
   },
@@ -38,6 +44,12 @@
       "materials": ["rattan", "jute", "washed linen", "chunky knit wool", "warm rustic wood", "handmade ceramics"],
       "mood": "warm layered bohemian, golden-hour light, terracotta and sand tones, relaxed low seating, artisanal collected feel",
       "signature": ["woven rattan pendant lights", "layered jute rugs and knit throws", "dried pampas grass", "organic terracotta wall art", "floor cushions and poufs"],
+      "colorways": [
+        {"slug": "terracotta", "label": "Terracotta", "walls": "warm sand walls", "accents": "terracotta, sand and golden textile layering"},
+        {"slug": "sable-blanc", "label": "Sable blanc", "walls": "warm white plaster-toned walls", "accents": "cream and natural jute layering, pale rattan, tone-on-tone"},
+        {"slug": "olive", "label": "Olive", "walls": "repaint the walls in a soft olive-sage", "accents": "olive and ochre textiles on warm wood and rattan"},
+        {"slug": "crepuscule", "label": "Crépuscule", "walls": "repaint the walls in a dusty rose-terracotta", "accents": "blush, rust and gold textile layering"}
+      ],
       "moodboardUrl": "/moodboards/boheme_1.jpg"
     }
   },
@@ -50,6 +62,12 @@
       "materials": ["cream bouclé", "travertine", "rattan", "jute", "sage zellige", "brass"],
       "mood": "fresh plant-filled modern boho, bright natural daylight, sage green and cream, curved bouclé furniture, lush trailing greenery everywhere",
       "signature": ["abundant live plants including a plant wall", "curved cream bouclé sectional", "round travertine coffee tables", "organic-wave patterned rug", "woven baskets as planters"],
+      "colorways": [
+        {"slug": "sauge-creme", "label": "Sauge & crème", "walls": "warm white walls", "accents": "sage green and cream with lush trailing greenery"},
+        {"slug": "foret", "label": "Forêt", "walls": "repaint the walls in a deep forest green", "accents": "dark green walls with cream bouclé and abundant plants"},
+        {"slug": "blanc-serre", "label": "Blanc serre", "walls": "bright warm white walls", "accents": "all-cream base letting the greenery be the only colour"},
+        {"slug": "terracotta", "label": "Terracotta", "walls": "warm terracotta-tinted plaster walls", "accents": "terracotta pots and rust textiles with lush greenery"}
+      ],
       "moodboardUrl": "/moodboards/boho_1.jpg"
     }
   },
@@ -62,6 +80,12 @@
       "materials": ["walnut", "teak", "cognac leather", "corduroy", "brass", "smoked glass"],
       "mood": "retro 1950s-60s modern, walnut wood with tapered legs, mustard and burnt orange accents, warm brass lighting, nostalgic hi-fi comfort",
       "signature": ["walnut credenza with tapered legs", "brass sputnik chandelier or arc floor lamp", "cognac leather lounge chair", "record player and vinyl display", "geometric mid-century wall art"],
+      "colorways": [
+        {"slug": "moutarde-noyer", "label": "Moutarde & noyer", "walls": "warm off-white walls", "accents": "mustard and burnt orange accents with walnut and brass"},
+        {"slug": "vert-olive", "label": "Vert olive", "walls": "repaint the walls in a muted olive green", "accents": "olive and teal upholstery with walnut and brass"},
+        {"slug": "creme-galerie", "label": "Crème galerie", "walls": "warm gallery-white walls", "accents": "cream base with cognac leather and walnut, restrained colour"},
+        {"slug": "bleu-petrole", "label": "Bleu pétrole", "walls": "repaint the walls in a deep teal-blue", "accents": "teal walls with mustard and cognac accents, warm brass lighting"}
+      ],
       "moodboardUrl": "/moodboards/mid-century_2.jpg"
     }
   },
@@ -74,6 +98,12 @@
       "materials": ["exposed brick", "raw concrete", "blackened steel", "tufted camel leather", "reclaimed wood", "jute"],
       "mood": "raw loft atmosphere, exposed structure as decor, dramatic warm bulb lighting, bold contrast of black steel and cognac leather",
       "signature": ["exposed brick or raw concrete wall", "black steel beams and open shelving", "camel tufted leather modular sofa", "Edison filament pendant lights", "chunky reclaimed-wood coffee table"],
+      "colorways": [
+        {"slug": "brique-camel", "label": "Brique & camel", "walls": "exposed brick and raw plaster walls as they are", "accents": "camel leather and black steel against warm brick"},
+        {"slug": "charbon", "label": "Charbon", "walls": "paint the plain walls in a deep charcoal, keep the exposed brick as is", "accents": "charcoal and black steel with camel leather warmth"},
+        {"slug": "blanc-atelier", "label": "Blanc atelier", "walls": "whitewashed workshop walls, keep the exposed brick visible", "accents": "lighter airy industrial, pale grey and camel leather"},
+        {"slug": "vert-bouteille", "label": "Vert bouteille", "walls": "paint the plain walls in a deep bottle green, keep the exposed brick as is", "accents": "bottle green with aged cognac leather and brass details"}
+      ],
       "moodboardUrl": "/moodboards/industriel_1.jpg"
     }
   },
@@ -86,6 +116,12 @@
       "materials": ["rough whitewashed plaster", "terracotta", "patterned azulejo tiles", "wood beams", "wicker", "washed linen"],
       "mood": "sun-drenched greek-island feel, whitewashed walls, cobalt blue accents, arched openings, breezy holiday lightness",
       "signature": ["blue and white ceramics collections", "arched doors and niches", "terracotta urns with olive trees", "exposed wood ceiling beams", "azulejo patterned tiles"],
+      "colorways": [
+        {"slug": "cobalt", "label": "Cobalt", "walls": "rough whitewashed walls", "accents": "cobalt blue accents on white, wicker and wood beams"},
+        {"slug": "terre-cuite", "label": "Terre cuite", "walls": "rough whitewashed walls", "accents": "terracotta and warm clay accents instead of blue, wicker and washed linen"},
+        {"slug": "vert-olivier", "label": "Vert olivier", "walls": "rough whitewashed walls", "accents": "olive-green and sage accents on white, natural linen"},
+        {"slug": "sable", "label": "Sable", "walls": "warm sand-tinted limewash walls", "accents": "tone-on-tone sand and ecru, terracotta floor warmth, minimal colour"}
+      ],
       "moodboardUrl": "/moodboards/mediterraneen_1.jpg"
     }
   },
@@ -98,6 +134,12 @@
       "materials": ["sculpted plaster mouldings", "herringbone oak parquet", "marble", "emerald velvet", "cognac leather", "brass and glass"],
       "mood": "elegant parisian apartment, ornate cornices and ceiling roses, tall french windows flooding light, classical shell furnished with modern pieces",
       "signature": ["ornate plaster mouldings and ceiling rose", "point-de-hongrie herringbone parquet", "marble fireplace with gilt mirror", "emerald velvet sofa", "modern furniture contrasting the classical envelope"],
+      "colorways": [
+        {"slug": "emeraude", "label": "Émeraude", "walls": "soft warm white walls with classical mouldings", "accents": "emerald velvet, cognac leather and brass against the classical shell"},
+        {"slug": "bleu-nuit", "label": "Bleu nuit", "walls": "repaint the walls in a deep midnight blue with the mouldings picked out in the same tone", "accents": "navy walls with cognac leather, brass and glass"},
+        {"slug": "poudre", "label": "Poudré", "walls": "soft powder-beige walls with white mouldings", "accents": "muted powdery accents, marble and brass, quiet elegance"},
+        {"slug": "bordeaux", "label": "Bordeaux", "walls": "repaint the walls in a deep burgundy with the mouldings picked out in the same tone", "accents": "burgundy and camel accents, dark wood and brass"}
+      ],
       "moodboardUrl": "/moodboards/haussmannien_1.jpg"
     }
   },
@@ -110,6 +152,12 @@
       "materials": ["rough clay plaster", "raw live-edge wood", "crumpled linen", "stoneware", "woven rattan"],
       "mood": "contemplative silence, hazy diffuse sunbeams, visible texture and imperfection, earthy monochrome, handcrafted organic forms",
       "signature": ["mottled limewash plaster walls", "monumental live-edge wood slab table", "giant woven rattan sphere pendant", "stoneware urns with dried branches", "monolithic low linen sofa"],
+      "colorways": [
+        {"slug": "argile-claire", "label": "Argile claire", "walls": "rough clay plaster walls in warm beige", "accents": "earthy beige monochrome, raw wood and stoneware"},
+        {"slug": "terre-brulee", "label": "Terre brûlée", "walls": "clay plaster walls in a deeper camel-brown tone", "accents": "burnt-earth and camel monochrome layering, dark stoneware"},
+        {"slug": "gris-cendre", "label": "Gris cendre", "walls": "clay plaster walls in a soft ash-grey tone", "accents": "grey-beige stone monochrome with dark wood accents"},
+        {"slug": "blanc-casse", "label": "Blanc cassé", "walls": "rough plaster walls in warm broken white", "accents": "pale monochrome, raw live-edge wood and pale stoneware"}
+      ],
       "moodboardUrl": "/moodboards/wabi-sabi_1.jpg"
     }
   },
@@ -122,6 +170,12 @@
       "materials": ["bouclé", "smooth leather", "lacquered wood panelling", "smoked glass", "brushed brass", "natural stone"],
       "mood": "hushed five-star suite, deep ink-navy and espresso tones, walls in lacquered panelling or rich dark paint, tonal layering, texture over pattern, jewel-like discreet lighting, tailored sculptural furniture, no clutter",
       "signature": ["deep navy-blue lacquered boiserie or feature walls", "monolithic curved bouclé sofa", "smoked glass globe lighting", "leather-wrapped platform bed", "discreet brass details"],
+      "colorways": [
+        {"slug": "encre-expresso", "label": "Encre & expresso", "walls": "walls in deep ink-navy lacquered panelling or rich dark paint", "accents": "espresso, camel and bronze tonal layering, jewel-like lighting"},
+        {"slug": "camel", "label": "Camel", "walls": "walls in warm greige lacquered panelling", "accents": "camel, cream and bronze tonal layering, texture over pattern"},
+        {"slug": "vert-foret", "label": "Vert forêt", "walls": "walls in a blackened forest-green panelling or rich dark paint", "accents": "deep green with cognac leather and brushed brass"},
+        {"slug": "ivoire", "label": "Ivoire", "walls": "walls in soft ivory panelling", "accents": "light tonal luxury, ivory bouclé, natural stone, bronze details"}
+      ],
       "moodboardUrl": "/moodboards/quiet-luxury_1.jpg"
     }
   },
@@ -134,6 +188,12 @@
       "materials": ["channel-tufted velvet", "brass inlay", "black marble", "lacquered fluted wood", "satin"],
       "mood": "theatrical gatsby-era opulence, emerald and gold pairing, geometric glamour, warm brass lighting, bold curved silhouettes",
       "signature": ["gold geometric wall linework with arches and sunbursts", "channel-tufted velvet sofa", "black marble coffee table", "brass sputnik globe chandelier", "fluted lacquered cabinetry"],
+      "colorways": [
+        {"slug": "emeraude-or", "label": "Émeraude & or", "walls": "deep emerald walls", "accents": "emerald and gold pairing, brass and black marble"},
+        {"slug": "nuit-laiton", "label": "Nuit & laiton", "walls": "repaint the walls in a near-black deep teal", "accents": "black marble, brass and smoked glass under warm golden lighting"},
+        {"slug": "bordeaux", "label": "Bordeaux", "walls": "repaint the walls in a deep burgundy", "accents": "burgundy channel-tufted velvet with gold geometry"},
+        {"slug": "ivoire-gatsby", "label": "Ivoire Gatsby", "walls": "warm ivory walls with gilded mouldings", "accents": "cream and gold with black lacquer contrast"}
+      ],
       "moodboardUrl": "/moodboards/art-deco_1.jpg"
     }
   },
@@ -146,6 +206,12 @@
       "materials": ["floral wallpaper", "painted wainscot panelling", "aged walnut", "antique brass", "chintz", "needlepoint textiles"],
       "mood": "genteel english countryside nostalgia, floral-on-floral layering, soft daylight with small shaded lamps, collected-antique charm",
       "signature": ["botanical floral wallpaper", "two-tone painted wainscot with dado rail", "antique mahogany chests and dressers", "fresh garden flowers in vases", "displayed floral china"],
+      "colorways": [
+        {"slug": "rose-sauge", "label": "Rose & sauge", "walls": "floral wallpaper over painted wainscot in soft sage", "accents": "rose and sage floral-on-floral layering, aged walnut"},
+        {"slug": "bleu-wedgwood", "label": "Bleu Wedgwood", "walls": "soft wedgwood-blue painted wainscot with blue-toned floral wallpaper above", "accents": "blue-and-white chintz, antique brass and aged walnut"},
+        {"slug": "creme-beurre", "label": "Crème beurre", "walls": "buttery cream walls with painted wainscot", "accents": "yellow and leaf-green florals, warm antique wood"},
+        {"slug": "vert-feuille", "label": "Vert feuille", "walls": "repaint the wainscot in a leafy green with floral wallpaper above", "accents": "green-dominant florals with rose touches, needlepoint textiles"}
+      ],
       "moodboardUrl": "/moodboards/cottage-anglais_1.jpg"
     }
   },
@@ -158,6 +224,12 @@
       "materials": ["dark painted panelling", "tufted cognac leather", "aged plaster", "brass", "old books", "worn persian rugs"],
       "mood": "nocturnal scholarly atmosphere, candlelight and low sconces, near-black walls with ornate cornices, moody antique elegance",
       "signature": ["floor-to-ceiling bookshelves with old books", "antique oil paintings in gilt frames", "tufted cognac leather seating", "dark herringbone floors", "antique writing desk"],
+      "colorways": [
+        {"slug": "nuit-verte", "label": "Nuit verte", "walls": "near-black green-tinted painted panelling with ornate cornices", "accents": "tufted cognac leather, brass, old books and worn persian rugs"},
+        {"slug": "brun-bibliotheque", "label": "Brun bibliothèque", "walls": "repaint the panelling in a deep espresso brown", "accents": "cognac leather, brass and candlelight warmth"},
+        {"slug": "bordeaux-oxblood", "label": "Bordeaux oxblood", "walls": "repaint the panelling in a deep oxblood red", "accents": "oxblood and tan leather, worn persian rug tones"},
+        {"slug": "bleu-minuit", "label": "Bleu de minuit", "walls": "repaint the panelling in a deep midnight blue", "accents": "navy with cognac leather and antique brass"}
+      ],
       "moodboardUrl": "/moodboards/dark-academia_1.jpg"
     }
   },
@@ -170,6 +242,12 @@
       "materials": ["smooth adobe plaster", "raw chunky wood", "clay pottery", "kilim textiles", "rattan", "concrete"],
       "mood": "arid serene southwest desert home, intense direct sunlight and long shadows, sculpted plaster forms, earthy terracotta and sage",
       "signature": ["sculptural adobe fireplace and niches", "living cacti in clay pots", "kilim and carved-pattern rugs", "terracotta-dyed textile wall art", "dried grasses in urns"],
+      "colorways": [
+        {"slug": "terracotta-sauge", "label": "Terracotta & sauge", "walls": "smooth sand adobe plaster walls", "accents": "terracotta and sage kilim accents, clay pottery"},
+        {"slug": "blanc-adobe", "label": "Blanc adobe", "walls": "smooth white adobe plaster walls", "accents": "pale sand and cream, clay pottery as the only warmth"},
+        {"slug": "ocre-profond", "label": "Ocre profond", "walls": "adobe plaster walls in a deeper ochre-clay tone", "accents": "rust and ochre kilim accents, dark raw wood"},
+        {"slug": "sauge", "label": "Sauge", "walls": "pale sand plaster walls", "accents": "sage-green dominant textiles with sand and chunky wood"}
+      ],
       "moodboardUrl": "/moodboards/desert_1.jpg"
     }
   },
@@ -182,6 +260,12 @@
       "materials": ["tufted corduroy", "velvet", "chrome and glass", "cane and rattan", "lacquer", "terrazzo"],
       "mood": "groovy optimistic retro-pop, burnt orange first, sunny warm light with glowing glass globes, low modular seating, playful curves",
       "signature": ["low tufted modular sofa in burnt orange", "mushroom and globe lamps", "checkerboard and wavy-pattern rugs", "chrome and glass furniture", "gallery of retro graphic posters"],
+      "colorways": [
+        {"slug": "orange-brule", "label": "Orange brûlé", "walls": "warm cream walls", "accents": "burnt orange first, mustard and teal retro accents, glowing glass globes"},
+        {"slug": "vert-avocat", "label": "Vert avocat", "walls": "repaint the walls in a warm avocado green", "accents": "avocado and mustard corduroy with chrome and glass"},
+        {"slug": "choco-rose", "label": "Choco & rose", "walls": "repaint the walls in a warm chocolate brown", "accents": "chocolate, blush-pink and cream retro accents"},
+        {"slug": "creme-disco", "label": "Crème disco", "walls": "warm cream walls", "accents": "cream base with caramel, chrome and glowing glass globes, subtle colour pops"}
+      ],
       "moodboardUrl": "/moodboards/seventies_1.jpg"
     }
   },
@@ -194,6 +278,12 @@
       "materials": ["matte paint supergraphics", "velvet", "fluted wood", "brass", "marble"],
       "mood": "playful graphic optimism, bright even daylight, giant painted color fields and arches, complementary color duos, rounded pill silhouettes",
       "signature": ["supergraphic painted arches continuing onto the ceiling", "complementary color pairing like orange and green", "arched niches and painted door surrounds", "color-matched accessories", "curved rounded furniture"],
+      "colorways": [
+        {"slug": "orange-vert", "label": "Orange & vert", "walls": "giant painted colour fields and arches in burnt orange and deep green on off-white walls", "accents": "orange-green complementary duo, rounded pill silhouettes"},
+        {"slug": "bleu-jaune", "label": "Bleu & jaune", "walls": "giant painted colour fields and arches in cobalt blue and warm yellow on off-white walls", "accents": "cobalt and yellow duo on a cream base"},
+        {"slug": "rose-rouge", "label": "Rose & rouge", "walls": "giant painted colour fields and arches in pink and tomato red on off-white walls", "accents": "pink-red clash duo, rounded silhouettes"},
+        {"slug": "vert-lilas", "label": "Vert & lilas", "walls": "giant painted colour fields and arches in deep green and lilac on off-white walls", "accents": "green and lilac duo, matte paint supergraphics"}
+      ],
       "moodboardUrl": "/moodboards/color-block_1.jpg"
     }
   },
@@ -206,6 +296,12 @@
       "materials": ["terrazzo", "high-gloss lacquer", "matte painted geometry", "bouclé", "colored acrylic"],
       "mood": "playful 80s memphis pop design, toy-like geometric primitives, bright studio light, primary-plus-pastel color clash, cartoon energy",
       "signature": ["terrazzo surfaces with colored speckle", "zigzag and squiggle motifs", "stacked geometric arches", "blob-stack sphere lamps", "pill-shaped poufs"],
+      "colorways": [
+        {"slug": "primaires-pastels", "label": "Primaires & pastels", "walls": "bright white walls with painted geometric shapes", "accents": "primary-plus-pastel colour clash, terrazzo and lacquer"},
+        {"slug": "pastel-pop", "label": "Pastel pop", "walls": "pale pastel walls with painted geometric shapes in pink, mint and lilac", "accents": "pastel-dominant memphis with a few primary touches"},
+        {"slug": "primaire-franc", "label": "Primaire franc", "walls": "white gallery walls with bold primary geometric supergraphics", "accents": "red, blue and yellow dominance with black grid details"},
+        {"slug": "noir-blanc-pop", "label": "Noir & blanc pop", "walls": "white walls with black-and-white geometric squiggle patterns", "accents": "monochrome geometry with one bright accent colour per piece"}
+      ],
       "moodboardUrl": "/moodboards/memphis_1.jpg"
     }
   },
@@ -218,6 +314,12 @@
       "materials": ["tufted velvet", "lacquered wood", "persian rugs", "colored glass", "carved wood", "brass"],
       "mood": "exuberant more-is-more eclecticism, saturated complementary color clashes, dense curated collections, joyful pattern mixing",
       "signature": ["velvet chesterfield sofa in a bold color", "dense gallery wall", "rainbow-ordered bookshelves", "colored glass lamps", "mixed patterned upholstery"],
+      "colorways": [
+        {"slug": "joyaux", "label": "Joyaux mêlés", "walls": "saturated jewel-toned walls", "accents": "clashing jewel tones, dense curated collections and mixed patterns"},
+        {"slug": "rouge-theatre", "label": "Rouge théâtre", "walls": "repaint the walls in a saturated theatre red", "accents": "red-dominant with pink and gold clashes, dense pattern mixing"},
+        {"slug": "vert-paon", "label": "Vert paon", "walls": "repaint the walls in a deep peacock green", "accents": "peacock green with magenta and mustard clashes, colored glass"},
+        {"slug": "ocre-safran", "label": "Ocre safran", "walls": "repaint the walls in a saturated saffron ochre", "accents": "saffron with teal and crimson pattern mixing, brass and velvet"}
+      ],
       "moodboardUrl": "/moodboards/maximaliste_1.jpg"
     }
   }
