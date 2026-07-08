@@ -84,10 +84,16 @@ export default function RootLayout({
           />
         </noscript>
 
-        {/* 1. Axeptio en PREMIER (beforeInteractive) : pose le Consent Mode « denied ». */}
+        {/* 1. Axeptio en PREMIER (afterInteractive, avant GTM dans l'ordre du DOM) :
+            pose window.axeptioSettings + le Consent Mode « denied » avant que GTM ne
+            fire (protégé par wait_for_update:500). On N'utilise PAS beforeInteractive :
+            le SDK Axeptio injecte #axeptio_overlay dans le DOM, et en beforeInteractive
+            ça se produit AVANT l'hydratation React → mismatch d'hydratation + warning
+            « script tag while rendering ». En afterInteractive, l'injection a lieu
+            après l'hydratation → aucun conflit. */}
         <Script
           id="axeptio-cmp"
-          strategy="beforeInteractive"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{ __html: AXEPTIO_INLINE }}
         />
 
