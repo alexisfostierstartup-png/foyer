@@ -111,7 +111,7 @@ function profilesToFurniture(profiles: ElementProfile[]): DetectedFurniture[] {
 // Récapitule l'architecture FIXE détectée (ouvertures + fixtures notables) en une
 // ligne chiffrée injectée dans la génération → cible claire qui limite l'invention
 // ou le déplacement de fenêtres/portes/escalier sur les angles serrés.
-function buildFixedFeaturesSummary(profiles: ElementProfile[]): string {
+export function buildFixedFeaturesSummary(profiles: ElementProfile[]): string {
   const count = (cat: string) => profiles.filter((p) => p.category === cat).length;
   const parts: string[] = [];
   const w = count("window"); if (w) parts.push(`${w} fenêtre(s)`);
@@ -135,7 +135,7 @@ function buildFixedFeaturesSummary(profiles: ElementProfile[]): string {
 // Liste des éléments DÉTECTÉS à retirer = intersection des catégories parasites de
 // la pièce (statique, depuis l'asset room_defaults.removeCategories) et de ce qui
 // est réellement sur la photo. Générique : aucune logique room-type en dur ici.
-function buildRemoveList(profiles: ElementProfile[], categories: string[]): string {
+export function buildRemoveList(profiles: ElementProfile[], categories: string[]): string {
   if (!categories.length) return "(none)";
   const set = new Set(categories);
   const items = profiles
@@ -170,7 +170,7 @@ const LEAN_INVENTORY_SUFFIX =
   '"material_family", "surface_features", "condition" et "dims" de chaque élément ' +
   '(ne les émets pas du tout). Conserve bien "movable" et tous les autres champs.';
 
-async function detectElementProfiles(
+export async function detectElementProfiles(
   projectId: string,
   sourceImage: ImageInput,
   label: string,
@@ -250,7 +250,7 @@ function parseHex(v: unknown): string | undefined {
   return typeof v === "string" && /^#[0-9a-fA-F]{6}$/.test(v.trim()) ? v.trim().toLowerCase() : undefined;
 }
 
-function constraintsToChoices(c: UserConstraints) {
+export function constraintsToChoices(c: UserConstraints) {
   const result: Record<string, unknown> = {};
 
   if (c.floor.change) {
@@ -1317,6 +1317,34 @@ async function analyzeRender(projectId: string, project: Project): Promise<Rende
     if (wasCandidate) return after ? { ...d, description: after } : d;
     return d;
   });
+
+  // ── MÉTRIQUE conformité plan → rendu (gratuite : le verdict est déjà calculé).
+  // Base de décision pour une éventuelle réparation payante (cf. doc DIY §10) :
+  // taux d'échec réel par type d'intention et par action, loggé par projet.
+  {
+    const compliance = { surface: { applied: 0, missing: 0 }, structural: { applied: 0, missing: 0 } };
+    const missingByAction: Record<string, number> = {};
+    for (const d of decisions) {
+      if (d.mismatch_type !== "surface" && d.mismatch_type !== "structural") continue;
+      if (!judgedIds.has(d.element_id)) continue;
+      const bucket = compliance[d.mismatch_type];
+      if (appliedIds.has(d.element_id)) bucket.applied += 1;
+      else {
+        bucket.missing += 1;
+        const k = d.action_slug ?? `${d.mismatch_type}:${d.category}`;
+        missingByAction[k] = (missingByAction[k] ?? 0) + 1;
+      }
+    }
+    const total = compliance.surface.applied + compliance.surface.missing + compliance.structural.applied + compliance.structural.missing;
+    if (total > 0) {
+      await logPipelineEvent({
+        project_id: projectId,
+        event: "audit",
+        step: "plan-compliance",
+        metadata: { ...compliance, missingByAction, diyMode: project.diyMode ?? "standard" },
+      });
+    }
+  }
 
   // Taxonomie DB → résolution catégorie unique (build + matcher), + non-matchés visibles.
   const taxonomy = await taxonomyPromise;

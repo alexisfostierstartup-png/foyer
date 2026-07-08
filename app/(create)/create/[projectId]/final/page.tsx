@@ -45,6 +45,7 @@ export default async function FinalPage({
       liveEditsUsed={project.live_edits_used ?? 0}
       pendingList={pendingList}
       expertMode={project.mode === "expert"}
+      diyBeta={project.diyMode === "beta"}
       productOverrides={project.productOverrides ?? null}
       customProducts={project.customProducts ?? null}
     />

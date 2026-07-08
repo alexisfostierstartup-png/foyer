@@ -247,6 +247,10 @@ type Props = {
   // Projet en mode expert → active la « liste de courses alternative » : choix de
   // produits alternatifs (accumulés) + bouton « Nouveau rendu avec les (x) éléments ».
   expertMode?: boolean;
+  // Projet flux DIY beta : badge « Customisation » sur les fournitures DIY —
+  // par construction (reconciliation analyzeRender), une entrée DIY qui atteint
+  // la liste est une customisation CONFIRMÉE sur le rendu.
+  diyBeta?: boolean;
   productOverrides?: Record<string, number> | null;
   customProducts?: Record<string, CustomProduct> | null;
 };
@@ -261,6 +265,7 @@ export function FinalScreen({
   liveEditsUsed = 0,
   pendingList = false,
   expertMode = false,
+  diyBeta = false,
   productOverrides = null,
   customProducts = null,
 }: Props) {
@@ -594,6 +599,7 @@ export function FinalScreen({
                   shoppingList={shoppingList}
                   alterations={alterationsList}
                   onProductUrl={handleProductUrl}
+                  diyBeta={diyBeta}
                 />
               </div>
               {/* Slide 1 — Score Foyer */}
@@ -670,10 +676,12 @@ function EnhancedListeShoppingTab({
   shoppingList,
   alterations,
   onProductUrl,
+  diyBeta = false,
 }: {
   shoppingList: ShoppingItem[];
   alterations: Alteration[];
   onProductUrl: () => void;
+  diyBeta?: boolean;
 }) {
   // Dedup by id before grouping (guards against stale cached data with duplicate catalog products)
   const seen = new Set<string>();
@@ -758,7 +766,16 @@ function EnhancedListeShoppingTab({
                       ×{item.quantity}
                     </span>
                   )}
-                  <span className="shrink-0 text-[12px] text-foyer-muted">À sourcer</span>
+                  {diyBeta && item.source === "diy" ? (
+                    <span
+                      className="shrink-0 rounded-full bg-foyer-sage/15 px-2 py-0.5 text-[12px] font-medium text-foyer-sage"
+                      title={item.detail ?? undefined}
+                    >
+                      ✦ Customisation
+                    </span>
+                  ) : (
+                    <span className="shrink-0 text-[12px] text-foyer-muted">À sourcer</span>
+                  )}
                 </li>
               ))}
 
