@@ -43,6 +43,10 @@ export const CLEAR_FINALIZE: Partial<Project> = {
   shoppingList: undefined,
   scoreFoyer: undefined,
   alterations: undefined,
+  // Un nouveau rendu invalide les 3 dispositions (elles dérivent du même
+  // render/style) : on les efface pour que la page /dispositions les régénère
+  // au lieu de réafficher — ou que le verrou d'idempotence ne renvoie — du périmé.
+  dispositionsRenderUrls: undefined,
 };
 
 export async function fetchImageBytes(url: string): Promise<Buffer> {
@@ -1077,7 +1081,29 @@ const DISPOSITION_BRIEFS = [
  * layout → 3 rendus PLEIN FORMAT distincts. Réutilise profils/style/design plan.
  * Ne touche pas generatedRenderUrl (le user en choisira un ensuite).
  */
+// Dédup en vol des dispositions (par process/lambda) : deux requêtes concurrentes
+// (ex. re-mount de la page pendant les ~2 min de génération) PARTAGENT le même
+// calcul au lieu de lancer 6 renders Gemini. Complète l'idempotence DB ci-dessous.
+const inflightDispositions = new Map<string, Promise<string[]>>();
+
 export async function runDispositionsPipeline(projectId: string): Promise<string[]> {
+  // Idempotence : dispositions déjà générées (pour ce render/style — CLEAR_FINALIZE
+  // les efface à chaque nouveau rendu) → on renvoie SANS relancer. Coupe le double-run
+  // observé : la page /dispositions se re-monte / est rafraîchie pendant la 1re passe
+  // (~2 min) et, `dispositionsRenderUrls` désormais persistées, le 2e POST court-circuite
+  // au lieu de refaire 3 renders qui, concurrents, affamaient le matching (timeout /expert).
+  const existing = await getProject(projectId);
+  if ((existing?.dispositionsRenderUrls?.length ?? 0) >= 3) {
+    return existing!.dispositionsRenderUrls as string[];
+  }
+  const inflight = inflightDispositions.get(projectId);
+  if (inflight) return inflight;
+  const run = runDispositionsPipelineInner(projectId).finally(() => inflightDispositions.delete(projectId));
+  inflightDispositions.set(projectId, run);
+  return run;
+}
+
+async function runDispositionsPipelineInner(projectId: string): Promise<string[]> {
   const project = await getProject(projectId);
   if (!project) throw new Error(`Project not found: ${projectId}`);
   if (!project.basePhotoUrl || !project.selectedStyleId || !project.roomType) {
