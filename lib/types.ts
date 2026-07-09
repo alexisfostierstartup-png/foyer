@@ -8,6 +8,8 @@ export type Style = {
   id: string;
   name: string;
   description: string;
+  // Description longue (FR) — infobulle au survol de la carte + matière SEO.
+  longDescription?: string;
   paletteHex: string[];
   materials: string[];
   mood: string;
@@ -82,6 +84,9 @@ export type ProductMatch = {
   // true si le score final est sous le seuil d'affichage (confiance faible) — l'item est
   // tout de même proposé (le neuf sort toujours), mais signalé.
   belowThreshold?: boolean;
+  // Bonus de style appliqué (MATCH_STYLE_BONUS) : le produit est taggé du style du
+  // projet — "core" (style_affinity) ou "compatible" (metadata.style_compatible).
+  styleTagHit?: "core" | "compatible";
 };
 
 // Détail d'un attribut structuré comparé (rendu ↔ produit), pour le debug scoring /final.
@@ -92,6 +97,17 @@ export type AttrScoreDetail = {
   weight: number;         // poids de l'attribut (sur 100, dans sa catégorie)
   sim: number;            // similarité de cet attribut ∈ [0,1] (1 = match exact ; ΔE pour couleur)
   compared: boolean;      // false si non comparable (un côté unknown/n/a/absent → ignoré)
+};
+
+// Pièce réellement intégrée au rendu expert (swap NB2) : le produit exact + de quoi
+// retrouver/reconstruire sa ligne de courses quel que soit le recalcul.
+export type ExpertIntegratedPiece = {
+  category: string;
+  name: string;
+  imageUrl: string;
+  elementId?: string | null;
+  // Produit catalogue utilisé (null si produit custom fourni par l'user).
+  match?: ProductMatch | null;
 };
 
 export type ShoppingItem = {
@@ -118,6 +134,10 @@ export type ShoppingItem = {
   // Élément source (decision.element_id) → permet de retrouver son crop/bbox dans le rendu
   // pour le matching image↔image. Absent pour les ajouts nets (détectés sans bbox).
   elementId?: string;
+  // Rendu EXPERT : ce produit a été RÉELLEMENT intégré au rendu (swap NB2). La ligne
+  // est AUTORITAIRE : matches[0] = le produit exact du rendu, jamais écrasée par une
+  // re-dérivation vision (cf. enforceExpertIntegratedPieces).
+  integrated?: boolean;
   // PEINTURE : couleur du mur détectée dans le rendu (hex) → matching ΔE + affichée.
   targetHex?: string;
   // ── Débogage scoring (/final) ────────────────────────────────────────────
@@ -199,6 +219,15 @@ export type Project = {
   // « liste de courses alternative »). elementId → index dans `matches` (0 = meilleur).
   // Le rendu expert utilise ce produit au lieu de matches[0] pour cet élément.
   productOverrides?: Record<string, number> | null;
+  // Rendu expert : les pièces RÉELLEMENT swappées dans le rendu (source de vérité de
+  // la liste de courses pour ces meubles) — persistées par runExpertRenderPipeline au
+  // moment du swap, ré-injectées dans toute liste recalculée. Jamais dans CLEAR_FINALIZE.
+  expertIntegratedPieces?: ExpertIntegratedPiece[] | null;
+  // VERROU DE LISTE (anti « loterie du refresh ») : snapshot des propositions déjà
+  // montrées au user — un recalcul reprend ces matches par item, sauf pour les
+  // catégories visées par les demandes d'itération en attente (listLock.ts).
+  lockedShoppingList?: ShoppingItem[] | null;
+  pendingReleaseRequests?: string[] | null;
   // Produit SUR-MESURE fourni par l'user (URL collée → image extraite, ou JPEG
   // importé). Clé = elementId (choix à la liste shopping) OU catégorie (choix dès
   // l'upload, avant détection). Prioritaire sur le matching pour cet élément/catégorie.

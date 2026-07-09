@@ -30,6 +30,18 @@ export function StyleCard({ style, selected, onSelect }: StyleCardProps) {
           alt={`Ambiance ${style.name}`}
           className="size-full object-cover"
         />
+        {/* Infobulle : description longue au survol (desktop — Tailwind v4 gate
+            hover: sur les devices qui le supportent, pas de conflit tactile). */}
+        {style.longDescription && (
+          <div
+            role="tooltip"
+            className="pointer-events-none absolute inset-0 flex items-center bg-foyer-ink/85 p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+          >
+            <p className="text-[11.5px] leading-snug text-white/95">
+              {style.longDescription}
+            </p>
+          </div>
+        )}
         {selected && (
           <span className="absolute right-2 top-2 flex size-6 items-center justify-center rounded-full bg-foyer-sage text-white shadow-sm">
             <Check className="size-4" aria-hidden />

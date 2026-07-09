@@ -54,6 +54,7 @@ function mapAmbianceRow(a: { id: string; slug: string; data: unknown }): Style {
   const d = a.data as {
     name: string;
     description: string;
+    longDescription?: string;
     palette: string[];
     materials: string[];
     mood: string;
@@ -63,6 +64,7 @@ function mapAmbianceRow(a: { id: string; slug: string; data: unknown }): Style {
     id: a.slug,
     name: d.name,
     description: d.description,
+    longDescription: d.longDescription,
     paletteHex: d.palette,
     materials: d.materials,
     mood: d.mood,

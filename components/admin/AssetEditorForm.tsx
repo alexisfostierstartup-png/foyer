@@ -39,6 +39,9 @@ function AmbianceFields({
       <Field label="Description">
         <textarea value={String(data.description ?? "")} onChange={(e) => update("description", e.target.value)} rows={3} className={inputCls} />
       </Field>
+      <Field label="Description longue (FR — infobulle du sélecteur + matière SEO)">
+        <textarea value={String(data.longDescription ?? "")} onChange={(e) => update("longDescription", e.target.value)} rows={4} className={inputCls} />
+      </Field>
       <Field label="Mood">
         <input value={String(data.mood ?? "")} onChange={(e) => update("mood", e.target.value)} className={inputCls} />
       </Field>

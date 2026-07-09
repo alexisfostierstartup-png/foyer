@@ -13,12 +13,16 @@ const chair = (i: number) => ({
 });
 
 describe("formatDesignPlan", () => {
-  it("regroupe les identiques en une ligne ×N", () => {
+  it("regroupe les identiques en une ligne (cible = catégorie, suffixe silhouette pour les assises)", () => {
     const plan = formatDesignPlan([chair(1), chair(2), chair(3), chair(4)]);
     const lines = plan.split("\n");
     expect(lines).toHaveLength(1);
-    expect(lines[0]).toContain("×4");
-    expect(lines[0]).toContain("the 4");
+    expect(lines[0]).toContain("the 4 dining chairs");
+    expect(lines[0]).toContain("put 4");
+    // Assise : exigence de géométrie différente (anti « même silhouette retapissée »)
+    expect(lines[0]).toContain("SILHOUETTE");
+    // La description de l'original n'est plus citée (le modèle la recopiait)
+    expect(lines[0]).not.toContain("pivotante");
   });
 
   it("REPLACE ignore l'action_label 'retapisser' (pas de contradiction)", () => {
@@ -97,7 +101,8 @@ describe("formatDesignPlan", () => {
     const lines = beta.split("\n");
     expect(lines).toHaveLength(2);
     expect(lines.find((l) => l.includes("the walls"))).toContain("RESTYLE");
-    const chairs = lines.find((l) => l.includes("Chaise"));
+    // Cible REPLACE par catégorie (plus de description de l'original)
+    const chairs = lines.find((l) => l.includes("chair"));
     expect(chairs).toContain("all 2 identical");
     expect(chairs).toContain("Never the original recolored");
   });

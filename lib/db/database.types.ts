@@ -695,6 +695,8 @@ export type StyleColorway = {
 export type AmbianceData = {
   name: string
   description: string
+  // Description longue (FR) — infobulle du sélecteur de style + matière SEO.
+  longDescription?: string
   palette: string[]
   materials: string[]
   mood: string

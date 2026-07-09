@@ -4,17 +4,39 @@
     "data": {
       "name": "Scandinave",
       "description": "Bois blond, blanc chaud, lignes simples. L'essentiel, baigné de lumière.",
+      "longDescription": "Né dans les pays nordiques où la lumière est rare, le scandinave privilégie les tons pâles, le bois blond et des lignes simples et fonctionnelles. Textiles naturels, surfaces dégagées, décoration sobre mais chaleureuse. Idéal pour agrandir visuellement les petits espaces et apaiser les intérieurs familiaux.",
       "palette": ["#F3EFE6", "#D3AE7C", "#C9BCA8", "#E0D4BF", "#9AA286"],
       "materials": ["pale oak", "wool bouclé", "washed linen", "rattan", "light stone"],
       "mood": "calm nordic simplicity, soft diffuse daylight, warm white walls, pale wood, uncluttered functional furniture, cozy hygge textures",
       "signature": ["pale oak furniture with clean lines", "chunky wool rug with fringe", "paper or linen pendant shades", "dried botanicals in ceramic vases", "near-absence of saturated color"],
       "colorways": [
-        { "slug": "blond", "label": "Blond classique", "walls": "warm white walls", "accents": "cream, pale wood and soft greige textile accents" },
-        { "slug": "sauge", "label": "Sauge", "walls": "repaint the walls in a muted sage green", "accents": "sage and olive textile accents on cream furniture" },
-        { "slug": "bleu-nordique", "label": "Bleu nordique", "walls": "repaint the walls in a soft misty blue-grey", "accents": "slate-blue and indigo textile accents on off-white furniture" },
-        { "slug": "terre", "label": "Terre", "walls": "warm sand-white walls", "accents": "muted terracotta and ochre accents in cushions, throws and wall art" }
+        {"slug": "blond", "label": "Blond classique", "walls": "warm white walls", "accents": "cream, pale wood and soft greige textile accents"},
+        {"slug": "sauge", "label": "Sauge", "walls": "repaint the walls in a muted sage green", "accents": "sage and olive textile accents on cream furniture"},
+        {"slug": "bleu-nordique", "label": "Bleu nordique", "walls": "repaint the walls in a soft misty blue-grey", "accents": "slate-blue and indigo textile accents on off-white furniture"},
+        {"slug": "terre", "label": "Terre", "walls": "warm sand-white walls", "accents": "muted terracotta and ochre accents in cushions, throws and wall art"}
       ],
-      "moodboardUrl": "/moodboards/scandinave_1.jpg"
+      "moodboardUrl": "/moodboards/scandinave_1.jpg",
+      "beauty": "Bright airy daylight, whites warmed by pale oak and wool; one sculptural accent piece; layered soft textiles (sheepskin, chunky knit); everything breathes — generous negative space, nothing pushed against walls",
+      "avoid": ["grey flatness / clinical showroom feel", "IKEA-catalog uniformity with zero character", "cold blue-white light", "cluttered shelves"]
+    }
+  },
+  {
+    "slug": "moderne",
+    "data": {
+      "name": "Moderne",
+      "description": "Lignes nettes, bois et métal brossé, confort actuel. Le contemporain sans effort.",
+      "longDescription": "Le contemporain sans effort : lignes nettes, bois chaleureux équilibré par le verre et le métal brossé, technologie discrète et éclairage indirect. Ni minimaliste ni chargé, simplement actuel. Idéal pour les appartements récents, les pièces de vie multifonctions et ceux qui veulent du net sans froideur.",
+      "palette": ["#F2EFE9", "#8B8178", "#1F1D1B", "#2C3A4E", "#A97C50"],
+      "materials": ["oiled wood", "smoked glass", "brushed metal", "smooth leather", "natural stone", "wool"],
+      "mood": "clean contemporary living, crisp straight lines, warm wood balanced by glass and brushed metal, discreet modern technology, soft indirect lighting, uncluttered yet comfortable",
+      "signature": ["low straight-lined modular sofa in a neutral tone", "smoked glass or stone coffee table", "matte black or brushed metal details", "large plain textured rug", "indirect concealed lighting"],
+      "colorways": [
+        {"slug": "taupe-bois", "label": "Taupe & bois", "walls": "warm off-white walls", "accents": "taupe, greige and natural wood accents"},
+        {"slug": "bleu-nuit", "label": "Bleu nuit", "walls": "repaint the walls in a deep night blue", "accents": "night-blue walls with warm wood and off-white seating"},
+        {"slug": "greige", "label": "Greige clair", "walls": "light greige walls", "accents": "tone-on-tone greige and cream with matte black details"},
+        {"slug": "noir-bois", "label": "Noir & bois", "walls": "warm off-white walls", "accents": "matte black accents with warm natural wood"}
+      ],
+      "moodboardUrl": "/moodboards/moderne.svg"
     }
   },
   {
@@ -22,6 +44,7 @@
     "data": {
       "name": "Japandi",
       "description": "L'épure japonaise, la chaleur scandinave. Noyer, noir, silence.",
+      "longDescription": "Fusion de l'épure japonaise et de la chaleur scandinave : mobilier bas, noyer strié, céramique mate et un vide assumé. Une ambiance silencieuse et disciplinée, propice au calme. Idéal pour les chambres, les petits appartements à harmoniser et les esprits en quête de sérénité.",
       "palette": ["#DDD3C2", "#6C4E32", "#2E2A26", "#6F7455", "#E7DCC6"],
       "materials": ["slatted walnut", "bouclé", "travertine", "washi paper", "smoked glass", "jute"],
       "mood": "zen warm minimalism, hushed atmosphere, low warm light, disciplined negative space, low-slung curved furniture, japanese-scandinavian fusion",
@@ -32,7 +55,9 @@
         {"slug": "encre", "label": "Encre", "walls": "repaint the walls in a deep warm charcoal", "accents": "ink-dark walls warmed by beige bouclé and walnut, low warm light"},
         {"slug": "brume", "label": "Brume", "walls": "pale warm off-white walls", "accents": "misty washed-out beige tones with smoked oak and black lines"}
       ],
-      "moodboardUrl": "/moodboards/japandi_1.jpg"
+      "moodboardUrl": "/moodboards/japandi_1.jpg",
+      "beauty": "Low warm light and deep shadows, tea-stained neutrals; tactile contrast of slatted walnut against bouclé and travertine; sparse composition where each object earns its place; one ikebana branch as the only flourish",
+      "avoid": ["busy decor or filled shelves", "cool grey minimalism", "glossy lacquered surfaces", "matchy furniture sets"]
     }
   },
   {
@@ -40,6 +65,7 @@
     "data": {
       "name": "Bohème",
       "description": "Rotin, terracotta, lumière dorée. Des textiles superposés qui racontent un voyage.",
+      "longDescription": "Le bohème assume la superposition : tapis étagés, macramé, rotin et textiles chinés au fil des voyages, sous une lumière dorée. Des tons terracotta et sable, des objets artisanaux qui racontent une histoire. Idéal pour les pièces à vivre chaleureuses, les vérandas et les intérieurs très personnels.",
       "palette": ["#C9A97E", "#B4602F", "#F0E3D2", "#8A9B6E", "#D8B98F"],
       "materials": ["rattan", "jute", "washed linen", "chunky knit wool", "warm rustic wood", "handmade ceramics"],
       "mood": "warm layered bohemian, golden-hour light, terracotta and sand tones, relaxed low seating, artisanal collected feel",
@@ -50,7 +76,9 @@
         {"slug": "olive", "label": "Olive", "walls": "repaint the walls in a soft olive-sage", "accents": "olive and ochre textiles on warm wood and rattan"},
         {"slug": "crepuscule", "label": "Crépuscule", "walls": "repaint the walls in a dusty rose-terracotta", "accents": "blush, rust and gold textile layering"}
       ],
-      "moodboardUrl": "/moodboards/boheme_1.jpg"
+      "moodboardUrl": "/moodboards/boheme_1.jpg",
+      "beauty": "Sun-washed warmth, layered kilims and worn leather, plants cascading at different heights; collected-over-years mix of patinas and origins; warm brass and amber glass catching light",
+      "avoid": ["floral chintz or grandma wallpaper", "doily / lace fabrics", "flat beige uniformity", "brand-new matching rattan set"]
     }
   },
   {
@@ -58,6 +86,7 @@
     "data": {
       "name": "Urban jungle",
       "description": "Des plantes partout, du bouclé crème, de la pierre claire. Une serre à vivre.",
+      "longDescription": "Une serre à vivre : plantes en abondance, bouclé crème, travertin et laiton. La verdure devient la couleur principale sur une base claire et douce. Idéal pour les amoureux des plantes, les pièces lumineuses et les intérieurs frais qui respirent.",
       "palette": ["#F2EAD9", "#4E7A46", "#97A97C", "#C0603A", "#D19B3F"],
       "materials": ["cream bouclé", "travertine", "rattan", "jute", "sage zellige", "brass"],
       "mood": "fresh plant-filled modern boho, bright natural daylight, sage green and cream, curved bouclé furniture, lush trailing greenery everywhere",
@@ -68,7 +97,9 @@
         {"slug": "blanc-serre", "label": "Blanc serre", "walls": "bright warm white walls", "accents": "all-cream base letting the greenery be the only colour"},
         {"slug": "terracotta", "label": "Terracotta", "walls": "warm terracotta-tinted plaster walls", "accents": "terracotta pots and rust textiles with lush greenery"}
       ],
-      "moodboardUrl": "/moodboards/boho_1.jpg"
+      "moodboardUrl": "/moodboards/boho_1.jpg",
+      "beauty": "Light natural fibres — jute, rattan, macramé — over warm white; low-slung seating with generous cushions; sun-bleached palette with terracotta touches; airy, beachy ease",
+      "avoid": ["floral chintz wallpaper", "heavy dark furniture", "overloaded knick-knacks", "plastic-looking rattan"]
     }
   },
   {
@@ -76,6 +107,7 @@
     "data": {
       "name": "Mid-century",
       "description": "Noyer, courbes, laiton. L'élégance des années 50-60, remise au présent.",
+      "longDescription": "L'élégance des années 50-60 remise au présent : noyer aux pieds fuselés, cuir cognac, laiton, touches moutarde et orange brûlé. Un rétro chic et chaleureux, jamais vieillot. Idéal pour les salons conviviaux, les amateurs de vinyles et les appartements de caractère.",
       "palette": ["#6B4226", "#D9A23B", "#C65D2E", "#EFE6D2", "#7A7A4C"],
       "materials": ["walnut", "teak", "cognac leather", "corduroy", "brass", "smoked glass"],
       "mood": "retro 1950s-60s modern, walnut wood with tapered legs, mustard and burnt orange accents, warm brass lighting, nostalgic hi-fi comfort",
@@ -86,7 +118,9 @@
         {"slug": "creme-galerie", "label": "Crème galerie", "walls": "warm gallery-white walls", "accents": "cream base with cognac leather and walnut, restrained colour"},
         {"slug": "bleu-petrole", "label": "Bleu pétrole", "walls": "repaint the walls in a deep teal-blue", "accents": "teal walls with mustard and cognac accents, warm brass lighting"}
       ],
-      "moodboardUrl": "/moodboards/mid-century_2.jpg"
+      "moodboardUrl": "/moodboards/mid-century_2.jpg",
+      "beauty": "Warm walnut and teak with tapered legs, one saturated accent (mustard, burnt orange) against calm neutrals; iconic silhouettes with breathing room; graphic art and sculptural lighting as jewelry",
+      "avoid": ["theme-park 50s diner look", "crowding icons together", "orange-brown everything", "fake vintage patina"]
     }
   },
   {
@@ -94,6 +128,7 @@
     "data": {
       "name": "Industriel",
       "description": "Brique, béton, acier noir, cuir camel. L'âme d'un loft d'atelier.",
+      "longDescription": "L'âme d'un loft d'atelier : brique, béton, acier noir et cuir camel patiné. Les structures se montrent, les matières restent brutes, l'éclairage est spectaculaire. Idéal pour les grands volumes, les cuisines ouvertes et les intérieurs urbains assumés.",
       "palette": ["#8A4A32", "#2B2B2B", "#9A9A96", "#B26E3C", "#E8A34F"],
       "materials": ["exposed brick", "raw concrete", "blackened steel", "tufted camel leather", "reclaimed wood", "jute"],
       "mood": "raw loft atmosphere, exposed structure as decor, dramatic warm bulb lighting, bold contrast of black steel and cognac leather",
@@ -104,7 +139,9 @@
         {"slug": "blanc-atelier", "label": "Blanc atelier", "walls": "whitewashed workshop walls, keep the exposed brick visible", "accents": "lighter airy industrial, pale grey and camel leather"},
         {"slug": "vert-bouteille", "label": "Vert bouteille", "walls": "paint the plain walls in a deep bottle green, keep the exposed brick as is", "accents": "bottle green with aged cognac leather and brass details"}
       ],
-      "moodboardUrl": "/moodboards/industriel_1.jpg"
+      "moodboardUrl": "/moodboards/industriel_1.jpg",
+      "beauty": "Moody depth: charcoal metal, worn leather cognac, warm Edison glow against raw textures; generous scale pieces, uncluttered; softened by one plush rug and greenery",
+      "avoid": ["turning painted walls into fake brick or concrete", "gadget decor (route 66 signs, fake pipes)", "everything black — no warmth", "hangar emptiness"]
     }
   },
   {
@@ -112,6 +149,7 @@
     "data": {
       "name": "Méditerranéen",
       "description": "Blanc chaulé, bleu d'Égée, terre cuite. La lumière du Sud, une maison de vacances.",
+      "longDescription": "La lumière du Sud : murs chaulés, terre cuite, bois patiné et accents de bleu profond. Une ambiance de maison de vacances grecque ou marocaine, simple et solaire. Idéal pour les maisons du sud, les vérandas et tous ceux qui veulent des vacances à demeure.",
       "palette": ["#F5F1E8", "#2C5BA8", "#B96A3E", "#C89C64", "#7FA9CF"],
       "materials": ["rough whitewashed plaster", "terracotta", "patterned azulejo tiles", "wood beams", "wicker", "washed linen"],
       "mood": "sun-drenched greek-island feel, whitewashed walls, cobalt blue accents, arched openings, breezy holiday lightness",
@@ -122,25 +160,28 @@
         {"slug": "vert-olivier", "label": "Vert olivier", "walls": "rough whitewashed walls", "accents": "olive-green and sage accents on white, natural linen"},
         {"slug": "sable", "label": "Sable", "walls": "warm sand-tinted limewash walls", "accents": "tone-on-tone sand and ecru, terracotta floor warmth, minimal colour"}
       ],
-      "moodboardUrl": "/moodboards/mediterraneen_1.jpg"
+      "moodboardUrl": "/moodboards/mediterraneen_1.jpg",
+      "beauty": "White-warm plaster feel achieved with PAINT only, olive and terracotta accents, natural woods; strong daylight with soft shadows; ceramics and linen, uncluttered surfaces; the calm of a summer house",
+      "avoid": ["adding arches, niches or beams that don't exist", "kitsch souvenirs (anchors, fishnets)", "saturated blue-white Santorini cliché", "rough plaster texture painted on real walls"]
     }
   },
   {
-    "slug": "haussmannien",
+    "slug": "luxe",
     "data": {
-      "name": "Haussmannien",
-      "description": "Moulures, point de Hongrie, cheminée en marbre. Paris, réinventé au présent.",
-      "palette": ["#F4F1E9", "#C89B5F", "#14513B", "#A15C2F", "#C3A15C"],
-      "materials": ["sculpted plaster mouldings", "herringbone oak parquet", "marble", "emerald velvet", "cognac leather", "brass and glass"],
-      "mood": "elegant parisian apartment, ornate cornices and ceiling roses, tall french windows flooding light, classical shell furnished with modern pieces",
-      "signature": ["ornate plaster mouldings and ceiling rose", "point-de-hongrie herringbone parquet", "marble fireplace with gilt mirror", "emerald velvet sofa", "modern furniture contrasting the classical envelope"],
+      "name": "Luxe",
+      "description": "Marbre veiné, laiton, velours. L'hôtellerie haut de gamme, à la maison.",
+      "longDescription": "L'hôtellerie cinq étoiles à la maison : marbre veiné, laiton brossé, velours profonds et bois nobles sur une base crème. Une opulence mesurée, précieuse sans être clinquante. Idéal pour les salons de réception, les suites parentales et les intérieurs qui veulent impressionner avec goût.",
+      "palette": ["#EFE6D8", "#C2A25B", "#2E4A3E", "#23505C", "#191817"],
+      "materials": ["veined marble", "brushed brass", "deep velvet", "walnut", "onyx", "silk"],
+      "mood": "refined five-star hotel elegance, cream base with brushed brass and veined marble, deep velvet in jewel tones, warm architectural lighting, polished and precious yet never flashy",
+      "signature": ["veined marble tabletop or console", "brushed brass lighting and hardware", "deep velvet upholstery in emerald or petrol blue", "walnut or dark noble wood furniture", "sculptural warm statement lighting"],
       "colorways": [
-        {"slug": "emeraude", "label": "Émeraude", "walls": "soft warm white walls with classical mouldings", "accents": "emerald velvet, cognac leather and brass against the classical shell"},
-        {"slug": "bleu-nuit", "label": "Bleu nuit", "walls": "repaint the walls in a deep midnight blue with the mouldings picked out in the same tone", "accents": "navy walls with cognac leather, brass and glass"},
-        {"slug": "poudre", "label": "Poudré", "walls": "soft powder-beige walls with white mouldings", "accents": "muted powdery accents, marble and brass, quiet elegance"},
-        {"slug": "bordeaux", "label": "Bordeaux", "walls": "repaint the walls in a deep burgundy with the mouldings picked out in the same tone", "accents": "burgundy and camel accents, dark wood and brass"}
+        {"slug": "creme-or", "label": "Crème & or", "walls": "soft cream walls", "accents": "cream, gold and warm veined-marble accents"},
+        {"slug": "vert-sapin", "label": "Vert sapin", "walls": "repaint the walls in a deep fir green", "accents": "fir green with brass details and cream velvet"},
+        {"slug": "bleu-petrole", "label": "Bleu pétrole", "walls": "repaint the walls in a deep petrol blue", "accents": "petrol blue with brass and walnut"},
+        {"slug": "noir-or", "label": "Noir & or", "walls": "repaint the walls in a deep charcoal black", "accents": "charcoal walls with gold details and cream seating"}
       ],
-      "moodboardUrl": "/moodboards/haussmannien_1.jpg"
+      "moodboardUrl": "/moodboards/luxe.svg"
     }
   },
   {
@@ -148,6 +189,7 @@
     "data": {
       "name": "Wabi-sabi",
       "description": "Plâtre brut, bois massif, lin froissé. La beauté de l'imparfait, le calme du vide.",
+      "longDescription": "La beauté de l'imperfection : enduits à la main, bois patiné, céramiques irrégulières et un monochrome terreux. Le temps qui passe devient la décoration. Idéal pour les espaces de méditation, les chambres apaisées et les maisons anciennes dont on veut révéler l'âme.",
       "palette": ["#C9BEAC", "#E3D8C4", "#B98E5F", "#8A8068", "#3A352E"],
       "materials": ["rough clay plaster", "raw live-edge wood", "crumpled linen", "stoneware", "woven rattan"],
       "mood": "contemplative silence, hazy diffuse sunbeams, visible texture and imperfection, earthy monochrome, handcrafted organic forms",
@@ -158,7 +200,9 @@
         {"slug": "gris-cendre", "label": "Gris cendre", "walls": "clay plaster walls in a soft ash-grey tone", "accents": "grey-beige stone monochrome with dark wood accents"},
         {"slug": "blanc-casse", "label": "Blanc cassé", "walls": "rough plaster walls in warm broken white", "accents": "pale monochrome, raw live-edge wood and pale stoneware"}
       ],
-      "moodboardUrl": "/moodboards/wabi-sabi_1.jpg"
+      "moodboardUrl": "/moodboards/wabi-sabi_1.jpg",
+      "beauty": "Humble materials with visible life — raw wood, unbleached linen, stoneware; muted earth tones in soft north light; asymmetry and emptiness as luxury; every surface matte and tactile",
+      "avoid": ["polished or glossy anything", "symmetrical staging", "bright saturated colour", "decor abundance"]
     }
   },
   {
@@ -166,6 +210,7 @@
     "data": {
       "name": "Quiet luxury",
       "description": "Bleu nuit laqué, bouclé, laiton discret. Le luxe qui ne dit pas son nom.",
+      "longDescription": "Le luxe feutré : encre profonde et expresso, boiseries laquées, bouclé et laiton discret sous une lumière précieuse. Rien ne brille fort, tout est impeccable. Idéal pour les suites parentales, les bureaux de direction et les intérieurs sombres et enveloppants.",
       "palette": ["#1E2A3C", "#B7A794", "#4A3628", "#B29054", "#E9E1D2"],
       "materials": ["bouclé", "smooth leather", "lacquered wood panelling", "smoked glass", "brushed brass", "natural stone"],
       "mood": "hushed five-star suite, deep ink-navy and espresso tones, walls in lacquered panelling or rich dark paint, tonal layering, texture over pattern, jewel-like discreet lighting, tailored sculptural furniture, no clutter",
@@ -176,7 +221,9 @@
         {"slug": "vert-foret", "label": "Vert forêt", "walls": "walls in a blackened forest-green panelling or rich dark paint", "accents": "deep green with cognac leather and brushed brass"},
         {"slug": "ivoire", "label": "Ivoire", "walls": "walls in soft ivory panelling", "accents": "light tonal luxury, ivory bouclé, natural stone, bronze details"}
       ],
-      "moodboardUrl": "/moodboards/quiet-luxury_1.jpg"
+      "moodboardUrl": "/moodboards/quiet-luxury_1.jpg",
+      "beauty": "Impeccable tailoring: plush neutral textiles (cashmere tones, ivory bouclé), stone and pale wood; soft indirect lighting layers; visible quality in every seam, zero logos, zero clutter — hotel-suite serenity",
+      "avoid": ["bling (gold chrome, mirror furniture)", "visible brands or ornate patterns", "colour shocks", "sparse cheap-minimal look"]
     }
   },
   {
@@ -184,6 +231,7 @@
     "data": {
       "name": "Art déco",
       "description": "Vert émeraude, laiton, velours. Le faste géométrique des années 20.",
+      "longDescription": "L'opulence théâtrale des années 20 : velours émeraude, laiton, marbre noir et géométries en éventail. Un glamour assumé, taillé pour recevoir. Idéal pour les salons d'apparat, les salles à manger de caractère et les coins bar.",
       "palette": ["#14624A", "#C9A24B", "#8C3A2B", "#0F2E2B", "#C46A5F"],
       "materials": ["channel-tufted velvet", "brass inlay", "black marble", "lacquered fluted wood", "satin"],
       "mood": "theatrical gatsby-era opulence, emerald and gold pairing, geometric glamour, warm brass lighting, bold curved silhouettes",
@@ -194,7 +242,9 @@
         {"slug": "bordeaux", "label": "Bordeaux", "walls": "repaint the walls in a deep burgundy", "accents": "burgundy channel-tufted velvet with gold geometry"},
         {"slug": "ivoire-gatsby", "label": "Ivoire Gatsby", "walls": "warm ivory walls with gilded mouldings", "accents": "cream and gold with black lacquer contrast"}
       ],
-      "moodboardUrl": "/moodboards/art-deco_1.jpg"
+      "moodboardUrl": "/moodboards/art-deco_1.jpg",
+      "beauty": "Rich jewel tones (emerald, sapphire) with brass and dark wood; velvet and marble; strong geometry in textiles and lighting; glamorous but curated — two or three statement pieces, not a casino",
+      "avoid": ["gold overload / casino vibe", "painting fake geometric murals on every wall", "adding period mouldings or chandeliers to a plain room", "black-gold everything"]
     }
   },
   {
@@ -202,6 +252,7 @@
     "data": {
       "name": "Cottage anglais",
       "description": "Papier peint fleuri, boiseries sauge, meubles chinés. Le charme de la campagne anglaise.",
+      "longDescription": "La campagne anglaise réconfortante : papiers peints fleuris, soubassements peints, noyer ancien et textiles brodés. Un charme d'antiquaire, généreux et vécu. Idéal pour les maisons de campagne, les chambres douillettes et les amoureux du motif.",
       "palette": ["#7D8B62", "#F2EBDA", "#D9A1A6", "#6E4A2F", "#C9D6BE"],
       "materials": ["floral wallpaper", "painted wainscot panelling", "aged walnut", "antique brass", "chintz", "needlepoint textiles"],
       "mood": "genteel english countryside nostalgia, floral-on-floral layering, soft daylight with small shaded lamps, collected-antique charm",
@@ -212,7 +263,9 @@
         {"slug": "creme-beurre", "label": "Crème beurre", "walls": "buttery cream walls with painted wainscot", "accents": "yellow and leaf-green florals, warm antique wood"},
         {"slug": "vert-feuille", "label": "Vert feuille", "walls": "repaint the wainscot in a leafy green with floral wallpaper above", "accents": "green-dominant florals with rose touches, needlepoint textiles"}
       ],
-      "moodboardUrl": "/moodboards/cottage-anglais_1.jpg"
+      "moodboardUrl": "/moodboards/cottage-anglais_1.jpg",
+      "beauty": "Cosy layered comfort: warm woods, soft plaids, books and ceramics; muted heritage tones (sage, cream, oxblood accents); gentle patterns SMALL and balanced (one armchair, one cushion) — inviting, lived-in, never fussy",
+      "avoid": ["floral wallpaper covering walls", "chintz on every surface", "doily-grandma accumulation", "dark cluttered Victorian pastiche"]
     }
   },
   {
@@ -220,6 +273,7 @@
     "data": {
       "name": "Dark academia",
       "description": "Boiseries sombres, cuir cognac, livres anciens. L'atmosphère d'une bibliothèque anglaise.",
+      "longDescription": "Une bibliothèque à la tombée du soir : boiseries sombres, cuir cognac capitonné, laiton et vieux livres à la lueur des lampes. Studieux, mystérieux, enveloppant. Idéal pour les bureaux, les bibliothèques et les salons d'hiver.",
       "palette": ["#1E2D2F", "#3B2A20", "#9C5F2E", "#B08D4A", "#3A4032"],
       "materials": ["dark painted panelling", "tufted cognac leather", "aged plaster", "brass", "old books", "worn persian rugs"],
       "mood": "nocturnal scholarly atmosphere, candlelight and low sconces, near-black walls with ornate cornices, moody antique elegance",
@@ -230,7 +284,9 @@
         {"slug": "bordeaux-oxblood", "label": "Bordeaux oxblood", "walls": "repaint the panelling in a deep oxblood red", "accents": "oxblood and tan leather, worn persian rug tones"},
         {"slug": "bleu-minuit", "label": "Bleu de minuit", "walls": "repaint the panelling in a deep midnight blue", "accents": "navy with cognac leather and antique brass"}
       ],
-      "moodboardUrl": "/moodboards/dark-academia_1.jpg"
+      "moodboardUrl": "/moodboards/dark-academia_1.jpg",
+      "beauty": "Deep bookish warmth: forest green or aubergine walls, dark wood, brass reading lamps, stacked books and art; pools of warm light in a moody room; leather and tweed textures — a private-library intimacy",
+      "avoid": ["adding fake wall panelling or a fireplace", "halloween gloom (candles everywhere)", "crowding every surface with props", "pitch-black lighting"]
     }
   },
   {
@@ -238,6 +294,7 @@
     "data": {
       "name": "Désert",
       "description": "Plâtre sculpté, terre cuite, cactus. La sérénité minérale du Sud-Ouest.",
+      "longDescription": "Le Sud-Ouest aride : plâtre adobe sculpté, terre cuite, sauge et bois brut sous une lumière franche. Minéral, serein, presque silencieux. Idéal pour les intérieurs lumineux, les maisons de plain-pied et les ambiances minérales.",
       "palette": ["#EFE6D8", "#C2703E", "#D9BE9C", "#7C8A5F", "#A65E38"],
       "materials": ["smooth adobe plaster", "raw chunky wood", "clay pottery", "kilim textiles", "rattan", "concrete"],
       "mood": "arid serene southwest desert home, intense direct sunlight and long shadows, sculpted plaster forms, earthy terracotta and sage",
@@ -248,7 +305,9 @@
         {"slug": "ocre-profond", "label": "Ocre profond", "walls": "adobe plaster walls in a deeper ochre-clay tone", "accents": "rust and ochre kilim accents, dark raw wood"},
         {"slug": "sauge", "label": "Sauge", "walls": "pale sand plaster walls", "accents": "sage-green dominant textiles with sand and chunky wood"}
       ],
-      "moodboardUrl": "/moodboards/desert_1.jpg"
+      "moodboardUrl": "/moodboards/desert_1.jpg",
+      "beauty": "Sun-baked warmth: sand, rust and clay tones on textiles and decor, cacti and dried grasses, leather and raw wood; strong warm light, long shadows; open uncluttered ground — PAINT and objects only, never sculpted walls",
+      "avoid": ["sculpting adobe niches or curved plaster walls", "southwestern kitsch (skulls, wagon wheels)", "orange-washing every surface", "crowded cactus collection"]
     }
   },
   {
@@ -256,6 +315,7 @@
     "data": {
       "name": "Seventies",
       "description": "Orange brûlé, velours côtelé, chrome. Le groove optimiste des années 70.",
+      "longDescription": "Le rétro-pop optimiste : orange brûlé, velours côtelé, chrome et globes lumineux, assises basses et modulaires. Groovy, sans déguisement. Idéal pour les salons conviviaux, les esprits joueurs et les intérieurs qui n'ont pas peur de la couleur.",
       "palette": ["#D2622A", "#D9A33A", "#3E7D6C", "#E9A8A0", "#7C4A2A"],
       "materials": ["tufted corduroy", "velvet", "chrome and glass", "cane and rattan", "lacquer", "terrazzo"],
       "mood": "groovy optimistic retro-pop, burnt orange first, sunny warm light with glowing glass globes, low modular seating, playful curves",
@@ -266,7 +326,9 @@
         {"slug": "choco-rose", "label": "Choco & rose", "walls": "repaint the walls in a warm chocolate brown", "accents": "chocolate, blush-pink and cream retro accents"},
         {"slug": "creme-disco", "label": "Crème disco", "walls": "warm cream walls", "accents": "cream base with caramel, chrome and glowing glass globes, subtle colour pops"}
       ],
-      "moodboardUrl": "/moodboards/seventies_1.jpg"
+      "moodboardUrl": "/moodboards/seventies_1.jpg",
+      "beauty": "Sunset palette (burnt orange, ochre, chocolate) on velvet and corduroy; low-slung curved seating; one graphic rug or artwork as the statement; chrome and smoked glass details; warm, cinematic, groovy but composed",
+      "avoid": ["costume-party psychedelia", "clashing patterns on every surface", "shag carpet everywhere", "brown-on-brown murk"]
     }
   },
   {
@@ -274,6 +336,7 @@
     "data": {
       "name": "Color block",
       "description": "Arches peintes, duos de couleurs franches. Les murs deviennent un graphisme.",
+      "longDescription": "Des aplats francs et des arches peintes : duos de couleurs complémentaires, silhouettes arrondies, optimisme graphique. La peinture devient l'architecture. Idéal pour réveiller un intérieur sage, les entrées et les pièces à fort caractère.",
       "palette": ["#D95B2A", "#2F5D45", "#F1E8D7", "#E8A11B", "#1F5FAD"],
       "materials": ["matte paint supergraphics", "velvet", "fluted wood", "brass", "marble"],
       "mood": "playful graphic optimism, bright even daylight, giant painted color fields and arches, complementary color duos, rounded pill silhouettes",
@@ -284,7 +347,9 @@
         {"slug": "rose-rouge", "label": "Rose & rouge", "walls": "giant painted colour fields and arches in pink and tomato red on off-white walls", "accents": "pink-red clash duo, rounded silhouettes"},
         {"slug": "vert-lilas", "label": "Vert & lilas", "walls": "giant painted colour fields and arches in deep green and lilac on off-white walls", "accents": "green and lilac duo, matte paint supergraphics"}
       ],
-      "moodboardUrl": "/moodboards/color-block_1.jpg"
+      "moodboardUrl": "/moodboards/color-block_1.jpg",
+      "beauty": "Confident planes of saturated colour on WALLS ONLY (painted blocks, not paper), balanced by white ground and neutral floor; furniture in solid joyful hues; graphic and gallery-clean — 3 colours maximum, composed like an artwork",
+      "avoid": ["painting the ceiling or floor blocks", "wallpaper or murals", "more than 3 competing colours", "colour on every single object"]
     }
   },
   {
@@ -292,6 +357,7 @@
     "data": {
       "name": "Memphis",
       "description": "Terrazzo, zigzags, couleurs pop. L'exubérance ludique des années 80.",
+      "longDescription": "Le pop design des années 80 : géométries primaires, terrazzo, couleurs franches et pastels qui s'entrechoquent. Ludique, graphique, assumé. Idéal pour les créatifs, les studios et tous ceux qui veulent un intérieur qui sourit.",
       "palette": ["#F0A5B8", "#E03C31", "#2FA8A0", "#F2C230", "#2456C4"],
       "materials": ["terrazzo", "high-gloss lacquer", "matte painted geometry", "bouclé", "colored acrylic"],
       "mood": "playful 80s memphis pop design, toy-like geometric primitives, bright studio light, primary-plus-pastel color clash, cartoon energy",
@@ -302,7 +368,9 @@
         {"slug": "primaire-franc", "label": "Primaire franc", "walls": "white gallery walls with bold primary geometric supergraphics", "accents": "red, blue and yellow dominance with black grid details"},
         {"slug": "noir-blanc-pop", "label": "Noir & blanc pop", "walls": "white walls with black-and-white geometric squiggle patterns", "accents": "monochrome geometry with one bright accent colour per piece"}
       ],
-      "moodboardUrl": "/moodboards/memphis_1.jpg"
+      "moodboardUrl": "/moodboards/memphis_1.jpg",
+      "beauty": "Playful primary accents and geometric pattern in SMALL doses (one rug, one artwork, one lamp) on a clean bright ground; sculptural quirky furniture shapes; gallery-like negative space so each piece pops",
+      "avoid": ["pattern on every surface (visual noise)", "kindergarten primary overload", "cheap plastic look", "cluttered squiggles"]
     }
   },
   {
@@ -310,6 +378,7 @@
     "data": {
       "name": "Maximaliste",
       "description": "Velours, galeries de cadres, couleurs saturées. Plus, c'est plus.",
+      "longDescription": "Le plus-est-plus : couleurs saturées qui se répondent, collections denses, motifs superposés avec gourmandise. Une exubérance orchestrée, jamais désordonnée. Idéal pour les grands caractères, les collectionneurs et les intérieurs qui racontent beaucoup.",
       "palette": ["#D9A62E", "#1F7A4D", "#D0342C", "#17747E", "#D14E8A"],
       "materials": ["tufted velvet", "lacquered wood", "persian rugs", "colored glass", "carved wood", "brass"],
       "mood": "exuberant more-is-more eclecticism, saturated complementary color clashes, dense curated collections, joyful pattern mixing",
@@ -320,7 +389,9 @@
         {"slug": "vert-paon", "label": "Vert paon", "walls": "repaint the walls in a deep peacock green", "accents": "peacock green with magenta and mustard clashes, colored glass"},
         {"slug": "ocre-safran", "label": "Ocre safran", "walls": "repaint the walls in a saturated saffron ochre", "accents": "saffron with teal and crimson pattern mixing, brass and velvet"}
       ],
-      "moodboardUrl": "/moodboards/maximaliste_1.jpg"
+      "moodboardUrl": "/moodboards/maximaliste_1.jpg",
+      "beauty": "Rich curated abundance: layered patterns UNIFIED by a controlled palette (2-3 families), gallery walls hung precisely, saturated velvet seating; abundance with intention — every layer deliberate, lighting warm and theatrical",
+      "avoid": ["hoarder chaos without palette discipline", "clashing undertones (warm+cool jumble)", "covering windows or blocking flow", "flea-market dust feel"]
     }
   }
 ]
