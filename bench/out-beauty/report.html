@@ -1,0 +1,34 @@
+<!doctype html><meta charset="utf-8"><title>Bench styles Foyer</title>
+<style>
+body{font:14px/1.4 -apple-system,sans-serif;margin:20px;background:#141414;color:#eee}
+table{border-collapse:collapse;margin:12px 0}td,th{border:1px solid #444;padding:4px 10px}
+.row{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px}
+.cell{flex:0 0 340px;background:#1e1e1e;border-radius:8px;overflow:hidden}
+.cell img{width:100%;display:block}.hd{padding:6px 8px;font-weight:600}
+.badge{color:#fff;border-radius:4px;padding:1px 6px;font-size:12px}.score{float:right}
+.body{padding:6px 8px;color:#bbb;font-size:12px}.err .body{color:#f88}
+ul{margin:6px 0 0 16px;padding:0}
+</style>
+<h1>Bench fidélité styles — 2026-07-09</h1>
+<h2>Synthèse par style (trié du pire au meilleur)</h2>
+<table><tr><th>Style</th><th>Fidélité /10</th><th>Palette /10</th><th>Doublons</th><th>Placement</th><th>Archi</th><th>Fails</th><th>N</th></tr>
+<tr><td><b>haussmannien</b></td><td>6.0</td><td>7.0</td><td>0</td><td>2</td><td>2</td><td>0</td><td>1</td></tr>
+<tr><td><b>japandi</b></td><td>6.0</td><td>5.0</td><td>1</td><td>2</td><td>0</td><td>0</td><td>1</td></tr>
+<tr><td><b>scandinave</b></td><td>7.0</td><td>8.0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td></tr>
+<tr><td><b>boheme</b></td><td>8.0</td><td>7.0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>1</td></tr>
+<tr><td><b>seventies</b></td><td>8.0</td><td>9.0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td></tr></table>
+<h2>demo_salon.jpeg</h2><div class="row"><div class="cell"><div class="hd">ORIGINAL</div><img loading="lazy" src="../base/demo_salon.jpeg"></div><div class="cell"><div class="hd">boheme <span class="badge" style="background:#e2a336">warn</span> <span class="score">8/10</span></div>
+<a href="demo_salon__boheme.png" target="_blank"><img loading="lazy" src="demo_salon__boheme.png"></a>
+<div class="body">Le rendu capture l'esthétique bohème avec des tons chauds et des matériaux naturels, créant une ambiance invitante. Cependant, le canapé vert foncé d'origine est une faute de goût majeure qui rompt la cohérence de la palette, et des éléments signature essentiels sont absents.<ul><li>📐 Les plantes suspendues semblent flotter ou être attachées de manière peu réaliste.</li></ul></div></div>
+<div class="cell"><div class="hd">haussmannien <span class="badge" style="background:#e2a336">warn</span> <span class="score">6/10</span></div>
+<a href="demo_salon__haussmannien.png" target="_blank"><img loading="lazy" src="demo_salon__haussmannien.png"></a>
+<div class="body">Le rendu intègre des éléments haussmanniens comme la rosace et le velours émeraude, mais échoue sur des signatures clés comme le parquet point-de-hongrie et les moulures en plâtre. Le styling manque de raffinement et la palette est déséquilibrée, donnant un résultat correct mais peu inspiré.<ul><li>📐 Le pouf près de la cheminée semble gêner le passage</li><li>📐 Le lampadaire est très proche du canapé et de la cheminée</li><li>🏗 Ajout d'une rosace de plafond et d'un lustre</li><li>🏗 Modification du manteau de cheminée</li></ul></div></div>
+<div class="cell"><div class="hd">japandi <span class="badge" style="background:#e2a336">warn</span> <span class="score">6/10</span></div>
+<a href="demo_salon__japandi.png" target="_blank"><img loading="lazy" src="demo_salon__japandi.png"></a>
+<div class="body">Le rendu manque cruellement de la chaleur et de l'atmosphère feutrée du Japandi, avec une lumière plate et une palette générique. Des défauts techniques comme l'enceinte dupliquée et le reflet incohérent du miroir nuisent à la crédibilité.<ul><li>🔁 Enceinte noire sur la cheminée (duplique celle sur le meuble TV)</li><li>📐 Lampadaire noir à gauche semble flotter légèrement</li><li>📐 La table basse est un peu petite pour l'ensemble canapé</li><li>👻 Enceinte dupliquée</li><li>👻 Reflet de miroir irréaliste</li><li>👻 Lampadaire flottant</li></ul></div></div>
+<div class="cell"><div class="hd">seventies <span class="badge" style="background:#e2a336">warn</span> <span class="score">8/10</span></div>
+<a href="demo_salon__seventies.png" target="_blank"><img loading="lazy" src="demo_salon__seventies.png"></a>
+<div class="body">Le rendu intègre bien les éléments clés du style Seventies, notamment le canapé orange brûlé et le tapis à carreaux. Cependant, l'éclairage général manque de chaleur et le reflet du luminaire d'origine dans le miroir nuit à l'immersion stylistique.</div></div>
+<div class="cell"><div class="hd">scandinave <span class="badge" style="background:#d64545">fail</span> <span class="score">7/10</span></div>
+<a href="demo_salon__scandinave.png" target="_blank"><img loading="lazy" src="demo_salon__scandinave.png"></a>
+<div class="body">Le rendu propose une base scandinave propre et épurée, mais la lumière est plate et l'ensemble manque de caractère. Le reflet incohérent dans le miroir est une hallucination majeure qui décrédibilise fortement le travail.<ul><li>👻 Le reflet d'une étagère inexistante dans le miroir</li></ul></div></div></div>

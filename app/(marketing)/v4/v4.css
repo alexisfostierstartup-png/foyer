@@ -1,33 +1,26 @@
 /* ---------------------------------------------------------------------------
  * Landing v4 — "shop the room" / rendu shoppable.
  * Tokens scopés à .foyer-v4 uniquement : ne touche à aucune variable globale.
- * Palette plus claire/nette que l'éditorial v2 dans les zones produit (blanc
- * galerie chaud, contrastes plus fermes), ochre/terra utilisés littéralement
- * comme couleur d'étiquette de prix / badges marketplace.
+ * Registre "mobilier haut de gamme" (référence : &Tradition) plutôt que
+ * "starter e-commerce" : neutres dominants, une seule couleur d'accent
+ * utilisée avec parcimonie (CTA + état sélectionné), pas de badges colorés.
  * ------------------------------------------------------------------------- */
 .foyer-v4 {
   --v4-paper: #ffffff;
-  --v4-canvas: #fbf7f1;
-  --v4-canvas-deep: #f2ebdc;
+  --v4-canvas: #f7f4ee;
+  --v4-canvas-deep: #eee7d8;
 
   --v4-ink: #1f1b16;
-  --v4-ink-wash: rgba(31, 27, 22, 0.06);
-  --v4-ink-wash-strong: rgba(31, 27, 22, 0.12);
+  --v4-ink-wash: rgba(31, 27, 22, 0.05);
 
-  --v4-muted: #6b645a;
-  --v4-border: #e6ddcc;
-  --v4-border-strong: #d8cbac;
+  --v4-muted: #7a7367;
+  --v4-faint: #a39c8d;
+  --v4-border: #e2dccc;
 
-  --v4-sage: #3f6b47;
-  --v4-sage-wash: rgba(63, 107, 71, 0.1);
-  --v4-sage-wash-strong: rgba(63, 107, 71, 0.16);
+  /* Accent unique — utilisé seulement pour le CTA principal et l'état
+     "sélectionné" des hotspots/tuiles. Jamais comme fond de badge. */
+  --v4-accent: #a8412a;
+  --v4-accent-wash: rgba(168, 65, 42, 0.08);
 
-  --v4-terra: #a8412a;
-  --v4-terra-wash: rgba(168, 65, 42, 0.08);
-
-  --v4-ochre: #c0873d;
-  --v4-ochre-deep: #8a5c22;
-  --v4-ochre-wash: rgba(192, 135, 61, 0.14);
-
-  --v4-price: var(--v4-terra);
+  --v4-price: var(--v4-ink);
 }

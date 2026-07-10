@@ -48,3 +48,19 @@ export const MATCH_MIN_SIMILARITY = 0.25;
 export const MATCH_COLOR_FAMILY_RESTRICT = 1;
 export const MATCH_COLOR_FAMILY_MIN_WEIGHT = 0.15;
 
+// Bonus de STYLE au matching (réversible). 1 = les produits taggés du style du projet
+// (partner_products.style_affinity = tags "core", metadata.style_compatible = tags
+// faibles) reçoivent un bonus ADDITIF sur le score final avant le tri — jamais de
+// pénalité pour les produits non taggés (le backfill est progressif). Ordres de
+// grandeur : les écarts du top-pool blend font ~0.01-0.06 → core à 0.05 re-classe
+// franchement à qualité visuelle proche, sans permettre à un mauvais match visuel
+// (-0.10) de doubler un excellent. Flip à 0 si ça appauvrit les propositions
+// (catalogue peu couvert sur certains styles → voir dashboard des trous).
+// Écart core/compat resserré (0.03/0.02) : à +0.05 le bonus core inversait des
+// classements entiers quand les autres signaux manquaient (cas meuble TV 2026-07-10,
+// feedback Alexis : « la logique est bonne mais trop d'écart de poids ») — le style
+// doit départager des produits PROCHES, jamais compenser un mauvais match.
+export const MATCH_STYLE_BONUS = 1;
+export const MATCH_STYLE_BONUS_CORE = 0.03;
+export const MATCH_STYLE_BONUS_COMPAT = 0.02;
+

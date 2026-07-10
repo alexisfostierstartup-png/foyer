@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
-import { getSchemaV3, schemaForCategory } from "@/lib/shopping/attributeSchemaV3";
+import { getSchemaV3, schemaForCategory, SCHEMA_V3 } from "@/lib/shopping/attributeSchemaV3";
 import { COLOR_FAMILIES } from "@/lib/color";
 
 type PartnerProduct = {
@@ -19,7 +19,9 @@ type PartnerProduct = {
   primary_image_url: string;
   last_synced_at: string | null;
   created_at: string;
-  metadata?: { attrs?: Record<string, unknown> } | null;
+  metadata?: { attrs?: Record<string, unknown>; style_compatible?: string[] } | null;
+  // Tags de style CORE (le produit incarne le style) — backfill-style-tags.
+  style_affinity?: string[] | null;
 };
 
 type SyncRun = {
@@ -39,6 +41,7 @@ type Props = {
   initialProducts: PartnerProduct[];
   totalCount: number;
   syncRuns: SyncRun[];
+  merchants: string[];
 };
 
 const TIER_COLORS: Record<string, string> = {
@@ -60,22 +63,24 @@ const SYNC_STATUS_COLORS: Record<string, string> = {
   running: "text-blue-500",
 };
 
-const MERCHANTS = ["", "manomano", "castorama", "la_redoute", "ikea", "cdiscount", "leroy_merlin"];
 const TIERS = ["", "strategic", "standard", "discovery"];
 const SOURCE_TYPES = ["", "eco_new", "secondhand", "eco_label_certified"];
-const CATEGORIES = [
-  "", "sofa", "armchair", "coffee_table", "side_table", "tv_stand", "sideboard",
-  "bookshelf", "dining_table", "chair", "rug", "floor_lamp", "dresser",
-  "paint", "mouldings", "batten", "floor",
-];
+// Catégories = clés canoniques du référentiel d'attributs (+ alias legacy encore présents
+// en base : floor/lamp/footstool, mappés via schemaForCategory) — pas une liste figée en
+// dur qui devient stale à chaque nouvelle catégorie ajoutée (desk, wall_sconce, vase...).
+const CATEGORIES = ["", ...Object.keys(SCHEMA_V3).filter((c) => c !== "default"), "floor", "lamp", "footstool"];
+// 18 collections canoniques (source data/styles.json) pour le filtre de tags de style.
+const STYLES = ["", "scandinave", "japandi", "boheme", "boho", "mid-century", "industriel", "mediterraneen", "haussmannien", "wabi-sabi", "quiet-luxury", "art-deco", "cottage-anglais", "dark-academia", "desert", "seventies", "color-block", "memphis", "maximaliste"];
 
-export function CatalogAdmin({ initialProducts, totalCount, syncRuns }: Props) {
+export function CatalogAdmin({ initialProducts, totalCount, syncRuns, merchants }: Props) {
+  const MERCHANTS = ["", ...merchants];
   const [products, setProducts] = useState(initialProducts);
   const [count, setCount] = useState(totalCount);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState({
     merchant: "", category: "", partner_tier: "", source_type: "", availability_status: "",
+    style_core: "", style_compatible: "",
   });
   // Filtres par attribut structuré (multi-select : plusieurs valeurs par attribut → OU).
   const [attrFilters, setAttrFilters] = useState<Record<string, string[]>>({});
@@ -219,6 +224,8 @@ export function CatalogAdmin({ initialProducts, totalCount, syncRuns }: Props) {
           { key: "merchant", label: "Merchant", opts: MERCHANTS },
           { key: "partner_tier", label: "Tier", opts: TIERS },
           { key: "source_type", label: "Source", opts: SOURCE_TYPES },
+          { key: "style_core", label: "Style core", opts: STYLES },
+          { key: "style_compatible", label: "Style compatible", opts: STYLES },
         ].map(({ key, label, opts }) => (
           <select
             key={key}
@@ -286,7 +293,7 @@ export function CatalogAdmin({ initialProducts, totalCount, syncRuns }: Props) {
         <table className="w-full text-sm">
           <thead className="bg-foyer-cream/50">
             <tr>
-              {["Image", "Nom", "Catégorie", "Merchant", "Prix", "Tier", "Statut", "Actions"].map((h) => (
+              {["Image", "Nom", "Catégorie", "Styles", "Merchant", "Prix", "Tier", "Statut", "Actions"].map((h) => (
                 <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-foyer-muted">
                   {h}
                 </th>
@@ -296,7 +303,7 @@ export function CatalogAdmin({ initialProducts, totalCount, syncRuns }: Props) {
           <tbody className="divide-y divide-foyer-border">
             {products.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-foyer-muted">
+                <td colSpan={9} className="px-4 py-8 text-center text-foyer-muted">
                   {loading ? "Chargement…" : "Aucun produit. Lancez une sync pour importer."}
                 </td>
               </tr>
@@ -332,6 +339,23 @@ export function CatalogAdmin({ initialProducts, totalCount, syncRuns }: Props) {
                   )}
                 </td>
                 <td className="px-4 py-3 text-foyer-muted">{p.category}</td>
+                {/* Tags de style : core = chip pleine (incarne), compatible = contour. */}
+                <td className="px-4 py-3 max-w-[180px]">
+                  <div className="flex flex-wrap gap-1">
+                    {(p.style_affinity ?? []).map((s) => (
+                      <span key={s} className="rounded-full bg-foyer-sage/90 px-2 py-0.5 text-[10px] font-medium text-white">{s}</span>
+                    ))}
+                    {(p.metadata?.style_compatible ?? []).slice(0, 3).map((s) => (
+                      <span key={s} className="rounded-full border border-foyer-border px-2 py-0.5 text-[10px] text-foyer-muted" title="compatible">{s}</span>
+                    ))}
+                    {(p.metadata?.style_compatible?.length ?? 0) > 3 && (
+                      <span className="text-[10px] text-foyer-muted" title={(p.metadata?.style_compatible ?? []).slice(3).join(", ")}>+{(p.metadata?.style_compatible?.length ?? 0) - 3}</span>
+                    )}
+                    {!(p.style_affinity?.length || p.metadata?.style_compatible?.length) && (
+                      <span className="text-[10px] text-foyer-muted">—</span>
+                    )}
+                  </div>
+                </td>
                 <td className="px-4 py-3 text-foyer-muted">{p.merchant}</td>
                 <td className="px-4 py-3 text-foyer-ink">
                   {p.price != null ? `${p.price} €` : "–"}

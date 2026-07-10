@@ -301,12 +301,14 @@ export function formatDesignPlan(
   const beta = Boolean(opts?.renderableSlugs);
   const decorReplacements: string[] = [];
   let decorCount = 0;
-  // Beta : les KEEP d'objets (hors surfaces murales — la liberté de style y
-  // reste entière) sont énoncés en UNE ligne compacte. Silencieux, ils étaient
-  // systématiquement violés (banc nuit 2026-07-10 : tableaux conservés
-  // supprimés/remplacés dans 6 sessions sur 8).
+  // Les KEEP d'objets (hors surfaces murales — la liberté de style y reste
+  // entière) sont énoncés en UNE ligne compacte, flux standard ET beta.
+  // Silencieux, ils étaient systématiquement violés (banc nuit 2026-07-10 :
+  // tableaux conservés supprimés/remplacés dans 6 sessions sur 8 en beta ;
+  // même défaillance observée en standard sur des canapés — projet
+  // i1d6E1vlTmNgb2G3ekk9X 2026-07-10).
   const keptDescs: string[] = [];
-  if (beta) {
+  {
     const keptCount = new Map<string, number>();
     for (const d of decisions) {
       if (d.mismatch_type !== "none" || ARCH_SURFACE_CATEGORIES.has(d.category)) continue;

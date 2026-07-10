@@ -1,0 +1,34 @@
+<!doctype html><meta charset="utf-8"><title>Bench styles Foyer</title>
+<style>
+body{font:14px/1.4 -apple-system,sans-serif;margin:20px;background:#141414;color:#eee}
+table{border-collapse:collapse;margin:12px 0}td,th{border:1px solid #444;padding:4px 10px}
+.row{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px}
+.cell{flex:0 0 340px;background:#1e1e1e;border-radius:8px;overflow:hidden}
+.cell img{width:100%;display:block}.hd{padding:6px 8px;font-weight:600}
+.badge{color:#fff;border-radius:4px;padding:1px 6px;font-size:12px}.score{float:right}
+.body{padding:6px 8px;color:#bbb;font-size:12px}.err .body{color:#f88}
+ul{margin:6px 0 0 16px;padding:0}
+</style>
+<h1>Bench fidélité styles — 2026-07-08</h1>
+<h2>Synthèse par style (trié du pire au meilleur)</h2>
+<table><tr><th>Style</th><th>Fidélité /10</th><th>Palette /10</th><th>Doublons</th><th>Placement</th><th>Archi</th><th>Fails</th><th>N</th></tr>
+<tr><td><b>japandi</b></td><td>8.0</td><td>9.0</td><td>0</td><td>2</td><td>2</td><td>0</td><td>1</td></tr>
+<tr><td><b>boheme</b></td><td>8.0</td><td>9.0</td><td>0</td><td>5</td><td>0</td><td>0</td><td>1</td></tr>
+<tr><td><b>seventies</b></td><td>9.0</td><td>9.0</td><td>0</td><td>3</td><td>0</td><td>0</td><td>1</td></tr>
+<tr><td><b>color-block</b></td><td>9.0</td><td>9.0</td><td>0</td><td>3</td><td>2</td><td>0</td><td>1</td></tr>
+<tr><td><b>art-deco</b></td><td>9.0</td><td>9.0</td><td>0</td><td>2</td><td>1</td><td>1</td><td>1</td></tr></table>
+<h2>test1.jpg</h2><div class="row"><div class="cell"><div class="hd">ORIGINAL</div><img loading="lazy" src="../base/test1.jpg"></div><div class="cell"><div class="hd">japandi <span class="badge" style="background:#e2a336">warn</span> <span class="score">8/10</span></div>
+<a href="test1__japandi.png" target="_blank"><img loading="lazy" src="test1__japandi.png"></a>
+<div class="body">Le rendu intègre avec succès la plupart des éléments et la palette du style Japandi, créant une atmosphère cohérente. Cependant, des modifications architecturales mineures et quelques défauts de placement sont à noter.<ul><li>📐 le lampadaire derrière le canapé semble traverser le mur</li><li>📐 le rail de spots au plafond semble flotter légèrement</li><li>🏗 le mur de droite (vers la chambre) semble avoir été légèrement élargi ou l'ouverture déplacée</li><li>🏗 le mur derrière le canapé a été étendu pour créer une niche pour la bibliothèque</li></ul></div></div>
+<div class="cell"><div class="hd">seventies <span class="badge" style="background:#22a06b">pass</span> <span class="score">9/10</span></div>
+<a href="test1__seventies.png" target="_blank"><img loading="lazy" src="test1__seventies.png"></a>
+<div class="body">Le rendu incarne fidèlement le style Seventies défini, avec une excellente utilisation de la palette et des éléments signature. Quelques ajustements mineurs de placement pourraient améliorer la fluidité de l'espace.<ul><li>📐 Dining chairs trop proches du canapé</li><li>📐 Table d'appoint à gauche semble à l'étroit</li><li>📐 Fauteuil jaune isolé sur la droite</li></ul></div></div>
+<div class="cell"><div class="hd">color-block <span class="badge" style="background:#e2a336">warn</span> <span class="score">9/10</span></div>
+<a href="test1__color-block.png" target="_blank"><img loading="lazy" src="test1__color-block.png"></a>
+<div class="body">Le rendu incarne très bien le style 'Color block' avec une excellente fidélité à la palette et aux éléments signature. Cependant, des défauts mineurs de placement et des modifications architecturales sont présents.<ul><li>📐 le petit guéridon rond à côté du canapé traverse légèrement le canapé</li><li>📐 le lampadaire derrière le canapé traverse légèrement le canapé</li><li>📐 la plante sur la table à manger semble flotter légèrement</li><li>🏗 niche arquée ajoutée sur le mur du buffet</li><li>🏗 encadrement de porte arqué ajouté vers la chambre</li></ul></div></div>
+<div class="cell"><div class="hd">art-deco <span class="badge" style="background:#d64545">fail</span> <span class="score">9/10</span></div>
+<a href="test1__art-deco.png" target="_blank"><img loading="lazy" src="test1__art-deco.png"></a>
+<div class="body">Le rendu adhère remarquablement au style Art Déco défini, avec une excellente utilisation de la palette et des éléments signature. Cependant, la modification architecturale majeure de l'ouverture vers la pièce adjacente est inacceptable sans instruction spécifique.<ul><li>📐 La table à manger et les chaises sont très serrées, entravant la circulation</li><li>📐 Le canapé est trop proche de la zone de repas</li><li>🏗 L'ouverture vers la pièce adjacente a été transformée en une arche encadrée avec des panneaux muraux, modifiant la structure de la pièce</li></ul></div></div>
+<div class="cell"><div class="hd">boheme <span class="badge" style="background:#e2a336">warn</span> <span class="score">8/10</span></div>
+<a href="test1__boheme.png" target="_blank"><img loading="lazy" src="test1__boheme.png"></a>
+<div class="body">Le rendu adhère fidèlement au style Bohème et à sa palette. Cependant, l'agencement de certains éléments comme la plante, les poufs et la hauteur des décorations murales nécessite une révision pour une meilleure ergonomie et harmonie visuelle.<ul><li>📐 plante à gauche trop serrée</li><li>📐 poufs sur la droite mal intégrés</li><li>📐 table basse trop éloignée du canapé</li><li>📐 décoration murale au-dessus du buffet trop haute</li><li>📐 pampas grass sur le buffet disproportionné</li></ul></div></div></div>

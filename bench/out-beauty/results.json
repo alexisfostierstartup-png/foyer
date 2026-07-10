@@ -1,0 +1,221 @@
+[
+  {
+    "image": "demo_salon.jpeg",
+    "style": "boheme",
+    "renderFile": "demo_salon__boheme.png",
+    "durationMs": 23520,
+    "judge": {
+      "desirability": 6,
+      "style_fidelity": 8,
+      "palette_match": 7,
+      "beauty_flaws": [
+        "Le canapé vert foncé de l'image originale est conservé, ce qui crée une dissonance majeure avec la palette bohème chaleureuse et le vert sourd (#8A9B6E) spécifié.",
+        "Les plantes suspendues semblent un peu génériques et manquent de l'authenticité 'collectée au fil des ans'.",
+        "Le stylisme sur la cheminée avec des bouteilles identiques est répétitif et manque de caractère artisanal.",
+        "L'absence de tapis superposés, un élément clé du 'craft' et des 'signature elements' du style."
+      ],
+      "signature_elements_present": [
+        "Tapis en jute",
+        "Plaids en maille épaisse",
+        "Herbe de pampa séchée",
+        "Décoration murale organique en terre cuite",
+        "Coussins de sol et poufs"
+      ],
+      "signature_elements_missing": [
+        "Suspensions en rotin tressé (le luminaire d'origine est conservé)",
+        "Tapis superposés (un seul grand tapis en jute est présent)",
+        "Laiton chaud et verre ambré captant la lumière (présence de bouteilles ambrées, mais pas comme élément de capture de lumière distinctif)"
+      ],
+      "duplicated_items": [],
+      "mirror_issues": [],
+      "placement_issues": [
+        "Les plantes suspendues semblent flotter ou être attachées de manière peu réaliste."
+      ],
+      "architecture_issues": [],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "warn",
+      "comment": "Le rendu capture l'esthétique bohème avec des tons chauds et des matériaux naturels, créant une ambiance invitante. Cependant, le canapé vert foncé d'origine est une faute de goût majeure qui rompt la cohérence de la palette, et des éléments signature essentiels sont absents."
+    }
+  },
+  {
+    "image": "demo_salon.jpeg",
+    "style": "japandi",
+    "renderFile": "demo_salon__japandi.png",
+    "durationMs": 24080,
+    "judge": {
+      "desirability": 6,
+      "style_fidelity": 6,
+      "palette_match": 5,
+      "beauty_flaws": [
+        "Lumière plate et froide, ne créant pas l'atmosphère \"hushed\" et les \"deep shadows\" attendues par le style Japandi.",
+        "Palette de couleurs trop générique, manquant la chaleur des \"tea-stained neutrals\" et la richesse du noyer.",
+        "Matériaux du bois (bibliothèque, table basse) semblent génériques, pas le \"slatted walnut\" attendu. Le travertin est absent.",
+        "Le \"craft\" du style n'est pas pleinement réalisé : manque de contraste tactile fort, composition un peu vide plutôt que \"chaque objet gagne sa place\".",
+        "L'arrangement de branches n'est pas \"ikebana-style\"."
+      ],
+      "signature_elements_present": [
+        "Slatted wood (bibliothèque, mais pas clairement noyer)",
+        "Black accents punctuating beige (vase, lampe, enceinte)",
+        "Organic-shaped coffee table (mais en bois, pas travertin)",
+        "Branch arrangement (mais pas ikebana-style)"
+      ],
+      "signature_elements_missing": [
+        "Low warm light and deep shadows",
+        "Tea-stained neutrals",
+        "Travertine material",
+        "Paper globe lantern",
+        "True Ikebana-style branch arrangement",
+        "Slatted walnut wood (spécifiquement)"
+      ],
+      "duplicated_items": [
+        "Enceinte noire sur la cheminée (duplique celle sur le meuble TV)"
+      ],
+      "mirror_issues": [
+        "Reflet incohérent et sombre dans le miroir, ne correspondant pas à la pièce"
+      ],
+      "placement_issues": [
+        "Lampadaire noir à gauche semble flotter légèrement",
+        "La table basse est un peu petite pour l'ensemble canapé"
+      ],
+      "architecture_issues": [],
+      "hallucinations": [
+        "Enceinte dupliquée",
+        "Reflet de miroir irréaliste",
+        "Lampadaire flottant"
+      ],
+      "perspective_changed": false,
+      "verdict": "warn",
+      "comment": "Le rendu manque cruellement de la chaleur et de l'atmosphère feutrée du Japandi, avec une lumière plate et une palette générique. Des défauts techniques comme l'enceinte dupliquée et le reflet incohérent du miroir nuisent à la crédibilité."
+    }
+  },
+  {
+    "image": "demo_salon.jpeg",
+    "style": "haussmannien",
+    "renderFile": "demo_salon__haussmannien.png",
+    "durationMs": 28362,
+    "judge": {
+      "desirability": 6,
+      "style_fidelity": 6,
+      "palette_match": 7,
+      "beauty_flaws": [
+        "Lumière plate et manque de chaleur générale",
+        "Le parquet en planches n'est pas le point-de-hongrie attendu pour le style Haussmannien",
+        "Les boiseries murales sont simples et ne sont pas les moulures en plâtre sculptées du style",
+        "La palette est déséquilibrée, avec un gris pour les boiseries non conforme et un vert très dominant",
+        "Le styling manque de l'œuvre d'art moderne forte et de l'élégance contrastée promise"
+      ],
+      "signature_elements_present": [
+        "Rosace de plafond ornée",
+        "Lustre",
+        "Cheminée en marbre avec miroir doré",
+        "Canapé en velours émeraude",
+        "Mobilier moderne contrastant l'enveloppe classique (table basse, meuble TV)"
+      ],
+      "signature_elements_missing": [
+        "Parquet point-de-hongrie",
+        "Moulures en plâtre sculptées",
+        "Une œuvre d'art moderne forte",
+        "Cuir cognac"
+      ],
+      "duplicated_items": [],
+      "mirror_issues": [],
+      "placement_issues": [
+        "Le pouf près de la cheminée semble gêner le passage",
+        "Le lampadaire est très proche du canapé et de la cheminée"
+      ],
+      "architecture_issues": [
+        "Ajout d'une rosace de plafond et d'un lustre",
+        "Modification du manteau de cheminée"
+      ],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "warn",
+      "comment": "Le rendu intègre des éléments haussmanniens comme la rosace et le velours émeraude, mais échoue sur des signatures clés comme le parquet point-de-hongrie et les moulures en plâtre. Le styling manque de raffinement et la palette est déséquilibrée, donnant un résultat correct mais peu inspiré."
+    }
+  },
+  {
+    "image": "demo_salon.jpeg",
+    "style": "scandinave",
+    "renderFile": "demo_salon__scandinave.png",
+    "durationMs": 24406,
+    "judge": {
+      "desirability": 6,
+      "style_fidelity": 7,
+      "palette_match": 8,
+      "beauty_flaws": [
+        "Lumière un peu plate, manque le côté 'soft diffuse daylight' et 'bright airy daylight' du style",
+        "Le rendu frôle le piège 'clinical showroom feel' ou 'IKEA-catalog uniformity with zero character', manquant d'une âme ou d'une pièce sculpturale forte",
+        "Le luminaire de plafond d'origine est conservé, ne correspondant pas aux 'paper or linen pendant shades' attendus",
+        "La couleur des boiseries murales reste un peu grise, ne s'intégrant pas pleinement à la palette chaude et claire"
+      ],
+      "signature_elements_present": [
+        "Pale oak furniture with clean lines (meuble TV, étagère, table basse)",
+        "Chunky wool rug with fringe",
+        "Dried botanicals in ceramic vases",
+        "Near-absence of saturated color",
+        "Wool bouclé sofa",
+        "Rattan chairs"
+      ],
+      "signature_elements_missing": [
+        "Paper or linen pendant shades",
+        "Bright airy daylight",
+        "One sculptural accent piece"
+      ],
+      "duplicated_items": [],
+      "mirror_issues": [
+        "Le miroir reflète une étagère haute et sombre qui n'est pas visible dans la pièce, constituant une incohérence majeure"
+      ],
+      "placement_issues": [],
+      "architecture_issues": [],
+      "hallucinations": [
+        "Le reflet d'une étagère inexistante dans le miroir"
+      ],
+      "perspective_changed": false,
+      "verdict": "fail",
+      "comment": "Le rendu propose une base scandinave propre et épurée, mais la lumière est plate et l'ensemble manque de caractère. Le reflet incohérent dans le miroir est une hallucination majeure qui décrédibilise fortement le travail."
+    }
+  },
+  {
+    "image": "demo_salon.jpeg",
+    "style": "seventies",
+    "renderFile": "demo_salon__seventies.png",
+    "durationMs": 32654,
+    "judge": {
+      "desirability": 7,
+      "style_fidelity": 8,
+      "palette_match": 9,
+      "beauty_flaws": [
+        "La lumière générale de la pièce est un peu plate, ne correspondant pas à l'ambiance \"sunny warm light\" attendue.",
+        "Le luminaire de plafond d'origine est toujours présent et visible dans le reflet du miroir, ce qui rompt la cohérence du style \"glowing glass globes\".",
+        "Le canapé vert sur la droite, bien que dans la palette, ne s'intègre pas parfaitement à la \"sunset palette\" et à l'ambiance \"composée\" du style.",
+        "Le canapé principal n'est pas en \"tufted corduroy\" comme suggéré, mais plutôt en velours."
+      ],
+      "signature_elements_present": [
+        "low sofa in burnt orange velvet",
+        "globe lamps (floor lamp)",
+        "checkerboard rug",
+        "chrome and glass furniture (coffee table)",
+        "gallery of retro graphic posters"
+      ],
+      "signature_elements_missing": [
+        "tufted corduroy (as a material for the sofa)",
+        "mushroom lamps",
+        "cane and rattan",
+        "lacquer",
+        "terrazzo",
+        "wavy-pattern rugs"
+      ],
+      "duplicated_items": [],
+      "mirror_issues": [
+        "Le miroir reflète le luminaire de plafond d'origine, qui n'est pas dans le style \"Seventies\" et crée une incohérence visuelle."
+      ],
+      "placement_issues": [],
+      "architecture_issues": [],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "warn",
+      "comment": "Le rendu intègre bien les éléments clés du style Seventies, notamment le canapé orange brûlé et le tapis à carreaux. Cependant, l'éclairage général manque de chaleur et le reflet du luminaire d'origine dans le miroir nuit à l'immersion stylistique."
+    }
+  }
+]

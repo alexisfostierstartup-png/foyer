@@ -1,0 +1,999 @@
+[
+  {
+    "image": "test10.jpg",
+    "style": "boheme",
+    "projectId": "cz_EmkK6UnslGoWcO9fwn",
+    "renderFile": "s02_test10__boheme.png",
+    "plan": [
+      {
+        "element_id": "sofa_1",
+        "category": "sofa",
+        "description": "Grand canapé modulaire en tissu beige clair",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "coffee_table_1",
+        "category": "coffee_table",
+        "description": "Table basse rectangulaire avec plateau en bois noir à chevrons et structure métallique",
+        "expected": "RESTYLE (Sand and stain the wood in a natural light oak finish) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "tv_stand_1",
+        "category": "tv_stand",
+        "description": "Meuble TV en bois clair avec façades en cannage",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "armchair_1",
+        "category": "armchair",
+        "description": "Fauteuil en tissu beige clair",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "rug_1",
+        "category": "rug",
+        "description": "Grand tapis rectangulaire uni",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "window_1",
+        "category": "window",
+        "description": "Fenêtre rectangulaire avec allège",
+        "expected": "RESTYLE (Install a wooden curtain rod with beige linen curtains) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "door_1",
+        "category": "door",
+        "description": "Porte d'entrée vitrée",
+        "expected": "RESTYLE (Repaint the door in matte white to soften the plastic look) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "floor_1",
+        "category": "floor",
+        "description": "Parquet en bois clair",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "wall_1",
+        "category": "wall",
+        "description": "Mur peint en blanc",
+        "expected": "RESTYLE (Paint a half-wall in soft terracotta) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "frame_1",
+        "category": "frame",
+        "description": "Tableau encadré au mur",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      }
+    ],
+    "durationMs": 31697,
+    "judge": {
+      "decisions": [
+        {
+          "element_id": "sofa_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "coffee_table_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "tv_stand_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "armchair_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "rug_1",
+          "expected": "REPLACE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "window_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "door_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "floor_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "wall_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "frame_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        }
+      ],
+      "color_wash": false,
+      "major_issues": [],
+      "verdict": "pass",
+      "comment": "Le plan de rénovation a été parfaitement respecté, notamment le soubassement terracotta et le relooking de la table basse en chêne clair. Les éléments à conserver ont bien été maintenus à l'identique."
+    }
+  },
+  {
+    "image": "test10.jpg",
+    "style": "seventies",
+    "projectId": "rrzIrrrHYKHMWdr9klnJ8",
+    "renderFile": null,
+    "plan": [],
+    "durationMs": 44716,
+    "error": "juge: JSON invalide après retry"
+  },
+  {
+    "image": "test10.jpg",
+    "style": "campagne-francaise",
+    "projectId": "H2hi9JlxR9us-pEOlUM3d",
+    "renderFile": "s03_test10__campagne-francaise.png",
+    "plan": [
+      {
+        "element_id": "sofa_1",
+        "category": "sofa",
+        "description": "Grand canapé modulaire en tissu beige clair",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "coffee_table_1",
+        "category": "coffee_table",
+        "description": "Table basse rectangulaire avec plateau en bois noir à chevrons et structure métallique",
+        "expected": "RESTYLE (Sand and stain the wood to a light natural oak finish) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "tv_stand_1",
+        "category": "tv_stand",
+        "description": "Meuble TV en bois clair avec façades en cannage",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "armchair_1",
+        "category": "armchair",
+        "description": "Fauteuil en tissu beige clair",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "rug_1",
+        "category": "rug",
+        "description": "Grand tapis rectangulaire uni",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "window_1",
+        "category": "window",
+        "description": "Fenêtre rectangulaire avec allège",
+        "expected": "RESTYLE (Install an unlacquered brass curtain rod with airy linen curtains) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "door_1",
+        "category": "door",
+        "description": "Porte d'entrée vitrée",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "floor_1",
+        "category": "floor",
+        "description": "Parquet en bois clair",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "wall_1",
+        "category": "wall",
+        "description": "Mur peint en blanc",
+        "expected": "RESTYLE (Paint the walls in a warm, luminous antique white) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "frame_1",
+        "category": "frame",
+        "description": "Tableau encadré au mur",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      }
+    ],
+    "durationMs": 33696,
+    "judge": {
+      "decisions": [
+        {
+          "element_id": "sofa_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "coffee_table_1",
+          "expected": "RESTYLE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "tv_stand_1",
+          "expected": "KEEP",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "armchair_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "rug_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "window_1",
+          "expected": "RESTYLE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "door_1",
+          "expected": "KEEP",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "floor_1",
+          "expected": "KEEP",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "wall_1",
+          "expected": "RESTYLE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "frame_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        }
+      ],
+      "color_wash": false,
+      "major_issues": [],
+      "verdict": "pass",
+      "comment": "Le plan de rénovation a été suivi à la perfection. Tous les changements demandés, y compris les restylages précis et les remplacements de mobilier, sont parfaitement exécutés."
+    }
+  },
+  {
+    "image": "test10.jpg",
+    "style": "art-deco",
+    "projectId": "lR_xQ1__pLhR_GaUIZZt3",
+    "renderFile": "s04_test10__art-deco.png",
+    "plan": [
+      {
+        "element_id": "sofa_1",
+        "category": "sofa",
+        "description": "Grand canapé modulaire en tissu beige clair",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "coffee_table_1",
+        "category": "coffee_table",
+        "description": "Table basse rectangulaire avec plateau en bois noir à chevrons et structure métallique",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "tv_stand_1",
+        "category": "tv_stand",
+        "description": "Meuble TV en bois clair avec façades en cannage",
+        "expected": "RESTYLE (Repaint in black lacquer) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "armchair_1",
+        "category": "armchair",
+        "description": "Fauteuil en tissu beige clair",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "rug_1",
+        "category": "rug",
+        "description": "Grand tapis rectangulaire uni",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "window_1",
+        "category": "window",
+        "description": "Fenêtre rectangulaire avec allège",
+        "expected": "RESTYLE (Install a brushed brass curtain rod with velvet curtains) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "door_1",
+        "category": "door",
+        "description": "Porte d'entrée vitrée",
+        "expected": "RESTYLE (Repaint in deep black) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "floor_1",
+        "category": "floor",
+        "description": "Parquet en bois clair",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "wall_1",
+        "category": "wall",
+        "description": "Mur peint en blanc",
+        "expected": "RESTYLE (Repaint the walls in deep teal) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "frame_1",
+        "category": "frame",
+        "description": "Tableau encadré au mur",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      }
+    ],
+    "durationMs": 29523,
+    "judge": {
+      "decisions": [
+        {
+          "element_id": "sofa_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "coffee_table_1",
+          "expected": "KEEP",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "tv_stand_1",
+          "expected": "RESTYLE (Repaint in black lacquer)",
+          "applied": "no",
+          "note": "Le meuble TV est resté en bois clair au lieu d'être laqué en noir."
+        },
+        {
+          "element_id": "armchair_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "rug_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "window_1",
+          "expected": "RESTYLE (Install a brushed brass curtain rod with velvet curtains)",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "door_1",
+          "expected": "RESTYLE (Repaint in deep black)",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "floor_1",
+          "expected": "KEEP",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "wall_1",
+          "expected": "RESTYLE (Repaint the walls in deep teal)",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "frame_1",
+          "expected": "KEEP",
+          "applied": "yes",
+          "note": ""
+        }
+      ],
+      "color_wash": false,
+      "major_issues": [],
+      "verdict": "warn",
+      "comment": "Le rendu est d'excellente qualité et respecte très bien l'ambiance demandée. Seul le meuble TV n'a pas été repeint en noir laqué."
+    }
+  },
+  {
+    "image": "test5.jpg",
+    "style": "seventies",
+    "projectId": "q1ivAlnAd-CXm6l9jGAZW",
+    "renderFile": "s05_test5__seventies.png",
+    "plan": [
+      {
+        "element_id": "sofa_1",
+        "category": "sofa",
+        "description": "Canapé d'angle en tissu beige clair",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "coffee_table_1",
+        "category": "coffee_table",
+        "description": "Table basse ronde avec plateau effet marbre et structure noire",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "tv_stand_1",
+        "category": "tv_stand",
+        "description": "Meuble TV bas en bois clair",
+        "expected": "RESTYLE (Stain the wood in a dark walnut finish) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "rug_1",
+        "category": "rug",
+        "description": "Grand tapis à motifs géométriques",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "ceiling_light_1",
+        "category": "ceiling_light",
+        "description": "Suspension cylindrique en tissu",
+        "expected": "RESTYLE (Replace the lampshade with an opal glass globe pendant light) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "wall_sconce_1",
+        "category": "wall_sconce",
+        "description": "Applique murale demi-lune",
+        "expected": "RESTYLE (Replace with a chrome mushroom wall sconce) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "wall_sconce_2",
+        "category": "wall_sconce",
+        "description": "Applique murale demi-lune",
+        "expected": "RESTYLE (Replace with a chrome mushroom wall sconce) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "frame_1",
+        "category": "frame",
+        "description": "Grand cadre mural avec affiche abstraite",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "door_1",
+        "category": "door",
+        "description": "Porte intérieure pleine",
+        "expected": "RESTYLE (Repaint the door in deep forest green) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "floor_1",
+        "category": "floor",
+        "description": "Sol en carrelage terrazzo",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "wall_1",
+        "category": "wall",
+        "description": "Mur principal peint",
+        "expected": "RESTYLE (Repaint the wall in warm ochre) — MÊME objet, seule cette finition change, uniforme"
+      }
+    ],
+    "durationMs": 39778,
+    "judge": {
+      "decisions": [
+        {
+          "element_id": "sofa_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "coffee_table_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "tv_stand_1",
+          "expected": "RESTYLE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "rug_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "ceiling_light_1",
+          "expected": "RESTYLE",
+          "applied": "no",
+          "note": "La suspension en tissu est restée inchangée au lieu d'être remplacée par un globe en verre opale."
+        },
+        {
+          "element_id": "wall_sconce_1",
+          "expected": "RESTYLE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "wall_sconce_2",
+          "expected": "RESTYLE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "frame_1",
+          "expected": "KEEP",
+          "applied": "no",
+          "note": "Le grand cadre original a été supprimé et remplacé par une composition de plusieurs petits cadres."
+        },
+        {
+          "element_id": "door_1",
+          "expected": "RESTYLE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "floor_1",
+          "expected": "KEEP",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "wall_1",
+          "expected": "RESTYLE",
+          "applied": "yes",
+          "note": ""
+        }
+      ],
+      "color_wash": false,
+      "major_issues": [],
+      "verdict": "warn",
+      "comment": "La majorité des consignes de restylage et de remplacement ont été bien suivies. Cependant, la suspension n'a pas été modifiée et le grand cadre mural a été remplacé par une galerie de cadres non demandée."
+    }
+  },
+  {
+    "image": "test5.jpg",
+    "style": "boheme",
+    "projectId": "CsGZscGDqN_cto1ISB_cB",
+    "renderFile": "s06_test5__boheme.png",
+    "plan": [
+      {
+        "element_id": "sofa_1",
+        "category": "sofa",
+        "description": "Canapé d'angle en tissu beige clair",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "coffee_table_1",
+        "category": "coffee_table",
+        "description": "Table basse ronde avec plateau effet marbre et structure noire",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "tv_stand_1",
+        "category": "tv_stand",
+        "description": "Meuble TV bas en bois clair",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "rug_1",
+        "category": "rug",
+        "description": "Grand tapis à motifs géométriques",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "ceiling_light_1",
+        "category": "ceiling_light",
+        "description": "Suspension cylindrique en tissu",
+        "expected": "RESTYLE (Replace lampshade with a woven rattan dome pendant light) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "wall_sconce_1",
+        "category": "wall_sconce",
+        "description": "Applique murale demi-lune",
+        "expected": "RESTYLE (Replace lampshade with a matte ceramic wall sconce) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "wall_sconce_2",
+        "category": "wall_sconce",
+        "description": "Applique murale demi-lune",
+        "expected": "RESTYLE (Replace lampshade with a matte ceramic wall sconce) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "frame_1",
+        "category": "frame",
+        "description": "Grand cadre mural avec affiche abstraite",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "door_1",
+        "category": "door",
+        "description": "Porte intérieure pleine",
+        "expected": "RESTYLE (Repaint the door in cream white) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "floor_1",
+        "category": "floor",
+        "description": "Sol en carrelage terrazzo",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "wall_1",
+        "category": "wall",
+        "description": "Mur principal peint",
+        "expected": "RESTYLE (Repaint the wall in light terracotta) — MÊME objet, seule cette finition change, uniforme"
+      }
+    ],
+    "durationMs": 40122,
+    "judge": {
+      "decisions": [
+        {
+          "element_id": "sofa_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "coffee_table_1",
+          "expected": "REPLACE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "tv_stand_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "rug_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "ceiling_light_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "wall_sconce_1",
+          "expected": "RESTYLE",
+          "applied": "no",
+          "note": "L'applique n'a pas été modifiée et reste identique à l'originale."
+        },
+        {
+          "element_id": "wall_sconce_2",
+          "expected": "RESTYLE",
+          "applied": "no",
+          "note": "L'applique n'a pas été modifiée et reste identique à l'originale."
+        },
+        {
+          "element_id": "frame_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "door_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "floor_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "wall_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        }
+      ],
+      "color_wash": false,
+      "major_issues": [],
+      "verdict": "warn",
+      "comment": "Le rendu est d'excellente qualité et applique très fidèlement la majorité des consignes. Seules les deux appliques murales n'ont pas subi le restylage prévu."
+    }
+  },
+  {
+    "image": "test5.jpg",
+    "style": "campagne-francaise",
+    "projectId": "cr2JCkJl_Ouk__gZKqs4p",
+    "renderFile": "s07_test5__campagne-francaise.png",
+    "plan": [
+      {
+        "element_id": "sofa_1",
+        "category": "sofa",
+        "description": "Canapé d'angle en tissu beige clair",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "coffee_table_1",
+        "category": "coffee_table",
+        "description": "Table basse ronde avec plateau effet marbre et structure noire",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "tv_stand_1",
+        "category": "tv_stand",
+        "description": "Meuble TV bas en bois clair",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "rug_1",
+        "category": "rug",
+        "description": "Grand tapis à motifs géométriques",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "ceiling_light_1",
+        "category": "ceiling_light",
+        "description": "Suspension cylindrique en tissu",
+        "expected": "RESTYLE (Swap for a woven rattan lampshade) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "wall_sconce_1",
+        "category": "wall_sconce",
+        "description": "Applique murale demi-lune",
+        "expected": "RESTYLE (Swap for an unlacquered brass wall sconce) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "wall_sconce_2",
+        "category": "wall_sconce",
+        "description": "Applique murale demi-lune",
+        "expected": "RESTYLE (Swap for an unlacquered brass wall sconce) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "frame_1",
+        "category": "frame",
+        "description": "Grand cadre mural avec affiche abstraite",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "door_1",
+        "category": "door",
+        "description": "Porte intérieure pleine",
+        "expected": "RESTYLE (Repaint the door in dusty French blue) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "floor_1",
+        "category": "floor",
+        "description": "Sol en carrelage terrazzo",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "wall_1",
+        "category": "wall",
+        "description": "Mur principal peint",
+        "expected": "RESTYLE (Add decorative wall moldings) — MÊME objet, seule cette finition change, uniforme"
+      }
+    ],
+    "durationMs": 38278,
+    "judge": {
+      "decisions": [
+        {
+          "element_id": "sofa_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "coffee_table_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "tv_stand_1",
+          "expected": "KEEP",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "rug_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "ceiling_light_1",
+          "expected": "RESTYLE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "wall_sconce_1",
+          "expected": "RESTYLE",
+          "applied": "no",
+          "note": "L'applique n'a pas été modifiée en laiton"
+        },
+        {
+          "element_id": "wall_sconce_2",
+          "expected": "RESTYLE",
+          "applied": "no",
+          "note": "L'applique n'a pas été modifiée en laiton"
+        },
+        {
+          "element_id": "frame_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "door_1",
+          "expected": "RESTYLE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "floor_1",
+          "expected": "KEEP",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "wall_1",
+          "expected": "RESTYLE",
+          "applied": "yes",
+          "note": ""
+        }
+      ],
+      "color_wash": false,
+      "major_issues": [],
+      "verdict": "warn",
+      "comment": "La majorité des modifications demandées ont été superbement réalisées, notamment les moulures murales et la porte bleue. Cependant, les deux appliques murales n'ont pas été remplacées par des modèles en laiton."
+    }
+  },
+  {
+    "image": "test5.jpg",
+    "style": "art-deco",
+    "projectId": "tQxFdhplHVuOFNgc6U5Nu",
+    "renderFile": "s08_test5__art-deco.png",
+    "plan": [
+      {
+        "element_id": "sofa_1",
+        "category": "sofa",
+        "description": "Canapé d'angle en tissu beige clair",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "coffee_table_1",
+        "category": "coffee_table",
+        "description": "Table basse ronde avec plateau effet marbre et structure noire",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "tv_stand_1",
+        "category": "tv_stand",
+        "description": "Meuble TV bas en bois clair",
+        "expected": "RESTYLE (Repaint the TV stand in glossy black lacquer) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "rug_1",
+        "category": "rug",
+        "description": "Grand tapis à motifs géométriques",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "ceiling_light_1",
+        "category": "ceiling_light",
+        "description": "Suspension cylindrique en tissu",
+        "expected": "RESTYLE (Replace the lampshade with a tiered glass rod chandelier) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "wall_sconce_1",
+        "category": "wall_sconce",
+        "description": "Applique murale demi-lune",
+        "expected": "RESTYLE (Replace with a brushed brass wall sconce) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "wall_sconce_2",
+        "category": "wall_sconce",
+        "description": "Applique murale demi-lune",
+        "expected": "RESTYLE (Replace with a brushed brass wall sconce) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "frame_1",
+        "category": "frame",
+        "description": "Grand cadre mural avec affiche abstraite",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "door_1",
+        "category": "door",
+        "description": "Porte intérieure pleine",
+        "expected": "RESTYLE (Repaint the door in deep black) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "floor_1",
+        "category": "floor",
+        "description": "Sol en carrelage terrazzo",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "wall_1",
+        "category": "wall",
+        "description": "Mur principal peint",
+        "expected": "RESTYLE (Paint the wall in deep teal) — MÊME objet, seule cette finition change, uniforme"
+      }
+    ],
+    "durationMs": 30591,
+    "judge": {
+      "decisions": [
+        {
+          "element_id": "sofa_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "coffee_table_1",
+          "expected": "KEEP",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "tv_stand_1",
+          "expected": "RESTYLE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "rug_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "ceiling_light_1",
+          "expected": "RESTYLE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "wall_sconce_1",
+          "expected": "RESTYLE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "wall_sconce_2",
+          "expected": "RESTYLE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "frame_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "door_1",
+          "expected": "RESTYLE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "floor_1",
+          "expected": "KEEP",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "wall_1",
+          "expected": "RESTYLE",
+          "applied": "yes",
+          "note": ""
+        }
+      ],
+      "color_wash": false,
+      "major_issues": [],
+      "verdict": "pass",
+      "comment": "Le rendu est d'excellente qualité et applique scrupuleusement chaque consigne du plan de rénovation. Les textures et les couleurs correspondent parfaitement aux attentes."
+    }
+  }
+]

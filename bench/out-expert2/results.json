@@ -1,0 +1,141 @@
+[
+  {
+    "image": "demo_salon.jpeg",
+    "style": "boheme",
+    "projectId": "1kTCt8Wdw3jRGxlZFVDjV",
+    "integrated": [
+      {
+        "category": "sofa",
+        "name": "Canapé 3 places en textile flammé ocre"
+      },
+      {
+        "category": "rug",
+        "name": "Tapis en jute et coton recyclé 160x230"
+      },
+      {
+        "category": "tv_stand",
+        "name": "Meuble tv effet bois"
+      },
+      {
+        "category": "pouf",
+        "name": "ALSEDA siege fibres de bananier"
+      }
+    ],
+    "assertLineForEachPiece": true,
+    "assertSurvivesRecompute": true,
+    "judge": {
+      "products_visible": [
+        "sofa",
+        "rug",
+        "tv_stand"
+      ],
+      "products_missing": [
+        "pouf"
+      ],
+      "objects_added": [],
+      "objects_removed": [],
+      "light_fixtures_changed": false,
+      "mirror_issues": [],
+      "verdict": "fail",
+      "comment": "Le canapé, le tapis et le meuble TV ont été correctement remplacés. Cependant, le pouf n'a pas été modifié, ce qui constitue un échec."
+    },
+    "fakeFile": "demo_salon__boheme_fake.png",
+    "expertFile": "demo_salon__boheme_expert.png"
+  },
+  {
+    "image": "test1.jpg",
+    "style": "scandinave",
+    "projectId": "XlvaacG9orG9TIj8_X58z",
+    "integrated": [
+      {
+        "category": "armchair",
+        "name": "Fauteuil scandinave bois d'hévéa et dossier arrondi en bouclette crème - AMELIE AMELIE"
+      },
+      {
+        "category": "coffee_table",
+        "name": "Table basse ovale - l119 cm - effet travertin"
+      },
+      {
+        "category": "side_table",
+        "name": "Table d'appoint en bois massif FineBuy - Bout de canapé 44x60x30cm - Marron clair"
+      },
+      {
+        "category": "rug",
+        "name": "Tapis Portivo crème 160x220 cm"
+      },
+      {
+        "category": "dining_chair",
+        "name": "COLAMY Chaise, Lot 4 Chaises de salle à manger en bois massif – design épuré et chaleureux - marron"
+      }
+    ],
+    "assertLineForEachPiece": true,
+    "assertSurvivesRecompute": true,
+    "judge": {
+      "products_visible": [
+        "armchair",
+        "coffee_table",
+        "side_table",
+        "rug"
+      ],
+      "products_missing": [
+        "dining_chair"
+      ],
+      "objects_added": [],
+      "objects_removed": [],
+      "light_fixtures_changed": false,
+      "mirror_issues": [],
+      "verdict": "fail",
+      "comment": "Les chaises de salle à manger n'ont pas été remplacées et sont identiques à l'image d'origine. Tous les autres meubles listés ont été correctement mis à jour."
+    },
+    "fakeFile": "test1__scandinave_fake.png",
+    "expertFile": "test1__scandinave_expert.png"
+  },
+  {
+    "image": "test4.jpeg",
+    "style": "seventies",
+    "projectId": "yLOQFSCKXwWRiFqAgjO-a",
+    "integrated": [
+      {
+        "category": "sofa",
+        "name": "Canapé d'angle xxl 6 places en velours côtelé - angle droit - marron"
+      },
+      {
+        "category": "armchair",
+        "name": "Fauteuil en velours jaune doré alabama"
+      },
+      {
+        "category": "rug",
+        "name": "Tapis moderne Diamora noir-blanc 120x170 cm"
+      },
+      {
+        "category": "bench",
+        "name": "Banc en velours côtelé  tu marron"
+      },
+      {
+        "category": "dining_chair",
+        "name": "BERGMUND chaise"
+      }
+    ],
+    "assertLineForEachPiece": true,
+    "assertSurvivesRecompute": true,
+    "judge": {
+      "products_visible": [
+        "sofa",
+        "armchair",
+        "rug"
+      ],
+      "products_missing": [
+        "bench",
+        "dining_chair"
+      ],
+      "objects_added": [],
+      "objects_removed": [],
+      "light_fixtures_changed": false,
+      "mirror_issues": [],
+      "verdict": "fail",
+      "comment": "Le canapé, le tapis et les fauteuils ont été correctement remplacés. Cependant, le banc et la chaise de salle à manger spécifiés sont absents du rendu."
+    },
+    "fakeFile": "test4__seventies_fake.png",
+    "expertFile": "test4__seventies_expert.png"
+  }
+]

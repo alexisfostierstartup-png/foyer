@@ -6,14 +6,16 @@ import { cn } from "@/lib/utils";
 import { CONDITION_LABEL, HERO_IMAGE, type Condition, type Crop } from "./data";
 
 /* -------------------------------------------------------------------------- *
- * RevealV4 — apparition au scroll en physique ressort (motion `whileInView`),
- * volontairement plus "rebondi" que les fades doux de v1/v2.
+ * RevealV4 — apparition au scroll sobre (fade + très léger déplacement).
+ * Volontairement plus posée que v2/v3 : pas de spring rebondissant, la
+ * retenue est le point de style ici (référence : maisons de mobilier haut de
+ * gamme, pas d'app mobile).
  * -------------------------------------------------------------------------- */
 export function RevealV4({
   children,
   className,
   delay = 0,
-  y = 22,
+  y = 12,
 }: {
   children: ReactNode;
   className?: string;
@@ -26,7 +28,7 @@ export function RevealV4({
       initial={{ opacity: 0, y }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-10% 0px -10% 0px" }}
-      transition={{ type: "spring", stiffness: 260, damping: 26, delay: delay / 1000 }}
+      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: delay / 1000 }}
     >
       {children}
     </motion.div>
@@ -65,23 +67,32 @@ export function CroppedShot({
   );
 }
 
-const CONDITION_TONE: Record<Condition, string> = {
-  conserve: "bg-[var(--v4-sage-wash)] text-[var(--v4-sage)] ring-[var(--v4-sage)]/25",
-  occasion: "bg-[var(--v4-ochre-wash)] text-[var(--v4-ochre-deep)] ring-[var(--v4-ochre)]/35",
-  neuf: "bg-[var(--v4-ink-wash)] text-[var(--v4-ink)] ring-[var(--v4-ink)]/12",
-};
-
-export function ConditionBadge({ condition, className }: { condition: Condition; className?: string }) {
+/**
+ * ConditionLabel — remplace l'ancien badge en pilule colorée. Une marque de
+ * mobilier haut de gamme ne code pas ses catégories par couleur : simple
+ * légende grise, petites capitales, alignée comme une métadonnée de fiche
+ * produit (référence : catégorie produit &Tradition).
+ */
+export function ConditionLabel({ condition, className }: { condition: Condition; className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2 py-[3px] text-[10px] font-bold uppercase tracking-[0.09em] ring-1 backdrop-blur-sm",
-        CONDITION_TONE[condition],
+        "whitespace-nowrap text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--v4-faint)]",
         className,
       )}
     >
       {CONDITION_LABEL[condition]}
     </span>
+  );
+}
+
+/** RefCode — petit code référence en exposant, façon nomenclature designer ("Numbra ᵀʸ³"). */
+export function RefCode({ index, className }: { index: number; className?: string }) {
+  const code = `HR·${String(index + 1).padStart(2, "0")}`;
+  return (
+    <sup className={cn("ml-1 text-[9px] font-normal tracking-[0.03em] text-[var(--v4-faint)]", className)}>
+      {code}
+    </sup>
   );
 }
 
@@ -96,16 +107,38 @@ export function PriceTag({
 }) {
   if (price === null) {
     return (
-      <span className={cn("text-[12px] font-semibold text-[var(--v4-muted)]", className)}>
+      <span className={cn("text-[12px] text-[var(--v4-muted)]", className)}>
         Déjà chez vous
       </span>
     );
   }
   const sizeClass =
-    size === "lg" ? "text-[26px] md:text-[30px]" : size === "sm" ? "text-[14px]" : "text-[17px]";
+    size === "lg" ? "text-[24px] md:text-[28px]" : size === "sm" ? "text-[13px]" : "text-[15px]";
   return (
-    <span className={cn("font-serif font-medium tracking-[-0.01em] text-[var(--v4-price)]", sizeClass, className)}>
+    <span className={cn("font-serif font-normal tracking-[-0.01em] text-[var(--v4-price)]", sizeClass, className)}>
       {price}&nbsp;€
+    </span>
+  );
+}
+
+/** Lien texte + flèche fine qui glisse au survol — remplace le bouton pilule + bulle icône. */
+export function TextLink({
+  children,
+  className,
+  arrow = true,
+}: {
+  children: ReactNode;
+  className?: string;
+  arrow?: boolean;
+}) {
+  return (
+    <span className={cn("group/link inline-flex items-center gap-1.5", className)}>
+      {children}
+      {arrow && (
+        <span aria-hidden className="inline-block transition-transform duration-300 group-hover/link:translate-x-1">
+          →
+        </span>
+      )}
     </span>
   );
 }

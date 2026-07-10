@@ -1,0 +1,30 @@
+[
+  {
+    "image": "salon_lampe.jpeg",
+    "style": "japandi",
+    "renderFile": "salon_lampe__japandi.png",
+    "durationMs": 19034,
+    "judge": {
+      "style_fidelity": 8,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "slatted walnut wood",
+        "black accents",
+        "organic-shaped travertine coffee table",
+        "paper globe lantern"
+      ],
+      "signature_elements_missing": [
+        "ikebana-style branch arrangement"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [
+        "l'accoudoir droit du fauteuil traverse le mur"
+      ],
+      "architecture_issues": [],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "warn",
+      "comment": "Le rendu intègre bien les codes du style Japandi, notamment par l'usage du bois de noyer latté, du travertin et de la palette chromatique définie. Cependant, l'accoudoir du fauteuil traverse le mur, et l'arrangement floral ne correspond pas à un ikebana."
+    }
+  }
+]

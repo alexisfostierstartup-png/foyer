@@ -1,0 +1,46 @@
+[
+  {
+    "image": "test1.jpg",
+    "variant": "A_normal",
+    "blurred": 0,
+    "same_model": [],
+    "file": "test1_A_normal.png"
+  },
+  {
+    "image": "test1.jpg",
+    "variant": "B_blur",
+    "blurred": 9,
+    "same_model": [],
+    "file": "test1_B_blur.png"
+  },
+  {
+    "image": "test2.jpg",
+    "variant": "A_normal",
+    "blurred": 0,
+    "same_model": [],
+    "file": "test2_A_normal.png"
+  },
+  {
+    "image": "test2.jpg",
+    "variant": "B_blur",
+    "blurred": 5,
+    "same_model": [],
+    "file": "test2_B_blur.png"
+  },
+  {
+    "image": "test5.jpg",
+    "variant": "A_normal",
+    "blurred": 0,
+    "same_model": [],
+    "file": "test5_A_normal.png"
+  },
+  {
+    "image": "test5.jpg",
+    "variant": "B_blur",
+    "blurred": 1,
+    "same_model": [
+      "sofa_1"
+    ],
+    "file": "test5_B_blur.png"
+  }
+]

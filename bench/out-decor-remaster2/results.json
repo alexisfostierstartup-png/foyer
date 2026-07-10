@@ -1,0 +1,257 @@
+[
+  {
+    "image": "test12.jpg",
+    "style": "campagne-francaise",
+    "projectId": "y72lbg2Cz83L8XgUCtUAA",
+    "renderFile": "s01_test12__campagne-francaise.png",
+    "plan": [
+      {
+        "element_id": "floor_1",
+        "category": "floor",
+        "description": "Parquet en bois clair posé en chevrons",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "wall_1",
+        "category": "wall",
+        "description": "Murs peints en blanc cassé avec moulures",
+        "expected": "RESTYLE (Paint the mouldings and wainscoting in sage green) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "sofa_1",
+        "category": "sofa",
+        "description": "Canapé blanc avec coussins rouges",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "coffee_table_1",
+        "category": "coffee_table",
+        "description": "Table basse moderne blanche à deux niveaux",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "armchair_1",
+        "category": "armchair",
+        "description": "Fauteuil de style classique avec structure en bois",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "armchair_2",
+        "category": "armchair",
+        "description": "Fauteuil moderne blanc",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "ceiling_light_1",
+        "category": "ceiling_light",
+        "description": "Lustre à pampilles en cristal",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "french_door_1",
+        "category": "french_door",
+        "description": "Grande porte-fenêtre vitrée style atelier",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "frame_1",
+        "category": "frame",
+        "description": "Grand tableau encadré au-dessus de la cheminée",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      }
+    ],
+    "durationMs": 32662,
+    "judge": {
+      "decisions": [
+        {
+          "element_id": "floor_1",
+          "expected": "KEEP",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "wall_1",
+          "expected": "RESTYLE",
+          "applied": "partial",
+          "note": "Le mur a bien été peint en vert sauge, mais la cheminée et ses moulures associées ont été complètement supprimées."
+        },
+        {
+          "element_id": "sofa_1",
+          "expected": "REPLACE",
+          "applied": "no",
+          "note": "Le canapé blanc d'origine est toujours présent, seuls les coussins ont été modifiés."
+        },
+        {
+          "element_id": "coffee_table_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "armchair_1",
+          "expected": "KEEP",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "armchair_2",
+          "expected": "REPLACE",
+          "applied": "no",
+          "note": "Le fauteuil moderne blanc n'a pas été remplacé."
+        },
+        {
+          "element_id": "ceiling_light_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "french_door_1",
+          "expected": "KEEP",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "frame_1",
+          "expected": "REPLACE",
+          "applied": "no",
+          "note": "La cheminée ayant disparu, le tableau a été remplacé par une disposition totalement différente de trois petits cadres."
+        }
+      ],
+      "color_wash": false,
+      "major_issues": [
+        "La cheminée d'origine a été entièrement supprimée et remplacée par un canapé bleu, ce qui modifie gravement l'architecture de la pièce."
+      ],
+      "verdict": "fail",
+      "comment": "Le rendu est refusé en raison de la suppression non autorisée de la cheminée, un élément architectural majeur. De plus, plusieurs consignes de remplacement de mobilier n'ont pas été respectées."
+    }
+  },
+  {
+    "image": "test12.jpg",
+    "style": "boheme",
+    "projectId": "yxR4mPhlwekCp_uzlFCJX",
+    "renderFile": "s02_test12__boheme.png",
+    "plan": [
+      {
+        "element_id": "floor_1",
+        "category": "floor",
+        "description": "Parquet en bois clair posé en chevrons",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "wall_1",
+        "category": "wall",
+        "description": "Murs peints en blanc cassé avec moulures",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "sofa_1",
+        "category": "sofa",
+        "description": "Canapé blanc avec coussins rouges",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "coffee_table_1",
+        "category": "coffee_table",
+        "description": "Table basse moderne blanche à deux niveaux",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "armchair_1",
+        "category": "armchair",
+        "description": "Fauteuil de style classique avec structure en bois",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "armchair_2",
+        "category": "armchair",
+        "description": "Fauteuil moderne blanc",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "ceiling_light_1",
+        "category": "ceiling_light",
+        "description": "Lustre à pampilles en cristal",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "french_door_1",
+        "category": "french_door",
+        "description": "Grande porte-fenêtre vitrée style atelier",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "frame_1",
+        "category": "frame",
+        "description": "Grand tableau encadré au-dessus de la cheminée",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      }
+    ],
+    "durationMs": 33698,
+    "judge": {
+      "decisions": [
+        {
+          "element_id": "floor_1",
+          "expected": "KEEP",
+          "applied": "no",
+          "note": "Le parquet d'origine a été remplacé par un parquet en chevrons."
+        },
+        {
+          "element_id": "wall_1",
+          "expected": "KEEP",
+          "applied": "no",
+          "note": "Les murs ont été peints en jaune ocre au lieu de conserver le blanc cassé."
+        },
+        {
+          "element_id": "sofa_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "coffee_table_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "armchair_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "armchair_2",
+          "expected": "KEEP",
+          "applied": "no",
+          "note": "Le fauteuil moderne blanc a été remplacé par un autre modèle."
+        },
+        {
+          "element_id": "ceiling_light_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "french_door_1",
+          "expected": "KEEP",
+          "applied": "no",
+          "note": "La porte-fenêtre a été remplacée par un modèle noir de style différent."
+        },
+        {
+          "element_id": "frame_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        }
+      ],
+      "color_wash": false,
+      "major_issues": [
+        "Suppression complète de la grande verrière de toit à l'arrière-plan",
+        "Modification structurelle majeure de la cheminée et de la configuration de la pièce"
+      ],
+      "verdict": "fail",
+      "comment": "Le plan de rénovation n'a pas été respecté, avec des changements de couleur et de sol non demandés. De plus, la suppression de la verrière au plafond constitue une modification architecturale majeure non autorisée."
+    }
+  }
+]

@@ -1,0 +1,142 @@
+[
+  {
+    "image": "test10.jpg",
+    "style": "wabi-sabi",
+    "projectId": "Pw4hOIiEsMJnEaqHvy8oi",
+    "renderFile": null,
+    "plan": [],
+    "durationMs": 28114,
+    "error": "Expected ',' or ']' after array element in JSON at position 1186 (line 56 column 6)"
+  },
+  {
+    "image": "test10.jpg",
+    "style": "seventies",
+    "projectId": "TkuTxGi_5cTkaPIbZvfgL",
+    "renderFile": null,
+    "plan": [],
+    "durationMs": 31862,
+    "error": "Unexpected non-whitespace character after JSON at position 1503 (line 63 column 1)"
+  },
+  {
+    "image": "test12.jpg",
+    "style": "seventies",
+    "projectId": "J-fYNPp0vHoeY9WfgdiPO",
+    "renderFile": "s03_test12__seventies.png",
+    "plan": [
+      {
+        "element_id": "floor_1",
+        "category": "floor",
+        "description": "Parquet en bois clair posé en chevrons",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "sofa_1",
+        "category": "sofa",
+        "description": "Canapé blanc avec coussins rouges",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "coffee_table_1",
+        "category": "coffee_table",
+        "description": "Table basse moderne à deux plateaux",
+        "expected": "RESTYLE (Repaint in an ochre lacquer finish) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "armchair_1",
+        "category": "armchair",
+        "description": "Fauteuil de style classique avec structure en bois",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "armchair_2",
+        "category": "armchair",
+        "description": "Fauteuil moderne blanc",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "ceiling_light_1",
+        "category": "ceiling_light",
+        "description": "Lustre à pampilles en cristal",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "french_door_1",
+        "category": "french_door",
+        "description": "Porte-fenêtre vitrée à petits carreaux",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "frame_1",
+        "category": "frame",
+        "description": "Grand tableau au-dessus de la cheminée",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      }
+    ],
+    "durationMs": 32246,
+    "judge": {
+      "decisions": [
+        {
+          "element_id": "floor_1",
+          "expected": "KEEP",
+          "applied": "no",
+          "note": "Le parquet a été modifié en motif chevrons avec une transition de texture très visible et artificielle au milieu de la pièce."
+        },
+        {
+          "element_id": "sofa_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "coffee_table_1",
+          "expected": "RESTYLE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "armchair_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "armchair_2",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "ceiling_light_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "french_door_1",
+          "expected": "KEEP",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "frame_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        }
+      ],
+      "color_wash": false,
+      "major_issues": [],
+      "verdict": "warn",
+      "comment": "Le plan de remplacement et de restylage du mobilier a été parfaitement respecté. Seul le parquet pose problème car il a été modifié avec un raccord de texture très visible au sol."
+    }
+  },
+  {
+    "image": "test12.jpg",
+    "style": "wabi-sabi",
+    "projectId": "G6WAq0g4dUSMlb688qU-J",
+    "renderFile": null,
+    "plan": [],
+    "durationMs": 30102,
+    "error": "Expected ',' or ']' after array element in JSON at position 949 (line 50 column 6)"
+  }
+]

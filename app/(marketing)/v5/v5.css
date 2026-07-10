@@ -1,102 +1,22 @@
 /* ---------------------------------------------------------------------------
- * Landing v5 — "Studio, pas app". Utilitaires scopés à la route /v5 (chargés
- * uniquement ici, importé en haut de app/(marketing)/v5/page.tsx).
+ * Landing v5 — "Studio, pas app". Palette scopée à la route /v5 (chargée
+ * uniquement ici, importée en haut de app/(marketing)/v5/page.tsx).
  * N'affecte jamais /, /v1, /v3, /v4.
  * ------------------------------------------------------------------------- */
 
 .v5-root {
   --v5-paper: oklch(97% 0.008 75);
-  --v5-paper-dim: oklch(93.5% 0.014 78);
   --v5-ink: oklch(9% 0.01 60);
-  --v5-ink-soft: oklch(15% 0.012 60);
   --v5-line: oklch(86% 0.016 75);
   --v5-line-dark: oklch(28% 0.01 60);
   --v5-muted: oklch(45% 0.01 60);
   --v5-muted-dark: oklch(68% 0.02 75);
   --v5-gold: oklch(74% 0.11 85);
   --v5-gold-deep: oklch(58% 0.1 78);
-  --v5-forest: oklch(34% 0.06 152);
-}
-
-/* Le curseur custom masque le curseur système sur desktop (pointer:fine) ;
- * la classe est ajoutée/retirée sur <html> au montage/démontage de
- * CursorProvider (voir components/landing/v5/parts.tsx), donc jamais active
- * hors de /v5. */
-@media (pointer: fine) and (min-width: 1024px) {
-  html.v5-cursor-none,
-  html.v5-cursor-none * {
-    cursor: none !important;
-  }
-}
-
-/* Bandeau marquee — deux copies de la piste, translation continue -50%. */
-.v5-marquee-track {
-  display: flex;
-  width: max-content;
-  animation: v5-marquee 34s linear infinite;
-}
-.v5-marquee-track:hover {
-  animation-play-state: paused;
-}
-@keyframes v5-marquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-/* Rail horizontal (galerie projets) — scrollbar masquée. */
-.v5-horizontal-track {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.v5-horizontal-track::-webkit-scrollbar {
-  display: none;
-}
-
-/* Halo ambiant très doux pour les sections sombres. */
-.v5-ambient-glow {
-  background:
-    radial-gradient(48% 60% at 20% 30%, oklch(74% 0.11 85 / 22%), transparent 70%),
-    radial-gradient(40% 50% at 85% 70%, oklch(38% 0.06 152 / 30%), transparent 70%);
-  animation: v5-ambient-drift 18s ease-in-out infinite alternate;
-  filter: blur(40px);
-}
-@keyframes v5-ambient-drift {
-  from {
-    transform: translate3d(-2%, -1%, 0) scale(1);
-    opacity: 0.65;
-  }
-  to {
-    transform: translate3d(2%, 2%, 0) scale(1.08);
-    opacity: 0.9;
-  }
-}
-
-/* Grain discret pour la section sombre "process" (texture, pas de nouvelle image). */
-.v5-grain {
-  position: relative;
-}
-.v5-grain::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.045;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-}
-
-/* Traitement CSS des photos process (arch-1..4.jpg) : duotone gris/chaud,
- * pas de génération d'image — juste un filtre. */
-.v5-duotone {
-  filter: grayscale(1) contrast(1.1) brightness(0.9);
 }
 
 /* Wordmark/logo Héra (dessinés en encre sur fond transparent) rendus
- * lisibles sur fond sombre. */
+ * lisibles sur fond sombre (footer, CTA finale). */
 .v5-white-mark {
   filter: brightness(0) invert(1);
 }

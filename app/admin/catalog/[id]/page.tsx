@@ -106,6 +106,28 @@ export default async function CatalogDetailPage({
             </a>
           )}
 
+          {/* Tags de style (backfill-style-tags) : core = le produit incarne le style
+              (chip pleine, utilisé par le bonus matching + le dashboard des trous) ;
+              compatible = s'intègre sans détonner (contour, bonus faible). */}
+          {(((p.style_affinity ?? []) as string[]).length > 0 || ((metadata.style_compatible ?? []) as string[]).length > 0) && (
+            <section className="mt-5 rounded-xl border border-foyer-border bg-foyer-cream/40 p-3">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-foyer-muted">
+                Styles
+                {typeof metadata.style_tagged_at === "string" && (
+                  <span className="ml-2 font-normal normal-case text-foyer-muted/70">· taggé le {metadata.style_tagged_at.slice(0, 10)}</span>
+                )}
+              </h2>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {((p.style_affinity ?? []) as string[]).map((s) => (
+                  <span key={s} className="rounded-full bg-foyer-sage/90 px-2.5 py-1 text-xs font-medium text-white" title="core — incarne le style">{s}</span>
+                ))}
+                {((metadata.style_compatible ?? []) as string[]).map((s) => (
+                  <span key={s} className="rounded-full border border-foyer-border bg-white/70 px-2.5 py-1 text-xs text-foyer-muted" title="compatible">{s}</span>
+                ))}
+              </div>
+            </section>
+          )}
+
           {attrs && Object.keys(attrs).filter((k) => k !== "_error").length > 0 && (
             <section className="mt-5 rounded-xl border border-foyer-border bg-foyer-cream/40 p-3">
               <h2 className="text-xs font-semibold uppercase tracking-wide text-foyer-muted">

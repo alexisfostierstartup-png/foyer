@@ -1,0 +1,1940 @@
+[
+  {
+    "image": "test1.jpg",
+    "style": "scandinave",
+    "projectId": "HCbp22ump2QVJotXIRLhY",
+    "renderFile": "s01_test1__scandinave.png",
+    "plan": [
+      {
+        "element_id": "dining_table_1",
+        "category": "dining_table",
+        "description": "Table à manger rectangulaire en bois avec des coins arrondis.",
+        "expected": "RESTYLE (Oil the wood for a lighter, natural look) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "dining_chair_1",
+        "category": "dining_chair",
+        "description": "Chaise de salle à manger pivotante avec pieds noirs et assise/dossier en tissu beige.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "dining_chair_2",
+        "category": "dining_chair",
+        "description": "Chaise de salle à manger pivotante avec pieds noirs et assise/dossier en tissu beige.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "dining_chair_3",
+        "category": "dining_chair",
+        "description": "Chaise de salle à manger pivotante avec pieds noirs et assise/dossier en tissu beige.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "dining_chair_4",
+        "category": "dining_chair",
+        "description": "Chaise de salle à manger pivotante avec pieds noirs et assise/dossier en tissu beige.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "frame_1",
+        "category": "frame",
+        "description": "Grand cadre mural avec une œuvre d'art abstraite en gris et blanc.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "plant_1",
+        "category": "plant",
+        "description": "Petite plante verte dans un pot.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "table_lamp_1",
+        "category": "table_lamp",
+        "description": "Lampe de table avec un abat-jour blanc et un pied vert foncé.",
+        "expected": "RESTYLE (Change the lampshade to a linen or paper model) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "side_table_1",
+        "category": "side_table",
+        "description": "Table d'appoint étroite avec un plateau en verre et une structure métallique.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "ceiling_light_1",
+        "category": "ceiling_light",
+        "description": "Luminaire plafonnier avec une structure métallique dorée et un globe blanc.",
+        "expected": "RESTYLE (Change the lampshade to a paper or linen model) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "ceiling_light_2",
+        "category": "ceiling_light",
+        "description": "Luminaire plafonnier avec une structure métallique dorée et un globe blanc.",
+        "expected": "RESTYLE (Change the lampshade to a paper or linen model) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "ceiling_light_3",
+        "category": "ceiling_light",
+        "description": "Luminaire plafonnier avec une structure métallique noire et un abat-jour en forme de sphère.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "sofa_1",
+        "category": "sofa",
+        "description": "Canapé modulaire de couleur beige clair, composé de plusieurs sections.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "coffee_table_1",
+        "category": "coffee_table",
+        "description": "Table basse ronde avec un plateau en marbre blanc et un pied métallique.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "rug_1",
+        "category": "rug",
+        "description": "Tapis rectangulaire de couleur beige, tissé.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "sideboard_1",
+        "category": "sideboard",
+        "description": "Buffet bas en bois clair avec des portes et des tiroirs.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "frame_2",
+        "category": "frame",
+        "description": "Cadre mural rectangulaire avec une image texturée.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "table_lamp_2",
+        "category": "table_lamp",
+        "description": "Lampe de table avec un abat-jour doré et un pied métallique.",
+        "expected": "RESTYLE (Paint the lamp base matte white or light wood) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "french_door_1",
+        "category": "french_door",
+        "description": "Porte-fenêtre vitrée avec cadre en bois, donnant sur l'extérieur.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "floor_1",
+        "category": "floor",
+        "description": "Sol en parquet de couleur grise.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "wall_1",
+        "category": "wall",
+        "description": "Mur intérieur peint en blanc.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "ceiling_1",
+        "category": "ceiling",
+        "description": "Plafond intérieur peint en blanc.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      }
+    ],
+    "durationMs": 44422,
+    "judge": {
+      "decisions": [
+        {
+          "element_id": "dining_table_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "dining_chair_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "dining_chair_2",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "dining_chair_3",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "dining_chair_4",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "frame_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "plant_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "table_lamp_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "side_table_1",
+          "expected": "REPLACE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "ceiling_light_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "ceiling_light_2",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "ceiling_light_3",
+          "expected": "REPLACE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "sofa_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "coffee_table_1",
+          "expected": "REPLACE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "rug_1",
+          "expected": "KEEP",
+          "applied": "no",
+          "note": "Le tapis a été remplacé par un modèle différent au lieu d'être conservé."
+        },
+        {
+          "element_id": "sideboard_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "frame_2",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "table_lamp_2",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "french_door_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "floor_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "wall_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "ceiling_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        }
+      ],
+      "color_wash": false,
+      "major_issues": [],
+      "verdict": "warn",
+      "comment": "Le rendu applique la plupart des modifications demandées avec succès. Seul le tapis n'a pas été conservé comme prévu, mais remplacé par un modèle différent."
+    }
+  },
+  {
+    "image": "test10.jpg",
+    "style": "japandi",
+    "projectId": "eP36Ff6xmbkZrUIKuCjBE",
+    "renderFile": "s02_test10__japandi.png",
+    "plan": [
+      {
+        "element_id": "sofa_1",
+        "category": "sofa",
+        "description": "Canapé modulable de couleur beige clair, composé de plusieurs assises et dossiers rembourrés.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "armchair_1",
+        "category": "armchair",
+        "description": "Fauteuil blanc, rembourré, avec des accoudoirs bas.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "armchair_2",
+        "category": "armchair",
+        "description": "Fauteuil crème, rembourré, visible partiellement au premier plan.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "coffee_table_1",
+        "category": "coffee_table",
+        "description": "Table basse rectangulaire avec un plateau noir texturé et un piètement métallique noir.",
+        "expected": "RESTYLE (Repaint the coffee table matte black.) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "rug_1",
+        "category": "rug",
+        "description": "Tapis rectangulaire de couleur taupe, placé sous la table basse et le canapé.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "tv_stand_1",
+        "category": "tv_stand",
+        "description": "Meuble TV bas en bois clair avec des portes en cannage.",
+        "expected": "RESTYLE (Add walnut wood slats to the TV stand fronts.) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "television_1",
+        "category": "television",
+        "description": "Téléviseur à écran plat posé sur le meuble TV.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "cushion_1",
+        "category": "cushion",
+        "description": "Coussin décoratif rayé vert et blanc sur le canapé.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "cushion_2",
+        "category": "cushion",
+        "description": "Coussin décoratif marron sur le canapé.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "cushion_3",
+        "category": "cushion",
+        "description": "Coussin décoratif rayé vert et blanc sur le canapé.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "cushion_4",
+        "category": "cushion",
+        "description": "Coussin décoratif rayé vert et blanc sur le canapé.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "cushion_5",
+        "category": "cushion",
+        "description": "Coussin décoratif rayé vert et blanc sur le canapé.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "plant_1",
+        "category": "plant",
+        "description": "Plante verte en pot sur la table basse.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "frame_1",
+        "category": "frame",
+        "description": "Cadre mural noir avec une illustration.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "door_1",
+        "category": "door",
+        "description": "Porte vitrée blanche donnant sur l'extérieur.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "window_1",
+        "category": "window",
+        "description": "Fenêtre avec des rideaux beiges.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "curtains_1",
+        "category": "curtains",
+        "description": "Rideaux beiges tombant le long de la fenêtre.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "floor_1",
+        "category": "floor",
+        "description": "Plancher en bois clair.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "wall_1",
+        "category": "wall",
+        "description": "Mur principal de couleur blanche.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "wall_2",
+        "category": "wall",
+        "description": "Mur d'angle de couleur gris clair.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "ceiling_1",
+        "category": "ceiling",
+        "description": "Plafond blanc.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "decor_object_1",
+        "category": "decor_object",
+        "description": "Boîte de rangement rouge avec des jouets à l'intérieur.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "ceiling_light_1",
+        "category": "ceiling_light",
+        "description": "Luminaire suspendu avec une ampoule apparente.",
+        "expected": "RESTYLE (Replace the exposed bulb with a washi paper globe pendant.) — MÊME objet, seule cette finition change, uniforme"
+      }
+    ],
+    "durationMs": 57336,
+    "judge": {
+      "decisions": [
+        {
+          "element_id": "sofa_1",
+          "expected": "KEEP — objet inchangé (même objet, même couleur, même place)",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "armchair_1",
+          "expected": "KEEP — objet inchangé (même objet, même couleur, même place)",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "armchair_2",
+          "expected": "KEEP — objet inchangé (même objet, même couleur, même place)",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "coffee_table_1",
+          "expected": "RESTYLE (Repaint the coffee table matte black.) — MÊME objet, seule cette finition change, uniforme",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "rug_1",
+          "expected": "KEEP — objet inchangé (même objet, même couleur, même place)",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "tv_stand_1",
+          "expected": "RESTYLE (Add walnut wood slats to the TV stand fronts.) — MÊME objet, seule cette finition change, uniforme",
+          "applied": "no",
+          "note": "walnut wood slats not added, caning remains"
+        },
+        {
+          "element_id": "television_1",
+          "expected": "KEEP — objet inchangé (même objet, même couleur, même place)",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "cushion_1",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "cushion_2",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "cushion_3",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "cushion_4",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "cushion_5",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "plant_1",
+          "expected": "KEEP — objet inchangé (même objet, même couleur, même place)",
+          "applied": "no",
+          "note": "plant replaced by a vase with branches"
+        },
+        {
+          "element_id": "frame_1",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "door_1",
+          "expected": "KEEP — objet inchangé (même objet, même couleur, même place)",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "window_1",
+          "expected": "KEEP — objet inchangé (même objet, même couleur, même place)",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "curtains_1",
+          "expected": "KEEP — objet inchangé (même objet, même couleur, même place)",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "floor_1",
+          "expected": "KEEP — objet inchangé (même objet, même couleur, même place)",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "wall_1",
+          "expected": "KEEP — objet inchangé (même objet, même couleur, même place)",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "wall_2",
+          "expected": "KEEP — objet inchangé (même objet, même couleur, même place)",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "ceiling_1",
+          "expected": "KEEP — objet inchangé (même objet, même couleur, même place)",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "decor_object_1",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "ceiling_light_1",
+          "expected": "RESTYLE (Replace the exposed bulb with a washi paper globe pendant.) — MÊME objet, seule cette finition change, uniforme",
+          "applied": "no",
+          "note": "light fixture replaced, not restyled"
+        }
+      ],
+      "color_wash": false,
+      "major_issues": [],
+      "verdict": "warn",
+      "comment": "Le rendu applique globalement le plan, avec des remplacements réussis pour les coussins et le cadre mural. Cependant, le meuble TV n'a pas été restylé comme demandé, la plante a été remplacée au lieu d'être conservée, et le luminaire de plafond a été remplacé plutôt que restylé."
+    }
+  },
+  {
+    "image": "test11.jpg",
+    "style": "boheme",
+    "projectId": "GJwanKUTlcw53hy-hZxnU",
+    "renderFile": null,
+    "plan": [],
+    "durationMs": 35197,
+    "error": "Nano Banana did not return an image. Raw: {\"candidates\":[{\"finishReason\":\"IMAGE_OTHER\",\"index\":0,\"finishMessage\":\"Unable to show the generated image. The model could not generate the image based on the prompt provided. You will not be charged for this request. Try rephrasing the prompt. If you think this was an error, [send feedback](https://ai.google.dev/gemini-api/docs/troubleshooting).\"}],\"usageMetadata\":{\"promptTokenCount\":7021,\"totalTokenCount\":7021,\"promptTokensDetails\":[{\"modality\":\"TEXT\",\"tokenCount\":6763},{\"modality\":\"IMAGE\",\"t"
+  },
+  {
+    "image": "test2.jpg",
+    "style": "seventies",
+    "projectId": "g9CuqEmpX01X3r-y1m0r3",
+    "renderFile": "s05_test2__seventies.png",
+    "plan": [
+      {
+        "element_id": "sofa_1",
+        "category": "sofa",
+        "description": "Canapé d'angle gris foncé avec des coussins.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "coffee_table_1",
+        "category": "coffee_table",
+        "description": "Table basse rectangulaire blanche avec deux niveaux.",
+        "expected": "RESTYLE (Apply a concrete effect to the coffee table top) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "bar_table_1",
+        "category": "bar_table",
+        "description": "Table haute rectangulaire avec plateau en bois clair et pieds métalliques noirs.",
+        "expected": "RESTYLE (Stain the bar table top burnt orange) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "chair_1",
+        "category": "chair",
+        "description": "Tabouret de bar noir avec pieds métalliques.",
+        "expected": "RESTYLE (Repaint the bar stool legs in chrome) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "chair_2",
+        "category": "chair",
+        "description": "Tabouret de bar noir avec pieds métalliques.",
+        "expected": "RESTYLE (Repaint the bar stool legs in chrome) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "chair_3",
+        "category": "chair",
+        "description": "Tabouret de bar noir avec pieds métalliques.",
+        "expected": "RESTYLE (Repaint the bar stool legs in chrome) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "chair_4",
+        "category": "chair",
+        "description": "Tabouret de bar noir avec pieds métalliques.",
+        "expected": "RESTYLE (Repaint the bar stool legs in chrome) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "frame_1",
+        "category": "frame",
+        "description": "Grande peinture murale en noir et blanc représentant des hippopotames.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "cushion_1",
+        "category": "cushion",
+        "description": "Coussin décoratif blanc avec un motif abstrait.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "cushion_2",
+        "category": "cushion",
+        "description": "Coussin décoratif vert olive.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "ceiling_light_1",
+        "category": "ceiling_light",
+        "description": "Luminaire rond en papier blanc fixé au mur, ressemblant à une lanterne.",
+        "expected": "RESTYLE (Replace the lampshade with a globe glass lamp in amber) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "window_1",
+        "category": "window",
+        "description": "Grande fenêtre cintrée avec des croisillons, donnant sur l'extérieur.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "curtains_1",
+        "category": "curtains",
+        "description": "Rideau jaune vif.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "radiator_1",
+        "category": "radiator",
+        "description": "Radiateur blanc horizontal.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "floor_1",
+        "category": "floor",
+        "description": "Sol gris foncé, aspect béton ciré ou vinyle.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "wall_1",
+        "category": "wall",
+        "description": "Mur blanc.",
+        "expected": "RESTYLE (Repaint the walls off-white) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "ceiling_1",
+        "category": "ceiling",
+        "description": "Plafond avec poutres apparentes en bois.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      }
+    ],
+    "durationMs": 38112,
+    "judge": {
+      "decisions": [
+        {
+          "element_id": "sofa_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "coffee_table_1",
+          "expected": "RESTYLE (Apply a concrete effect to the coffee table top)",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "bar_table_1",
+          "expected": "RESTYLE (Stain the bar table top burnt orange)",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "chair_1",
+          "expected": "RESTYLE (Repaint the bar stool legs in chrome)",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "chair_2",
+          "expected": "RESTYLE (Repaint the bar stool legs in chrome)",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "chair_3",
+          "expected": "RESTYLE (Repaint the bar stool legs in chrome)",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "chair_4",
+          "expected": "RESTYLE (Repaint the bar stool legs in chrome)",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "frame_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "cushion_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "cushion_2",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "ceiling_light_1",
+          "expected": "RESTYLE (Replace the lampshade with a globe glass lamp in amber)",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "window_1",
+          "expected": "KEEP",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "curtains_1",
+          "expected": "REPLACE",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "radiator_1",
+          "expected": "KEEP",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "floor_1",
+          "expected": "KEEP",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "wall_1",
+          "expected": "RESTYLE (Repaint the walls off-white)",
+          "applied": "yes",
+          "note": ""
+        },
+        {
+          "element_id": "ceiling_1",
+          "expected": "KEEP",
+          "applied": "yes",
+          "note": ""
+        }
+      ],
+      "color_wash": false,
+      "major_issues": [],
+      "verdict": "pass",
+      "comment": "Le rendu a appliqué toutes les modifications demandées avec précision. Chaque élément a été transformé conformément au plan, sans aucun problème majeur."
+    }
+  },
+  {
+    "image": "test4.jpeg",
+    "style": "haussmannien",
+    "projectId": "J8d9mRSudVrVnTmyn80Hu",
+    "renderFile": "s06_test4__haussmannien.png",
+    "plan": [
+      {
+        "element_id": "floor_1",
+        "category": "floor",
+        "description": "Plancher en bois de couleur miel, composé de lames de parquet.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "wall_1",
+        "category": "wall",
+        "description": "Mur intérieur peint en blanc.",
+        "expected": "RESTYLE (Add plaster moldings) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "ceiling_1",
+        "category": "ceiling",
+        "description": "Plafond blanc lisse.",
+        "expected": "RESTYLE (Repaint the ceiling in off-white) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "french_door_1",
+        "category": "french_door",
+        "description": "Porte-fenêtre vitrée coulissante avec cadre noir, donnant sur l'extérieur.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "chair_1",
+        "category": "chair",
+        "description": "Fauteuil confortable de couleur beige, avec un coussin gris jeté dessus.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "pouf_1",
+        "category": "pouf",
+        "description": "Pouf rond de couleur marron clair, en tissu.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "sofa_1",
+        "category": "sofa",
+        "description": "Canapé d'angle de couleur gris foncé, en tissu.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "coffee_table_1",
+        "category": "coffee_table",
+        "description": "Table basse rectangulaire avec plateau en bois foncé et pieds noirs.",
+        "expected": "RESTYLE (Repaint the coffee table in matte black) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "tv_stand_1",
+        "category": "tv_stand",
+        "description": "Meuble TV bas de couleur blanche avec des tiroirs.",
+        "expected": "RESTYLE (Repaint the TV stand in off-white) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "television_1",
+        "category": "television",
+        "description": "Téléviseur à écran plat noir posé sur le meuble TV.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "floor_lamp_1",
+        "category": "floor_lamp",
+        "description": "Lampadaire noir avec trois bras orientables.",
+        "expected": "RESTYLE (Paint the floor lamp base in brass) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "plant_1",
+        "category": "plant",
+        "description": "Grande plante verte d'intérieur avec de longues feuilles.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "plant_2",
+        "category": "plant",
+        "description": "Plante verte d'intérieur de taille moyenne.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "plant_3",
+        "category": "plant",
+        "description": "Petite plante verte en pot.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "plant_4",
+        "category": "plant",
+        "description": "Plante verte d'intérieur avec de longues feuilles.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "plant_5",
+        "category": "plant",
+        "description": "Plante verte d'intérieur avec de longues feuilles.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "shelf_1",
+        "category": "shelf",
+        "description": "Étagère murale en bois clair avec des objets décoratifs et des plantes.",
+        "expected": "RESTYLE (Repaint the shelf in light wood) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "decor_object_1",
+        "category": "decor_object",
+        "description": "Objet décoratif en forme de coquillage.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "decor_object_2",
+        "category": "decor_object",
+        "description": "Plante artificielle rouge.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "decor_object_3",
+        "category": "decor_object",
+        "description": "Boîte en bois vieilli avec inscription.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "table_1",
+        "category": "other",
+        "description": "Table à manger recouverte d'une nappe transparente.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "cushion_1",
+        "category": "cushion",
+        "description": "Coussin décoratif avec un motif animalier.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "cushion_2",
+        "category": "cushion",
+        "description": "Coussin décoratif de couleur verte.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      }
+    ],
+    "durationMs": 58264,
+    "judge": {
+      "decisions": [
+        {
+          "element_id": "floor_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "wall_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "ceiling_1",
+          "expected": "RESTYLE",
+          "applied": "no",
+          "note": "Chandelier and ceiling rose added, not just repainted."
+        },
+        {
+          "element_id": "french_door_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "chair_1",
+          "expected": "REPLACE",
+          "applied": "no",
+          "note": "Object removed, not replaced."
+        },
+        {
+          "element_id": "pouf_1",
+          "expected": "REPLACE",
+          "applied": "no",
+          "note": "Object removed, not replaced."
+        },
+        {
+          "element_id": "sofa_1",
+          "expected": "REPLACE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "coffee_table_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "tv_stand_1",
+          "expected": "RESTYLE",
+          "applied": "no",
+          "note": "Object appears unchanged, not repainted off-white."
+        },
+        {
+          "element_id": "television_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "floor_lamp_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "plant_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "plant_2",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "plant_3",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "plant_4",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "plant_5",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "shelf_1",
+          "expected": "RESTYLE",
+          "applied": "no",
+          "note": "Object appears unchanged, not visibly repainted."
+        },
+        {
+          "element_id": "decor_object_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "decor_object_2",
+          "expected": "REPLACE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "decor_object_3",
+          "expected": "REPLACE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "table_1",
+          "expected": "REPLACE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "cushion_1",
+          "expected": "REPLACE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "cushion_2",
+          "expected": "REPLACE",
+          "applied": "yes"
+        }
+      ],
+      "color_wash": false,
+      "major_issues": [],
+      "verdict": "warn",
+      "comment": "Le rendu applique la majorité des changements demandés, notamment les restylages et remplacements majeurs. Cependant, plusieurs éléments n'ont pas été traités comme spécifié, soit par suppression au lieu de remplacement, soit par absence de restylage visible, et un luminaire a été ajouté au plafond."
+    }
+  },
+  {
+    "image": "test5.jpg",
+    "style": "wabi-sabi",
+    "projectId": "3yeMosAn7pjnV_pKUNJgh",
+    "renderFile": "s07_test5__wabi-sabi.png",
+    "plan": [
+      {
+        "element_id": "sofa_1",
+        "category": "sofa",
+        "description": "Canapé d'angle modulable de couleur beige clair, avec des coussins assortis et des coussins décoratifs bleus et gris.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "coffee_table_1",
+        "category": "coffee_table",
+        "description": "Table basse ronde avec un plateau en marbre blanc veiné et un piètement métallique noir.",
+        "expected": "RESTYLE (Apply a raw concrete effect plaster to the top) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "rug_1",
+        "category": "rug",
+        "description": "Grand tapis rectangulaire de couleur crème avec un motif géométrique texturé gris clair.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "ceiling_light_1",
+        "category": "ceiling_light",
+        "description": "Suspension de plafond avec un abat-jour cylindrique en tissu de couleur beige.",
+        "expected": "RESTYLE (Change the lampshade to a woven rattan sphere) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "wall_sconce_1",
+        "category": "wall_sconce",
+        "description": "Applique murale orientée vers le haut, avec un design en bois clair.",
+        "expected": "RESTYLE (Replace the lampshades with organic terracotta forms) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "wall_sconce_2",
+        "category": "wall_sconce",
+        "description": "Applique murale orientée vers le haut, avec un design en bois clair.",
+        "expected": "RESTYLE (Replace the lampshades with organic terracotta forms) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "frame_1",
+        "category": "frame",
+        "description": "Cadre rectangulaire en bois clair contenant une peinture abstraite aux formes géométriques.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "plant_1",
+        "category": "plant",
+        "description": "Grande plante verte en pot, placée dans un coin de la pièce.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "door_1",
+        "category": "door",
+        "description": "Porte intérieure battante de couleur grise.",
+        "expected": "RESTYLE (Repaint the door in matte earthy grey) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "door_2",
+        "category": "door",
+        "description": "Porte intérieure battante de couleur grise.",
+        "expected": "RESTYLE (Repaint the door in matte earthy grey) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "tv_stand_1",
+        "category": "tv_stand",
+        "description": "Meuble TV bas en bois clair avec des portes.",
+        "expected": "RESTYLE (Stain the wood of the TV stand a dark, natural hue) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "television_1",
+        "category": "television",
+        "description": "Téléviseur à écran plat noir.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "table_lamp_1",
+        "category": "table_lamp",
+        "description": "Lampe de table avec un abat-jour en forme de champignon et une base en céramique.",
+        "expected": "RESTYLE (Paint the ceramic lamp base in a raw finish) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "wall_1",
+        "category": "wall",
+        "description": "Murs de la pièce principale, peints dans des tons de gris clair.",
+        "expected": "RESTYLE (Apply a textured limewash plaster in sand color) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "ceiling_1",
+        "category": "ceiling",
+        "description": "Plafond blanc.",
+        "expected": "RESTYLE (Repaint the ceiling in matte off-white) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "floor_1",
+        "category": "floor",
+        "description": "Sol en carrelage de couleur beige clair avec de petites inclusions sombres.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      }
+    ],
+    "durationMs": 41414,
+    "judge": {
+      "decisions": [
+        {
+          "element_id": "sofa_1",
+          "expected": "REPLACE",
+          "applied": "no",
+          "note": "même canapé, seuls les coussins ont été changés"
+        },
+        {
+          "element_id": "coffee_table_1",
+          "expected": "RESTYLE (Apply a raw concrete effect plaster to the top)",
+          "applied": "yes"
+        },
+        {
+          "element_id": "rug_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "ceiling_light_1",
+          "expected": "RESTYLE (Change the lampshade to a woven rattan sphere)",
+          "applied": "yes"
+        },
+        {
+          "element_id": "wall_sconce_1",
+          "expected": "RESTYLE (Replace the lampshades with organic terracotta forms)",
+          "applied": "yes"
+        },
+        {
+          "element_id": "wall_sconce_2",
+          "expected": "RESTYLE (Replace the lampshades with organic terracotta forms)",
+          "applied": "yes"
+        },
+        {
+          "element_id": "frame_1",
+          "expected": "REPLACE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "plant_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "door_1",
+          "expected": "RESTYLE (Repaint the door in matte earthy grey)",
+          "applied": "yes"
+        },
+        {
+          "element_id": "door_2",
+          "expected": "RESTYLE (Repaint the door in matte earthy grey)",
+          "applied": "yes"
+        },
+        {
+          "element_id": "tv_stand_1",
+          "expected": "RESTYLE (Stain the wood of the TV stand a dark, natural hue)",
+          "applied": "yes"
+        },
+        {
+          "element_id": "television_1",
+          "expected": "REPLACE",
+          "applied": "no",
+          "note": "même téléviseur"
+        },
+        {
+          "element_id": "table_lamp_1",
+          "expected": "RESTYLE (Paint the ceramic lamp base in a raw finish)",
+          "applied": "yes"
+        },
+        {
+          "element_id": "wall_1",
+          "expected": "RESTYLE (Apply a textured limewash plaster in sand color)",
+          "applied": "yes"
+        },
+        {
+          "element_id": "ceiling_1",
+          "expected": "RESTYLE (Repaint the ceiling in matte off-white)",
+          "applied": "yes"
+        },
+        {
+          "element_id": "floor_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        }
+      ],
+      "color_wash": false,
+      "major_issues": [],
+      "verdict": "warn",
+      "comment": "Le plan a été globalement bien appliqué, avec la majorité des éléments correctement restylés ou conservés. Cependant, le canapé et le téléviseur n'ont pas été remplacés comme demandé, mais plutôt modifiés ou conservés."
+    }
+  },
+  {
+    "image": "test6.jpg",
+    "style": "color-block",
+    "projectId": "PVKbhWWkGig7HQTfFYLou",
+    "renderFile": "s08_test6__color-block.png",
+    "plan": [
+      {
+        "element_id": "staircase_1",
+        "category": "staircase",
+        "description": "Escalier en bois sombre avec des marches larges, menant à un étage supérieur.",
+        "expected": "RESTYLE (Repaint the staircase in forest green (#2F5D45)) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "water_heater_1",
+        "category": "water_heater",
+        "description": "Chauffe-eau mural blanc, de forme cylindrique.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "shelf_1",
+        "category": "shelf",
+        "description": "Étagères murales en bois clair, disposées en quadrillage au-dessus du chauffe-eau.",
+        "expected": "RESTYLE (Repaint the shelves in bright orange (#D95B2A)) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "radiator_1",
+        "category": "radiator",
+        "description": "Radiateur blanc vertical, installé sous la fenêtre.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "radiator_2",
+        "category": "radiator",
+        "description": "Radiateur blanc vertical, installé près de l'escalier.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "window_1",
+        "category": "window",
+        "description": "Fenêtre rectangulaire avec cadre blanc, donnant sur l'extérieur.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "window_2",
+        "category": "window",
+        "description": "Fenêtre rectangulaire avec cadre blanc, située à côté de la première fenêtre.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "floor_1",
+        "category": "floor",
+        "description": "Sol en parquet de couleur bois clair, composé de lames rectangulaires.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "wall_1",
+        "category": "wall",
+        "description": "Mur intérieur peint en blanc.",
+        "expected": "RESTYLE (Paint a large orange (#D95B2A) color block arch on the wall) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "ceiling_1",
+        "category": "ceiling",
+        "description": "Plafond intérieur peint en blanc.",
+        "expected": "RESTYLE (Repaint the ceiling in deep blue (#1F5FAD)) — MÊME objet, seule cette finition change, uniforme"
+      }
+    ],
+    "durationMs": 40621,
+    "judge": {
+      "decisions": [
+        {
+          "element_id": "staircase_1",
+          "expected": "RESTYLE",
+          "applied": "no",
+          "note": "Couleur incorrecte (orange au lieu de vert forêt) et non uniforme sur l'escalier."
+        },
+        {
+          "element_id": "water_heater_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "shelf_1",
+          "expected": "RESTYLE",
+          "applied": "no",
+          "note": "L'objet original a été supprimé et remplacé par un meuble différent à un autre emplacement."
+        },
+        {
+          "element_id": "radiator_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "radiator_2",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "window_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "window_2",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "floor_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "wall_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "ceiling_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        }
+      ],
+      "color_wash": false,
+      "major_issues": [
+        "architecture ajoutée/supprimée (shelf_1)"
+      ],
+      "verdict": "fail",
+      "comment": "Le rendu présente des écarts importants par rapport au plan. L'escalier n'a pas été repeint dans la couleur spécifiée, et les étagères originales ont été supprimées et remplacées par un meuble différent à un autre emplacement, ce qui constitue un problème majeur."
+    }
+  },
+  {
+    "image": "test1.jpg",
+    "style": "mid-century",
+    "projectId": "ZjR7Tq1aIVBPlo6WYeRo3",
+    "renderFile": "s09_test1__mid-century.png",
+    "plan": [
+      {
+        "element_id": "dining_table_1",
+        "category": "dining_table",
+        "description": "Table à manger rectangulaire en bois avec des coins arrondis.",
+        "expected": "RESTYLE (Stain the wood walnut) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "dining_chair_1",
+        "category": "dining_chair",
+        "description": "Chaise de salle à manger pivotante avec pieds noirs et assise/dossier en tissu beige.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "dining_chair_2",
+        "category": "dining_chair",
+        "description": "Chaise de salle à manger pivotante avec pieds noirs et assise/dossier en tissu beige.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "dining_chair_3",
+        "category": "dining_chair",
+        "description": "Chaise de salle à manger pivotante avec pieds noirs et assise/dossier en tissu beige.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "dining_chair_4",
+        "category": "dining_chair",
+        "description": "Chaise de salle à manger pivotante avec pieds noirs et assise/dossier en tissu beige.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "frame_1",
+        "category": "frame",
+        "description": "Grand cadre mural avec une œuvre d'art abstraite en gris et blanc.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "plant_1",
+        "category": "plant",
+        "description": "Petite plante verte dans un pot.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "table_lamp_1",
+        "category": "table_lamp",
+        "description": "Lampe de table avec un abat-jour blanc et un pied vert foncé.",
+        "expected": "RESTYLE (Swap the lampshade for a cream textured fabric lampshade) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "side_table_1",
+        "category": "side_table",
+        "description": "Table d'appoint étroite avec un plateau en verre et une structure métallique.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "ceiling_light_1",
+        "category": "ceiling_light",
+        "description": "Luminaire plafonnier avec une structure métallique dorée et un globe blanc.",
+        "expected": "RESTYLE (Swap the lampshade for a smoked glass globe) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "ceiling_light_2",
+        "category": "ceiling_light",
+        "description": "Luminaire plafonnier avec une structure métallique dorée et un globe blanc.",
+        "expected": "RESTYLE (Swap the lampshade for a smoked glass globe) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "ceiling_light_3",
+        "category": "ceiling_light",
+        "description": "Luminaire plafonnier avec une structure métallique noire et un abat-jour en forme de sphère.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "sofa_1",
+        "category": "sofa",
+        "description": "Canapé modulaire de couleur beige clair, composé de plusieurs sections.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "coffee_table_1",
+        "category": "coffee_table",
+        "description": "Table basse ronde avec un plateau en marbre blanc et un pied métallique.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "rug_1",
+        "category": "rug",
+        "description": "Tapis rectangulaire de couleur beige, tissé.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "sideboard_1",
+        "category": "sideboard",
+        "description": "Buffet bas en bois clair avec des portes et des tiroirs.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "frame_2",
+        "category": "frame",
+        "description": "Cadre mural rectangulaire avec une image texturée.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "table_lamp_2",
+        "category": "table_lamp",
+        "description": "Lampe de table avec un abat-jour doré et un pied métallique.",
+        "expected": "RESTYLE (Paint the lamp base brushed brass) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "french_door_1",
+        "category": "french_door",
+        "description": "Porte-fenêtre vitrée avec cadre en bois, donnant sur l'extérieur.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "floor_1",
+        "category": "floor",
+        "description": "Sol en parquet de couleur grise.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "wall_1",
+        "category": "wall",
+        "description": "Mur intérieur peint en blanc.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "ceiling_1",
+        "category": "ceiling",
+        "description": "Plafond intérieur peint en blanc.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      }
+    ],
+    "durationMs": 52081,
+    "judge": {
+      "decisions": [
+        {
+          "element_id": "dining_table_1",
+          "expected": "RESTYLE (Stain the wood walnut) — MÊME objet, seule cette finition change, uniforme",
+          "applied": "yes"
+        },
+        {
+          "element_id": "dining_chair_1",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "no",
+          "note": "Les chaises n'ont pas été remplacées, elles sont identiques à l'original."
+        },
+        {
+          "element_id": "dining_chair_2",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "no",
+          "note": "Les chaises n'ont pas été remplacées, elles sont identiques à l'original."
+        },
+        {
+          "element_id": "dining_chair_3",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "no",
+          "note": "Les chaises n'ont pas été remplacées, elles sont identiques à l'original."
+        },
+        {
+          "element_id": "dining_chair_4",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "no",
+          "note": "Les chaises n'ont pas été remplacées, elles sont identiques à l'original."
+        },
+        {
+          "element_id": "frame_1",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes"
+        },
+        {
+          "element_id": "plant_1",
+          "expected": "KEEP — objet inchangé (même objet, même couleur, même place)",
+          "applied": "yes"
+        },
+        {
+          "element_id": "table_lamp_1",
+          "expected": "RESTYLE (Swap the lampshade for a cream textured fabric lampshade) — MÊME objet, seule cette finition change, uniforme",
+          "applied": "yes"
+        },
+        {
+          "element_id": "side_table_1",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes"
+        },
+        {
+          "element_id": "ceiling_light_1",
+          "expected": "RESTYLE (Swap the lampshade for a smoked glass globe) — MÊME objet, seule cette finition change, uniforme",
+          "applied": "no",
+          "note": "Le luminaire a été remplacé par un objet différent au lieu d'un simple restyle de l'abat-jour."
+        },
+        {
+          "element_id": "ceiling_light_2",
+          "expected": "RESTYLE (Swap the lampshade for a smoked glass globe) — MÊME objet, seule cette finition change, uniforme",
+          "applied": "yes"
+        },
+        {
+          "element_id": "ceiling_light_3",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes"
+        },
+        {
+          "element_id": "sofa_1",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes"
+        },
+        {
+          "element_id": "coffee_table_1",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes"
+        },
+        {
+          "element_id": "rug_1",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes"
+        },
+        {
+          "element_id": "sideboard_1",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes"
+        },
+        {
+          "element_id": "frame_2",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes"
+        },
+        {
+          "element_id": "table_lamp_2",
+          "expected": "RESTYLE (Paint the lamp base brushed brass) — MÊME objet, seule cette finition change, uniforme",
+          "applied": "yes"
+        },
+        {
+          "element_id": "french_door_1",
+          "expected": "KEEP — objet inchangé (même objet, même couleur, même place)",
+          "applied": "yes"
+        },
+        {
+          "element_id": "floor_1",
+          "expected": "KEEP — objet inchangé (même objet, même couleur, même place)",
+          "applied": "yes"
+        },
+        {
+          "element_id": "wall_1",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes"
+        },
+        {
+          "element_id": "ceiling_1",
+          "expected": "KEEP — objet inchangé (même objet, même couleur, même place)",
+          "applied": "yes"
+        }
+      ],
+      "color_wash": false,
+      "major_issues": [],
+      "verdict": "warn",
+      "comment": "Le rendu présente plusieurs écarts par rapport au plan, notamment le non-remplacement des chaises de salle à manger et un luminaire de plafond remplacé au lieu d'être restylé. Le reste des modifications a été appliqué correctement."
+    }
+  },
+  {
+    "image": "test10.jpg",
+    "style": "art-deco",
+    "projectId": "du8HEIuv7mWPxmM5JoqB1",
+    "renderFile": "s10_test10__art-deco.png",
+    "plan": [
+      {
+        "element_id": "sofa_1",
+        "category": "sofa",
+        "description": "Canapé modulable de couleur beige clair, composé de plusieurs assises et dossiers rembourrés.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "armchair_1",
+        "category": "armchair",
+        "description": "Fauteuil blanc, rembourré, avec des accoudoirs bas.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "armchair_2",
+        "category": "armchair",
+        "description": "Fauteuil crème, rembourré, visible partiellement au premier plan.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "coffee_table_1",
+        "category": "coffee_table",
+        "description": "Table basse rectangulaire avec un plateau noir texturé et un piètement métallique noir.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "rug_1",
+        "category": "rug",
+        "description": "Tapis rectangulaire de couleur taupe, placé sous la table basse et le canapé.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "tv_stand_1",
+        "category": "tv_stand",
+        "description": "Meuble TV bas en bois clair avec des portes en cannage.",
+        "expected": "RESTYLE (Apply slats to the fronts for a fluted effect and paint in lacquered black.) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "television_1",
+        "category": "television",
+        "description": "Téléviseur à écran plat posé sur le meuble TV.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "cushion_1",
+        "category": "cushion",
+        "description": "Coussin décoratif rayé vert et blanc sur le canapé.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "cushion_2",
+        "category": "cushion",
+        "description": "Coussin décoratif marron sur le canapé.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "cushion_3",
+        "category": "cushion",
+        "description": "Coussin décoratif rayé vert et blanc sur le canapé.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "cushion_4",
+        "category": "cushion",
+        "description": "Coussin décoratif rayé vert et blanc sur le canapé.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "cushion_5",
+        "category": "cushion",
+        "description": "Coussin décoratif rayé vert et blanc sur le canapé.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "plant_1",
+        "category": "plant",
+        "description": "Plante verte en pot sur la table basse.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "frame_1",
+        "category": "frame",
+        "description": "Cadre mural noir avec une illustration.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "door_1",
+        "category": "door",
+        "description": "Porte vitrée blanche donnant sur l'extérieur.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "window_1",
+        "category": "window",
+        "description": "Fenêtre avec des rideaux beiges.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "curtains_1",
+        "category": "curtains",
+        "description": "Rideaux beiges tombant le long de la fenêtre.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "floor_1",
+        "category": "floor",
+        "description": "Plancher en bois clair.",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "wall_1",
+        "category": "wall",
+        "description": "Mur principal de couleur blanche.",
+        "expected": "RESTYLE (Add geometric gold moldings and paint emerald green.) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "wall_2",
+        "category": "wall",
+        "description": "Mur d'angle de couleur gris clair.",
+        "expected": "RESTYLE (Add geometric gold moldings and paint emerald green.) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "ceiling_1",
+        "category": "ceiling",
+        "description": "Plafond blanc.",
+        "expected": "RESTYLE (Repaint the ceiling off-white.) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "decor_object_1",
+        "category": "decor_object",
+        "description": "Boîte de rangement rouge avec des jouets à l'intérieur.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "ceiling_light_1",
+        "category": "ceiling_light",
+        "description": "Luminaire suspendu avec une ampoule apparente.",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      }
+    ],
+    "durationMs": 50124,
+    "judge": {
+      "decisions": [
+        {
+          "element_id": "sofa_1",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes"
+        },
+        {
+          "element_id": "armchair_1",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes"
+        },
+        {
+          "element_id": "armchair_2",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes"
+        },
+        {
+          "element_id": "coffee_table_1",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes"
+        },
+        {
+          "element_id": "rug_1",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes"
+        },
+        {
+          "element_id": "tv_stand_1",
+          "expected": "RESTYLE (Apply slats to the fronts for a fluted effect and paint in lacquered black.) — MÊME objet, seule cette finition change, uniforme",
+          "applied": "no",
+          "note": "La finition demandée (lattes pour effet cannelé) n'a pas été appliquée, l'objet semble avoir été remplacé ou restylé différemment."
+        },
+        {
+          "element_id": "television_1",
+          "expected": "KEEP — objet inchangé (même objet, même couleur, même place)",
+          "applied": "yes"
+        },
+        {
+          "element_id": "cushion_1",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes"
+        },
+        {
+          "element_id": "cushion_2",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes"
+        },
+        {
+          "element_id": "cushion_3",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes"
+        },
+        {
+          "element_id": "cushion_4",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes"
+        },
+        {
+          "element_id": "cushion_5",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes"
+        },
+        {
+          "element_id": "plant_1",
+          "expected": "KEEP — objet inchangé (même objet, même couleur, même place)",
+          "applied": "yes"
+        },
+        {
+          "element_id": "frame_1",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes"
+        },
+        {
+          "element_id": "door_1",
+          "expected": "KEEP — objet inchangé (même objet, même couleur, même place)",
+          "applied": "yes"
+        },
+        {
+          "element_id": "window_1",
+          "expected": "KEEP — objet inchangé (même objet, même couleur, même place)",
+          "applied": "yes"
+        },
+        {
+          "element_id": "curtains_1",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes"
+        },
+        {
+          "element_id": "floor_1",
+          "expected": "KEEP — objet inchangé (même objet, même couleur, même place)",
+          "applied": "yes"
+        },
+        {
+          "element_id": "wall_1",
+          "expected": "RESTYLE (Add geometric gold moldings and paint emerald green.) — MÊME objet, seule cette finition change, uniforme",
+          "applied": "yes"
+        },
+        {
+          "element_id": "wall_2",
+          "expected": "RESTYLE (Add geometric gold moldings and paint emerald green.) — MÊME objet, seule cette finition change, uniforme",
+          "applied": "yes"
+        },
+        {
+          "element_id": "ceiling_1",
+          "expected": "RESTYLE (Repaint the ceiling off-white.) — MÊME objet, seule cette finition change, uniforme",
+          "applied": "yes"
+        },
+        {
+          "element_id": "decor_object_1",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes"
+        },
+        {
+          "element_id": "ceiling_light_1",
+          "expected": "REPLACE — objet clairement différent au même emplacement",
+          "applied": "yes"
+        }
+      ],
+      "color_wash": false,
+      "major_issues": [],
+      "verdict": "warn",
+      "comment": "Le rendu applique globalement le plan de rénovation avec succès pour la majorité des éléments. Cependant, le meuble TV n'a pas été restylé avec l'effet cannelé et la couleur laquée noire spécifiés, ce qui constitue un écart mineur."
+    }
+  },
+  {
+    "image": "test12.jpg",
+    "style": "industriel",
+    "projectId": "aRbYJX_EoglASATpsQlYn",
+    "renderFile": "s04_test12__industriel.png",
+    "plan": [],
+    "durationMs": 351879,
+    "judge": {
+      "decisions": [],
+      "color_wash": false,
+      "major_issues": [
+        "Murs transformés (plâtre/peinture vers brique apparente)",
+        "Poutre ajoutée au plafond",
+        "Cheminée restylée/remplacée de manière significative"
+      ],
+      "verdict": "fail",
+      "comment": "Le rendu introduit des changements architecturaux majeurs (murs en brique, poutre au plafond) et remplace la plupart du mobilier. Le plan étant vide, l'attente implicite était de ne rien modifier, ce qui a été massivement ignoré."
+    }
+  }
+]

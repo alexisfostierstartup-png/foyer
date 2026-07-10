@@ -1,0 +1,168 @@
+[
+  {
+    "image": "test1.jpg",
+    "style": "seventies",
+    "renderFile": "test1__seventies.png",
+    "durationMs": 18198,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "low tufted modular sofa in burnt orange",
+        "globe lamps",
+        "checkerboard rug",
+        "chrome and glass furniture",
+        "gallery of retro graphic posters"
+      ],
+      "signature_elements_missing": [
+        "mushroom lamps",
+        "cane and rattan",
+        "lacquer (as a dominant material)",
+        "terrazzo",
+        "wavy-pattern rugs"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [
+        "dining chairs are too tightly packed around the table",
+        "floor lamp on the left is positioned too close to the window frame",
+        "living area rug is undersized for the sofa"
+      ],
+      "architecture_issues": [],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "warn",
+      "comment": "Le rendu incarne très bien le style Seventies avec une excellente fidélité à la palette et aux éléments signature. Cependant, des ajustements sont nécessaires concernant le placement des chaises de salle à manger et la taille du tapis du salon."
+    }
+  },
+  {
+    "image": "test1.jpg",
+    "style": "color-block",
+    "renderFile": "test1__color-block.png",
+    "durationMs": 20148,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "supergraphic painted arches continuing onto the ceiling",
+        "complementary color pairing like orange and green",
+        "arched niches and painted door surrounds",
+        "color-matched accessories",
+        "curved rounded furniture",
+        "velvet",
+        "brass",
+        "marble"
+      ],
+      "signature_elements_missing": [
+        "fluted wood"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [],
+      "architecture_issues": [
+        "The rectangular opening to the adjacent room has been transformed into a large blue arched doorway."
+      ],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "pass",
+      "comment": "Le rendu incarne avec succès le style 'Color block', intégrant la palette et les éléments signature avec une grande fidélité. L'intégration de l'arche peinte sur le passage est une modification architecturale audacieuse et pertinente pour le style."
+    }
+  },
+  {
+    "image": "test1.jpg",
+    "style": "japandi",
+    "renderFile": "test1__japandi.png",
+    "durationMs": 26349,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "fluted or slatted walnut wood",
+        "black accents punctuating beige",
+        "organic-shaped travertine coffee table",
+        "paper globe lantern",
+        "ikebana-style branch arrangement"
+      ],
+      "signature_elements_missing": [
+        "smoked glass"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [
+        "L'accoudoir du fauteuil de droite empiète sur l'encadrement de la porte.",
+        "La plante près de la table à manger est trop proche du pied de table."
+      ],
+      "architecture_issues": [
+        "Un radiateur a été ajouté sous la fenêtre du balcon, absent de l'image originale."
+      ],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "warn",
+      "comment": "Le rendu intègre avec succès les éléments et l'ambiance Japandi, démontrant une excellente fidélité au style. Cependant, l'ajout d'un radiateur et des problèmes mineurs de placement nécessitent une révision pour une exécution impeccable."
+    }
+  },
+  {
+    "image": "test1.jpg",
+    "style": "art-deco",
+    "renderFile": "test1__art-deco.png",
+    "durationMs": 20627,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "gold geometric wall linework with arches and sunbursts",
+        "channel-tufted velvet sofa",
+        "black marble coffee table",
+        "brass sputnik globe chandelier",
+        "fluted lacquered cabinetry"
+      ],
+      "signature_elements_missing": [],
+      "duplicated_items": [],
+      "placement_issues": [
+        "chaises de salle à manger trop serrées autour de la table",
+        "tapis de salon trop petit pour l'agencement",
+        "plante derrière le canapé semble flotter",
+        "console murale légèrement en conflit avec le panneau mural"
+      ],
+      "architecture_issues": [
+        "mur ajouté sur le côté droit, fermant l'ouverture vers la pièce adjacente",
+        "luminaires de plafond modifiés",
+        "cadres de porte/fenêtre assombris"
+      ],
+      "hallucinations": [],
+      "perspective_changed": true,
+      "verdict": "fail",
+      "comment": "L'exécution du style Art Déco est remarquable, avec une excellente fidélité à la palette et aux éléments signature. Cependant, l'ajout d'un mur majeur altère fondamentalement l'architecture originale de la pièce, et des problèmes de placement sont notables."
+    }
+  },
+  {
+    "image": "test1.jpg",
+    "style": "boheme",
+    "renderFile": "test1__boheme.png",
+    "durationMs": 21890,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 8,
+      "signature_elements_present": [
+        "woven rattan pendant lights",
+        "layered jute rugs",
+        "knit throws",
+        "dried pampas grass",
+        "organic terracotta wall art",
+        "poufs"
+      ],
+      "signature_elements_missing": [
+        "floor cushions",
+        "washed linen"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [
+        "Le grand tapis rond sous la table à manger chevauche légèrement le tapis rectangulaire du salon."
+      ],
+      "architecture_issues": [
+        "La texture du mur a été modifiée en un enduit terre cuite. Un léger renfoncement ou extension du mur gauche est perceptible."
+      ],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "pass",
+      "comment": "Le rendu incarne avec succès le style Bohème défini, utilisant la palette et les matériaux spécifiés de manière cohérente. Quelques ajustements mineurs sur le placement des tapis et la finition architecturale seraient à considérer."
+    }
+  }
+]

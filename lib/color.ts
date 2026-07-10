@@ -64,6 +64,12 @@ function classifyHsl(h: number, s: number, l: number): string {
   if (l >= 0.9 && s < 0.18) return "blanc";
   if (l <= 0.12) return "noir";
   if (s < 0.12) return "gris";
+  // Quasi-blanc teinté (écru/ivoire/blanc cassé) : très clair mais pas assez neutre pour
+  // "blanc" pur. En HSL, la saturation calculée grimpe vite près des extrêmes de clarté
+  // pour un écart RGB minime (#F0F0E8 → s≈0.21, pourtant perçu comme blanc/écru, pas
+  // jaune). Sans ce palier, ces teintes retombent dans la classification chromatique brute
+  // (jaune/orange) — bug observé sur des canapés "blanc cassé" classés jaune.
+  if (l >= 0.85 && s < 0.35) return "beige";
   // Beige / marron = orange désaturé (h ~20-50) : par clarté.
   if (h >= 20 && h < 50) {
     if (s < 0.55 && l > 0.6) return "beige";

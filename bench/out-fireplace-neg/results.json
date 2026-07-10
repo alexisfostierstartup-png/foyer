@@ -1,0 +1,305 @@
+[
+  {
+    "image": "test2.jpg",
+    "style": "art-deco",
+    "projectId": "krykcY6VCmJ1c8XSAnHt1",
+    "renderFile": "s02_test2__art-deco.png",
+    "plan": [
+      {
+        "element_id": "sofa_1",
+        "category": "sofa",
+        "description": "Canapé d'angle gris foncé",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "coffee_table_1",
+        "category": "coffee_table",
+        "description": "Table basse rectangulaire blanche avec étagère",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "bar_table_1",
+        "category": "bar_table",
+        "description": "Table haute type mange-debout avec plateau bois et pieds métal",
+        "expected": "RESTYLE (Stain the wooden tabletop dark ebony) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "stool_1",
+        "category": "stool",
+        "description": "Tabouret de bar en métal noir",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "stool_2",
+        "category": "stool",
+        "description": "Tabouret de bar en métal noir",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "stool_3",
+        "category": "stool",
+        "description": "Tabouret de bar en métal noir",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "wall_lamp_1",
+        "category": "wall_sconce",
+        "description": "Luminaire mural avec abat-jour en papier",
+        "expected": "RESTYLE (Replace the lampshade with a spherical opal glass shade with a brass mount) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "frame_1",
+        "category": "frame",
+        "description": "Grand tableau noir et blanc représentant des hippopotames",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "window_1",
+        "category": "window",
+        "description": "Fenêtre cintrée avec cadre en bois",
+        "expected": "RESTYLE (Install a brass curtain rod with emerald velvet curtains) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "floor_1",
+        "category": "floor",
+        "description": "Sol sombre",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "wall_1",
+        "category": "wall",
+        "description": "Mur blanc",
+        "expected": "RESTYLE (Paint a deep emerald green half-wall) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "ceiling_1",
+        "category": "ceiling",
+        "description": "Plafond avec poutres apparentes en bois",
+        "expected": "RESTYLE (Repaint the ceiling beams matte black) — MÊME objet, seule cette finition change, uniforme"
+      }
+    ],
+    "durationMs": 30941,
+    "judge": {
+      "decisions": [
+        {
+          "element_id": "sofa_1",
+          "expected": "REPLACE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "coffee_table_1",
+          "expected": "REPLACE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "bar_table_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "stool_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "stool_2",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "stool_3",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "wall_lamp_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "frame_1",
+          "expected": "REPLACE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "window_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "floor_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "wall_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "ceiling_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        }
+      ],
+      "color_wash": false,
+      "major_issues": [],
+      "verdict": "pass",
+      "comment": "Le plan de rénovation a été suivi à la perfection. Toutes les modifications demandées, y compris le demi-mur vert émeraude et les poutres noires, sont parfaitement exécutées."
+    }
+  },
+  {
+    "image": "test2.jpg",
+    "style": "haussmannien",
+    "projectId": "jY2L4jDk9-wwh1qiaJUFA",
+    "renderFile": "s01_test2__haussmannien.png",
+    "plan": [
+      {
+        "element_id": "sofa_1",
+        "category": "sofa",
+        "description": "Canapé d'angle gris foncé",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "coffee_table_1",
+        "category": "coffee_table",
+        "description": "Table basse rectangulaire blanche avec étagère",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "bar_table_1",
+        "category": "bar_table",
+        "description": "Table haute type mange-debout avec plateau bois et pieds métal",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "stool_1",
+        "category": "stool",
+        "description": "Tabouret de bar en métal noir",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "stool_2",
+        "category": "stool",
+        "description": "Tabouret de bar en métal noir",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "stool_3",
+        "category": "stool",
+        "description": "Tabouret de bar en métal noir",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "wall_lamp_1",
+        "category": "wall_sconce",
+        "description": "Luminaire mural avec abat-jour en papier",
+        "expected": "RESTYLE (Swap for a brass wall sconce) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "frame_1",
+        "category": "frame",
+        "description": "Grand tableau noir et blanc représentant des hippopotames",
+        "expected": "REPLACE — objet clairement différent au même emplacement"
+      },
+      {
+        "element_id": "window_1",
+        "category": "window",
+        "description": "Fenêtre cintrée avec cadre en bois",
+        "expected": "RESTYLE (Install a brass curtain rod with beige linen curtains) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "floor_1",
+        "category": "floor",
+        "description": "Sol sombre",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "wall_1",
+        "category": "wall",
+        "description": "Mur blanc",
+        "expected": "RESTYLE (Paint in off-white #F4F1E9) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "ceiling_1",
+        "category": "ceiling",
+        "description": "Plafond avec poutres apparentes en bois",
+        "expected": "RESTYLE (Paint the ceiling beams in matte white) — MÊME objet, seule cette finition change, uniforme"
+      }
+    ],
+    "durationMs": 34701,
+    "judge": {
+      "decisions": [
+        {
+          "element_id": "sofa_1",
+          "expected": "REPLACE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "coffee_table_1",
+          "expected": "REPLACE",
+          "applied": "no",
+          "note": "La table d'origine a été conservée et simplement surmontée d'un plateau en marbre."
+        },
+        {
+          "element_id": "bar_table_1",
+          "expected": "REPLACE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "stool_1",
+          "expected": "REPLACE",
+          "applied": "no",
+          "note": "Le tabouret d'origine en métal noir n'a pas été remplacé."
+        },
+        {
+          "element_id": "stool_2",
+          "expected": "REPLACE",
+          "applied": "no",
+          "note": "Le tabouret d'origine en métal noir n'a pas été remplacé."
+        },
+        {
+          "element_id": "stool_3",
+          "expected": "REPLACE",
+          "applied": "no",
+          "note": "Le tabouret d'origine en métal noir n'a pas été remplacé."
+        },
+        {
+          "element_id": "wall_lamp_1",
+          "expected": "RESTYLE",
+          "applied": "no",
+          "note": "La suspension en papier d'origine est toujours présente et inchangée."
+        },
+        {
+          "element_id": "frame_1",
+          "expected": "REPLACE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "window_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "floor_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "wall_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "ceiling_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        }
+      ],
+      "color_wash": false,
+      "major_issues": [],
+      "verdict": "warn",
+      "comment": "Le rendu est esthétique mais plusieurs consignes de remplacement ont été ignorées, notamment pour les tabourets, la table basse et le luminaire en papier qui ont été conservés."
+    }
+  }
+]

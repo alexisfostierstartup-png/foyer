@@ -1,0 +1,156 @@
+[
+  {
+    "image": "demo_salon.jpeg",
+    "style": "boheme",
+    "projectId": "2EOgMzD-cJQvFBamJWkpT",
+    "integrated": [
+      {
+        "category": "sofa",
+        "name": "Canapé 3 places 180 cm en lin vidaXL"
+      },
+      {
+        "category": "rug",
+        "name": "Tapis en jute Sakira beige 80x250 cm"
+      },
+      {
+        "category": "tv_stand",
+        "name": "Meuble tv  effet noyer et rotin 150cm"
+      }
+    ],
+    "assertLineForEachPiece": true,
+    "assertSurvivesRecompute": true,
+    "judge": {
+      "products_visible": [
+        "tv_stand"
+      ],
+      "products_missing": [
+        "sofa",
+        "rug"
+      ],
+      "objects_added": [],
+      "objects_removed": [],
+      "light_fixtures_changed": false,
+      "mirror_issues": [],
+      "verdict": "fail",
+      "comment": "Seul le meuble TV a été remplacé par le modèle spécifié. Le canapé et le tapis n'ont pas été modifiés dans l'IMAGE 2."
+    },
+    "fakeFile": "demo_salon__boheme_fake.png",
+    "expertFile": "demo_salon__boheme_expert.png"
+  },
+  {
+    "image": "test1.jpg",
+    "style": "scandinave",
+    "projectId": "MNHf4_8y80nz4CJiRYjAP",
+    "integrated": [
+      {
+        "category": "armchair",
+        "name": "Fauteuil scandinave bois d'hévéa et dossier arrondi en bouclette crème - AMELIE AMELIE"
+      },
+      {
+        "category": "coffee_table",
+        "name": "Table basse en MDF décor mélaminé beige Maeve - Oviala"
+      },
+      {
+        "category": "side_table",
+        "name": "Table d'appoint Totem, vert L.44 x H.50 cm"
+      },
+      {
+        "category": "rug",
+        "name": "Tapis de laine taupe 200x300"
+      },
+      {
+        "category": "dining_chair",
+        "name": "Lot de 6 Chaises Scandinaves en Velours et pieds métallique Doréé - Beige"
+      }
+    ],
+    "assertLineForEachPiece": true,
+    "assertSurvivesRecompute": true,
+    "judge": {
+      "products_visible": [
+        "armchair",
+        "coffee_table",
+        "side_table",
+        "rug",
+        "dining_chair"
+      ],
+      "products_missing": [],
+      "objects_added": [],
+      "objects_removed": [
+        "small plant on dining table"
+      ],
+      "light_fixtures_changed": false,
+      "mirror_issues": [],
+      "verdict": "pass",
+      "comment": "Tous les meubles spécifiés (fauteuils, table basse, table d'appoint, tapis, chaises de salle à manger) ont été correctement remplacés. Un petit végétal sur la table à manger a été retiré."
+    },
+    "fakeFile": "test1__scandinave_fake.png",
+    "expertFile": "test1__scandinave_expert.png"
+  },
+  {
+    "image": "test4.jpeg",
+    "style": "seventies",
+    "projectId": "BoGG_L1SZ6Z4z4Gj5irU2",
+    "integrated": [
+      {
+        "category": "sofa",
+        "name": "Canapé d'angle droit convertible en velours côtelé - terracotta"
+      },
+      {
+        "category": "armchair",
+        "name": "Fauteuil en velours jaune doré alabama"
+      },
+      {
+        "category": "coffee_table",
+        "name": "Table basse carrée bordeaux L80"
+      },
+      {
+        "category": "rug",
+        "name": "Tapis  en jute moutarde 120 x 170 cm"
+      },
+      {
+        "category": "tv_stand",
+        "name": "Meuble tv d'angle modulable en bois l145cm - terracotta"
+      },
+      {
+        "category": "bench",
+        "name": "Banc velours orange"
+      },
+      {
+        "category": "dining_chair",
+        "name": "Chaise en tissu chenille coloris rouille et pieds en acier noir"
+      }
+    ],
+    "assertLineForEachPiece": true,
+    "assertSurvivesRecompute": true,
+    "judge": {
+      "products_visible": [
+        "sofa",
+        "armchair",
+        "coffee_table",
+        "rug",
+        "tv_stand",
+        "dining_chair"
+      ],
+      "products_missing": [
+        "bench"
+      ],
+      "objects_added": [],
+      "objects_removed": [
+        "vase on coffee table",
+        "books on coffee table",
+        "small plant on coffee table",
+        "small plant on TV stand",
+        "small plant on window sill",
+        "small decorative item on window sill",
+        "small plant on left counter",
+        "small plant pot on floor near window"
+      ],
+      "light_fixtures_changed": false,
+      "mirror_issues": [],
+      "verdict": "fail",
+      "comment": "La plupart des meubles ont été remplacés comme demandé. Cependant, le banc n'a pas été changé et les chaises de salle à manger ont une couleur rose au lieu de rouille."
+    },
+    "fakeFile": "test4__seventies_fake.png",
+    "expertFile": "test4__seventies_expert.png"
+  }
+]

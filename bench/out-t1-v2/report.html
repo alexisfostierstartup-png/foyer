@@ -1,0 +1,34 @@
+<!doctype html><meta charset="utf-8"><title>Bench styles Foyer</title>
+<style>
+body{font:14px/1.4 -apple-system,sans-serif;margin:20px;background:#141414;color:#eee}
+table{border-collapse:collapse;margin:12px 0}td,th{border:1px solid #444;padding:4px 10px}
+.row{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px}
+.cell{flex:0 0 340px;background:#1e1e1e;border-radius:8px;overflow:hidden}
+.cell img{width:100%;display:block}.hd{padding:6px 8px;font-weight:600}
+.badge{color:#fff;border-radius:4px;padding:1px 6px;font-size:12px}.score{float:right}
+.body{padding:6px 8px;color:#bbb;font-size:12px}.err .body{color:#f88}
+ul{margin:6px 0 0 16px;padding:0}
+</style>
+<h1>Bench fidélité styles — 2026-07-08</h1>
+<h2>Synthèse par style (trié du pire au meilleur)</h2>
+<table><tr><th>Style</th><th>Fidélité /10</th><th>Palette /10</th><th>Doublons</th><th>Placement</th><th>Archi</th><th>Fails</th><th>N</th></tr>
+<tr><td><b>japandi</b></td><td>9.0</td><td>9.0</td><td>0</td><td>2</td><td>1</td><td>0</td><td>1</td></tr>
+<tr><td><b>seventies</b></td><td>9.0</td><td>9.0</td><td>0</td><td>3</td><td>0</td><td>0</td><td>1</td></tr>
+<tr><td><b>color-block</b></td><td>9.0</td><td>9.0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td></tr>
+<tr><td><b>art-deco</b></td><td>9.0</td><td>9.0</td><td>0</td><td>4</td><td>3</td><td>1</td><td>1</td></tr>
+<tr><td><b>boheme</b></td><td>9.0</td><td>8.0</td><td>0</td><td>1</td><td>1</td><td>0</td><td>1</td></tr></table>
+<h2>test1.jpg</h2><div class="row"><div class="cell"><div class="hd">ORIGINAL</div><img loading="lazy" src="../base/test1.jpg"></div><div class="cell"><div class="hd">japandi <span class="badge" style="background:#e2a336">warn</span> <span class="score">9/10</span></div>
+<a href="test1__japandi.png" target="_blank"><img loading="lazy" src="test1__japandi.png"></a>
+<div class="body">Le rendu intègre avec succès les éléments et l'ambiance Japandi, démontrant une excellente fidélité au style. Cependant, l'ajout d'un radiateur et des problèmes mineurs de placement nécessitent une révision pour une exécution impeccable.<ul><li>📐 L'accoudoir du fauteuil de droite empiète sur l'encadrement de la porte.</li><li>📐 La plante près de la table à manger est trop proche du pied de table.</li><li>🏗 Un radiateur a été ajouté sous la fenêtre du balcon, absent de l'image originale.</li></ul></div></div>
+<div class="cell"><div class="hd">seventies <span class="badge" style="background:#e2a336">warn</span> <span class="score">9/10</span></div>
+<a href="test1__seventies.png" target="_blank"><img loading="lazy" src="test1__seventies.png"></a>
+<div class="body">Le rendu incarne très bien le style Seventies avec une excellente fidélité à la palette et aux éléments signature. Cependant, des ajustements sont nécessaires concernant le placement des chaises de salle à manger et la taille du tapis du salon.<ul><li>📐 dining chairs are too tightly packed around the table</li><li>📐 floor lamp on the left is positioned too close to the window frame</li><li>📐 living area rug is undersized for the sofa</li></ul></div></div>
+<div class="cell"><div class="hd">color-block <span class="badge" style="background:#22a06b">pass</span> <span class="score">9/10</span></div>
+<a href="test1__color-block.png" target="_blank"><img loading="lazy" src="test1__color-block.png"></a>
+<div class="body">Le rendu incarne avec succès le style 'Color block', intégrant la palette et les éléments signature avec une grande fidélité. L'intégration de l'arche peinte sur le passage est une modification architecturale audacieuse et pertinente pour le style.<ul><li>🏗 The rectangular opening to the adjacent room has been transformed into a large blue arched doorway.</li></ul></div></div>
+<div class="cell"><div class="hd">art-deco <span class="badge" style="background:#d64545">fail</span> <span class="score">9/10</span></div>
+<a href="test1__art-deco.png" target="_blank"><img loading="lazy" src="test1__art-deco.png"></a>
+<div class="body">L'exécution du style Art Déco est remarquable, avec une excellente fidélité à la palette et aux éléments signature. Cependant, l'ajout d'un mur majeur altère fondamentalement l'architecture originale de la pièce, et des problèmes de placement sont notables.<ul><li>📐 chaises de salle à manger trop serrées autour de la table</li><li>📐 tapis de salon trop petit pour l'agencement</li><li>📐 plante derrière le canapé semble flotter</li><li>📐 console murale légèrement en conflit avec le panneau mural</li><li>🏗 mur ajouté sur le côté droit, fermant l'ouverture vers la pièce adjacente</li><li>🏗 luminaires de plafond modifiés</li><li>🏗 cadres de porte/fenêtre assombris</li></ul></div></div>
+<div class="cell"><div class="hd">boheme <span class="badge" style="background:#22a06b">pass</span> <span class="score">9/10</span></div>
+<a href="test1__boheme.png" target="_blank"><img loading="lazy" src="test1__boheme.png"></a>
+<div class="body">Le rendu incarne avec succès le style Bohème défini, utilisant la palette et les matériaux spécifiés de manière cohérente. Quelques ajustements mineurs sur le placement des tapis et la finition architecturale seraient à considérer.<ul><li>📐 Le grand tapis rond sous la table à manger chevauche légèrement le tapis rectangulaire du salon.</li><li>🏗 La texture du mur a été modifiée en un enduit terre cuite. Un léger renfoncement ou extension du mur gauche est perceptible.</li></ul></div></div></div>

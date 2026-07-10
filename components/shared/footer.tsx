@@ -12,12 +12,12 @@ const LEGAL_LINKS = [
 
 /**
  * Footer global, monté dans le root layout. Présent sur toutes les pages,
- * SAUF le parcours de création (/create/*) et la landing (/) qui possède son
- * propre footer brandé.
+ * SAUF le parcours de création (/create/*) et les landings (/, /v1, /v3…)
+ * qui possèdent chacune leur propre footer brandé (avec gestion cookies).
  */
 export function Footer() {
   const pathname = usePathname();
-  if (pathname?.startsWith("/create") || pathname === "/") return null;
+  if (pathname?.startsWith("/create") || pathname === "/" || /^\/v\d+$/.test(pathname ?? "")) return null;
 
   return (
     <footer className="mt-auto border-t border-foyer-border bg-foyer-cream px-6 py-8">

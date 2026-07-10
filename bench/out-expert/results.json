@@ -1,0 +1,135 @@
+[
+  {
+    "image": "demo_salon.jpeg",
+    "style": "boheme",
+    "projectId": "H999mtyxFQ8lCLhx1pq7W",
+    "integrated": [
+      {
+        "category": "sofa",
+        "name": "Canapé 3/4 places en lin lavé coloris ficelle"
+      },
+      {
+        "category": "rug",
+        "name": "Tapis en tissu beige 200x140cm"
+      },
+      {
+        "category": "tv_stand",
+        "name": "Meuble tv 1 porte 1 tiroir stratifiés beige"
+      },
+      {
+        "category": "pouf",
+        "name": "Pouf en bouclettes terracotta et base en bois"
+      }
+    ],
+    "assertLineForEachPiece": true,
+    "assertSurvivesRecompute": true,
+    "judge": {
+      "products_visible": [
+        "sofa",
+        "rug",
+        "tv_stand",
+        "pouf"
+      ],
+      "products_missing": [],
+      "objects_added": [
+        "chairs"
+      ],
+      "objects_removed": [
+        "middle sofa",
+        "patterned pouf",
+        "woven pouf"
+      ],
+      "light_fixtures_changed": false,
+      "mirror_issues": [],
+      "verdict": "pass",
+      "comment": "Tous les meubles listés ont été correctement remplacés. Cependant, le canapé central d'origine a été retiré et deux chaises ont été ajoutées."
+    },
+    "fakeFile": "demo_salon__boheme_fake.png",
+    "expertFile": "demo_salon__boheme_expert.png"
+  },
+  {
+    "image": "test1.jpg",
+    "style": "scandinave",
+    "projectId": "OWjDE2WgWTqp3nJA8ukVk",
+    "integrated": [
+      {
+        "category": "armchair",
+        "name": "Fauteuil design en bois et tissu. 1 place droit fixe. pieds compas scandinave. structure en bois solide. assise"
+      },
+      {
+        "category": "coffee_table",
+        "name": "Table basse en bois clair rectangle"
+      },
+      {
+        "category": "rug",
+        "name": "Tapis tissé á plat Barca crème 133x190 cm"
+      }
+    ],
+    "assertLineForEachPiece": true,
+    "assertSurvivesRecompute": true,
+    "judge": {
+      "products_visible": [],
+      "products_missing": [
+        "armchair",
+        "coffee_table",
+        "rug"
+      ],
+      "objects_added": [],
+      "objects_removed": [],
+      "light_fixtures_changed": false,
+      "mirror_issues": [],
+      "verdict": "fail",
+      "comment": "Aucun des meubles listés n'a été remplacé dans l'IMAGE 2. L'IMAGE 2 est identique à l'IMAGE 1."
+    },
+    "fakeFile": "test1__scandinave_fake.png",
+    "expertFile": "test1__scandinave_expert.png"
+  },
+  {
+    "image": "test4.jpeg",
+    "style": "seventies",
+    "projectId": "JJvHGKlF1Z2J13-vDflqt",
+    "integrated": [
+      {
+        "category": "sofa",
+        "name": "Canapé 3 places en cuir vieilli ALEGAN - Marron"
+      },
+      {
+        "category": "coffee_table",
+        "name": "Bout de canapé en verre et acier noir"
+      },
+      {
+        "category": "tv_stand",
+        "name": "Meuble tv verre trempé orange foncé et structure en chrome"
+      },
+      {
+        "category": "chair",
+        "name": "Fauteuil de table en velours orange écureuil"
+      },
+      {
+        "category": "pouf",
+        "name": "Pouf rectangulaire éco cuir marron"
+      }
+    ],
+    "assertLineForEachPiece": true,
+    "assertSurvivesRecompute": true,
+    "judge": {
+      "products_visible": [
+        "sofa",
+        "coffee_table",
+        "chair",
+        "pouf"
+      ],
+      "products_missing": [
+        "tv_stand"
+      ],
+      "objects_added": [],
+      "objects_removed": [],
+      "light_fixtures_changed": false,
+      "mirror_issues": [],
+      "verdict": "fail",
+      "comment": "Le meuble TV n'a pas été remplacé par le modèle spécifié (verre trempé orange foncé et chrome), mais par un meuble noir et verre transparent. Tous les autres meubles ont été correctement remplacés."
+    },
+    "fakeFile": "test4__seventies_fake.png",
+    "expertFile": "test4__seventies_expert.png"
+  }
+]

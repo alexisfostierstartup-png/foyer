@@ -12,12 +12,17 @@ export async function GET(request: Request) {
   const source_type = searchParams.get("source_type");
   const availability = searchParams.get("availability_status");
   const search = searchParams.get("search");
+  // Filtres par tag de style (backfill-style-tags) — deux listes indépendantes,
+  // combinables (ET) : ?style_core=<slug> (colonne style_affinity — le produit
+  // incarne le style) et ?style_compatible=<slug> (metadata.style_compatible).
+  const styleCore = searchParams.get("style_core");
+  const styleCompatible = searchParams.get("style_compatible");
 
   const supabase = createSupabaseAdmin();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase as any)
     .from("partner_products")
-    .select("id, name, category, merchant, price, partner_tier, source_type, availability_status, primary_image_url, last_synced_at, created_at, metadata", { count: "exact" })
+    .select("id, name, category, merchant, price, partner_tier, source_type, availability_status, primary_image_url, last_synced_at, created_at, metadata, style_affinity", { count: "exact" })
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -27,6 +32,8 @@ export async function GET(request: Request) {
   if (source_type) query = query.eq("source_type", source_type);
   if (availability) query = query.eq("availability_status", availability);
   if (search) query = query.ilike("name", `%${search}%`);
+  if (styleCore) query = query.contains("style_affinity", [styleCore]);
+  if (styleCompatible) query = query.contains("metadata->style_compatible", `["${styleCompatible}"]`);
 
   // Filtres par attribut structuré : ?attr_<clé>=<valeur> → metadata.attrs.<clé> = valeur
   // (ex. attr_shape=round). Permet de vérifier le matching (lister les produits d'un même

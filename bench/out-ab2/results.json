@@ -1,0 +1,951 @@
+[
+  {
+    "image": "test1.jpg",
+    "style": "mid-century",
+    "renderFile": "test1__mid-century.png",
+    "durationMs": 19983,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "walnut credenza with tapered legs",
+        "brass sputnik chandelier",
+        "arc floor lamp",
+        "cognac leather lounge chair",
+        "record player",
+        "geometric mid-century wall art"
+      ],
+      "signature_elements_missing": [
+        "vinyl display"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [
+        "le pot de la plante sur la table à manger traverse légèrement le plateau",
+        "la base du lampadaire arc est trop proche du buffet"
+      ],
+      "architecture_issues": [],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "pass",
+      "comment": "Le rendu incarne avec succès l'esthétique Mid-century, respectant scrupuleusement la palette et les éléments signature. Quelques ajustements mineurs de placement pourraient parfaire la scène."
+    }
+  },
+  {
+    "image": "test1.jpg",
+    "style": "haussmannien",
+    "renderFile": "test1__haussmannien.png",
+    "durationMs": 21762,
+    "judge": {
+      "style_fidelity": 7,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "ornate plaster mouldings and ceiling rose",
+        "marble fireplace with gilt mirror",
+        "emerald velvet sofa",
+        "cognac leather armchairs",
+        "brass and glass elements"
+      ],
+      "signature_elements_missing": [
+        "point-de-hongrie herringbone parquet",
+        "tall french windows"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [],
+      "architecture_issues": [
+        "fireplace added",
+        "wall paneling added"
+      ],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "warn",
+      "comment": "Le rendu intègre avec succès les moulures, la cheminée et la palette de couleurs Haussmanniennes. Cependant, l'absence de parquet point-de-Hongrie et de hautes fenêtres françaises limite la fidélité canonique du style."
+    }
+  },
+  {
+    "image": "test1.jpg",
+    "style": "industriel",
+    "renderFile": "test1__industriel.png",
+    "durationMs": 23865,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "exposed brick wall",
+        "black steel beams",
+        "camel leather modular sofa",
+        "Edison filament pendant lights",
+        "chunky reclaimed-wood coffee table",
+        "jute rug"
+      ],
+      "signature_elements_missing": [
+        "black steel open shelving"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [],
+      "architecture_issues": [
+        "exposed brick walls added",
+        "black steel beams added to ceiling"
+      ],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "pass",
+      "comment": "Le rendu incarne le style Industriel avec une fidélité remarquable, intégrant parfaitement les matériaux et la palette canoniques. Les modifications architecturales sont audacieuses et efficaces pour transformer l'espace."
+    }
+  },
+  {
+    "image": "test1.jpg",
+    "style": "cottage-anglais",
+    "renderFile": "test1__cottage-anglais.png",
+    "durationMs": 18586,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "botanical floral wallpaper",
+        "two-tone painted wainscot with dado rail",
+        "antique mahogany chests and dressers",
+        "fresh garden flowers in vases",
+        "displayed floral china"
+      ],
+      "signature_elements_missing": [
+        "needlepoint textiles"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [
+        "Bouquet de fleurs sur la table à manger de taille excessive",
+        "Tableau sur le mur de droite légèrement trop petit pour l'espace"
+      ],
+      "architecture_issues": [],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "pass",
+      "comment": "Le rendu incarne avec une grande fidélité le style Cottage anglais, respectant la palette et les éléments signature. Quelques ajustements mineurs sur la taille des objets décoratifs amélioreraient l'équilibre visuel."
+    }
+  },
+  {
+    "image": "test1.jpg",
+    "style": "desert",
+    "renderFile": "test1__desert.png",
+    "durationMs": 21056,
+    "judge": {
+      "style_fidelity": 8,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "sculpted plaster forms",
+        "earthy terracotta",
+        "sage",
+        "smooth adobe plaster",
+        "raw chunky wood",
+        "clay pottery",
+        "kilim textiles",
+        "living cacti in clay pots",
+        "kilim and carved-pattern rugs",
+        "terracotta-dyed textile wall art",
+        "dried grasses in urns"
+      ],
+      "signature_elements_missing": [
+        "sculptural adobe fireplace",
+        "rattan"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [
+        "TV height appears too low for comfortable viewing from the sofa",
+        "Dried grasses on TV console partially obstruct the TV screen"
+      ],
+      "architecture_issues": [
+        "Addition of a sculpted niche wall on the left where a flat wall and side table were",
+        "Removal of the dining area and replacement with an extended living room layout"
+      ],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "warn",
+      "comment": "Le rendu incarne très bien le style \"Désert\" avec une excellente fidélité à la palette et aux éléments signature. Cependant, des modifications architecturales majeures, comme l'ajout de la niche murale et la suppression de la zone repas, dépassent le cadre d'un simple redesign."
+    }
+  },
+  {
+    "image": "test1.jpg",
+    "style": "mediterraneen",
+    "renderFile": "test1__mediterraneen.png",
+    "durationMs": 21352,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "blue and white ceramics collections",
+        "arched niches",
+        "terracotta urns",
+        "exposed wood ceiling beams",
+        "rough whitewashed plaster",
+        "wicker"
+      ],
+      "signature_elements_missing": [
+        "arched doors",
+        "azulejo patterned tiles"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [
+        "plante sur la table à manger traversant la surface",
+        "grande plante au sol traversant le mur/sol",
+        "hauteur de la console sous la niche inadaptée",
+        "tapis légèrement décentré par rapport au canapé et à la table basse"
+      ],
+      "architecture_issues": [
+        "ajout de poutres apparentes au plafond",
+        "ajout d'une niche arquée sur le mur de droite",
+        "changement de la texture des murs en plâtre blanchi à la chaux"
+      ],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "warn",
+      "comment": "Le rendu incarne très bien le style Méditerranéen avec une excellente fidélité à la palette et aux matériaux. Cependant, des modifications architecturales majeures ont été apportées et quelques légers défauts de placement sont visibles."
+    }
+  },
+  {
+    "image": "test10.jpg",
+    "style": "haussmannien",
+    "renderFile": "test10__haussmannien.png",
+    "durationMs": 18505,
+    "judge": {
+      "style_fidelity": 8,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "ornate plaster mouldings and ceiling rose",
+        "marble fireplace with gilt mirror",
+        "emerald velvet sofa",
+        "modern furniture contrasting the classical envelope"
+      ],
+      "signature_elements_missing": [
+        "point-de-hongrie herringbone parquet",
+        "tall french windows flooding light"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [
+        "l'armchair est très proche de la cheminée, potentiellement gênant l'accès",
+        "le tapis est légèrement sous le foyer de la cheminée"
+      ],
+      "architecture_issues": [
+        "cheminée ajoutée",
+        "moulures murales ajoutées",
+        "rosace de plafond ajoutée",
+        "garde-corps extérieur classique ajouté à la fenêtre"
+      ],
+      "hallucinations": [],
+      "perspective_changed": true,
+      "verdict": "warn",
+      "comment": "Le rendu incarne avec succès l'esthétique Haussmannienne grâce à ses moulures et sa palette. Néanmoins, l'absence du parquet point-de-hongrie et de fenêtres hautes est un manquement notable à la définition canonique."
+    }
+  },
+  {
+    "image": "test10.jpg",
+    "style": "mid-century",
+    "renderFile": "test10__mid-century.png",
+    "durationMs": 18224,
+    "judge": {
+      "style_fidelity": 9.5,
+      "palette_match": 9.5,
+      "signature_elements_present": [
+        "walnut credenza with tapered legs",
+        "brass sputnik chandelier",
+        "arc floor lamp",
+        "cognac leather lounge chair",
+        "geometric mid-century wall art"
+      ],
+      "signature_elements_missing": [
+        "record player and vinyl display"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [
+        "Le pot de la plante sur la table basse semble légèrement traverser la surface."
+      ],
+      "architecture_issues": [],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "pass",
+      "comment": "Le rendu incarne très fidèlement le style Mid-century défini, avec une excellente adhésion à la palette et aux matériaux. Seul un élément signature mineur manque, et un léger défaut de placement est à noter."
+    }
+  },
+  {
+    "image": "test10.jpg",
+    "style": "industriel",
+    "renderFile": "test10__industriel.png",
+    "durationMs": 24668,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "exposed brick wall",
+        "black steel open shelving",
+        "camel leather modular sofa",
+        "Edison filament pendant lights",
+        "chunky reclaimed-wood coffee table"
+      ],
+      "signature_elements_missing": [
+        "black steel beams",
+        "tufted detail on sofa"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [],
+      "architecture_issues": [
+        "Mur blanc remplacé par un mur en briques apparentes"
+      ],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "pass",
+      "comment": "Le rendu transforme efficacement la pièce dans le style Industriel défini, intégrant la palette et les matériaux clés avec succès. L'atmosphère brute et chaleureuse est bien rendue, malgré l'absence de poutres structurelles en acier noir et d'un tuftage prononcé sur le canapé."
+    }
+  },
+  {
+    "image": "test10.jpg",
+    "style": "desert",
+    "renderFile": "test10__desert.png",
+    "durationMs": 19956,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 10,
+      "signature_elements_present": [
+        "living cacti in clay pots",
+        "kilim and carved-pattern rugs",
+        "terracotta-dyed textile wall art",
+        "dried grasses in urns",
+        "smooth adobe plaster",
+        "raw chunky wood",
+        "clay pottery",
+        "rattan",
+        "concrete"
+      ],
+      "signature_elements_missing": [
+        "sculptural adobe fireplace and niches"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [
+        "Le grand cactus en pot à droite semble traverser légèrement le mur.",
+        "Le petit pouf sous le fauteuil est positionné de manière peu naturelle, presque en collision avec le pied du fauteuil."
+      ],
+      "architecture_issues": [
+        "Le mur d'accent vert sauge à gauche semble s'étendre plus loin dans la pièce que le mur gris original.",
+        "Les cadres de la fenêtre et de la porte semblent avoir été légèrement modifiés (plus fins)."
+      ],
+      "hallucinations": [],
+      "perspective_changed": true,
+      "verdict": "warn",
+      "comment": "Le rendu incarne très bien le style \"Désert\" avec une excellente fidélité à la palette et aux matériaux. Cependant, l'absence d'éléments architecturaux signature et quelques légers défauts de placement sont à noter."
+    }
+  },
+  {
+    "image": "test10.jpg",
+    "style": "cottage-anglais",
+    "renderFile": "test10__cottage-anglais.png",
+    "durationMs": 18758,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "botanical floral wallpaper",
+        "two-tone painted wainscot with dado rail",
+        "antique mahogany chests and dressers",
+        "fresh garden flowers in vases",
+        "displayed floral china"
+      ],
+      "signature_elements_missing": [],
+      "duplicated_items": [],
+      "placement_issues": [],
+      "architecture_issues": [
+        "porte supprimée sur le mur de droite"
+      ],
+      "hallucinations": [],
+      "perspective_changed": true,
+      "verdict": "warn",
+      "comment": "L'incarnation du style 'Cottage anglais' est exemplaire, avec une fidélité remarquable à la palette et aux éléments signature. Cependant, la suppression de la porte sur le mur de droite constitue une modification architecturale majeure non justifiée."
+    }
+  },
+  {
+    "image": "test10.jpg",
+    "style": "mediterraneen",
+    "renderFile": "test10__mediterraneen.png",
+    "durationMs": 22168,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "blue and white ceramics collections",
+        "arched niches",
+        "terracotta urns with olive trees",
+        "exposed wood ceiling beams",
+        "azulejo patterned tiles (on rug)",
+        "rough whitewashed plaster",
+        "wicker",
+        "washed linen"
+      ],
+      "signature_elements_missing": [
+        "arched doors",
+        "azulejo tiles (as actual tiles)"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [
+        "Le pot de la plante sur la table basse semble légèrement traverser le bol.",
+        "L'arbre dans l'urne est très proche de la porte, potentiellement gênant pour le passage."
+      ],
+      "architecture_issues": [
+        "Ajout de poutres apparentes au plafond.",
+        "Création d'une niche arquée pour la télévision.",
+        "Modification de la texture des murs en plâtre blanchi.",
+        "Suppression du mur d'accent gris."
+      ],
+      "hallucinations": [],
+      "perspective_changed": true,
+      "verdict": "pass",
+      "comment": "Le rendu intègre avec succès les éléments et la palette du style Méditerranéen, transformant l'ambiance de la pièce. Les modifications architecturales sont cependant très importantes et le point de vue a été sensiblement ajusté."
+    }
+  },
+  {
+    "image": "test12.jpg",
+    "style": "haussmannien",
+    "renderFile": "test12__haussmannien.png",
+    "durationMs": 21055,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "ornate plaster mouldings and ceiling rose",
+        "point-de-hongrie herringbone parquet",
+        "marble fireplace with gilt mirror",
+        "emerald velvet sofa",
+        "modern furniture contrasting the classical envelope"
+      ],
+      "signature_elements_missing": [],
+      "duplicated_items": [],
+      "placement_issues": [],
+      "architecture_issues": [
+        "skylight/glass ceiling removed and replaced with standard ceiling and window on the right wall"
+      ],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "fail",
+      "comment": "Le rendu incarne le style Haussmannien avec une fidélité remarquable dans le choix des matériaux et de la palette. Néanmoins, la modification architecturale majeure, remplaçant la verrière d'origine par un plafond et une fenêtre, est une altération inacceptable de la structure de la pièce."
+    }
+  },
+  {
+    "image": "test12.jpg",
+    "style": "industriel",
+    "renderFile": "test12__industriel.png",
+    "durationMs": 21630,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "exposed brick wall",
+        "black steel beams and open shelving",
+        "camel tufted leather sofa",
+        "Edison filament pendant lights",
+        "chunky reclaimed-wood coffee table"
+      ],
+      "signature_elements_missing": [],
+      "duplicated_items": [],
+      "placement_issues": [
+        "TV appears slightly too large and low for its console, creating an awkward visual balance."
+      ],
+      "architecture_issues": [
+        "Original white plaster walls replaced with exposed brick.",
+        "Original white ceiling with moldings replaced with a textured ceiling and added black steel beams."
+      ],
+      "hallucinations": [],
+      "perspective_changed": true,
+      "verdict": "warn",
+      "comment": "Le rendu incarne très bien le style Industriel, avec une excellente fidélité à la palette et aux éléments signature. Cependant, les modifications architecturales sont majeures par rapport à l'image originale, et la télévision est mal proportionnée."
+    }
+  },
+  {
+    "image": "test12.jpg",
+    "style": "mid-century",
+    "renderFile": "test12__mid-century.png",
+    "durationMs": 16934,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "walnut credenza with tapered legs",
+        "arc floor lamp",
+        "cognac leather lounge chair",
+        "geometric mid-century wall art"
+      ],
+      "signature_elements_missing": [
+        "record player and vinyl display"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [],
+      "architecture_issues": [],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "pass",
+      "comment": "Le rendu incarne fidèlement le style Mid-century avec une excellente adhésion à la palette et aux matériaux définis. L'absence d'un tourne-disque est le seul élément manquant pour une immersion complète dans l'ambiance nostalgique."
+    }
+  },
+  {
+    "image": "test12.jpg",
+    "style": "desert",
+    "renderFile": "test12__desert.png",
+    "durationMs": 19925,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "sculptural adobe fireplace and niches",
+        "living cacti in clay pots",
+        "kilim and carved-pattern rugs",
+        "dried grasses in urns"
+      ],
+      "signature_elements_missing": [
+        "terracotta-dyed textile wall art"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [
+        "le grand cactus à gauche est trop proche de l'encadrement de porte",
+        "la chaise en bois à gauche semble sous-dimensionnée et mal positionnée",
+        "la table basse est légèrement trop grande pour l'espace, entravant la circulation"
+      ],
+      "architecture_issues": [
+        "la cheminée originale a été entièrement remplacée par une forme sculpturale en plâtre avec des niches",
+        "les moulures et corniches du plafond ont été simplifiées ou supprimées",
+        "le lustre original a été remplacé par un luminaire suspendu"
+      ],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "warn",
+      "comment": "Le rendu incarne très bien le style Désert avec une excellente fidélité à la palette et aux matériaux. Cependant, des modifications architecturales majeures ont été apportées à la cheminée et aux moulures, et quelques éléments de mobilier présentent des problèmes de placement."
+    }
+  },
+  {
+    "image": "test12.jpg",
+    "style": "cottage-anglais",
+    "renderFile": "test12__cottage-anglais.png",
+    "durationMs": 20189,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "botanical floral wallpaper",
+        "two-tone painted wainscot with dado rail",
+        "antique mahogany chests and dressers",
+        "fresh garden flowers in vases"
+      ],
+      "signature_elements_missing": [
+        "displayed floral china"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [],
+      "architecture_issues": [
+        "cheminée modifiée (mantelpiece)"
+      ],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "pass",
+      "comment": "Le rendu incarne fidèlement le style 'Cottage anglais' avec une excellente intégration du papier peint floral et du mobilier ancien. La palette de couleurs canonique est respectée, créant une ambiance authentique et cohérente."
+    }
+  },
+  {
+    "image": "test12.jpg",
+    "style": "mediterraneen",
+    "renderFile": "test12__mediterraneen.png",
+    "durationMs": 22840,
+    "judge": {
+      "style_fidelity": 6,
+      "palette_match": 8,
+      "signature_elements_present": [
+        "blue and white ceramics collections",
+        "terracotta urns with olive trees"
+      ],
+      "signature_elements_missing": [
+        "arched doors and niches",
+        "exposed wood ceiling beams",
+        "azulejo patterned tiles",
+        "rough whitewashed plaster"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [
+        "Le grand vase en terre cuite sur la cheminée traverse légèrement le cadre du tableau.",
+        "Les petites assiettes décoratives sur la cheminée traversent le cadre du tableau."
+      ],
+      "architecture_issues": [],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "warn",
+      "comment": "Le rendu intègre bien les accents bleus et les céramiques, mais manque d'éléments architecturaux clés comme les arches et les poutres apparentes pour une fidélité complète au style Méditerranéen. Des problèmes mineurs de clipping sont également présents sur la cheminée."
+    }
+  },
+  {
+    "image": "test2.jpg",
+    "style": "industriel",
+    "renderFile": "test2__industriel.png",
+    "durationMs": 18360,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "exposed brick or raw concrete wall",
+        "black steel beams and open shelving",
+        "camel tufted leather modular sofa",
+        "Edison filament pendant lights",
+        "chunky reclaimed-wood coffee table"
+      ],
+      "signature_elements_missing": [],
+      "duplicated_items": [],
+      "placement_issues": [],
+      "architecture_issues": [],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "pass",
+      "comment": "Le rendu incarne fidèlement le style Industriel défini, avec une excellente adhésion à la palette et aux éléments signature. L'intégration des matériaux bruts et du mobilier spécifique est réussie, créant une atmosphère cohérente et dramatique."
+    }
+  },
+  {
+    "image": "test2.jpg",
+    "style": "mid-century",
+    "renderFile": "test2__mid-century.png",
+    "durationMs": 17299,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "walnut credenza with tapered legs",
+        "brass sputnik chandelier",
+        "arc floor lamp",
+        "cognac leather lounge chair",
+        "record player and vinyl display",
+        "geometric mid-century wall art"
+      ],
+      "signature_elements_missing": [],
+      "duplicated_items": [],
+      "placement_issues": [],
+      "architecture_issues": [],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "pass",
+      "comment": "Le rendu adhère de manière exemplaire au style Mid-century défini, intégrant la palette et les éléments signature avec précision. L'agencement est dense mais fonctionnel, respectant l'architecture existante."
+    }
+  },
+  {
+    "image": "test2.jpg",
+    "style": "haussmannien",
+    "renderFile": "test2__haussmannien.png",
+    "durationMs": 25972,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "ornate plaster mouldings",
+        "ceiling rose",
+        "marble fireplace with gilt mirror",
+        "emerald velvet sofa",
+        "modern furniture contrasting classical envelope",
+        "tall arched windows",
+        "marble (coffee table, fireplace)",
+        "cognac leather (chairs)",
+        "brass and glass (chandelier, table bases)"
+      ],
+      "signature_elements_missing": [
+        "point-de-hongrie herringbone parquet",
+        "true French windows (as opposed to tall arched windows)"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [],
+      "architecture_issues": [
+        "plafond à poutres apparentes remplacé par un plafond à caissons et moulures",
+        "ajout d'une cheminée et d'un miroir mural",
+        "ajout d'une seconde fenêtre",
+        "modification de la forme de la pièce (ajout d'un angle)",
+        "modification des fenêtres existantes (forme et encadrement)"
+      ],
+      "hallucinations": [],
+      "perspective_changed": true,
+      "verdict": "pass",
+      "comment": "Le rendu incarne très fidèlement le style Haussmannien défini, avec une excellente adhésion à la palette et aux matériaux. Les modifications architecturales sont cependant très importantes par rapport à la pièce originale."
+    }
+  },
+  {
+    "image": "test2.jpg",
+    "style": "desert",
+    "renderFile": "test2__desert.png",
+    "durationMs": 19882,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "sculptural adobe niches",
+        "living cacti in clay pots",
+        "kilim and carved-pattern rugs",
+        "terracotta-dyed textile wall art",
+        "dried grasses in urns"
+      ],
+      "signature_elements_missing": [
+        "sculptural adobe fireplace"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [
+        "Le comptoir de bar semble légèrement flotter sur le côté droit.",
+        "Le canapé semble légèrement flotter sur le côté gauche."
+      ],
+      "architecture_issues": [
+        "Ajout de niches murales."
+      ],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "warn",
+      "comment": "Le rendu incarne très bien le style \"Désert\" avec une excellente fidélité à la palette et aux éléments signature. Cependant, l'ajout de niches murales modifie l'architecture originale et des problèmes de flottement sont visibles."
+    }
+  },
+  {
+    "image": "test2.jpg",
+    "style": "cottage-anglais",
+    "renderFile": "test2__cottage-anglais.png",
+    "durationMs": 19655,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "botanical floral wallpaper",
+        "two-tone painted wainscot with dado rail",
+        "antique mahogany chests and dressers",
+        "fresh garden flowers in vases",
+        "displayed floral china"
+      ],
+      "signature_elements_missing": [
+        "needlepoint textiles",
+        "antique brass"
+      ],
+      "duplicated_items": [
+        "canapé d'angle gris d'origine"
+      ],
+      "placement_issues": [
+        "le nouveau canapé floral est placé devant l'ancien canapé d'angle gris, créant une superposition illogique et inesthétique"
+      ],
+      "architecture_issues": [],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "warn",
+      "comment": "Le rendu adhère fortement au style 'Cottage anglais' avec une excellente intégration des motifs floraux et des éléments antiques. Cependant, la présence de l'ancien canapé gris derrière le nouveau canapé floral est une erreur de placement majeure qui compromet l'ensemble du design."
+    }
+  },
+  {
+    "image": "test2.jpg",
+    "style": "mediterraneen",
+    "renderFile": "test2__mediterraneen.png",
+    "durationMs": 20674,
+    "judge": {
+      "style_fidelity": 8,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "whitewashed walls",
+        "cobalt blue accents",
+        "arched niche",
+        "rough whitewashed plaster",
+        "terracotta urns with plants",
+        "wicker",
+        "washed linen curtains",
+        "blue and white ceramics collections",
+        "exposed wood ceiling beams"
+      ],
+      "signature_elements_missing": [
+        "arched doors",
+        "azulejo patterned tiles"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [
+        "grand pot de plante traversant le rideau",
+        "petit pot de plante sur console traversant le rideau",
+        "console trop proche de la fenêtre/rideau"
+      ],
+      "architecture_issues": [
+        "niche arquée ajoutée"
+      ],
+      "hallucinations": [],
+      "perspective_changed": true,
+      "verdict": "fail",
+      "comment": "Le style Méditerranéen est bien incarné avec une palette et des éléments signature pertinents. Cependant, l'intégration du grand pot de plante à travers le rideau est une erreur de placement inacceptable qui dégrade l'ensemble."
+    }
+  },
+  {
+    "image": "test6.jpg",
+    "style": "haussmannien",
+    "renderFile": "test6__haussmannien.png",
+    "durationMs": 20708,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "ornate plaster mouldings and ceiling rose",
+        "tall french windows",
+        "marble fireplace with gilt mirror",
+        "emerald velvet sofa",
+        "modern furniture contrasting the classical envelope"
+      ],
+      "signature_elements_missing": [
+        "point-de-hongrie herringbone parquet"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [
+        "floor lamp slightly clipping wall"
+      ],
+      "architecture_issues": [
+        "staircase removed",
+        "water heater removed",
+        "windows replaced with taller French windows",
+        "fireplace added",
+        "mouldings and ceiling rose added"
+      ],
+      "hallucinations": [],
+      "perspective_changed": true,
+      "verdict": "warn",
+      "comment": "Le rendu incarne le style Haussmannien avec une fidélité remarquable, respectant la palette et les éléments clés. Cependant, des modifications architecturales majeures par rapport à l'image originale et l'absence du parquet point-de-Hongrie sont à noter."
+    }
+  },
+  {
+    "image": "test6.jpg",
+    "style": "mid-century",
+    "renderFile": "test6__mid-century.png",
+    "durationMs": 17332,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "walnut credenza with tapered legs",
+        "arc floor lamp",
+        "cognac leather lounge chair",
+        "record player and vinyl display",
+        "geometric mid-century wall art"
+      ],
+      "signature_elements_missing": [],
+      "duplicated_items": [],
+      "placement_issues": [],
+      "architecture_issues": [],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "pass",
+      "comment": "Le rendu incarne fidèlement le style Mid-century avec une excellente adhérence à la palette et aux éléments signature. L'intégration du mobilier est cohérente et sans défaut majeur."
+    }
+  },
+  {
+    "image": "test6.jpg",
+    "style": "industriel",
+    "renderFile": "test6__industriel.png",
+    "durationMs": 20865,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "exposed brick wall",
+        "raw concrete wall",
+        "black steel open shelving",
+        "camel tufted leather sofa",
+        "Edison filament pendant lights",
+        "chunky reclaimed-wood coffee table"
+      ],
+      "signature_elements_missing": [
+        "black steel beams"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [
+        "armchair too close to radiator"
+      ],
+      "architecture_issues": [],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "warn",
+      "comment": "Le rendu incarne très bien le style Industriel avec une excellente fidélité de palette et de matériaux. Néanmoins, l'absence de poutres en acier noir et le placement serré de l'assise près du radiateur sont à noter."
+    }
+  },
+  {
+    "image": "test6.jpg",
+    "style": "cottage-anglais",
+    "renderFile": "test6__cottage-anglais.png",
+    "durationMs": 17398,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "botanical floral wallpaper",
+        "two-tone painted wainscot with dado rail",
+        "antique mahogany chests and dressers",
+        "fresh garden flowers in vases",
+        "displayed floral china"
+      ],
+      "signature_elements_missing": [],
+      "duplicated_items": [],
+      "placement_issues": [],
+      "architecture_issues": [
+        "staircase removed",
+        "water heater and exposed pipes removed",
+        "radiators removed",
+        "wall reconfigured/room enlarged"
+      ],
+      "hallucinations": [],
+      "perspective_changed": true,
+      "verdict": "fail",
+      "comment": "Le rendu incarne parfaitement le style 'Cottage anglais' avec une excellente fidélité à la palette et aux éléments signature. Cependant, la suppression majeure de l'escalier et d'autres éléments architecturaux fondamentaux de la pièce originale est inacceptable."
+    }
+  },
+  {
+    "image": "test6.jpg",
+    "style": "desert",
+    "renderFile": "test6__desert.png",
+    "durationMs": 21262,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "sculptural adobe fireplace and niches",
+        "living cacti in clay pots",
+        "kilim and carved-pattern rugs",
+        "terracotta-dyed textile wall art",
+        "dried grasses in urns"
+      ],
+      "signature_elements_missing": [],
+      "duplicated_items": [],
+      "placement_issues": [
+        "Le grand cactus près de l'escalier est légèrement à l'étroit et pourrait gêner le passage."
+      ],
+      "architecture_issues": [
+        "Le chauffe-eau sous l'escalier a été supprimé.",
+        "L'étagère en bois sous l'escalier a été supprimée.",
+        "Une cheminée sculpturale avec niches a été ajoutée sur le mur principal.",
+        "Le revêtement de sol a été modifié."
+      ],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "warn",
+      "comment": "Le rendu incarne le style 'Désert' avec une excellente fidélité, intégrant tous les éléments signature et la palette définie. Cependant, des modifications architecturales majeures ont été apportées à la structure de la pièce originale."
+    }
+  },
+  {
+    "image": "test6.jpg",
+    "style": "mediterraneen",
+    "renderFile": "test6__mediterraneen.png",
+    "durationMs": 24697,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 10,
+      "signature_elements_present": [
+        "blue and white ceramics collections",
+        "arched doors and niches",
+        "terracotta urns with olive trees",
+        "exposed wood ceiling beams",
+        "azulejo patterned tiles"
+      ],
+      "signature_elements_missing": [],
+      "duplicated_items": [],
+      "placement_issues": [],
+      "architecture_issues": [
+        "Exposed wood ceiling beams added",
+        "Arched niche added under stairs",
+        "Water heater removed",
+        "Wall texture changed to rough plaster"
+      ],
+      "hallucinations": [
+        "'Orpi' watermark present",
+        "'leboncoin' watermark present"
+      ],
+      "perspective_changed": false,
+      "verdict": "fail",
+      "comment": "Le rendu incarne parfaitement le style Méditerranéen avec une excellente fidélité à la palette et aux éléments signature. Cependant, des modifications architecturales majeures ont été effectuées et les filigranes de l'image originale n'ont pas été supprimés."
+    }
+  }
+]

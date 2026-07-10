@@ -3,10 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, ShoppingBag } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useShop } from "./context";
-import { CroppedShot } from "./primitives";
+import { CroppedShot, TextLink } from "./primitives";
 import { PROJECT_TOTAL, PURCHASABLE } from "./data";
 
 /** Compte de 0 jusqu'à `target` la première fois que `active` devient vrai. */
@@ -36,7 +34,8 @@ function useCountUp(active: boolean, target: number) {
 /**
  * Rail panier persistant : visible de l'entrée du hero jusqu'à la sortie de la
  * grille "shop the room" (sentinels #shop-zone-start / #shop-zone-end posés
- * dans page.tsx). Latéral sur desktop, barre sticky en bas sur mobile.
+ * dans page.tsx). Traité comme une étiquette de fiche latérale, pas une carte
+ * flottante d'app — bord franc, pas d'ombre portée, pas d'icône panier.
  */
 export function ShopRail() {
   const { selectedId } = useShop();
@@ -76,32 +75,26 @@ export function ShopRail() {
 
   return (
     <>
-      {/* Desktop — rail latéral fixe */}
-      <div className="pointer-events-none fixed inset-y-0 right-0 z-40 hidden items-center pr-5 sm:flex">
+      {/* Desktop — languette latérale fixe, bord franc */}
+      <div className="pointer-events-none fixed inset-y-0 right-0 z-40 hidden items-center sm:flex">
         <AnimatePresence>
           {visible && (
             <motion.div
-              initial={{ opacity: 0, x: 28 }}
+              initial={{ opacity: 0, x: 16 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 24 }}
-              transition={{ type: "spring", stiffness: 320, damping: 30 }}
-              className="pointer-events-auto w-[224px] overflow-hidden rounded-2xl bg-white shadow-[0_20px_50px_rgba(31,27,22,0.22)] ring-1 ring-[var(--v4-border)]"
+              exit={{ opacity: 0, x: 12 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="pointer-events-auto w-[200px] border border-[var(--v4-border)] bg-white"
             >
-              <div className="flex items-center gap-2 border-b border-[var(--v4-border)] px-4 py-3">
-                <ShoppingBag className="size-4 text-[var(--v4-ink)]" strokeWidth={1.8} aria-hidden />
-                <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[var(--v4-ink)]">
-                  Votre projet
-                </p>
+              <div className="border-b border-[var(--v4-border)] px-4 py-3">
+                <p className="text-[11px] uppercase tracking-[0.12em] text-[var(--v4-muted)]">Votre sélection</p>
               </div>
               <div className="flex items-center gap-2.5 px-4 pt-3">
-                <div className="flex -space-x-2.5">
+                <div className="flex -space-x-2">
                   {PURCHASABLE.map((p) => (
                     <div
                       key={p.id}
-                      className={cn(
-                        "relative size-8 shrink-0 overflow-hidden rounded-full ring-2 ring-white transition-transform duration-300",
-                        selectedId === p.id && "z-10 scale-110 ring-[var(--v4-terra)]",
-                      )}
+                      className="relative size-7 shrink-0 overflow-hidden ring-2 ring-white"
                     >
                       <CroppedShot crop={p.crop} alt={p.name} />
                     </div>
@@ -115,19 +108,16 @@ export function ShopRail() {
               </div>
               <div className="px-4 pb-4 pt-3">
                 <div className="flex items-baseline justify-between border-t border-[var(--v4-border)] pt-3">
-                  <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--v4-muted)]">
-                    Total
-                  </span>
-                  <span className="font-serif text-[22px] font-medium tracking-[-0.01em] text-[var(--v4-ink)]">
+                  <span className="text-[11px] uppercase tracking-[0.1em] text-[var(--v4-muted)]">Total</span>
+                  <span className="font-serif text-[19px] font-normal tracking-[-0.01em] text-[var(--v4-ink)]">
                     {total}&nbsp;€
                   </span>
                 </div>
                 <Link
                   href="/create"
-                  className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full bg-[var(--v4-ink)] py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-[var(--v4-ink)]/85"
+                  className="mt-3 flex w-full items-center justify-center border border-[var(--v4-ink)] py-2 text-[12px] text-[var(--v4-ink)] transition-colors hover:bg-[var(--v4-ink)] hover:text-white"
                 >
-                  Voir mon panier
-                  <ArrowRight className="size-3.5" aria-hidden />
+                  <TextLink>Voir mon panier</TextLink>
                 </Link>
               </div>
             </motion.div>
@@ -135,39 +125,35 @@ export function ShopRail() {
         </AnimatePresence>
       </div>
 
-      {/* Mobile — barre sticky en bas */}
+      {/* Mobile — barre sticky en bas, bord franc */}
       <div className="fixed inset-x-0 bottom-0 z-40 sm:hidden">
         <AnimatePresence>
           {visible && (
             <motion.div
-              initial={{ y: 90, opacity: 0 }}
+              initial={{ y: 60, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 90, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 320, damping: 30 }}
-              className="flex items-center justify-between gap-3 border-t border-[var(--v4-border)] bg-white/97 px-4 py-3 shadow-[0_-8px_24px_rgba(31,27,22,0.12)] backdrop-blur-sm"
+              exit={{ y: 60, opacity: 0 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="flex items-center justify-between gap-3 border-t border-[var(--v4-border)] bg-white px-4 py-3"
             >
               <div className="flex items-center gap-2.5">
                 <div className="flex -space-x-2">
                   {PURCHASABLE.slice(0, 3).map((p) => (
-                    <div
-                      key={p.id}
-                      className="relative size-7 shrink-0 overflow-hidden rounded-full ring-2 ring-white"
-                    >
+                    <div key={p.id} className="relative size-7 shrink-0 overflow-hidden ring-2 ring-white">
                       <CroppedShot crop={p.crop} alt={p.name} />
                     </div>
                   ))}
                 </div>
                 <div className="leading-tight">
-                  <p className="font-serif text-[16px] font-medium text-[var(--v4-ink)]">{total}&nbsp;€</p>
+                  <p className="font-serif text-[15px] font-normal text-[var(--v4-ink)]">{total}&nbsp;€</p>
                   <p className="text-[11px] text-[var(--v4-muted)]">{PURCHASABLE.length} articles</p>
                 </div>
               </div>
               <Link
                 href="/create"
-                className="flex shrink-0 items-center gap-1 rounded-full bg-[var(--v4-ink)] px-4 py-2.5 text-[13px] font-semibold text-white"
+                className="flex shrink-0 items-center border border-[var(--v4-ink)] px-4 py-2 text-[12px] text-[var(--v4-ink)]"
               >
-                Commander
-                <ArrowRight className="size-3.5" aria-hidden />
+                <TextLink>Commander</TextLink>
               </Link>
             </motion.div>
           )}

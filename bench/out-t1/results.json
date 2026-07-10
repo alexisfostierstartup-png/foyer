@@ -1,0 +1,169 @@
+[
+  {
+    "image": "test1.jpg",
+    "style": "seventies",
+    "renderFile": "test1__seventies.png",
+    "durationMs": 17553,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "low tufted modular sofa in burnt orange",
+        "globe lamps",
+        "wavy-pattern rugs",
+        "chrome and glass furniture",
+        "gallery of retro graphic posters"
+      ],
+      "signature_elements_missing": [
+        "mushroom lamps",
+        "checkerboard pattern",
+        "cane and rattan",
+        "lacquer",
+        "terrazzo"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [
+        "Dining chairs trop proches du canapé",
+        "Table d'appoint à gauche semble à l'étroit",
+        "Fauteuil jaune isolé sur la droite"
+      ],
+      "architecture_issues": [],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "pass",
+      "comment": "Le rendu incarne fidèlement le style Seventies défini, avec une excellente utilisation de la palette et des éléments signature. Quelques ajustements mineurs de placement pourraient améliorer la fluidité de l'espace."
+    }
+  },
+  {
+    "image": "test1.jpg",
+    "style": "color-block",
+    "renderFile": "test1__color-block.png",
+    "durationMs": 18359,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "supergraphic painted arches continuing onto the ceiling",
+        "complementary color pairing like orange and green",
+        "arched niches and painted door surrounds",
+        "color-matched accessories",
+        "curved rounded furniture"
+      ],
+      "signature_elements_missing": [
+        "fluted wood",
+        "marble"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [
+        "le petit guéridon rond à côté du canapé traverse légèrement le canapé",
+        "le lampadaire derrière le canapé traverse légèrement le canapé",
+        "la plante sur la table à manger semble flotter légèrement"
+      ],
+      "architecture_issues": [
+        "niche arquée ajoutée sur le mur du buffet",
+        "encadrement de porte arqué ajouté vers la chambre"
+      ],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "warn",
+      "comment": "Le rendu incarne très bien le style 'Color block' avec une excellente fidélité à la palette et aux éléments signature. Cependant, des défauts mineurs de placement et des modifications architecturales sont présents."
+    }
+  },
+  {
+    "image": "test1.jpg",
+    "style": "japandi",
+    "renderFile": "test1__japandi.png",
+    "durationMs": 21669,
+    "judge": {
+      "style_fidelity": 8,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "paper globe lantern",
+        "organic-shaped travertine coffee table",
+        "fluted or slatted walnut wood",
+        "black accents punctuating beige",
+        "ikebana-style branch arrangement"
+      ],
+      "signature_elements_missing": [
+        "bouclé",
+        "smoked glass"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [
+        "le lampadaire derrière le canapé semble traverser le mur",
+        "le rail de spots au plafond semble flotter légèrement"
+      ],
+      "architecture_issues": [
+        "le mur de droite (vers la chambre) semble avoir été légèrement élargi ou l'ouverture déplacée",
+        "le mur derrière le canapé a été étendu pour créer une niche pour la bibliothèque"
+      ],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "warn",
+      "comment": "Le rendu intègre avec succès la plupart des éléments et la palette du style Japandi, créant une atmosphère cohérente. Cependant, des modifications architecturales mineures et quelques défauts de placement sont à noter."
+    }
+  },
+  {
+    "image": "test1.jpg",
+    "style": "art-deco",
+    "renderFile": "test1__art-deco.png",
+    "durationMs": 18948,
+    "judge": {
+      "style_fidelity": 9,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "gold geometric wall linework with arches and sunbursts",
+        "channel-tufted velvet sofa",
+        "black marble coffee table",
+        "brass sputnik globe chandelier"
+      ],
+      "signature_elements_missing": [
+        "fluted lacquered cabinetry",
+        "brass inlay"
+      ],
+      "duplicated_items": [],
+      "placement_issues": [
+        "La table à manger et les chaises sont très serrées, entravant la circulation",
+        "Le canapé est trop proche de la zone de repas"
+      ],
+      "architecture_issues": [
+        "L'ouverture vers la pièce adjacente a été transformée en une arche encadrée avec des panneaux muraux, modifiant la structure de la pièce"
+      ],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "fail",
+      "comment": "Le rendu adhère remarquablement au style Art Déco défini, avec une excellente utilisation de la palette et des éléments signature. Cependant, la modification architecturale majeure de l'ouverture vers la pièce adjacente est inacceptable sans instruction spécifique."
+    }
+  },
+  {
+    "image": "test1.jpg",
+    "style": "boheme",
+    "renderFile": "test1__boheme.png",
+    "durationMs": 19335,
+    "judge": {
+      "style_fidelity": 8,
+      "palette_match": 9,
+      "signature_elements_present": [
+        "woven rattan pendant lights",
+        "layered jute rugs and knit throws",
+        "dried pampas grass",
+        "organic terracotta wall art",
+        "floor cushions and poufs"
+      ],
+      "signature_elements_missing": [],
+      "duplicated_items": [],
+      "placement_issues": [
+        "plante à gauche trop serrée",
+        "poufs sur la droite mal intégrés",
+        "table basse trop éloignée du canapé",
+        "décoration murale au-dessus du buffet trop haute",
+        "pampas grass sur le buffet disproportionné"
+      ],
+      "architecture_issues": [],
+      "hallucinations": [],
+      "perspective_changed": false,
+      "verdict": "warn",
+      "comment": "Le rendu adhère fidèlement au style Bohème et à sa palette. Cependant, l'agencement de certains éléments comme la plante, les poufs et la hauteur des décorations murales nécessite une révision pour une meilleure ergonomie et harmonie visuelle."
+    }
+  }
+]
