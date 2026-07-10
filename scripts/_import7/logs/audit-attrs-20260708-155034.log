@@ -1,0 +1,49 @@
+◇ injected env (17) from .env.local // tip: ⌘ enable debugging { debug: true }
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+[audit-attrs] démarrage 2026-07-08T13:50:35.370Z — marchands=maisons_du_monde,cyrillus modèle=gemini-2.5-flash-lite catégories=31
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 495ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 657ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 2/4), retry dans 1607ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 3/4), retry dans 2005ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 882ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 810ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 2/4), retry dans 1244ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 3/4), retry dans 3461ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 854ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 664ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 2/4), retry dans 993ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 3/4), retry dans 2753ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 784ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 2/4), retry dans 1495ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 3/4), retry dans 3429ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 546ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 2/4), retry dans 1581ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 3/4), retry dans 2667ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+  ✗ extraction échouée — maisons_du_monde/sofa — Canapé d'angle droit convertible et coffre en tissu bouclette - rose
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 576ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 698ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 770ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 2/4), retry dans 1545ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 3/4), retry dans 3422ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 668ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 2/4), retry dans 1182ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 3/4), retry dans 3574ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 890ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 2/4), retry dans 1181ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 3/4), retry dans 3167ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 873ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 2/4), retry dans 1794ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 839ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 792ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 2/4), retry dans 1517ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 759ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+
+🛑 UNKNOWN — 17 déjà persistés au total (17 sur maisons_du_monde/sofa)
+   Marchand/Cat : maisons_du_monde / sofa
+   Produit      : Canapé d'angle droit convertible en velours côtelé - terracotta
+   Image        : https://medias.maisonsdumonde.com/images/w_1000/mkp/M24022220_1/canape-d-angle-droit-convertible-en-velours-cotele-terracotta.jpg
+   URL          : https://www.maisonsdumonde.com/FR/fr/p/canape-d-angle-droit-convertible-en-velours-cotele-terracotta-fuji-xl-M24022220.htm
+   Attrs        : {"seats":3,"configuration":"corner_right","color":"#a0522d","upholstery":"corduroy","legs_type":"block","legs_material":"unknown","legs_color":"#000000"}
+   ⚠️  unknown sur : legs_material
+   (n/a cumulés sur cette catégorie : {"legs_material":8})
+   → enrichir attributeSchemaV3.ts (vocab manquant) puis RELANCER la même commande (reprend sans perte).

@@ -1,0 +1,439 @@
+◇ injected env (17) from .env.local // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+[import7] démarrage 2026-07-08T13:55:45.930Z — 85 étapes (merchant×catégorie)
+[ingest:maisons_du_monde] sofa: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] sofa / maisons_du_monde: 0 insérés
+[ingest:maisons_du_monde] armchair: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] armchair / maisons_du_monde: 0 insérés
+[ingest:maisons_du_monde] chair: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] chair / maisons_du_monde: 0 insérés
+[ingest:maisons_du_monde] coffee_table: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] coffee_table / maisons_du_monde: 0 insérés
+[ingest:maisons_du_monde] dining_table: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] dining_table / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] 113368 lignes lues, 47583 mappées sur 29 catégories
+[effinity:maisons_du_monde] side_table: 0/0 produits (limit=300)
+[ingest:maisons_du_monde] side_table: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] side_table / maisons_du_monde: 0 insérés
+[ingest:maisons_du_monde] sideboard: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] sideboard / maisons_du_monde: 0 insérés
+[ingest:maisons_du_monde] dresser: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] dresser / maisons_du_monde: 0 insérés
+[ingest:maisons_du_monde] bookshelf: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] bookshelf / maisons_du_monde: 0 insérés
+[ingest:maisons_du_monde] stool: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] stool / maisons_du_monde: 0 insérés
+[ingest:maisons_du_monde] desk: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] desk / maisons_du_monde: 0 insérés
+[ingest:maisons_du_monde] bed: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] bed / maisons_du_monde: 0 insérés
+[ingest:maisons_du_monde] dressing_table: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] dressing_table / maisons_du_monde: 0 insérés
+[ingest:maisons_du_monde] nightstand: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] nightstand / maisons_du_monde: 0 insérés
+[ingest:maisons_du_monde] bench: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] bench / maisons_du_monde: 0 insérés
+[ingest:maisons_du_monde] pouf: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] pouf / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] headboard: 300/1196 produits (limit=300)
+[ingest:maisons_du_monde] headboard: 300 fetched / 227 insérés / 73 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 227
+[import7] headboard / maisons_du_monde: 227 insérés
+[effinity:maisons_du_monde] display_cabinet: 140/140 produits (limit=300)
+[ingest:maisons_du_monde] display_cabinet: 140 fetched / 140 insérés / 0 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 140
+[import7] display_cabinet / maisons_du_monde: 140 insérés
+[effinity:maisons_du_monde] tv_stand: 300/1026 produits (limit=300)
+[ingest:maisons_du_monde] tv_stand: 300 fetched / 300 insérés / 0 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 300
+[import7] tv_stand / maisons_du_monde: 300 insérés
+[effinity:maisons_du_monde] bar_cabinet: 0/0 produits (limit=300)
+[ingest:maisons_du_monde] bar_cabinet: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] bar_cabinet / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] room_divider: 9/9 produits (limit=300)
+[ingest:maisons_du_monde] room_divider: 9 fetched / 9 insérés / 0 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 9
+[import7] room_divider / maisons_du_monde: 9 insérés
+[effinity:maisons_du_monde] rug: 300/8573 produits (limit=300)
+[ingest:maisons_du_monde] rug: 300 fetched / 114 insérés / 186 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 114
+[import7] rug / maisons_du_monde: 114 insérés
+[effinity:maisons_du_monde] curtains: 300/1459 produits (limit=300)
+[ingest:maisons_du_monde] curtains: 300 fetched / 300 insérés / 0 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 300
+[import7] curtains / maisons_du_monde: 300 insérés
+[effinity:cyrillus] 10044 lignes lues, 183 mappées sur 2 catégories
+[effinity:cyrillus] sofa: 0/0 produits (limit=300)
+[ingest:cyrillus] sofa: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] sofa / cyrillus: 0 insérés
+[ingest:maisons_du_monde] sofa: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] sofa / maisons_du_monde: 0 insérés
+[effinity:cyrillus] armchair: 0/0 produits (limit=300)
+[ingest:cyrillus] armchair: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] armchair / cyrillus: 0 insérés
+[ingest:maisons_du_monde] armchair: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] armchair / maisons_du_monde: 0 insérés
+[effinity:cyrillus] chair: 0/0 produits (limit=300)
+[ingest:cyrillus] chair: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] chair / cyrillus: 0 insérés
+[ingest:maisons_du_monde] chair: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] chair / maisons_du_monde: 0 insérés
+[effinity:cyrillus] coffee_table: 0/0 produits (limit=300)
+[ingest:cyrillus] coffee_table: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] coffee_table / cyrillus: 0 insérés
+[ingest:maisons_du_monde] coffee_table: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] coffee_table / maisons_du_monde: 0 insérés
+[effinity:cyrillus] dining_table: 0/0 produits (limit=300)
+[ingest:cyrillus] dining_table: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] dining_table / cyrillus: 0 insérés
+[ingest:maisons_du_monde] dining_table: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] dining_table / maisons_du_monde: 0 insérés
+[effinity:cyrillus] side_table: 0/0 produits (limit=300)
+[ingest:cyrillus] side_table: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] side_table / cyrillus: 0 insérés
+[effinity:maisons_du_monde] side_table: 0/0 produits (limit=300)
+[ingest:maisons_du_monde] side_table: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] side_table / maisons_du_monde: 0 insérés
+[effinity:cyrillus] sideboard: 0/0 produits (limit=300)
+[ingest:cyrillus] sideboard: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] sideboard / cyrillus: 0 insérés
+[ingest:maisons_du_monde] sideboard: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] sideboard / maisons_du_monde: 0 insérés
+[effinity:cyrillus] dresser: 0/0 produits (limit=300)
+[ingest:cyrillus] dresser: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] dresser / cyrillus: 0 insérés
+[ingest:maisons_du_monde] dresser: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] dresser / maisons_du_monde: 0 insérés
+[effinity:cyrillus] bookshelf: 0/0 produits (limit=300)
+[ingest:cyrillus] bookshelf: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] bookshelf / cyrillus: 0 insérés
+[ingest:maisons_du_monde] bookshelf: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] bookshelf / maisons_du_monde: 0 insérés
+[effinity:cyrillus] stool: 0/0 produits (limit=300)
+[ingest:cyrillus] stool: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] stool / cyrillus: 0 insérés
+[ingest:maisons_du_monde] stool: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] stool / maisons_du_monde: 0 insérés
+[effinity:cyrillus] desk: 0/0 produits (limit=300)
+[ingest:cyrillus] desk: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] desk / cyrillus: 0 insérés
+[ingest:maisons_du_monde] desk: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] desk / maisons_du_monde: 0 insérés
+[effinity:cyrillus] bed: 0/0 produits (limit=300)
+[ingest:cyrillus] bed: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] bed / cyrillus: 0 insérés
+[ingest:maisons_du_monde] bed: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] bed / maisons_du_monde: 0 insérés
+[effinity:cyrillus] dressing_table: 0/0 produits (limit=300)
+[ingest:cyrillus] dressing_table: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] dressing_table / cyrillus: 0 insérés
+[ingest:maisons_du_monde] dressing_table: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] dressing_table / maisons_du_monde: 0 insérés
+[effinity:cyrillus] nightstand: 0/0 produits (limit=300)
+[ingest:cyrillus] nightstand: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] nightstand / cyrillus: 0 insérés
+[ingest:maisons_du_monde] nightstand: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] nightstand / maisons_du_monde: 0 insérés
+[effinity:cyrillus] bench: 0/0 produits (limit=300)
+[ingest:cyrillus] bench: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] bench / cyrillus: 0 insérés
+[ingest:maisons_du_monde] bench: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] bench / maisons_du_monde: 0 insérés
+[effinity:cyrillus] pouf: 0/0 produits (limit=300)
+[ingest:cyrillus] pouf: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] pouf / cyrillus: 0 insérés
+[ingest:maisons_du_monde] pouf: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] pouf / maisons_du_monde: 0 insérés
+[effinity:cyrillus] headboard: 0/0 produits (limit=300)
+[ingest:cyrillus] headboard: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] headboard / cyrillus: 0 insérés
+[ingest:maisons_du_monde] headboard: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] headboard / maisons_du_monde: 0 insérés
+[effinity:cyrillus] display_cabinet: 0/0 produits (limit=300)
+[ingest:cyrillus] display_cabinet: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] display_cabinet / cyrillus: 0 insérés
+[effinity:maisons_du_monde] display_cabinet: 140/140 produits (limit=300)
+[ingest:maisons_du_monde] display_cabinet: 140 fetched / 0 insérés / 140 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] display_cabinet / maisons_du_monde: 0 insérés
+[effinity:cyrillus] tv_stand: 0/0 produits (limit=300)
+[ingest:cyrillus] tv_stand: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] tv_stand / cyrillus: 0 insérés
+[ingest:maisons_du_monde] tv_stand: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] tv_stand / maisons_du_monde: 0 insérés
+[effinity:cyrillus] bar_cabinet: 0/0 produits (limit=300)
+[ingest:cyrillus] bar_cabinet: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] bar_cabinet / cyrillus: 0 insérés
+[effinity:maisons_du_monde] bar_cabinet: 0/0 produits (limit=300)
+[ingest:maisons_du_monde] bar_cabinet: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] bar_cabinet / maisons_du_monde: 0 insérés
+[effinity:cyrillus] room_divider: 0/0 produits (limit=300)
+[ingest:cyrillus] room_divider: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] room_divider / cyrillus: 0 insérés
+[effinity:maisons_du_monde] room_divider: 9/9 produits (limit=300)
+[ingest:maisons_du_monde] room_divider: 9 fetched / 0 insérés / 9 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] room_divider / maisons_du_monde: 0 insérés
+[effinity:cyrillus] rug: 34/34 produits (limit=300)
+[ingest:cyrillus] rug: 34 fetched / 34 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 34
+[import7] rug / cyrillus: 34 insérés
+[ingest:maisons_du_monde] rug: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] rug / maisons_du_monde: 0 insérés
+[effinity:cyrillus] curtains: 149/149 produits (limit=300)
+[ingest:cyrillus] curtains: 149 fetched / 149 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 149
+[import7] curtains / cyrillus: 149 insérés
+[ingest:maisons_du_monde] curtains: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] curtains / maisons_du_monde: 0 insérés
+[effinity:cyrillus] pendant_lamp: 0/0 produits (limit=300)
+[ingest:cyrillus] pendant_lamp: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] pendant_lamp / cyrillus: 0 insérés
+[ingest:maisons_du_monde] pendant_lamp: déjà 300 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] pendant_lamp / maisons_du_monde: 0 insérés
+[effinity:cyrillus] table_lamp: 0/0 produits (limit=300)
+[ingest:cyrillus] table_lamp: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] table_lamp / cyrillus: 0 insérés
+[effinity:maisons_du_monde] table_lamp: 300/1274 produits (limit=300)
+[ingest:maisons_du_monde] table_lamp: 300 fetched / 300 insérés / 0 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 300
+[import7] table_lamp / maisons_du_monde: 300 insérés
+[effinity:cyrillus] wall_sconce: 0/0 produits (limit=300)
+[ingest:cyrillus] wall_sconce: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] wall_sconce / cyrillus: 0 insérés
+[effinity:maisons_du_monde] wall_sconce: 300/1366 produits (limit=300)
+[ingest:maisons_du_monde] wall_sconce: 300 fetched / 300 insérés / 0 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 300
+[import7] wall_sconce / maisons_du_monde: 300 insérés
+[effinity:cyrillus] floor_lamp: 0/0 produits (limit=300)
+[ingest:cyrillus] floor_lamp: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] floor_lamp / cyrillus: 0 insérés
+[effinity:maisons_du_monde] floor_lamp: 300/785 produits (limit=300)
+[ingest:maisons_du_monde] floor_lamp: 300 fetched / 300 insérés / 0 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 300
+[import7] floor_lamp / maisons_du_monde: 300 insérés
+[effinity:cyrillus] mirror: 0/0 produits (limit=300)
+[ingest:cyrillus] mirror: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] mirror / cyrillus: 0 insérés
+[effinity:maisons_du_monde] mirror: 300/1122 produits (limit=300)
+[ingest:maisons_du_monde] mirror: 300 fetched / 300 insérés / 0 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 300
+[import7] mirror / maisons_du_monde: 300 insérés
+[effinity:cyrillus] vase: 0/0 produits (limit=300)
+[ingest:cyrillus] vase: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] vase / cyrillus: 0 insérés
+[effinity:maisons_du_monde] vase: 300/513 produits (limit=300)
+[ingest:maisons_du_monde] vase: 300 fetched / 300 insérés / 0 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 300
+[import7] vase / maisons_du_monde: 300 insérés
+[effinity:cyrillus] decorative_object: 0/0 produits (limit=300)
+[ingest:cyrillus] decorative_object: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] decorative_object / cyrillus: 0 insérés
+[effinity:maisons_du_monde] decorative_object: 300/1124 produits (limit=300)
+[ingest:maisons_du_monde] decorative_object: 300 fetched / 300 insérés / 0 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 300
+[import7] decorative_object / maisons_du_monde: 300 insérés
+[effinity:cyrillus] cushion: 0/0 produits (limit=300)
+[ingest:cyrillus] cushion: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] cushion / cyrillus: 0 insérés
+[effinity:maisons_du_monde] cushion: 96/96 produits (limit=300)
+[ingest:maisons_du_monde] cushion: 96 fetched / 96 insérés / 0 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 96
+[import7] cushion / maisons_du_monde: 96 insérés
+
+[import7] TERMINÉ 2026-07-08T16:15:18.411Z (démarré 2026-07-08T13:55:45.930Z)
+=== RÉCAP FINAL (insérés par catégorie × marchand) ===
+{
+  "sofa": {
+    "maisons_du_monde": 0,
+    "cyrillus": 0
+  },
+  "armchair": {
+    "maisons_du_monde": 0,
+    "cyrillus": 0
+  },
+  "chair": {
+    "maisons_du_monde": 0,
+    "cyrillus": 0
+  },
+  "coffee_table": {
+    "maisons_du_monde": 0,
+    "cyrillus": 0
+  },
+  "dining_table": {
+    "maisons_du_monde": 0,
+    "cyrillus": 0
+  },
+  "side_table": {
+    "maisons_du_monde": 0,
+    "cyrillus": 0
+  },
+  "sideboard": {
+    "maisons_du_monde": 0,
+    "cyrillus": 0
+  },
+  "dresser": {
+    "maisons_du_monde": 0,
+    "cyrillus": 0
+  },
+  "bookshelf": {
+    "maisons_du_monde": 0,
+    "cyrillus": 0
+  },
+  "stool": {
+    "maisons_du_monde": 0,
+    "cyrillus": 0
+  },
+  "desk": {
+    "maisons_du_monde": 0,
+    "cyrillus": 0
+  },
+  "bed": {
+    "maisons_du_monde": 0,
+    "cyrillus": 0
+  },
+  "dressing_table": {
+    "maisons_du_monde": 0,
+    "cyrillus": 0
+  },
+  "nightstand": {
+    "maisons_du_monde": 0,
+    "cyrillus": 0
+  },
+  "bench": {
+    "maisons_du_monde": 0,
+    "cyrillus": 0
+  },
+  "pouf": {
+    "maisons_du_monde": 0,
+    "cyrillus": 0
+  },
+  "headboard": {
+    "maisons_du_monde": 0,
+    "cyrillus": 0
+  },
+  "display_cabinet": {
+    "maisons_du_monde": 0,
+    "cyrillus": 0
+  },
+  "tv_stand": {
+    "maisons_du_monde": 0,
+    "cyrillus": 0
+  },
+  "bar_cabinet": {
+    "maisons_du_monde": 0,
+    "cyrillus": 0
+  },
+  "room_divider": {
+    "maisons_du_monde": 0,
+    "cyrillus": 0
+  },
+  "rug": {
+    "maisons_du_monde": 0,
+    "cyrillus": 34
+  },
+  "curtains": {
+    "maisons_du_monde": 0,
+    "cyrillus": 149
+  },
+  "pendant_lamp": {
+    "cyrillus": 0,
+    "maisons_du_monde": 0
+  },
+  "table_lamp": {
+    "cyrillus": 0,
+    "maisons_du_monde": 300
+  },
+  "wall_sconce": {
+    "cyrillus": 0,
+    "maisons_du_monde": 300
+  },
+  "floor_lamp": {
+    "cyrillus": 0,
+    "maisons_du_monde": 300
+  },
+  "mirror": {
+    "cyrillus": 0,
+    "maisons_du_monde": 300
+  },
+  "vase": {
+    "cyrillus": 0,
+    "maisons_du_monde": 300
+  },
+  "decorative_object": {
+    "cyrillus": 0,
+    "maisons_du_monde": 300
+  },
+  "cushion": {
+    "cyrillus": 0,
+    "maisons_du_monde": 96
+  }
+}

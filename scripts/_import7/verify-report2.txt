@@ -1,0 +1,379 @@
+
+=== BlanchePorte — 69597 lignes total, 2613 mappées (3.8%) ===
+Par catégorie: curtains=1084, sofa=585, rug=536, chair=201, cushion=119, vase=58, mirror=24, bookshelf=6
+Non mappés notables (>=5, 158 chemins) :
+    5717  Soutien-Gorges > Soutien-gorge avec armatures
+    5575  Soutien-Gorges > Soutien-gorge sans armatures
+    2187  Chemisiers, Tuniques, Blouses Femme > Chemisier
+    2069  Pulls, Gilets, Sweats Femme > Pull
+    1976  Maillots De Bain Femme > Maillot de bain 2 pièces
+    1860  Chaussures Femme
+    1834  T-Shirts Et Débardeurs Femme > T-shirt manches courtes
+    1765  Pulls, Gilets, Sweats Femme > Gilet
+    1579  
+    1399  Linge De Toilette
+    1319  Pantalons Femme > Pantalon large
+    1260  Pantalons Femme > Pantalon droit
+    1221  Culottes Et Shortys > Maxi culotte
+    1144  Robes > Robe courte
+    1048  Linge De Lit > Housse de couette
+    1026  Robes > Robe longue
+     993  Chemisiers, Tuniques, Blouses Femme > Blouse
+     990  Pyjamas Et Peignoirs Homme > Pyjama
+     964  Linge De Lit > Drap-housse
+     917  Pantalons Femme
+     900  Culottes Et Shortys > Culotte midi
+     886  Maillots De Bain Femme > Maillot de bain 1 pièce
+     864  Chemisiers, Tuniques, Blouses Femme > Tunique
+     848  Vestes Femme > Veste
+     779  T-Shirts Et Débardeurs Femme > Débardeur
+     737  Linge De Lit > Drap plat
+     735  T-Shirts Et Débardeurs Femme > T-shirt manches longues
+     672  Couettes Et Edredons > Couette synthétique
+     646  Jeans Femme > Jean droit
+     626  Pantacourts Femme > Pantacourt et 7/8ème
+     626  Linge De Lit > Taie d'oreiller
+     623  Linge De Table
+     604  Pantalons Femme > Pantalon chino
+     587  T-Shirts, Polos, Chemises Homme > T-shirt
+     534  Lingerie De Jour
+     534  Pantalons Et Jeans Homme
+     515  Pyjamas Et Pyjacourts Femme > Ensemble pyjama
+     514  Draps-Housse > Drap-housse
+     508  Pantalons Et Jeans Homme > Pantalon chino et 5 poches
+     502  Shorts Femme
+     490  Pyjamas Et Pyjacourts Femme > Haut de pyjama
+     469  Jupes > Jupe courte
+     463  Jupes > Jupe longue
+     450  Lingerie Sculptante > Gaine ventre plat
+     448  Shorts Et Pantacourts Homme
+     421  Chaussures Et Accessoires Homme
+     414  Sous-Vêtements Homme > Boxer
+     408  Protèges Matelas
+     404  Linge De Lit
+     396  Jeans Femme > Jean large
+     387  Couvertures
+     383  Blouse
+     374  Pulls Et Gilets Homme > Pull
+     372  Robe longue
+     363  Pyjamas Et Pyjacourts Femme > Bas de pyjama
+     354  Chemises De Nuit > Chemise de nuit courte
+     341  Pantoufles Femme
+     325  T-Shirts Et Débardeurs Femme > Caraco
+     324  Sous-Vêtements Homme > Maillot de corps et caleçon long
+     316  T-Shirts, Polos, Chemises Homme > Polo
+
+=== Cyrillus — 10044 lignes total, 203 mappées (2.0%) ===
+Par catégorie: curtains=166, rug=37
+Non mappés notables (>=5, 97 chemins) :
+     474  PULL / SWEAT > PULL / SWEAT > GARCON
+     438  TSHIRT / POLO > TSHIRT / POLO > GARCON
+     374  PANTALON > PANTALON > GARCON
+     346  CHEMISE > CHEMISE > FEMME
+     305  PULL / SWEAT > PULL / SWEAT > FILLE
+     291  PANTALON > PANTALON > FILLE
+     268  ROBE > ROBE > FILLE
+     260  TSHIRT / POLO > TSHIRT / POLO > FILLE
+     254  LINGE DE LIT - ADULTE > LINGE DE LIT - ADULTE > MAISON
+     252  PANTALON > PANTALON > FEMME
+     241  SHORT/ BERMUDA > SHORT/ BERMUDA > GARCON
+     240  PULL / SWEAT > PULL / SWEAT > BEBE
+     235  CHEMISE > CHEMISE > FILLE
+     211  ROBE > ROBE > FEMME
+     188  LINGE DE LIT - ENFANT > LINGE DE LIT - ENFANT > MAISON
+     182  TSHIRT / POLO > TSHIRT / POLO > FEMME
+     179  JOUR > JOUR > BEBE
+     179  CHEMISE > CHEMISE > HOMME
+     171  COMBI / SALOPETTE > COMBI / SALOPETTE > BEBE
+     169  CHEMISE > CHEMISE > GARCON
+     165  PANTALON > PANTALON > HOMME
+     161  PULL / SWEAT > PULL / SWEAT > FEMME
+     153  NUIT > NUIT > BEBE
+     151  PANTALON > PANTALON > BEBE
+     142  ROBE > ROBE > BEBE
+     135  DECO TEXTILE > DECO TEXTILE > MAISON
+     135  TSHIRT / POLO > TSHIRT / POLO > BEBE
+     135  PULL / SWEAT > PULL / SWEAT > HOMME
+     122  OBJET DE DECO > OBJET DE DECO > MAISON
+     120  CHAUSSURES > CHAUSSURES > FEMME
+     114  SHORT/ BERMUDA > SHORT/ BERMUDA > FILLE
+     111  GROSSE PIECE > GROSSE PIECE > GARCON
+     107  CHAUSSURES > CHAUSSURES > FILLE
+     106  JUPE > JUPE > FEMME
+     102  JUPE > JUPE > FILLE
+     102  TSHIRT / POLO > TSHIRT / POLO > HOMME
+     101  CHAUSSURES > CHAUSSURES > GARCON
+     100  PUERICULTURE > PUERICULTURE > MAISON
+      98  CHEMISE > CHEMISE > BEBE
+      96  LINGE DE LA TABLE > LINGE DE LA TABLE > MAISON
+      88  CHAUSSURES > CHAUSSURES > BEBE
+      87  NUIT > NUIT > FILLE
+      84  NUIT > NUIT > GARCON
+      82  GROSSE PIECE > GROSSE PIECE > FILLE
+      77  EPONGE > EPONGE > MAISON
+      77  LUMINAIRE > LUMINAIRE > MAISON
+      77  GROSSE PIECE > GROSSE PIECE > HOMME
+      74  ENSEMBLE > ENSEMBLE > BEBE
+      70  MEUBLE DE CHAMBRE > MEUBLE DE CHAMBRE > MAISON
+      62  GROSSE PIECE > GROSSE PIECE > FEMME
+      58  VESTE > VESTE > FEMME
+      57  CHAUSSANT > CHAUSSANT > FILLE
+      57  COSTUME > COSTUME > HOMME
+      56  BAIN > BAIN > FILLE
+      56  SHORT/ BERMUDA > SHORT/ BERMUDA > BEBE
+      54  SHORT/ BERMUDA > SHORT/ BERMUDA > FEMME
+      54  BAIN > BAIN > GARCON
+      50  SHORT/ BERMUDA > SHORT/ BERMUDA > HOMME
+      50  GROSSE PIECE > GROSSE PIECE > BEBE
+      47  COMBI / SALOPETTE > COMBI / SALOPETTE > FILLE
+
+=== MaisonsDuMonde — 113368 lignes total, 51848 mappées (45.7%) ===
+Par catégorie: rug=15275, sofa=8732, pendant_lamp=3161, bed=2660, chair=2577, bookshelf=1512, dining_table=1477, coffee_table=1467, sideboard=1415, wall_sconce=1366, dresser=1321, table_lamp=1271, headboard=1196, stool=1177, decorative_object=1124, mirror=1122, tv_stand=1026, nightstand=951, floor_lamp=785, desk=692, bench=660, vase=513, dressing_table=218, display_cabinet=140, room_divider=9, armchair=1
+Non mappés notables (>=5, 287 chemins) :
+    3135  Literie > Matelas
+    2328  Linge de maison et tapis > Linge de lit > Draps-housses
+    1926  Déco > Déco murale > Toiles et tableaux
+    1693  Literie > Ensemble matelas et sommiers
+    1639  Linge de maison et tapis > Linge de lit > Housses de couette
+    1628  Linge de maison et tapis > Linge de lit > Taie d oreiller et traversin
+    1609  Linge de maison et tapis > Linge de table > Nappes
+    1556  Déco > Déco murale > Papiers peints et moulures murales
+    1454  Linge de maison et tapis > Linge de lit > Parures de lit
+    1162  Déco > Déco murale > Affiches et posters
+    1018  Jardin > Décoration de jardin > Tapis extérieur
+     967  Meubles et décorations enfant > Literie bébé et enfant > Lits enfant
+     953  Jardin > Mobilier de jardin > Chaises de jardin
+     935  Jardin > Mobilier de jardin > Ensemble table et chaises de jardin
+     857  Meubles > Meubles de salon > Consoles et drapiers
+     760  Jardin > Mobilier de jardin > Bains de soleil et chaises longues
+     733  Meubles > Meubles de salle de bain > Meubles vasque
+     712  Literie > Sommiers
+     691  Jardin > Mobilier de jardin > Salons de jardin
+     667  Jardin > Mobilier de jardin > Tables de jardin
+     656  Déco > Rangements déco > Paniers et corbeilles
+     637  Meubles et décorations enfant > Eveil et jeux > Jouets enfant
+     631  Meubles > Meubles d entrées > Meubles à chaussures
+     607  Linge de maison et tapis > Linge de bain > Tapis de bain
+     604  Déco
+     565  Déco > Objets déco > Fleurs et plantes > Plantes et fleurs artificielles
+     555  Art de la table > Matériel et accessoires de cuisson > Ustensiles de cuisine et de pâtisserie
+     539  Linge de maison et tapis > Linge de bain > Peignoirs et chaussons de bain
+     530  Jardin > Décoration de jardin > Parasols
+     522  Déco > Rangements déco > Accessoires de salle de bain
+     516  Déco > Objets déco > Cadre photo, multivues & pêle mele
+     513  Meubles et décorations enfant > Décoration enfant > Tapis enfant
+     497  Déco > Déco murale > Plaques et lettrages
+     497  Art de la table > Vaisselle > Couverts et ménagère
+     486  Linge de maison et tapis > Linge de bain > Accessoires et serviettes de plage
+     486  Art de la table > Vaisselle > Tasses et mugs
+     466  Meubles et décorations enfant > Décoration enfant > Stickers et papiers-peint enfant
+     434  Déco > Lumières et parfums d ambiance > Bougies
+     401  Déco > Lumières et parfums d ambiance > Senteurs
+     396  Jardin > Décoration de jardin > Coussins de jardin
+     380  Meubles et décorations enfant > Décoration enfant > Décoration murale enfant
+     372  Art de la table > Vaisselle > Découpe
+     372  Art de la table > Vaisselle > Plats, saladiers et coupelles
+     371  Art de la table > Vaisselle > Assiettes > Assiettes plates
+     367  Linge de maison et tapis > Linge de lit > Draps plats
+     365  Linge de maison et tapis > Linge de table > Tabliers et torchons
+     353  Déco > Objets déco
+     344  Jardin > Décoration de jardin > Luminaire et éclairage extérieur > Applique d extérieur
+     340  Art de la table > Conservation et rangements de cuisine > Poubelles
+     327  Linge de maison et tapis > Linge de lit > Couvre-lits
+     326  Jardin > Mobilier de jardin > Fauteuils de jardin
+     303  Art de la table > Vaisselle > Bols
+     299  Loisirs et bien-être > Livres
+     295  Meubles > Meubles de salle de bain > Meubles bas de salle de bain
+     289  Art de la table > Vaisselle > Verres > Verres à vin
+     284  Art de la table > Accessoires de table > Salières, poivrières et moulins
+     281  Jardin > Mobilier de jardin > Tables basses de jardin
+     273  Art de la table > Vaisselle > Verres > Verres à eau
+     267  Jardin > Décoration de jardin > Luminaire et éclairage extérieur
+     234  Meubles et décorations enfant > Eveil et jeux > Jouets d éveil bébé
+
+=== Selency — 233239 lignes total, 154387 mappées (66.2%) ===
+Par catégorie: vase=15209, chair=14681, armchair=14521, pendant_lamp=13498, decorative_object=11827, coffee_table=9674, table_lamp=9236, side_table=6956, sideboard=6561, mirror=6436, dining_table=5715, dresser=5524, floor_lamp=5411, wall_sconce=4728, sofa=4162, dressing_table=4088, bookshelf=3902, stool=3809, nightstand=1973, rug=1443, display_cabinet=1160, bench=1069, headboard=739, bar_cabinet=586, cushion=548, pouf=453, room_divider=267, curtains=211
+Non mappés notables (>=5, 92 chemins) :
+    6969  art-de-la-table > bouteille-carafe-pichet > art-de-la-table > bouteille-carafe-pichet > carafe-pichet
+    6934  art-de-la-table > saladier-plat-ancien > art-de-la-table > saladier-plat-ancien > plat
+    4632  art > tableau-ancien > art > tableau-ancien
+    3772  art-de-la-table > assiette-vaisselle-faience > art-de-la-table > assiette-vaisselle-faience > assiette-plate
+    2847  art-de-la-table > verre > art-de-la-table > verre > coupe-flute-verre-a-pied
+    2839  art-de-la-table > mug-tasse > art-de-la-table > mug-tasse
+    2631  art-de-la-table > bol-coupelle > art-de-la-table > bol-coupelle
+    2528  art-de-la-table > saladier-plat-ancien > art-de-la-table > saladier-plat-ancien > saladier
+    2289  art-de-la-table > theiere-cafetiere-bouilloire > art-de-la-table > theiere-cafetiere-bouilloire
+    2275  art > illustration > art > illustration
+    1905  art-de-la-table > assiette-vaisselle-faience > art-de-la-table > assiette-vaisselle-faience > assiette-a-dessert
+    1849  art-de-la-table > assiette-vaisselle-faience > art-de-la-table > assiette-vaisselle-faience > assiette-creuse
+    1630  decorer > decoration-murale > decorer > decoration-murale > affiche-botanique-et-zoologique
+    1582  mobilier-de-jardin-terrasse > jarre-jardiniere-cache-pot > mobilier-de-jardin-terrasse > jarre-jardiniere-cache-pot
+    1553  art-de-la-table > plateau-dessous-de-plat > art-de-la-table > plateau-dessous-de-plat > plateau
+    1463  art-de-la-table > petite-vaisselle > art-de-la-table > petite-vaisselle > bonbonniere-sucrier
+    1355  art-de-la-table > verre > art-de-la-table > verre > tous-les-autres-verres
+    1297  meubles > table > meubles > table > console
+    1274  art > peinture-contemporaine > art > peinture-contemporaine
+    1248  art-de-la-table > couverts > art-de-la-table > couverts > couverts-de-table
+    1000  meubles > meuble-d-atelier > meubles > meuble-d-atelier > meuble-de-metier-comptoir
+     989  art-de-la-table > bouteille-carafe-pichet > art-de-la-table > bouteille-carafe-pichet > bouteille-siphon
+     987  art-de-la-table > saladier-plat-ancien > art-de-la-table > saladier-plat-ancien > soupiere
+     970  art-de-la-table > ramequin-ravier > art-de-la-table > ramequin-ravier
+     952  art > photographie > art > photographie
+     949  art-de-la-table > seau-a-glace > art-de-la-table > seau-a-glace
+     928  meubles > meuble-de-rangement > meubles > meuble-de-rangement > malle-de-rangement-coffre-caisse
+     871  decorer > accessoire-de-rangement > decorer > accessoire-de-rangement > panier-corbeille-a-papier
+     831  art-de-la-table > couverts > art-de-la-table > couverts > couverts-de-service
+     814  meubles > porte-manteau > meubles > porte-manteau > porte-manteau-sur-pied
+     802  decorer > loisirs > decorer > loisirs > globe-terrestre-carte-geographique
+     801  decorer > accessoires-de-cheminee > decorer > accessoires-de-cheminee
+     774  art-de-la-table > petite-vaisselle > art-de-la-table > petite-vaisselle > sauciere
+     760  decorer > accessoire-de-rangement > decorer > accessoire-de-rangement > porte-revue-porte-vinyle
+     734  meubles > porte-manteau > meubles > porte-manteau > porte-manteau-mural
+     721  art-de-la-table > petite-vaisselle > art-de-la-table > petite-vaisselle > saliere-poivrier
+     715  decorer > quincaillerie > decorer > quincaillerie > fenetre-porte-anciennes
+     667  decorer > decoration-murale > decorer > decoration-murale
+     656  eclairer > abat-jour > eclairer > abat-jour
+     574  mobilier-de-jardin-terrasse > salon-de-jardin > mobilier-de-jardin-terrasse > salon-de-jardin
+     560  art-de-la-table > bouteille-carafe-pichet > art-de-la-table > bouteille-carafe-pichet > pot-a-lait
+     529  kids-enfant-vintage > decoration-pour-enfant > kids-enfant-vintage > decoration-pour-enfant
+     525  art-de-la-table > couverts > art-de-la-table > couverts > porte-couteau
+     500  art-de-la-table > plateau-dessous-de-plat > art-de-la-table > plateau-dessous-de-plat > dessous-de-plat-dessous-de-verre
+     448  art-de-la-table > petite-vaisselle > art-de-la-table > petite-vaisselle > coquetier
+     421  kids-enfant-vintage > meuble-pour-enfant > kids-enfant-vintage > meuble-pour-enfant > bureau-pupitre
+     389  art-de-la-table > assiette-vaisselle-faience > art-de-la-table > assiette-vaisselle-faience > assiette-a-huitre-fondue
+     374  art > portrait-a-l-huile > art > portrait-a-l-huile
+     364  decorer > decoration-murale > decorer > decoration-murale > masque-tribal
+     335  decorer > loisirs > decorer > loisirs > sport-vintage
+     307  kids-enfant-vintage > assise-pour-enfant > kids-enfant-vintage > assise-pour-enfant > chaise-et-tabouret-pour-enfant
+     265  art-de-la-table > petite-vaisselle > art-de-la-table > petite-vaisselle > beurrier
+     259  decorer > accessoires-de-bureau > decorer > accessoires-de-bureau > serres-livres
+     258  decorer > decoration-murale > decorer > decoration-murale > relief-sculpte
+     254  decorer > decoration-murale > decorer > decoration-murale > tapisserie
+     244  linge-de-maison > linge-de-lit > linge-de-maison > linge-de-lit
+     237  linge-de-maison > torchon-et-serviette-de-table > linge-de-maison > torchon-et-serviette-de-table > serviette-de-table
+     229  meubles > porte-manteau > meubles > porte-manteau > patere
+     226  decorer > quincaillerie > decorer > quincaillerie > bouton-et-poignee-de-porte
+     221  meubles > meuble-d-atelier > meubles > meuble-d-atelier > etabli
+
+=== StoresRideaux — 2349 lignes total, 1963 mappées (83.6%) ===
+Par catégorie: curtains=1295, cushion=343, headboard=227, bed=98
+Non mappés notables (>=5, 15 chemins) :
+     126  
+      40  Stores Extérieurs > Stores Bannes Monobloc > Store Banne Monobloc Toiles Unies
+      32  Stores Extérieurs > Stores Bannes Coffre Terrasse > Store Banne Coffre Terrasse Toiles Unies
+      32  Stores Extérieurs > Stores Bannes Coffre Compactes > Store Banne Coffre Compacte Toiles Unies
+      31  Coussins > Coussins Banquettes Extérieurs > Coussin Banquette Extérieur - Effet Chiné
+      13  Tringles > Tringles à rideaux > Tringles décoratives > Tringles ALLIANCE
+      12  Rideaux > Rideaux à motifs > Rideaux à Motifs - ENFANTS NAIFS
+      12  Coussins > Coussins Banquettes Extérieurs > Coussin Banquette Extérieur - Uni
+      11  Rideaux > Rideaux extérieurs > Rideaux Extérieurs Tamisants Unis
+       9  Coussins > Coussins à Motifs > Coussin à Motifs - ENFANTS NAIFS
+       9  Rideaux > Rideaux extérieurs > Rideaux Extérieurs Obscurcissants Unis
+       7  Stores Intérieurs > Stores Bateaux > Stores Bateaux - enfants naïfs
+       6  Rideaux > Rideaux à motifs > Rideaux Enfants Classiques
+       6  Films et Accessoires > Films Vitrage > Films Sécurité
+       5  Coussins > Coussins Banquettes Extérieurs > Coussin Banquette Extérieur - Maille
+
+=== TheCoolRepublic — 28769 lignes total, 19837 mappées (69.0%) ===
+Par catégorie: pendant_lamp=2940, rug=1649, sofa=1638, chair=1619, wall_sconce=1168, stool=1144, coffee_table=1046, bookshelf=1002, dining_table=915, side_table=854, armchair=814, floor_lamp=689, mirror=679, table_lamp=525, vase=503, decorative_object=413, pouf=391, cushion=356, bed=348, bench=257, desk=193, sideboard=158, nightstand=151, dresser=147, curtains=128, tv_stand=76, headboard=27, room_divider=7
+Non mappés notables (>=5, 156 chemins) :
+    1009  Luminaires > Lampes
+     354  Déco > Affiches
+     286  Déco > Papiers peints
+     274  Jardin > Tables de jardin > Tables à manger de jardin
+     236  Jardin > Fauteuils de jardin
+     222  Jardin > Chaises de jardin
+     209  Cuisine > Vaisselle > Bols
+     207  Déco > Rangement et organisation > Corbeilles et paniers
+     203  Luminaires > Abat-jours
+     194  Jardin > Chaises de jardin > Chaises de jardin avec accoudoirs
+     158  Jardin > Bancs de jardin
+     150  Déco > Rangement et organisation > Porte-manteaux
+     147  Jardin > Canapés de jardin
+     139  Cuisine > Vaisselle > Assiettes
+     138  Jardin > Tables de jardin > Tables basses de jardin
+     136  Mobilier > Literie > Matelas
+     136  Mobilier > Consoles
+     131  Déco > Rangement et organisation > Patères murales
+     130  Cuisine > Vaisselle > Tasses > Tasses à café
+     130  Jardin > Tables de jardin
+     117  Jardin > Accessoires de jardin > Coussins pour fauteuils de jardin
+     116  Jardin > Chaises longues de jardin
+     111  Cuisine > Vaisselle > Carafes
+     106  Kids > Mobilier pour enfants > Poufs pour enfants
+     104  Mobilier > Meubles de rangement
+     102  Déco > Pots de fleurs
+     102  Cuisine > Accessoires de cuisine > Plateaux
+      93  Jardin > Tables de jardin > Tables d'appoint de jardin
+      87  Kids > Décoration chambre enfant > Tapis pour enfants
+      87  Jardin > Tabourets de jardin > Tabourets de bar de jardin
+      84  Déco > Décoration murale
+      80  Jardin > Tabourets de jardin
+      79  Cuisine > Verres > Verres à vin
+      74  Linge de maison > Linge de lit > Plaids et couvre-lits
+      69  Cuisine > Vaisselle > Tasses > Mugs
+      69  Kids > Décoration chambre enfant > Coussins pour enfants
+      68  Cuisine > Vaisselle > Plats de service
+      68  Déco > Rangement et organisation
+      64  Cuisine > Verres > Verres à eau
+      64  Déco > Rangement et organisation > Portants à vêtements
+      59  Déco > Déco
+      59  Cuisine > Vaisselle > Tasses
+      58  Luminaires > Appliques murales > Appliques pour salle de bain (IP67, IP65 et IP44)
+      55  Jardin > Poufs de jardin
+      55  Jardin > Luminaires de jardin > Appliques d'extérieur
+      54  Kids > Jeux et jouets
+      53  Déco > Pots de fleurs > Cache-pots
+      52  Jardin > Luminaires de jardin
+      50  Cuisine > Vaisselle > Assiettes > Assiettes plates
+      49  Jardin > Accessoires de jardin > Parasols
+      48  Déco > Salle de bain > Porte-serviettes
+      46  Déco > Quincaillerie > Tringlerie > Tringles à rideaux
+      45  Linge de maison > Linge de table > Nappes
+      45  Déco > Rangement et organisation > Patères murales > Crochets
+      44  Mobilier > Tables
+      44  Cuisine > Ustensiles de cuisine
+      43  Jardin > Luminaires de jardin > Lampes sans fil de jardin
+      43  Cuisine > Accessoires de cuisine > Salières et moulins à poivre
+      43  Linge de maison > Linge de lit > Housses de couette
+      43  Kids > Mobilier pour enfants > Fauteuils pour enfants
+
+=== UnAmourDeTapis — 6493 lignes total, 5160 mappées (79.5%) ===
+Par catégorie: rug=4932, stool=79, coffee_table=52, armchair=39, decorative_object=23, vase=19, chair=9, cushion=5, bookshelf=1, dresser=1
+Non mappés notables (>=5, 1 chemins) :
+      31  
+
+
+=== TOTAL GLOBAL ===
+463859 lignes, 236011 mappées, 227848 non mappées
+rug=23872
+pendant_lamp=19599
+chair=19087
+vase=16302
+armchair=15375
+sofa=15117
+decorative_object=13387
+coffee_table=12239
+table_lamp=11032
+mirror=8261
+sideboard=8134
+dining_table=8107
+side_table=7810
+wall_sconce=7262
+dresser=6993
+floor_lamp=6885
+bookshelf=6423
+stool=6209
+dressing_table=4306
+bed=3106
+nightstand=3075
+curtains=2884
+headboard=2189
+bench=1986
+cushion=1371
+display_cabinet=1300
+tv_stand=1102
+desk=885
+pouf=844
+bar_cabinet=586
+room_divider=283

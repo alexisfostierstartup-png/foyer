@@ -1,0 +1,68 @@
+◇ injected env (17) from .env.local // tip: ⌘ enable debugging { debug: true }
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+[import7] démarrage 2026-07-08T09:36:45.788Z — 85 étapes (merchant×catégorie)
+[effinity:maisons_du_monde] 113368 lignes lues, 47583 mappées sur 29 catégories
+[effinity:maisons_du_monde] sofa: 5772/5772 produits (limit=20000)
+[ingest:maisons_du_monde] sofa: 5772 fetched / 2 insérés / 5770 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 2
+[import7] sofa / maisons_du_monde: 2 insérés
+[effinity:maisons_du_monde] armchair: 1228/1228 produits (limit=20000)
+[ingest:maisons_du_monde] armchair: 1228 fetched / 0 insérés / 1228 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] armchair / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] chair: 2577/2577 produits (limit=20000)
+[ingest:maisons_du_monde] chair: 2577 fetched / 0 insérés / 2577 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] chair / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] coffee_table: 2122/2122 produits (limit=20000)
+[ingest:maisons_du_monde] coffee_table: 2122 fetched / 0 insérés / 2122 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] coffee_table / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] dining_table: 1477/1477 produits (limit=20000)
+[ingest:maisons_du_monde] dining_table: 1477 fetched / 0 insérés / 1477 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] dining_table / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] side_table: 0/0 produits (limit=20000)
+[ingest:maisons_du_monde] side_table: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] side_table / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] sideboard: 1415/1415 produits (limit=20000)
+[ingest:maisons_du_monde] sideboard: 1415 fetched / 0 insérés / 1415 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] sideboard / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] dresser: 1323/1323 produits (limit=20000)
+[ingest:maisons_du_monde] dresser: 1323 fetched / 0 insérés / 1323 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] dresser / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] bookshelf: 1512/1512 produits (limit=20000)
+[ingest:maisons_du_monde] bookshelf: 1512 fetched / 0 insérés / 1512 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] bookshelf / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] stool: 1177/1177 produits (limit=20000)
+[ingest:maisons_du_monde] stool: 1177 fetched / 0 insérés / 1177 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] stool / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] desk: 693/693 produits (limit=20000)
+[ingest:maisons_du_monde] desk: 693 fetched / 0 insérés / 693 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] desk / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] bed: 2632/2632 produits (limit=20000)
+[ingest:maisons_du_monde] bed: 2632 fetched / 475 insérés / 2157 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 475
+[import7] bed / maisons_du_monde: 475 insérés
+[effinity:maisons_du_monde] dressing_table: 1075/1075 produits (limit=20000)
+[ingest:maisons_du_monde] dressing_table: 1075 fetched / 1075 insérés / 0 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 1075
+[import7] dressing_table / maisons_du_monde: 1075 insérés
+[effinity:maisons_du_monde] nightstand: 951/951 produits (limit=20000)
+[ingest:maisons_du_monde] nightstand: 951 fetched / 951 insérés / 0 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 951
+[import7] nightstand / maisons_du_monde: 951 insérés
+[effinity:maisons_du_monde] bench: 688/688 produits (limit=20000)
+[ingest:maisons_du_monde] bench: 688 fetched / 688 insérés / 0 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 688
+[import7] bench / maisons_du_monde: 688 insérés
+[effinity:maisons_du_monde] pouf: 1078/1078 produits (limit=20000)
+[ingest:maisons_du_monde] pouf: 1078 fetched / 1078 insérés / 0 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 1078
+[import7] pouf / maisons_du_monde: 1078 insérés

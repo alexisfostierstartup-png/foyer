@@ -1,0 +1,20 @@
+◇ injected env (17) from .env.local // tip: ◈ secrets for agents [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+[audit-attrs] démarrage 2026-07-09T17:48:37.833Z — marchands=maisons_du_monde,cyrillus modèle=gemini-2.5-flash-lite catégories=31
+✓ maisons_du_monde sofa            0 extraits · 300 déjà faits · 0 échecs
+✓ maisons_du_monde armchair        0 extraits · 300 déjà faits · 0 échecs
+✓ maisons_du_monde chair           0 extraits · 279 déjà faits · 0 échecs
+✓ maisons_du_monde coffee_table    1 extraits · 299 déjà faits · 0 échecs
+✓ maisons_du_monde dining_table    0 extraits · 321 déjà faits · 0 échecs
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 552ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+  maisons_du_monde/sideboard: 50/300 (total global: 51)
+
+🛑 UNKNOWN — 62 déjà persistés au total (61 sur maisons_du_monde/sideboard)
+   Marchand/Cat : maisons_du_monde / sideboard
+   Produit      : Buffet design - 2 portes, étagère - métal doré aspect marbre noir
+   Image        : https://medias.maisonsdumonde.com/images/w_1000/mkp/M24122784_1/buffet-design-2-portes-etagere-metal-dore-aspect-marbre-noir.jpg
+   URL          : https://www.maisonsdumonde.com/FR/fr/p/buffet-design-2-portes-etagere-metal-dore-aspect-marbre-noir-homcom-M24122784.htm
+   Attrs        : {"shape":"low_credenza","color":"#2c2c2c","material":"unknown","front":"solid_doors","legs":"straight"}
+   ⚠️  unknown sur : material
+   (n/a cumulés sur cette catégorie : {})
+   → enrichir attributeSchemaV3.ts (vocab manquant) puis RELANCER la même commande (reprend sans perte).

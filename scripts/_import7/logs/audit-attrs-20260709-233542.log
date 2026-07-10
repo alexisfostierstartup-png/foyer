@@ -1,0 +1,19 @@
+◇ injected env (17) from .env.local // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+[audit-attrs] démarrage 2026-07-09T21:35:43.333Z — marchands=maisons_du_monde,cyrillus modèle=gemini-2.5-flash-lite catégories=31
+✓ maisons_du_monde sofa            0 extraits · 300 déjà faits · 0 échecs
+✓ maisons_du_monde armchair        0 extraits · 300 déjà faits · 0 échecs
+✓ maisons_du_monde chair           0 extraits · 279 déjà faits · 0 échecs
+✓ maisons_du_monde coffee_table    0 extraits · 300 déjà faits · 0 échecs
+✓ maisons_du_monde dining_table    0 extraits · 321 déjà faits · 0 échecs
+✓ maisons_du_monde sideboard       0 extraits · 300 déjà faits · 0 échecs
+
+🛑 UNKNOWN — 28 déjà persistés au total (28 sur maisons_du_monde/dresser)
+   Marchand/Cat : maisons_du_monde / dresser
+   Produit      : Commode métal 4 tiroirs bleu électrique 80 cm
+   Image        : https://medias.maisonsdumonde.com/images/w_1000/mkp/M26072694_1/commode-metal-4-tiroirs-bleu-electrique-80-cm.jpg
+   URL          : https://www.maisonsdumonde.com/FR/fr/p/commode-metal-4-tiroirs-bleu-electrique-80-cm-pantone-M26072694.htm
+   Attrs        : {"shape":"wide_low","color":"#2850d4","material":"unknown","drawers":"3","legs":"straight"}
+   ⚠️  unknown sur : material
+   (n/a cumulés sur cette catégorie : {"drawers":12})
+   → enrichir attributeSchemaV3.ts (vocab manquant) puis RELANCER la même commande (reprend sans perte).

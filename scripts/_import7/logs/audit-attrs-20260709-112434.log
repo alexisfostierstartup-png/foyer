@@ -1,0 +1,39 @@
+◇ injected env (17) from .env.local // tip: ⌘ suppress logs { quiet: true }
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+[audit-attrs] démarrage 2026-07-09T09:24:35.621Z — marchands=maisons_du_monde,cyrillus modèle=gemini-2.5-flash-lite catégories=31
+✓ maisons_du_monde sofa            0 extraits · 300 déjà faits · 0 échecs
+✓ maisons_du_monde armchair        0 extraits · 300 déjà faits · 0 échecs
+✓ maisons_du_monde chair           0 extraits · 279 déjà faits · 0 échecs
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 564ms — {"error":{"code":503,"message":"The service is currently unavailable.","status":"UNAVAILABLE"}}
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 718ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 802ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+  maisons_du_monde/coffee_table: 50/300 (total global: 50)
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 679ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 750ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+  maisons_du_monde/coffee_table: 100/300 (total global: 100)
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 545ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+  maisons_du_monde/coffee_table: 150/300 (total global: 150)
+  maisons_du_monde/coffee_table: 200/300 (total global: 200)
+  maisons_du_monde/coffee_table: 250/300 (total global: 250)
+✓ maisons_du_monde coffee_table    291 extraits · 9 déjà faits · 0 échecs
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 514ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+  maisons_du_monde/dining_table: 50/321 (total global: 341)
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 825ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 742ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+  maisons_du_monde/dining_table: 100/321 (total global: 391)
+  maisons_du_monde/dining_table: 150/321 (total global: 441)
+  maisons_du_monde/dining_table: 200/321 (total global: 491)
+  maisons_du_monde/dining_table: 250/321 (total global: 541)
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 820ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+  maisons_du_monde/dining_table: 300/321 (total global: 591)
+✓ maisons_du_monde dining_table    303 extraits · 18 déjà faits · 0 échecs
+
+🛑 UNKNOWN — 596 déjà persistés au total (2 sur maisons_du_monde/sideboard)
+   Marchand/Cat : maisons_du_monde / sideboard
+   Produit      : Buffet vert olive foncé portes en verre cannelé 75cm
+   Image        : https://medias.maisonsdumonde.com/images/w_1000/mkp/M23120013_1/buffet-vert-olive-fonce-portes-en-verre-cannele-75cm.jpg
+   URL          : https://www.maisonsdumonde.com/FR/fr/p/buffet-vert-olive-fonce-portes-en-verre-cannele-75cm-pantone-M23120013.htm
+   Attrs        : {"shape":"low_credenza","color":"#556b2f","material":"unknown","front":"glass","legs":"straight"}
+   ⚠️  unknown sur : material
+   (n/a cumulés sur cette catégorie : {})
+   → enrichir attributeSchemaV3.ts (vocab manquant) puis RELANCER la même commande (reprend sans perte).

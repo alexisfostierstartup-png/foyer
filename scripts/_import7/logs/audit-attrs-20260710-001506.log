@@ -1,0 +1,24 @@
+◇ injected env (17) from .env.local // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+[audit-attrs] démarrage 2026-07-09T22:15:07.853Z — marchands=maisons_du_monde,cyrillus modèle=gemini-2.5-flash-lite catégories=31
+✓ maisons_du_monde sofa            0 extraits · 300 déjà faits · 0 échecs
+✓ maisons_du_monde armchair        0 extraits · 300 déjà faits · 0 échecs
+✓ maisons_du_monde chair           0 extraits · 279 déjà faits · 0 échecs
+✓ maisons_du_monde coffee_table    0 extraits · 300 déjà faits · 0 échecs
+✓ maisons_du_monde dining_table    0 extraits · 321 déjà faits · 0 échecs
+✓ maisons_du_monde sideboard       0 extraits · 300 déjà faits · 0 échecs
+  maisons_du_monde/dresser: 50/300 (total global: 50)
+  maisons_du_monde/dresser: 100/300 (total global: 100)
+  maisons_du_monde/dresser: 150/300 (total global: 150)
+  maisons_du_monde/dresser: 200/300 (total global: 200)
+✓ maisons_du_monde dresser         249 extraits · 51 déjà faits · 0 échecs
+
+🛑 UNKNOWN — 258 déjà persistés au total (9 sur maisons_du_monde/bookshelf)
+   Marchand/Cat : maisons_du_monde / bookshelf
+   Produit      : Etagère en fer vert sauge 2 portes en verre
+   Image        : https://medias.maisonsdumonde.com/image/upload/w_1000/img/etagere-en-fer-vert-sauge-2-portes-en-verre-1000-4-12-236049_1.jpg
+   URL          : https://www.maisonsdumonde.com/FR/fr/p/etagere-en-fer-vert-sauge-2-portes-en-verre-236049.htm
+   Attrs        : {"shape":"tall_bookcase","color":"#a3b8a3","material":"unknown","structure":"mixed","mount":"floor"}
+   ⚠️  unknown sur : material
+   (n/a cumulés sur cette catégorie : {})
+   → enrichir attributeSchemaV3.ts (vocab manquant) puis RELANCER la même commande (reprend sans perte).

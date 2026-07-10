@@ -1,0 +1,24 @@
+◇ injected env (18) from .env.local // tip: ◈ secrets for agents [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+[audit-attrs] démarrage 2026-07-09T23:50:38.672Z — marchands=maisons_du_monde,cyrillus modèle=gemini-flash-lite-latest catégories=31
+✓ maisons_du_monde sofa            0 extraits · 300 déjà faits · 0 échecs
+✓ maisons_du_monde armchair        0 extraits · 300 déjà faits · 0 échecs
+✓ maisons_du_monde chair           0 extraits · 279 déjà faits · 0 échecs
+✓ maisons_du_monde coffee_table    0 extraits · 300 déjà faits · 0 échecs
+✓ maisons_du_monde dining_table    0 extraits · 321 déjà faits · 0 échecs
+✓ maisons_du_monde sideboard       0 extraits · 300 déjà faits · 0 échecs
+✓ maisons_du_monde dresser         0 extraits · 300 déjà faits · 0 échecs
+✓ maisons_du_monde bookshelf       1 extraits · 299 déjà faits · 0 échecs
+  maisons_du_monde/stool: 50/300 (total global: 51)
+  maisons_du_monde/stool: 100/300 (total global: 101)
+  maisons_du_monde/stool: 150/300 (total global: 151)
+  maisons_du_monde/stool: 200/300 (total global: 201)
+  maisons_du_monde/stool: 250/300 (total global: 251)
+✓ maisons_du_monde stool           280 extraits · 20 déjà faits · 0 échecs
+  maisons_du_monde/desk: 50/300 (total global: 331)
+  maisons_du_monde/desk: 100/300 (total global: 381)
+  maisons_du_monde/desk: 150/300 (total global: 431)
+  maisons_du_monde/desk: 200/300 (total global: 481)
+
+💳 CRÉDITS ÉPUISÉS (Gemini) — {"error":{"code":429,"message":"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 500, model: gemini-3.1-flash-lite\nPlease retry in 22.315444561s.","status":"RESOURCE_EXHAUSTED","details":[{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Learn more about Gemini API quotas","url":"https://ai.google.dev/gemini-api/docs/rate-limits"}]},{"@type":"type.googleapis.com/google.rpc.QuotaFailure","violations":[{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_requests","quotaId":"GenerateRequestsPerDayPerProjectPerModel-FreeTier","quotaDimensions":{"location":"global","model":"gemini-3.1-flash-lite"},"quotaValue":"500"}]},{"@type":"type.googleapis.com/google.rpc.RetryInfo","retryDelay":"22s"}]}}
+[audit-attrs] Arrêt — 498 attrs déjà persistés (rien perdu), recharge puis relance la même commande pour reprendre.

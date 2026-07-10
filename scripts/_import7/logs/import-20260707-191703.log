@@ -1,0 +1,6 @@
+◇ injected env (17) from .env.local // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+[import7] démarrage 2026-07-07T17:17:04.727Z — 240 étapes (merchant×catégorie)
+[effinity:maisons_du_monde] 113368 lignes lues, 47583 mappées sur 29 catégories
+[ingest:maisons_du_monde] M24033991 échec: fetch failed
+[ingest:maisons_du_monde] M24034005 échec: fetch failed

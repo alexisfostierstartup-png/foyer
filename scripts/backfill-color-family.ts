@@ -30,8 +30,10 @@ async function main() {
       while (idx < rows.length) {
         const p = rows[idx++];
         const attrs = p.metadata?.attrs ?? {};
-        const hex = attrs.color || attrs.top_color || p.metadata?.color_hex;
-        const h = typeof hex === "string" ? hex : null;
+        // Première source HEX-VALIDE (attrs.color peut être un label texte, ex. IKEA
+        // "Effet chêne blanchi" → on retombe sur color_hex calculé par sharp).
+        const cand = [attrs.color, attrs.top_color, p.metadata?.color_hex];
+        const h = cand.find((c) => typeof c === "string" && /^#?[0-9a-fA-F]{6}$/.test(c.trim())) ?? null;
         const fam = colorFamily(h);
         const fams = colorFamilies(h);
         if (!fam) { skipped++; continue; }

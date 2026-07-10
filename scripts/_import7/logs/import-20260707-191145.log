@@ -1,0 +1,4 @@
+◇ injected env (17) from .env.local // tip: ⌘ suppress logs { quiet: true }
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+[import7] démarrage 2026-07-07T17:11:46.067Z — 240 étapes (merchant×catégorie)
+[effinity:maisons_du_monde] 113368 lignes lues, 48760 mappées sur 29 catégories

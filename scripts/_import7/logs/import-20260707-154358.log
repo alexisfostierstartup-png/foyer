@@ -1,0 +1,19 @@
+◇ injected env (17) from .env.local // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+[import7] démarrage 2026-07-07T13:43:59.392Z — 31 catégories × 7 marchands
+[effinity:blancheporte] 69597 lignes lues, 2009 mappées sur 13 catégories
+[effinity:blancheporte] pendant_lamp: 0/0 produits (limit=20000)
+[ingest:blancheporte] pendant_lamp: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 0
+[import7] pendant_lamp / blancheporte: 0 insérés
+[effinity:cyrillus] 10044 lignes lues, 183 mappées sur 2 catégories
+[effinity:cyrillus] pendant_lamp: 0/0 produits (limit=20000)
+[ingest:cyrillus] pendant_lamp: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:cyrillus] TOTAL insérés: 0
+[import7] pendant_lamp / cyrillus: 0 insérés
+[effinity:maisons_du_monde] 113368 lignes lues, 49748 mappées sur 29 catégories
+[effinity:maisons_du_monde] pendant_lamp: 3180/3180 produits (limit=20000)
+[ingest:maisons_du_monde] pendant_lamp: 3180 fetched / 0 insérés / 3180 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] pendant_lamp / maisons_du_monde: 0 insérés
+[effinity:selency] 233239 lignes lues, 155461 mappées sur 29 catégories

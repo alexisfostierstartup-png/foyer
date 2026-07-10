@@ -1,0 +1,7 @@
+◇ injected env (17) from .env.local // tip: ⌘ suppress logs { quiet: true }
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+[import7] démarrage 2026-07-07T16:53:42.033Z — 240 étapes (merchant×catégorie)
+[effinity:maisons_du_monde] 113368 lignes lues, 49748 mappées sur 29 catégories
+[ingest:maisons_du_monde] M21014081 échec: Jina API 400: {"detail":{"message":"Failed to load image from https://medias.maisonsdumonde.com/images/mkp/M21014081_1/couette-naturelle-chaude-40-duvet-140x200-cm.jpg","request_id":"56aae1c00644e316c2c516e8a8fa3d03"}}
+[ingest:maisons_du_monde] M21015194 échec: Jina API 400: {"detail":{"message":"Failed to load image from https://medias.maisonsdumonde.com/images/mkp/M21015194_1/couette-naturelle-chaude-30-duvet-260x240-cm.jpg","request_id":"3fafb4a6dd146c08c2c516e8a8fa3e6d"}}
+[ingest:maisons_du_monde] M21015197 échec: Jina API 400: {"detail":{"message":"Failed to load image from https://medias.maisonsdumonde.com/images/mkp/M21015197_1/couette-naturelle-chaude-30-duvet-240x220-cm.jpg","request_id":"20c290e90c7d22f1c2c516e8a8fa368e"}}

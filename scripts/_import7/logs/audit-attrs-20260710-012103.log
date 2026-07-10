@@ -1,0 +1,16 @@
+◇ injected env (17) from .env.local // tip: ⌘ override existing { override: true }
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+[audit-attrs] démarrage 2026-07-09T23:21:04.399Z — marchands=maisons_du_monde,cyrillus modèle=gemini-2.5-flash-lite catégories=31
+✓ maisons_du_monde sofa            0 extraits · 300 déjà faits · 0 échecs
+✓ maisons_du_monde armchair        0 extraits · 300 déjà faits · 0 échecs
+✓ maisons_du_monde chair           0 extraits · 279 déjà faits · 0 échecs
+✓ maisons_du_monde coffee_table    0 extraits · 300 déjà faits · 0 échecs
+✓ maisons_du_monde dining_table    0 extraits · 321 déjà faits · 0 échecs
+✓ maisons_du_monde sideboard       0 extraits · 300 déjà faits · 0 échecs
+✓ maisons_du_monde dresser         0 extraits · 300 déjà faits · 0 échecs
+  maisons_du_monde/bookshelf: 50/300 (total global: 50)
+  maisons_du_monde/bookshelf: 100/300 (total global: 100)
+✓ maisons_du_monde bookshelf       144 extraits · 156 déjà faits · 0 échecs
+
+💳 CRÉDITS ÉPUISÉS (Gemini) — {"error":{"code":429,"message":"Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay. ","status":"RESOURCE_EXHAUSTED"}}
+[audit-attrs] Arrêt — 164 attrs déjà persistés (rien perdu), recharge puis relance la même commande pour reprendre.

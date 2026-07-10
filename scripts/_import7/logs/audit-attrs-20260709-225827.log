@@ -1,0 +1,26 @@
+◇ injected env (17) from .env.local // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+[audit-attrs] démarrage 2026-07-09T20:58:28.578Z — marchands=maisons_du_monde,cyrillus modèle=gemini-2.5-flash-lite catégories=31
+✓ maisons_du_monde sofa            0 extraits · 300 déjà faits · 0 échecs
+✓ maisons_du_monde armchair        0 extraits · 300 déjà faits · 0 échecs
+✓ maisons_du_monde chair           0 extraits · 279 déjà faits · 0 échecs
+✓ maisons_du_monde coffee_table    0 extraits · 300 déjà faits · 0 échecs
+✓ maisons_du_monde dining_table    0 extraits · 321 déjà faits · 0 échecs
+  maisons_du_monde/sideboard: 50/300 (total global: 50)
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 734ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 616ms — {"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again l
+  maisons_du_monde/sideboard: 100/300 (total global: 100)
+[ai:retry] vision gemini-2.5-flash-lite erreur transitoire (tentative 1/4), retry dans 839ms — {"error":{"code":503,"message":"The service is currently unavailable.","status":"UNAVAILABLE"}}
+  maisons_du_monde/sideboard: 150/300 (total global: 150)
+  maisons_du_monde/sideboard: 200/300 (total global: 200)
+✓ maisons_du_monde sideboard       204 extraits · 96 déjà faits · 0 échecs
+
+🛑 UNKNOWN — 227 déjà persistés au total (23 sur maisons_du_monde/dresser)
+   Marchand/Cat : maisons_du_monde / dresser
+   Produit      : Armoire 1 tringle 6 compartiments tissu non-tissé gris
+   Image        : https://medias.maisonsdumonde.com/images/w_1000/mkp/M24150657_1/armoire-1-tringle-6-compartiments-tissu-non-tisse-gris.jpg
+   URL          : https://www.maisonsdumonde.com/FR/fr/p/armoire-1-tringle-6-compartiments-tissu-non-tisse-gris-6-niveaux-M24150657.htm
+   Attrs        : {"shape":"tall_chest","color":"#808080","material":"unknown","drawers":"n/a","legs":"none"}
+   ⚠️  unknown sur : material
+   (n/a cumulés sur cette catégorie : {"drawers":6})
+   → enrichir attributeSchemaV3.ts (vocab manquant) puis RELANCER la même commande (reprend sans perte).

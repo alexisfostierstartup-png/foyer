@@ -1,0 +1,15 @@
+◇ injected env (17) from .env.local // tip: ◈ encrypted .env [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+[audit-attrs] démarrage 2026-07-09T07:35:19.565Z — marchands=maisons_du_monde,cyrillus modèle=gemini-2.5-flash-lite catégories=31
+✓ maisons_du_monde sofa            3 extraits · 297 déjà faits · 0 échecs
+✓ maisons_du_monde armchair        0 extraits · 300 déjà faits · 0 échecs
+
+🛑 UNKNOWN — 47 déjà persistés au total (44 sur maisons_du_monde/chair)
+   Marchand/Cat : maisons_du_monde / chair
+   Produit      : Ensemble table à manger avec 4 chaises plateau en verre trempé noir
+   Image        : https://medias.maisonsdumonde.com/images/w_1000/mkp/M25193060_1/ensemble-table-a-manger-avec-4-chaises-plateau-en-verre-trempe-noir.jpg
+   URL          : https://www.maisonsdumonde.com/FR/fr/p/ensemble-table-a-manger-avec-4-chaises-plateau-en-verre-trempe-noir-homcom-M25193060.htm
+   Attrs        : {"shape":"unknown","color":"#808080","material":"metal","legs_type":"four_legs","armrests":"without"}
+   ⚠️  unknown sur : shape
+   (n/a cumulés sur cette catégorie : {})
+   → enrichir attributeSchemaV3.ts (vocab manquant) puis RELANCER la même commande (reprend sans perte).

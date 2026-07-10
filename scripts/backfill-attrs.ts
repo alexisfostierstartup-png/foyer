@@ -33,6 +33,7 @@ async function main() {
 
   const { createSupabaseAdmin } = await import("../lib/supabase/server");
   const { getVisionProvider } = await import("../lib/ai/provider");
+  const { withTracking } = await import("../lib/ai/track");
   const { getSchemaV3, schemaForCategory, buildExtractionPrompt, SCHEMA_V3 } = await import("../lib/shopping/attributeSchemaV3");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sb = createSupabaseAdmin() as any;
@@ -40,12 +41,17 @@ async function main() {
   const CATS = catsArg === "all" ? Object.keys(SCHEMA_V3).filter((c) => c !== "default").concat(["floor", "lamp", "mirror"]) : catsArg.split(",");
 
   // 2 tentatives : récupère les échecs transitoires (host qui throttle, 503 Gemini).
+  // withTracking : logge chaque appel dans ai_calls (coût réel via ai_pricing) — absent
+  // auparavant, ajouté pour chiffrer précisément le coût d'un run "all" avant de le lancer.
   const extract = async (prompt: string, url: string): Promise<Record<string, unknown> | null> => {
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const buf = Buffer.from(await (await fetch(url, { headers: { "User-Agent": UA, Accept: "image/jpeg,image/webp" } })).arrayBuffer());
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const res = await getVisionProvider("gemini_vision").analyze(prompt, [buf as any], { model: MODEL });
+        const res = await withTracking(
+          { step: "other", provider: "gemini_vision", requestPayload: { model: MODEL, purpose: "attrs_extraction" } },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          () => getVisionProvider("gemini_vision").analyze(prompt, [buf as any], { model: MODEL }),
+        );
         return (res.parsed ?? null) as Record<string, unknown> | null;
       } catch { if (attempt === 0) await new Promise((r) => setTimeout(r, 800)); }
     }
