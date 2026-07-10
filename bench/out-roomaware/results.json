@@ -1,0 +1,162 @@
+[
+  {
+    "image": "sailly.jpg",
+    "style": "seventies",
+    "projectId": "aBht95DMLPtQ3sAKDQBnj",
+    "renderFile": "s01_sailly__seventies.png",
+    "plan": [
+      {
+        "element_id": "sofa_1",
+        "category": "sofa",
+        "description": "Canapé deux places en tissu vert",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "sofa_2",
+        "category": "sofa",
+        "description": "Canapé en tissu vert au premier plan",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "coffee_table_1",
+        "category": "coffee_table",
+        "description": "Table basse en bois massif",
+        "expected": "RESTYLE (Stain the wood in a warm teak finish to highlight the natural grain.) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "pouf_1",
+        "category": "pouf",
+        "description": "Pouf rose",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "pouf_2",
+        "category": "pouf",
+        "description": "Pouf jaune",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "pouf_3",
+        "category": "pouf",
+        "description": "Pouf bleu",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "tv_stand_1",
+        "category": "tv_stand",
+        "description": "Commode ancienne servant de meuble TV",
+        "expected": "RESTYLE (Repaint the TV stand in a deep chocolate brown for a vintage chic look.) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "television_1",
+        "category": "television",
+        "description": "Écran plat noir",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "mirror_1",
+        "category": "mirror",
+        "description": "Grand miroir mural au-dessus de la cheminée",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "ceiling_light_1",
+        "category": "ceiling_light",
+        "description": "Suspension filaire noire",
+        "expected": "RESTYLE (Replace with a spherical opal glass or chrome pendant light.) — MÊME objet, seule cette finition change, uniforme"
+      },
+      {
+        "element_id": "floor_1",
+        "category": "floor",
+        "description": "Parquet en bois foncé",
+        "expected": "KEEP — objet inchangé (même objet, même couleur, même place)"
+      },
+      {
+        "element_id": "wall_1",
+        "category": "wall",
+        "description": "Murs avec soubassement mouluré gris",
+        "expected": "RESTYLE (Paint the wainscoting in deep avocado green and the upper walls in warm cream.) — MÊME objet, seule cette finition change, uniforme"
+      }
+    ],
+    "durationMs": 39038,
+    "judge": {
+      "decisions": [
+        {
+          "element_id": "sofa_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "sofa_2",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "coffee_table_1",
+          "expected": "RESTYLE",
+          "applied": "no",
+          "note": "La table basse n'a pas reçu la finition teck chaud demandée, le bois est resté clair."
+        },
+        {
+          "element_id": "pouf_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "pouf_2",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "pouf_3",
+          "expected": "KEEP",
+          "applied": "no",
+          "note": "Le pouf bleu a disparu de la scène."
+        },
+        {
+          "element_id": "tv_stand_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "television_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "mirror_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "ceiling_light_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        },
+        {
+          "element_id": "floor_1",
+          "expected": "KEEP",
+          "applied": "yes"
+        },
+        {
+          "element_id": "wall_1",
+          "expected": "RESTYLE",
+          "applied": "yes"
+        }
+      ],
+      "color_wash": false,
+      "major_issues": [],
+      "verdict": "warn",
+      "comment": "Le plan de restylage est globalement bien respecté, notamment pour les murs et le meuble TV. Cependant, la table basse n'a pas été teintée, le pouf bleu a disparu et de nombreux éléments décoratifs non demandés ont été ajoutés."
+    }
+  },
+  {
+    "image": "sailly.jpg",
+    "style": "boheme",
+    "projectId": "auZa2UzrvXroyyEMOELGI",
+    "renderFile": null,
+    "plan": [],
+    "durationMs": 43084,
+    "error": "juge: JSON invalide après retry"
+  }
+]

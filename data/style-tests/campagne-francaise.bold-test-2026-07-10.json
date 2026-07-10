@@ -1,0 +1,69 @@
+{
+  "mood": "A warm, generous French country home — deep painted woodwork, sun-worn plaster tones, antique patina and abundant, lived-in charm.",
+  "name": "Campagne française",
+  "avoid": [
+    "English chintz floral wallpaper, doily lace and any wallpaper at all — paint only",
+    "Walls left visibly unpainted / flat beige uniformity",
+    "Kitsch farmhouse cliches (horseshoes, wagon wheels, fake beams)",
+    "High-gloss plastics and modern synthetic materials",
+    "Sterile, empty staging and bare surfaces"
+  ],
+  "beauty": "The render must feel TRANSFORMED, never a pale touch-up: the wainscot, boiseries and mouldings carry a DEEP, committed paint colour (olive, forest sage or dusty French blue) with upper walls in a warm cream or terracotta-washed plaster tone — this two-tone painted wall treatment is THE signature gesture. Warm late-afternoon sunlight streams in; table lamps glow. The fireplace mantel is fully styled: brass candlesticks with lit candles, dried and fresh flowers, stacked antique ceramics. Walls are dressed with a generous gallery of vintage oil paintings and botanical prints in gilded and dark-wood frames. Washed-linen curtains dress the EXISTING windows only (a room with no visible window gets none — never invent one); stoneware pitchers of wildflowers sit on the main surfaces.",
+  "palette": [
+    "#5A6B3B",
+    "#4A5D43",
+    "#7A8FA6",
+    "#F2E8CF",
+    "#C2704E",
+    "#B08D57"
+  ],
+  "colorways": [
+    {
+      "slug": "olive-profond",
+      "label": "Olive profond",
+      "walls": "upper walls buttery cream, wainscot and mouldings painted DEEP olive green",
+      "accents": "olive, cream and aged brass, patinated walnut"
+    },
+    {
+      "slug": "bleu-de-france",
+      "label": "Bleu de France",
+      "walls": "upper walls warm chalk white, wainscot and doors painted deep dusty French blue",
+      "accents": "French blue and cream linens, copper and unlacquered brass"
+    },
+    {
+      "slug": "terracotta-ancienne",
+      "label": "Terracotta ancienne",
+      "walls": "upper walls terracotta-washed plaster tone, wainscot deep cream",
+      "accents": "terracotta, soft rose and olive textiles on antique wood"
+    },
+    {
+      "slug": "vert-sauge",
+      "label": "Vert sauge",
+      "walls": "upper walls soft sage, wainscot painted a deeper forest sage",
+      "accents": "sage-on-sage with cream, walnut and brass"
+    }
+  ],
+  "materials": [
+    "Reclaimed Wood",
+    "Patinated Walnut",
+    "Stoneware",
+    "Washed Linen",
+    "Unlacquered Brass",
+    "Copper"
+  ],
+  "signature": [
+    "Deep-painted wainscot and mouldings with a coloured cornice line",
+    "Generous gallery of vintage oils and botanical prints in gilded frames",
+    "Stoneware pitchers filled with wildflowers",
+    "Brass candlesticks with lit candles on the mantel",
+    "Washed linen curtains",
+    "Turned-leg antique wooden tables",
+    "Stacked antique ceramics and copper pots on open shelving"
+  ],
+  "description": "Pierre, lin lavé et bois patiné — la maison de famille dans son jus, sans le kitsch.",
+  "referent_v1": null,
+  "moodboardUrl": "/style-refs/campagne-france_1.jpeg",
+  "longDescription": "La campagne française assumée : boiseries peintes en couleurs profondes, murs chauds, huiles anciennes en cadres dorés, bouquets de fleurs des champs et cuivres patinés. Une maison de famille généreuse et vécue. Idéal pour les maisons anciennes, les salons avec cheminée et les amoureux de la patine.",
+  "referent_source": "style-refs 2026-07-10",
+  "referent_version": "v2-bold-test-2026-07-10"
+}
