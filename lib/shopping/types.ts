@@ -37,7 +37,7 @@ export type DroppedItem = {
   description: string;
   action_slug: string | null;
   action_label: string | null;
-  reason: "budget_exceeded" | "not_applied";
+  reason: "budget_exceeded" | "not_applied" | "decor_discarded" | "kept_in_render";
 };
 
 export type AppliedItem = {

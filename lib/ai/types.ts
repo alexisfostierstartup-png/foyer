@@ -42,6 +42,8 @@ export interface ImageProvider {
   generateFromText(
     prompt: string,
     sourceImage?: ImageInput,
+    // Images de référence optionnelles (moodboard de style) — providers libres de les ignorer.
+    refImages?: ImageInput[],
   ): Promise<GenerationResult>;
   editImage(prompt: string, sourceImage: ImageInput): Promise<GenerationResult>;
 }

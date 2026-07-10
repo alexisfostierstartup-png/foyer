@@ -28,8 +28,30 @@ export function reconcilePlan(
     audit.elements.map((e) => [e.element_id, e]),
   );
 
+  // Remaster déco 2026-07-10 : la petite déco non alignée est RETIRÉE du rendu
+  // (discard) — jamais shoppée.
+  const DECOR_DISCARD = new Set(["decor_object", "frame", "mirror", "plant", "cushion"]);
+
   for (const d of decisions) {
     if (d.mismatch_type === "structural") {
+      if (DECOR_DISCARD.has(d.category)) {
+        dropList.push({
+          element_id: d.element_id, description: d.description,
+          action_slug: null, action_label: null, reason: "decor_discarded",
+        });
+        continue;
+      }
+      // Le rendu a GARDÉ l'original malgré le REPLACE (audit : élément préservé)
+      // → pas de ligne shopping incohérente avec l'image (pendant/miroir gardés
+      // mais shoppés, projet TvrnYMMy 2026-07-10).
+      const aud = auditMap.get(d.element_id);
+      if (aud?.element_preserved) {
+        dropList.push({
+          element_id: d.element_id, description: d.description,
+          action_slug: null, action_label: null, reason: "kept_in_render",
+        });
+        continue;
+      }
       toReplace.push(d);
       continue;
     }

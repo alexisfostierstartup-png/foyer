@@ -267,6 +267,12 @@ export async function buildFixedFeaturesSummary(profiles: ElementProfile[]): Pro
   const fd = count("french_door"); if (fd) parts.push(`${fd} porte(s)-fenêtre(s)`);
   const d = count("door"); if (d) parts.push(`${d} porte(s)`);
   const wo = count("wall_opening"); if (wo) parts.push(`${wo} ouverture(s)/passage(s) vers une autre pièce`);
+  // 0 est aussi une information (même leçon que les lightpoints ci-dessous) :
+  // sans compte explicite, le modèle invente une fenêtre pour y accrocher les
+  // rideaux du style (dispo 3 TvrnYMMyaELuMIc5pMRmL 2026-07-10). Le cas d'une
+  // ouverture RATÉE par la détection reste couvert par « THE PHOTO IS THE
+  // TRUTH » du SHELL_LOCK (préserver ce qui est visible gagne toujours).
+  if (w + fd === 0) parts.push(`NO window or french door visible (0) — NEVER add one, and NO curtains anywhere`);
   // Points lumineux FIXES (plafonnier/applique) — data-driven via le flag
   // fixed_lightpoint de la taxonomie. Le NOMBRE exact injecté verrouille le
   // compte : le swap en place reste permis, l'AJOUT de luminaires (lustre,
@@ -958,12 +964,51 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
   // empêche la coexistence par `conditions` — d'où le slug séparé.
   const genSlug = project.diyMode === "beta" ? "gen_wow_generic_diy_beta" : "gen_wow_generic";
 
+  // CANARY moodboard (STYLE_REF_IMAGE=1, OFF par défaut) : joint 1 image de
+  // référence du style (public/style-refs/<slug>_1.*) — ancre visuelle de
+  // l'ambiance, plus forte que le texte (comparaison Gemini web 2026-07-10 :
+  // rendus encore timides malgré COMMITMENT/WALLS/STAGING).
+  let refImages: ImageInput[] | undefined;
+  let refNote = "";
+  if (process.env.STYLE_REF_IMAGE === "1") {
+    try {
+      const { readdir, readFile } = await import("fs/promises");
+      const sharp = (await import("sharp")).default;
+      const refDir = `${process.cwd()}/public/style-refs`;
+      const slug = project.selectedStyleId === "campagne-francaise" ? "campagne-france" : project.selectedStyleId;
+      const files = (await readdir(refDir)).filter((f) => f.toLowerCase().startsWith(`${slug}_`)).sort();
+      // Choix déterministe par projet mais varié entre projets (hash id) —
+      // sinon c'est toujours _1 qui sert (les meilleures refs jamais vues).
+      const file = files.length ? files[[...projectId].reduce((a, c) => a + c.charCodeAt(0), 0) % files.length] : undefined;
+      if (file) {
+        // La ref est REDIMENSIONNÉE au format de la photo source : sans ça le
+        // modèle adopte parfois le ratio/l'expo de la ref (rendu carré sombre,
+        // banc out-styleref s03) au lieu du cadre de la pièce.
+        const srcMeta = await sharp(await fetchImageBytes(project.basePhotoUrl)).metadata();
+        const refResized = await sharp(`${refDir}/${file}`)
+          .resize(srcMeta.width ?? 1280, srcMeta.height ?? 768, { fit: "cover" })
+          .jpeg({ quality: 85 })
+          .toBuffer();
+        refImages = [refResized as unknown as ImageInput];
+        refNote =
+          `\n=== STYLE REFERENCE (last attached image) ===\nThe LAST image shows the TARGET AMBIANCE for this redesign — treat it as the standard to MATCH: ` +
+          `the same boldness of wall colour, the same staging density (rug, textiles, plants, dressed surfaces), the same richness. ` +
+          `A result that feels closer to the original photo's emptiness than to the reference's ambiance is a FAILURE. ` +
+          `Copy its SPIRIT only — NEVER its room: architecture, layout, openings, furniture positions and camera framing come from the FIRST image alone, ` +
+          `and the output stays a well-exposed daylight photograph with the FIRST image's exact framing and aspect ratio. Every rule above still applies.`;
+        console.log(`[canary:style-ref] ${projectId}: référence ${file} jointe (${files.length} dispo)`);
+      }
+    } catch (e) {
+      console.warn(`[canary:style-ref] ${projectId}: échec (non bloquant):`, e instanceof Error ? e.message : e);
+    }
+  }
+
   const t1 = Date.now();
   const genPrompt = await resolvePrompt(genSlug, genCtx, { strict: false });
   const genResult = await withTracking(
     { step: "generation", projectId, provider: genPrompt.prompt.provider,
       requestPayload: { promptName: genSlug, prompt: genPrompt.resolvedTemplate.slice(0, 5000) } },
-    () => getImageProvider(genPrompt.prompt.provider).generateFromText(genPrompt.resolvedTemplate, sourceImage),
+    () => getImageProvider(genPrompt.prompt.provider).generateFromText(genPrompt.resolvedTemplate + refNote, sourceImage, refImages),
   );
   console.log(`[pipeline:generate] generation: ${Date.now() - t1}ms, ${Math.round(genResult.imageBuffer.length / 1024)}KB`);
 

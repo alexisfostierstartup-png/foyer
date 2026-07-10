@@ -11,6 +11,9 @@ export class NanoBananaProvider implements ImageProvider {
   async generateFromText(
     prompt: string,
     sourceImage?: ImageInput,
+    // Images de référence additionnelles (moodboard de style) — jointes APRÈS
+    // la photo source ; le prompt doit préciser leur rôle (ambiance only).
+    refImages?: ImageInput[],
   ): Promise<GenerationResult> {
     const start = Date.now();
     // temperature 0 → suivi le plus littéral possible du plan (REPLACE, positions
@@ -23,6 +26,7 @@ export class NanoBananaProvider implements ImageProvider {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const parts: any[] = [prompt];
     if (sourceImage) parts.push(await toInlineData(sourceImage));
+    for (const ref of refImages ?? []) parts.push(await toInlineData(ref));
 
     const result = await withRetry(() => model.generateContent(parts), { label: `image ${MODEL}` });
 

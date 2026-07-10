@@ -468,6 +468,27 @@ export function FinalScreen({
                 items={shoppingList}
                 bboxById={bboxById}
                 showModify={!expertMode}
+                selected={expertMode ? sel : undefined}
+                onSelect={
+                  expertMode
+                    ? chooseProduct
+                    : (eid, idx) => {
+                        // Choix top-1 SANS recalcul : réordonne la ligne localement
+                        // (la carte liste suit) + persiste (survit au refresh/verrou).
+                        setShoppingList((prev) =>
+                          prev.map((it) =>
+                            it.elementId === eid && it.matches && idx < it.matches.length
+                              ? { ...it, matches: [it.matches[idx], ...it.matches.filter((_, i) => i !== idx)] }
+                              : it,
+                          ),
+                        );
+                        fetch(`/api/projects/${projectId}/choose-match`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ elementId: eid, matchIdx: idx }),
+                        }).catch(() => toast.error("Choix non sauvegardé — réessayez."));
+                      }
+                }
               />
             )}
             {fakeRenderUrl && (

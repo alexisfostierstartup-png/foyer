@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { getProject, updateProject } from "@/lib/storage/projects";
-import stylesData from "@/data/styles.json";
-
-const STYLE_IDS = new Set((stylesData as { slug: string }[]).map((s) => s.slug));
+import { getAmbianceById } from "@/lib/db/assets";
 
 export async function POST(
   request: Request,
@@ -18,7 +16,12 @@ export async function POST(
   }
 
   const styleId = body.styleId;
-  if (typeof styleId !== "string" || !STYLE_IDS.has(styleId)) {
+  // Valide contre la MÊME source que le sélecteur (assets ambiance actifs en DB)
+  // — la whitelist statique data/styles.json driftait à chaque rename DB
+  // (bug campagne-francaise 2026-07-10 : visible dans l'UI, refusé ici en 400).
+  const style =
+    typeof styleId === "string" ? await getAmbianceById(styleId) : null;
+  if (!style) {
     return NextResponse.json({ error: "Ambiance inconnue" }, { status: 400 });
   }
 
@@ -27,6 +30,6 @@ export async function POST(
     return NextResponse.json({ error: "Projet introuvable" }, { status: 404 });
   }
 
-  await updateProject(id, { selectedStyleId: styleId });
+  await updateProject(id, { selectedStyleId: styleId as string });
   return NextResponse.json({ ok: true });
 }
