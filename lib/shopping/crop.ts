@@ -40,8 +40,22 @@ export function isDegenerateBbox(b?: Bbox | null): boolean {
   return false;
 }
 
+// Fragment TRONQUÉ par le cadre : petit objet coupé dans un coin de l'image (ex. fauteuil
+// du premier plan « visible partiellement »). Son crop est du bruit (moitié sol/mur, objet
+// coupé) et fait dériver le matching image vers n'importe quoi (cas réel : fauteuil crème
+// tronqué → propositions similcuir noir). ≥2 bords touchés ET petite surface → on rejette
+// le crop, le matching bascule proprement sur texte+attrs. Le seuil de surface épargne les
+// catégories qui touchent naturellement plusieurs bords en grand (sol, tapis, grand canapé).
+export function isFrameTruncatedFragment(b?: Bbox | null): boolean {
+  if (!b) return false;
+  const edges = [b.x <= 0.01, b.y <= 0.01, b.x + b.w >= 0.99, b.y + b.h >= 0.99].filter(Boolean).length;
+  const vw = Math.min(1, b.x + b.w) - Math.max(0, b.x);
+  const vh = Math.min(1, b.y + b.h) - Math.max(0, b.y);
+  return edges >= 2 && vw * vh < 0.15;
+}
+
 export async function extractCrop(renderImage: Buffer, bbox?: Bbox | null): Promise<Buffer | null> {
-  if (isDegenerateBbox(bbox)) return null;
+  if (isDegenerateBbox(bbox) || isFrameTruncatedFragment(bbox)) return null;
   const b = bbox!;
   try {
     const meta = await sharp(renderImage).metadata();

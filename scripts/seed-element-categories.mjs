@@ -41,35 +41,38 @@ const CATS = [
   // ── ASSISE (retapisser trop cher → garder / remplacer) ────────────────────
   C("sofa", "Canapé", "assise", "salon", true, false, "sofa", KR),
   C("armchair", "Fauteuil", "assise", "any", true, false, "armchair", KR),
-  C("chair", "Chaise", "assise", "any", true, false, null, KR),
-  C("dining_chair", "Chaise de salle à manger", "assise", "salon", true, false, null, KR),
-  C("bench", "Banc", "assise", "any", true, false, null, KR),
-  C("stool", "Tabouret", "assise", "any", true, false, null, KR),
-  C("pouf", "Pouf", "assise", "any", true, false, null, KR),
+  // catalog_category "chair" : sans lui, une chaise/fauteuil détecté en ADDITION
+  // (pièce vide meublée par le rendu) était jeté « non shoppable » et disparaissait
+  // de la liste de courses (bug projet LUxR9ww1, fauteuil cannage absent).
+  C("chair", "Chaise", "assise", "any", true, false, "chair", KR),
+  C("dining_chair", "Chaise de salle à manger", "assise", "salon", true, false, "chair", KR),
+  C("bench", "Banc", "assise", "any", true, false, "bench", KR),
+  C("stool", "Tabouret", "assise", "any", true, false, "stool", KR),
+  C("pouf", "Pouf", "assise", "any", true, false, "pouf", { ...KR, keywords: ["pouf", "ottoman", "repose-pieds", "repose pieds"] }),
   // ── TABLE ───────────────────────────────────────────────────────────────
-  C("coffee_table", "Table basse", "table", "salon", true, true, "coffee_table"),
-  C("side_table", "Table d'appoint", "table", "salon", true, true, "side_table"),
-  C("dining_table", "Table à manger", "table", "salon", true, true, null),
+  C("coffee_table", "Table basse", "table", "salon", true, true, "coffee_table", { keywords: ["table basse"] }),
+  C("side_table", "Table d'appoint", "table", "salon", true, true, "side_table", { keywords: ["table d'appoint", "bout de canapé"] }),
+  C("dining_table", "Table à manger", "table", "salon", true, true, "dining_table", { keywords: ["table à manger", "table de repas"] }),
   C("console_table", "Console", "table", "any", true, true, null),
-  C("bar_table", "Table haute / mange-debout", "table", "salon", true, true, null),
-  C("desk", "Bureau", "table", "any", true, true, null),
+  C("bar_table", "Table haute / mange-debout", "table", "salon", true, true, "dining_table", { keywords: ["mange-debout", "table haute", "table de bar"] }),
+  C("desk", "Bureau", "table", "any", true, true, "desk"),
   // ── RANGEMENT ───────────────────────────────────────────────────────────
   C("bookshelf", "Bibliothèque", "rangement", "any", true, true, "bookshelf"),
-  C("shelf", "Étagère", "rangement", "any", true, true, null),
+  C("shelf", "Étagère", "rangement", "any", true, true, "bookshelf"),
   C("tv_stand", "Meuble TV", "rangement", "salon", true, true, "tv_stand"),
   C("dresser", "Commode", "rangement", "chambre", true, true, "dresser"),
-  C("sideboard", "Buffet", "rangement", "salon", true, true, null),
+  C("sideboard", "Buffet", "rangement", "salon", true, true, "sideboard"),
   C("wardrobe", "Armoire", "rangement", "chambre", true, true, null),
-  C("cabinet", "Meuble de rangement", "rangement", "any", true, true, null),
+  C("cabinet", "Meuble de rangement", "rangement", "any", true, true, "sideboard"),
   C("nightstand", "Table de chevet", "rangement", "chambre", true, true, "nightstand"),
   // ── COUCHAGE ────────────────────────────────────────────────────────────
   C("bed", "Lit", "couchage", "chambre", true, false, "bed", KR),
   C("headboard", "Tête de lit", "couchage", "chambre", true, true, null),
   C("mattress", "Matelas", "couchage", "chambre", true, false, null, KR),
   // ── LUMINAIRE (remplacer en place, pas de customisation) ──────────────────
-  C("ceiling_light", "Luminaire plafonnier", "luminaire", "any", false, false, "lamp", { ...KR, fixed_lightpoint: true }),
-  C("wall_sconce", "Applique murale", "luminaire", "any", false, false, "lamp", { ...KR, fixed_lightpoint: true }),
-  C("table_lamp", "Lampe de table", "luminaire", "any", true, false, "lamp", KR),
+  C("ceiling_light", "Luminaire plafonnier", "luminaire", "any", false, false, "pendant_lamp", { ...KR, fixed_lightpoint: true }),
+  C("wall_sconce", "Applique murale", "luminaire", "any", false, false, "wall_sconce", { ...KR, fixed_lightpoint: true }),
+  C("table_lamp", "Lampe de table", "luminaire", "any", true, false, "table_lamp", KR),
   C("floor_lamp", "Lampadaire", "luminaire", "any", true, false, "floor_lamp", KR),
   // ── TEXTILE ─────────────────────────────────────────────────────────────
   C("rug", "Tapis", "textile", "any", true, false, "rug", KR),
@@ -85,11 +88,13 @@ const CATS = [
   C("ceiling", "Plafond", "surface", "any", false, false, null, KC),
   // ── DÉCO ────────────────────────────────────────────────────────────────
   C("plant", "Plante", "deco", "any", true, false, "plant", KR),
-  C("mirror", "Miroir", "deco", "any", true, false, null, KR),
+  C("mirror", "Miroir", "deco", "any", true, false, "mirror", KR),
   C("frame", "Cadre / tableau", "deco", "any", true, false, null, KR),
   C("decor_object", "Objet déco", "deco", "any", true, false, null, KR),
   // ── ÉLECTROMÉNAGER ──────────────────────────────────────────────────────
-  C("television", "Téléviseur", "electromenager", "salon", true, false, null, KR),
+  // Télé : JAMAIS remplacée ni customisée — aucun intérêt déco, elle est rendue
+  // moderne dans l'image de toute façon (règle "Technology stays present-day").
+  C("television", "Téléviseur", "electromenager", "salon", true, false, null, K),
   C("radiator", "Radiateur", "electromenager", "any", false, false, null, {
     ...K, preserve_behind: true, keywords: ["radiateur", "radiator", "convecteur"],
   }),

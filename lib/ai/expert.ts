@@ -1,7 +1,8 @@
 import { getProject, updateProject } from "@/lib/storage/projects";
 import { fetchImageBytes } from "@/lib/ai/pipeline";
 import { saveRender } from "@/lib/ai/saveRender";
-import type { RoomType, ShoppingItem, CustomProduct } from "@/lib/types";
+import { enforceExpertIntegratedPieces } from "@/lib/shopping/integratedPieces";
+import type { RoomType, ShoppingItem, CustomProduct, ExpertIntegratedPiece, ProductMatch } from "@/lib/types";
 
 // ── Gros meubles à intégrer au rendu expert ─────────────────────────────────
 // V1 : SEULEMENT les gros éléments principaux. Exclus volontairement : déco,
@@ -21,6 +22,9 @@ const EXPERT_CATEGORIES = [
   "bed",
   "nightstand",
   "bench",
+  // Suspensions/plafonniers en dernier (swap le plus délicat — point plafond fixe).
+  "ceiling_light",
+  "pendant_lamp",
 ] as const;
 
 // Nom lisible injecté dans le prompt (le modèle doit savoir QUEL meuble ajouter,
@@ -54,6 +58,9 @@ const CATEGORY_NOUN: Record<string, string> = {
   chest: "chest of drawers",
   tv: "TV",
   buffet: "sideboard",
+  ceiling_light: "ceiling pendant light",
+  pendant_lamp: "ceiling pendant light",
+  chandelier: "ceiling pendant light",
 };
 
 // Ce qu'on NE remplace PAS par un produit catalogue dans le rendu (v1) : petite
@@ -63,9 +70,10 @@ const NON_REPLACEABLE = new Set([
   // déco / accessoires
   "cushion", "pillow", "throw", "frame", "artwork", "art", "painting", "poster", "mirror",
   "plant", "vase", "book", "books", "decor", "decoration", "tableware", "clock", "candle",
-  // luminaires
-  "lamp", "floor_lamp", "table_lamp", "ceiling_light", "pendant", "pendant_lamp", "wall_light",
-  "sconce", "chandelier", "light",
+  // luminaires NON swappés : lampes mobiles et appliques. Les SUSPENSIONS/plafonniers
+  // (ceiling_light/pendant) sont swappés depuis 2026-07-10 (go Alexis) — le produit
+  // exact de la liste remplace la suspension du rendu, au même point.
+  "lamp", "floor_lamp", "table_lamp", "wall_light", "wall_sconce", "sconce", "light",
   // textile / ouvertures souples
   "curtains", "curtain", "blinds", "drapes",
   // architecture / éléments fixes
@@ -89,7 +97,19 @@ const ROOM_LABEL: Record<string, string> = {
 // On plafonne le nombre de références envoyées à NB2 (au-delà, il peut saturer).
 const MAX_PIECES = 8;
 
-type Piece = { category: string; noun: string; imageUrl: string; name: string };
+type Piece = {
+  category: string;
+  noun: string;
+  imageUrl: string;
+  name: string;
+  // Traçabilité pour la liste de courses autoritaire : élément source + produit exact.
+  elementId?: string | null;
+  match?: ProductMatch | null;
+  // Description de l'élément SOURCE dans le rendu (localisateur) : désambiguïse le
+  // mapping quand deux meubles proches coexistent (la table d'appoint BORGEBY avait
+  // remplacé la table basse CENTRALE, projet CVp7yLGh).
+  sourceDesc?: string | null;
+};
 
 /**
  * Sélectionne les gros meubles matchés (image produit dispo), par priorité.
@@ -102,12 +122,19 @@ function selectExpertPieces(
   shoppingList: ShoppingItem[],
   overrides: Record<string, number> = {},
   customProducts: Record<string, CustomProduct> = {},
+  // element_ids des décisions REPLACE (structural) : SEULES pièces swappables.
+  // Décision Alexis 2026-07-10 : le swap ne touche QUE ce que le plan a remplacé —
+  // les keep/customize du user sont sacrés, et les ADDITIONS du fake restent
+  // telles quelles (la BORGEBY qui se posait à côté de la table conservée = la
+  // violation type). null = pas de restriction (rétro-compat tests).
+  replaceIds: Set<string> | null = null,
 ): Piece[] {
   const priority = new Map(EXPERT_CATEGORIES.map((c, i) => [c as string, i]));
   const pieces = shoppingList
     .map((it) => {
       const cat = it.category;
       if (it.source === "diy" || !isReplaceableFurniture(cat)) return null;
+      if (replaceIds && (!it.elementId || !replaceIds.has(it.elementId))) return null;
       const noun = CATEGORY_NOUN[cat] ?? cat.replace(/_/g, " ");
       // Priorité au produit custom de l'user (par elementId puis par catégorie).
       const cp = (it.elementId ? customProducts[it.elementId] : undefined) ?? customProducts[cat];
@@ -120,10 +147,13 @@ function selectExpertPieces(
         noun,
         imageUrl,
         name: cp?.name ?? match?.name ?? it.name,
+        elementId: (it.elementId ?? null) as string | null,
+        match: (cp ? null : match ?? null) as ProductMatch | null,
+        sourceDesc: (it.name?.trim() || null) as string | null,
         _p: priority.get(cat) ?? 99,
       };
     })
-    .filter((x): x is Piece & { _p: number } => x !== null)
+    .filter((x): x is NonNullable<typeof x> => x !== null)
     // dédup par catégorie (une ligne par type de meuble)
     .filter((x, i, arr) => arr.findIndex((y) => y.category === x.category) === i);
 
@@ -132,13 +162,13 @@ function selectExpertPieces(
   for (const [key, cp] of Object.entries(customProducts)) {
     if (!cp?.imageUrl || !CATEGORY_NOUN[key] || !isReplaceableFurniture(key)) continue;
     if (pieces.some((p) => p.category === key)) continue;
-    pieces.push({ category: key, noun: CATEGORY_NOUN[key], imageUrl: cp.imageUrl, name: cp.name ?? CATEGORY_NOUN[key], _p: priority.get(key) ?? 99 });
+    pieces.push({ category: key, noun: CATEGORY_NOUN[key], imageUrl: cp.imageUrl, name: cp.name ?? CATEGORY_NOUN[key], elementId: null, match: null, sourceDesc: null, _p: priority.get(key) ?? 99 });
   }
 
   return pieces
     .sort((a, b) => a._p - b._p)
     .slice(0, MAX_PIECES)
-    .map(({ category, noun, imageUrl, name }) => ({ category, noun, imageUrl, name }));
+    .map(({ category, noun, imageUrl, name, elementId, match, sourceDesc }) => ({ category, noun, imageUrl, name, elementId, match, sourceDesc }));
 }
 
 async function toDataUri(url: string): Promise<string> {
@@ -188,14 +218,26 @@ async function toValidProductUri(url: string): Promise<string | null> {
 
 const FAL_ENDPOINT = "https://fal.run/fal-ai/nano-banana-2/edit";
 
-async function callNb2(prompt: string, imageUris: string[]): Promise<{ buffer: Buffer; mimeType: string }> {
+// Ratio NB2 le plus proche des dimensions source — sans lui, NB2 rend dans SON
+// ratio par défaut et INVENTE du plafond/du sol pour remplir (« plafond plus haut
+// que la réalité », feedback Alexis 2026-07-10 projet 7JDbe).
+const NB2_RATIOS: [string, number][] = [
+  ["21:9", 21 / 9], ["16:9", 16 / 9], ["3:2", 3 / 2], ["4:3", 4 / 3], ["5:4", 5 / 4],
+  ["1:1", 1], ["4:5", 4 / 5], ["3:4", 3 / 4], ["2:3", 2 / 3], ["9:16", 9 / 16],
+];
+function closestNb2Ratio(width: number, height: number): string {
+  const r = width / height;
+  return NB2_RATIOS.reduce((best, cur) => (Math.abs(cur[1] - r) < Math.abs(best[1] - r) ? cur : best))[0];
+}
+
+async function callNb2(prompt: string, imageUris: string[], aspectRatio?: string): Promise<{ buffer: Buffer; mimeType: string }> {
   const key = process.env.FAL_API_KEY;
   if (!key) throw new Error("FAL_API_KEY manquant");
 
   const res = await fetch(FAL_ENDPOINT, {
     method: "POST",
     headers: { Authorization: `Key ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt, image_urls: imageUris, num_images: 1 }),
+    body: JSON.stringify({ prompt, image_urls: imageUris, num_images: 1, ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}) }),
   });
   const json = (await res.json()) as { images?: { url: string }[]; detail?: unknown };
   if (!res.ok) {
@@ -215,14 +257,26 @@ async function callNb2(prompt: string, imageUris: string[]): Promise<{ buffer: B
 // GROS meubles par les vrais produits. Le reste est conservé À L'IDENTIQUE.
 // Philosophie : RÉEL pour les grosses pièces (dures à trouver, chères) ; le style et
 // la petite déco (vase, cadre, vaisselle) restent ceux du fake → rendu vendeur.
+// NB2 sature au-delà de ~3 produits de référence : les grosses pièces sont swappées,
+// les petites (pouf, chaise, banc) sont ignorées (bench 2026-07-09, 3/3 sessions).
+// → le swap se fait par PASSES CHAÎNÉES de 3 produits max, chaque passe éditant la
+// sortie de la précédente (+1 appel NB2 ≈ $0.08 au-delà de 3 pièces).
+const SWAP_CHUNK_SIZE = 3;
+
 async function swapOnFake(
   fakeUrl: string,
   pieces: Piece[],
   roomType: RoomType,
-): Promise<{ buffer: Buffer; mimeType: string } | null> {
+): Promise<{ buffer: Buffer; mimeType: string; integrated: Piece[] } | null> {
   const room = ROOM_LABEL[roomType] ?? "room";
   // On VALIDE chaque image produit ; on ne garde que les vraies images (anti-garbage).
-  const fakeUri = await toDataUri(fakeUrl);
+  const fakeBytes = await fetchImageBytes(fakeUrl);
+  const fakeUri = `data:image/jpeg;base64,${fakeBytes.toString("base64")}`;
+  // Ratio de sortie VERROUILLÉ sur le fake : sans lui NB2 rend dans son ratio par
+  // défaut et invente du plafond pour remplir (perspective déformée).
+  const sharp = (await import("sharp")).default;
+  const meta = await sharp(fakeBytes).metadata();
+  const aspectRatio = meta.width && meta.height ? closestNb2Ratio(meta.width, meta.height) : undefined;
   const validated: { p: Piece; uri: string }[] = [];
   for (const p of pieces) {
     const uri = await toValidProductUri(p.imageUrl);
@@ -231,25 +285,66 @@ async function swapOnFake(
   }
   if (validated.length === 0) return null; // aucune image valide → on ne rend rien (fallback = fake)
 
+  // Passes chaînées de SWAP_CHUNK_SIZE produits.
+  let currentUri = fakeUri;
+  let last: { buffer: Buffer; mimeType: string } | null = null;
+  for (let i = 0; i < validated.length; i += SWAP_CHUNK_SIZE) {
+    const chunk = validated.slice(i, i + SWAP_CHUNK_SIZE);
+    last = await swapChunk(currentUri, chunk, room, aspectRatio);
+    currentUri = `data:${last.mimeType};base64,${last.buffer.toString("base64")}`;
+  }
+  return { ...last!, integrated: validated.map((v) => v.p) };
+}
+
+async function swapChunk(
+  baseUri: string,
+  validated: { p: Piece; uri: string }[],
+  room: string,
+  aspectRatio?: string,
+): Promise<{ buffer: Buffer; mimeType: string }> {
+
   // Pluriel-safe : une catégorie peut représenter plusieurs pièces identiques (ex.
   // 4 chaises) → on demande de remplacer CHAQUE pièce de ce type par le même produit.
-  const mapping = validated.map((v, i) => `every ${v.p.noun} → image ${i + 2}`).join(", ");
+  // Localisateur par pièce (« the sofa — currently: … ») : identifie SANS ambiguïté
+  // QUEL meuble remplacer quand plusieurs sont proches ; l'apparence cible vient
+  // toujours de l'image de référence, jamais de cette description.
+  const mapping = validated
+    .map((v, i) => `every ${v.p.noun}${v.p.sourceDesc ? ` (currently: "${v.p.sourceDesc.slice(0, 60)}")` : ""} → image ${i + 2}`)
+    .join(", ");
   const prompt =
-    `This is a beautifully styled photo of a ${room}. Replace ONLY the large furniture with its ` +
-    `matching real catalog product, using each product's EXACT appearance from its reference image ` +
-    `(IGNORE the reference backgrounds), keeping each at the EXACT same position, footprint, size ` +
-    `and orientation as the piece it replaces. When several identical pieces of the same type exist ` +
-    `(e.g. dining chairs or bar stools), replace EVERY ONE of them with that same product and keep ` +
-    `the same count; remove the old pieces: ${mapping}. Keep EVERYTHING ELSE strictly identical to ` +
+    `This is a beautifully styled photo of a ${room}. YOUR TASK — MANDATORY: replace EACH listed ` +
+    `piece of furniture with its real catalog product — but ONLY pieces actually VISIBLE in this ` +
+    `photo: if a listed piece does not exist in the photo, SKIP it and add NOTHING for it (never ` +
+    `insert a product into an empty spot). A listed piece VISIBLE but left UNCHANGED is a FAILURE; ` +
+    `a listed piece replaced by a LOOKALIKE instead of the product's EXACT appearance (shape, ` +
+    `colour, materials, details) from its reference image is a FAILURE. IGNORE the reference ` +
+    `backgrounds. Place each product at the SAME position and orientation as the piece it ` +
+    `replaces, at its REAL-WORLD size — respect the product's true nature and scale (a side ` +
+    `table stays a small side table ~40-50 cm, never enlarged into a coffee or dining table; ` +
+    `a pouf stays pouf-sized) — and ALWAYS at the product's TRUE proportions and shape from ` +
+    `its reference image: NEVER stretch, widen, squash, enlarge or distort a product to ` +
+    `fill the old piece's footprint (if the old piece was bigger, leave breathing room instead). ` +
+    `When several identical pieces of the same type exist ` +
+    `(e.g. dining chairs or bar stools), replace EVERY ONE of them with that same product, keep ` +
+    `the same count AND the same natural arrangement: chairs stay tucked at their table, seats ` +
+    `FACING the table — never scattered or turned away from it; remove the old pieces: ${mapping}. Keep EVERYTHING ELSE strictly identical to ` +
     `this photo — do NOT change, re-tint, restyle, move OR REMOVE anything other than the furniture ` +
-    `listed above. In particular, KEEP every other furniture piece exactly where it is, even next ` +
+    `listed above. In particular, KEEP every other furniture piece exactly where it is AND exactly ` +
+    `as it looks — a repainted or customized piece keeps its EXACT paint colour and finish from this ` +
+    `photo, pixel-faithful — even next ` +
     `to a replaced one (e.g. if you replace the bar stools, KEEP the bar/high table they surround; ` +
     `if you replace dining chairs, KEEP the dining table). Also keep unchanged: all wall art and ` +
     `frames, mirrors, lamps and light fixtures, plants, vases, cushions, books, tableware and small ` +
     `decor, the curtains, the wall colors and finishes, the ceiling, the window, the floor, and the ` +
     `entire styling, lighting and camera framing. Preserve the exact exposure and white balance. ` +
-    `Photorealistic.`;
-  return callNb2(prompt, [fakeUri, ...validated.map((v) => v.uri)]);
+    `STRICT RULES — violating any of these ruins the result: add NOTHING that is not in this photo ` +
+    `or in the product list above (no extra furniture, lamp, plant or decor); NEVER add, duplicate ` +
+    `or move a ceiling or wall light fixture; every MIRROR shows a plausible reflection of THIS very ` +
+    `room only — never an object that does not exist in the room, never a duplicated fixture in the ` +
+    `reflection; rooms and spaces visible through open doors or wall openings stay EXACTLY as in this ` +
+    `photo (do not furnish or restyle them); each replaced piece touches the floor with natural ` +
+    `contact shadows — no floating objects, no object intersecting another. Photorealistic.`;
+  return callNb2(prompt, [baseUri, ...validated.map((v) => v.uri)], aspectRatio);
 }
 
 /**
@@ -273,7 +368,22 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
   const shoppingList = (project.shoppingList ?? []) as ShoppingItem[];
   const overrides = (project.productOverrides ?? {}) as Record<string, number>;
   const customProducts = (project.customProducts ?? {}) as Record<string, CustomProduct>;
-  const pieces = selectExpertPieces(shoppingList, overrides, customProducts);
+  const replaceIds = new Set(
+    (project.element_decisions ?? [])
+      .filter((d) => d.mismatch_type === "structural")
+      .map((d) => d.element_id),
+  );
+  // CATÉGORIES PROTÉGÉES : le user GARDE ou CUSTOMISE un meuble de cette catégorie
+  // → le swap n'y touche pas du tout. Le ciblage texte de NB2 ne sait pas viser un
+  // objet précis quand deux semblables coexistent (la ligne ex-bar_table recatégorisée
+  // coffee_table a fait remplacer la table basse CONSERVÉE, projet CVp7yLGh).
+  const protectedCats = new Set(
+    (project.element_decisions ?? [])
+      .filter((d) => d.mismatch_type === "none" || d.mismatch_type === "surface")
+      .map((d) => d.category),
+  );
+  const swappable = shoppingList.filter((it) => !protectedCats.has(it.category));
+  const pieces = selectExpertPieces(swappable, overrides, customProducts, replaceIds);
   if (pieces.length === 0) {
     // Rien à remplacer (tous les meubles gardés, pièce déjà bien meublée) → le rendu
     // réel = le fake tel quel (pas de 400 : c'est un résultat légitime).
@@ -292,11 +402,31 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
     await updateProject(projectId, { expertRenderUrl: project.generatedRenderUrl });
     return project.generatedRenderUrl;
   }
-  const { buffer, mimeType } = result;
+  const { buffer, mimeType, integrated } = result;
 
   const url = await saveRender(buffer, project.storageFolder, mimeType, "expert");
-  await updateProject(projectId, { expertRenderUrl: url });
-  console.log(`[expert] ${projectId} : rendu expert sauvegardé`);
+  // Source de vérité de la liste de courses pour les meubles intégrés : ce qui est
+  // DANS le rendu fait foi. Persisté ici, ré-injecté dans toute liste recalculée
+  // (enforceExpertIntegratedPieces) — un meuble visible dans le rendu ne peut plus
+  // disparaître de la liste, quel que soit le re-gating vision du fake.
+  const integratedPieces: ExpertIntegratedPiece[] = integrated.map((p) => ({
+    category: p.category,
+    name: p.name,
+    imageUrl: p.imageUrl,
+    elementId: p.elementId ?? null,
+    match: p.match ?? null,
+  }));
+  // La liste courante est aussi mise à jour immédiatement (pin du produit exact).
+  const pinnedList = enforceExpertIntegratedPieces(
+    (project.shoppingList ?? []) as ShoppingItem[],
+    integratedPieces,
+  );
+  await updateProject(projectId, {
+    expertRenderUrl: url,
+    expertIntegratedPieces: integratedPieces,
+    shoppingList: pinnedList,
+  });
+  console.log(`[expert] ${projectId} : rendu expert sauvegardé, ${integratedPieces.length} produit(s) épinglés dans la liste`);
   return url;
 }
 
@@ -319,7 +449,10 @@ export async function runExpertIteration(projectId: string, userRequest: string)
     `Keep EVERYTHING ELSE exactly as it is — all furniture and its exact positions, all decor, ` +
     `the layout, the windows, doors, ceiling, lighting, and the SAME camera angle and framing. ` +
     `Only change what the request explicitly asks (e.g. the floor or the wall paint). Preserve the ` +
-    `exact perspective and a photorealistic look with natural lighting and contact shadows.`;
+    `exact perspective and a photorealistic look with natural lighting and contact shadows. ` +
+    `STRICT RULES: add NOTHING new to the scene; never add, duplicate or move a light fixture; ` +
+    `mirrors reflect THIS room only (never an object absent from the room); spaces seen through ` +
+    `doors or openings stay exactly as they are.`;
 
   const { buffer, mimeType } = await callNb2(prompt, [await toDataUri(parentUrl)]);
   const n = (project.iterationCount ?? 0) + 1;

@@ -94,6 +94,21 @@ export type AttrScoreLine = {
  * Couleur (clé contenant "color") → similarité ΔE ; sinon égalité stricte du vocab.
  * `details` : ligne par attribut (valeurs, poids, sim, comparé ou non) pour le debug /final.
  */
+// GROUPES DE SYNONYMES par attribut : valeurs d'enum équivalentes CÔTÉ PRODUIT
+// (le vocabulaire distingue des rendus visuels que le même produit peut donner).
+// Décision Alexis 2026-07-10 : chevron ≈ herringbone (double vocable au catalogue,
+// point de Hongrie / bâton rompu = même lame) ; straight_planks ≈ broken_bond
+// (le même parquet droit se pose des deux façons — la distinction ne vaut que
+// pour l'image du rendu, pas pour l'achat).
+const ATTR_VALUE_SYNONYMS: Record<string, string[][]> = {
+  pattern: [["chevron", "herringbone"], ["straight_planks", "broken_bond"]],
+};
+function synonymSim(key: string, a: string, b: string): number | null {
+  const groups = ATTR_VALUE_SYNONYMS[key];
+  if (!groups) return null;
+  return groups.some((g) => g.includes(a) && g.includes(b)) ? 1 : null;
+}
+
 export function structuredScore(
   schemaName: string,
   renderAttrs: Record<string, unknown> | null | undefined,
@@ -116,7 +131,7 @@ export function structuredScore(
     if (k.toLowerCase().includes("color")) {
       sim = colorAttrSim(String(va), String(vb)); // gate teinte + dégradé ΔE
     } else {
-      sim = String(va) === String(vb) ? 1 : 0;
+      sim = String(va) === String(vb) ? 1 : synonymSim(k, String(va), String(vb)) ?? 0;
     }
     num += wt * sim;
     den += wt;

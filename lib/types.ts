@@ -206,6 +206,9 @@ export type Project = {
     lighting: string;
   } | null;
   visionOutput?: unknown;
+  // Taille de pièce estimée par la détection (photo) : module le plan de
+  // génération (petit = essentiels aérés, grand = zones complémentaires).
+  roomScale?: "small" | "medium" | "large";
   // Photo sur laquelle visionOutput a été détecté (clé de cache du précalcul
   // upload) : re-upload → clé différente → re-détection à l'analyse.
   visionDetectionPhotoUrl?: string;
@@ -242,6 +245,9 @@ export type Project = {
   // Cache de l'ANALYSE VISION du rendu (Gemini), réutilisée tant que le rendu ne change pas.
   // Permet un « re-rank seul » au refresh (matching Jina + scoring) sans rappeler Gemini.
   renderAnalysis?: RenderAnalysis;
+  // Tap-to-target : element_ids à relâcher du verrou de liste au prochain
+  // recalcul (libération précise, complète pendingReleaseRequests textuel).
+  pendingReleaseElementIds?: string[];
 };
 
 // Analyse du rendu indépendante des poids de matching : squelette de liste + données vision

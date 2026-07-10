@@ -17,12 +17,15 @@ import { getProject, updateProject } from "@/lib/storage/projects";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import type { DetectedFurniture, UserConstraints, Project, ShoppingItem, ScoreFoyer, RenderAnalysis } from "@/lib/types";
 import { matchAlterationsToCatalog, type Alteration } from "@/lib/shopping/matcher";
+import { enforceExpertIntegratedPieces } from "@/lib/shopping/integratedPieces";
+import { SEAT_BLUR_CANARY, LIGHT_CATS, MIRROR_CATS, blurSeatsInSource } from "./seatBlurCanary";
+import { mapRequestsToCategories, carryOverLockedMatches } from "@/lib/shopping/listLock";
 import { reconcilePlan } from "@/lib/shopping/reconcile";
 import { buildShoppingList, builtToLegacyShoppingList } from "@/lib/shopping/build";
 import { matchPartnerProductsBlendBatch, matchFloorProductsBlend } from "@/lib/shopping/partnerMatch";
 import { buildAttrsInstruction, CATEGORY_W, ATTR_WEIGHTS } from "@/lib/shopping/attributeScore";
 import { schemaForCategory } from "@/lib/shopping/attributeSchemaV3";
-import { extractCrop, type Bbox } from "@/lib/shopping/crop";
+import { extractCrop, isFrameTruncatedFragment, type Bbox } from "@/lib/shopping/crop";
 import { matchPaintByColor, getChangedWallColors, type WallColor } from "@/lib/shopping/paintMatch";
 import type { ImageInput } from "./types";
 import { getAllDiyActions, getCandidateActions, getRenderableActionSlugs } from "@/lib/diy/rules";
@@ -111,13 +114,170 @@ function profilesToFurniture(profiles: ElementProfile[]): DetectedFurniture[] {
 // Récapitule l'architecture FIXE détectée (ouvertures + fixtures notables) en une
 // ligne chiffrée injectée dans la génération → cible claire qui limite l'invention
 // ou le déplacement de fenêtres/portes/escalier sur les angles serrés.
-export function buildFixedFeaturesSummary(profiles: ElementProfile[]): string {
+// Nombre de points lumineux FIXES (plafonnier/applique) détectés — partagé entre le
+// résumé fixedFeatures (prompt) et le contrôle post-génération (enforceLightpointCount).
+export async function countLightpoints(profiles: ElementProfile[]): Promise<number> {
+  return (await lightpointProfiles(profiles)).length;
+}
+
+async function lightpointProfiles(profiles: ElementProfile[]): Promise<ElementProfile[]> {
+  const cats = new Set((await getElementCategories()).filter((c) => c.fixed_lightpoint).map((c) => c.slug));
+  return profiles.filter((p) => cats.has(p.category));
+}
+
+// Ligne LIGHT FIXTURES injectée dans LE PLAN (la section la mieux suivie par le
+// modèle image — mesuré sur les REPLACE) : fix « au premier generate » du luminaire
+// ajouté au lieu de swappé. Le repère de position (description courte) ancre le
+// POINT, le style vient du reste du prompt. Cas 0 explicite (pièce sans plafonnier).
+// Taille de pièce → densité d'ameublement (demande Alexis 2026-07-10 : pièces
+// parfois trop vides alors que l'espace le permet ; petit vs grand salon ne se
+// meublent pas pareil). Détectée par la vision (room_scale), persistée projet.
+export function buildRoomScaleLine(roomScale?: "small" | "medium" | "large"): string {
+  if (roomScale === "large") {
+    return `\n- ROOM SIZE — LARGE: furnish it to its full potential. If generous floor area remains empty, add a complementary style-matching zone or pieces (e.g. a dining corner, a reading nook with armchair + floor lamp, a larger sofa, plants and decor) — the room must feel complete and lived-in, never sparse. Keep circulation clear and respect every rule above.`;
+  }
+  if (roomScale === "small") {
+    return `\n- ROOM SIZE — SMALL: keep to the essentials, correctly scaled (no oversized furniture); prioritize breathing room and circulation over adding pieces.`;
+  }
+  if (roomScale === "medium") {
+    return `\n- ROOM SIZE — MEDIUM: comfortably furnished — the main zone complete (seating, tables, lighting, textiles, wall decor), no large bare stretch of floor or wall; still airy, never crowded.`;
+  }
+  return "";
+}
+
+export async function buildLightingPlanLine(profiles: ElementProfile[], styleName: string): Promise<string> {
+  const lights = await lightpointProfiles(profiles);
+  if (lights.length === 0) {
+    return `- LIGHT FIXTURES: this room has NO ceiling or wall light point — add NONE (a floor/table lamp is allowed only per the lighting rule).`;
+  }
+  const spots = lights.map((l) => (l.description?.trim() || l.element || l.category).replace(/\s+/g, " ").slice(0, 70)).join(" · ");
+  // « pendant over the dining table » : biais récurrent du modèle — il en ajoute
+  // une même quand aucun point électrique n'existe là (banc out-lightblur s02).
+  return `- LIGHT FIXTURES (exactly ${lights.length}): swap each existing fixture — ${spots} — for a ${styleName} fixture AT ITS EXACT SAME ceiling/wall point. The result contains EXACTLY ${lights.length} fixed fixture(s): not one more, none added elsewhere, none duplicated. A dining table does NOT automatically get a pendant above it — only if one of the existing points is already there.`;
+}
+
+// ── AUDIT→RETOUCHE ciblé : points lumineux ──────────────────────────────────
+// La règle prompt (« swap in place, never add ») reste violée par le modèle image
+// (~1 rendu sur 5 : suspension AJOUTÉE au lieu de remplacer le point existant).
+// Après génération : comptage vision des luminaires fixes du rendu (flash-lite,
+// ~3 s) ; si excédent vs l'original → UNE passe d'édition qui retire l'excédent.
+// DERNIER RECOURS, désactivé par défaut (décision Alexis 2026-07-10 : le premier
+// generate doit être bon — le fix principal est la ligne LIGHT FIXTURES du plan).
+// Activer avec LIGHTPOINT_AUTOFIX=1 si la ligne de plan ne suffit pas en pratique.
+const LIGHTPOINT_AUTOFIX = process.env.LIGHTPOINT_AUTOFIX === "1";
+
+export async function enforceLightpointCount(
+  projectId: string,
+  gen: { imageBuffer: Buffer; mimeType: string },
+  expected: number,
+  providerName: string,
+): Promise<{ imageBuffer: Buffer; mimeType: string }> {
+  if (!LIGHTPOINT_AUTOFIX) return gen;
+  try {
+    const t0 = Date.now();
+    const countRes = await getVisionProvider("gemini_vision").analyze(
+      `Compte les luminaires FIXES visibles dans cette photo d'intérieur : suspensions/plafonniers accrochés au plafond + appliques murales. N'inclus PAS les lampadaires ni lampes à poser. Réponds en JSON strict: {"fixtures": <nombre>}`,
+      [gen.imageBuffer as unknown as ImageInput],
+      { model: "gemini-2.5-flash-lite", mediaResolution: "medium" },
+    );
+    const parsed = countRes.parsed as { fixtures?: number } | null;
+    const found = typeof parsed?.fixtures === "number" ? parsed.fixtures : null;
+    if (found == null || found <= expected) return gen;
+
+    console.warn(`[lightfix] ${projectId}: ${found} luminaires fixes au lieu de ${expected} → retouche ciblée`);
+    const editPrompt =
+      `This interior photo must contain EXACTLY ${expected} fixed light fixture(s) (ceiling pendants/flush mounts + wall sconces combined)` +
+      ` — it currently shows ${found}. REMOVE the ${found - expected} extra fixture(s): keep the fixture(s) at the room's original electrical` +
+      ` point(s), remove duplicates and added ones, and cleanly restore the ceiling or wall surface behind them. Keep EVERYTHING ELSE strictly` +
+      ` identical — furniture, decor, colors, floor/table lamps, lighting mood, camera framing. Photorealistic.`;
+    const edited = await withTracking(
+      { step: "generation", projectId, provider: providerName, requestPayload: { promptName: "lightpoint_autofix", prompt: editPrompt } },
+      () => getImageProvider(providerName).editImage(editPrompt, gen.imageBuffer as unknown as ImageInput),
+    );
+    await logPipelineEvent({ project_id: projectId, event: "generate", step: "lightpoint-autofix", provider: providerName, duration_ms: Date.now() - t0, metadata: { found, expected } });
+    return { imageBuffer: edited.imageBuffer, mimeType: edited.mimeType };
+  } catch (e) {
+    console.warn(`[lightfix] ${projectId}: contrôle/retouche échoué (non bloquant):`, e instanceof Error ? e.message : e);
+    return gen;
+  }
+}
+
+// ── AUDIT→RETOUCHE ciblé : sièges morphés ───────────────────────────────────
+// Le modèle image « remplace » un siège en gardant sa silhouette (retapissage /
+// chimère pieds anciens + dossier neuf) malgré TOUTES les couches de prompt
+// (sémantique REPLACE, axes silhouette, archétypes, descriptions retirées) —
+// plafond du texte atteint (bancs 07-09/07-10). Dernier recours demandé par
+// Alexis (« IL FAUT TROUVER UN MOYEN ») : après génération, UN contrôle vision
+// compare original/rendu sur les sièges ; si même modèle re-skinné → UNE passe
+// d'édition qui NE VOIT PLUS l'original (donc plus d'ancre) remplace le(s)
+// siège(s) par un vrai modèle différent. DÉSACTIVÉ PAR DÉFAUT — consigne ferme
+// Alexis (2× 2026-07-10) : JAMAIS de double génération automatique ; ce
+// mécanisme n'existe qu'en dernier recours explicite via SEAT_AUTOFIX=1.
+const SEAT_AUTOFIX = process.env.SEAT_AUTOFIX === "1";
+const SEAT_CATS = new Set(["sofa", "armchair", "chair", "dining_chair", "bench"]);
+
+export async function enforceSeatReplacement(
+  projectId: string,
+  sourceImage: ImageInput,
+  gen: { imageBuffer: Buffer; mimeType: string },
+  profiles: ElementProfile[],
+  styleName: string,
+  providerName: string,
+): Promise<{ imageBuffer: Buffer; mimeType: string }> {
+  if (!SEAT_AUTOFIX) return gen;
+  const seats = profiles.filter((p) => SEAT_CATS.has(p.category));
+  if (seats.length === 0) return gen;
+  try {
+    const t0 = Date.now();
+    const list = seats.map((s) => `${s.element_id} (${s.category}: ${(s.description ?? "").slice(0, 60)})`).join(" | ");
+    const check = await getVisionProvider("gemini_vision").analyze(
+      `IMAGE 1 = pièce d'origine. IMAGE 2 = redesign. Sièges d'origine : ${list}.
+Pour chaque siège, IMAGE 2 montre-t-elle le MÊME modèle que IMAGE 1 — silhouette/structure identique, seulement retissé, recoloré ou partiellement modifié (hybride) — ou un modèle GENUINEMENT différent ?
+JSON strict: {"same_model": [<element_ids des sièges restés le même modèle re-skinné>]}`,
+      [sourceImage, gen.imageBuffer as unknown as ImageInput],
+      { model: "gemini-2.5-flash", mediaResolution: "medium" },
+    );
+    const parsed = check.parsed as { same_model?: string[] } | null;
+    const bad = (parsed?.same_model ?? []).map((id) => seats.find((s) => s.element_id === id)).filter(Boolean) as ElementProfile[];
+    if (bad.length === 0) return gen;
+
+    console.warn(`[seatfix] ${projectId}: ${bad.length} siège(s) re-skinnés au lieu de remplacés → passe d'édition`);
+    const targets = bad.map((s) => `the ${s.category.replace(/_/g, " ")}`).join(" and ");
+    const editPrompt =
+      `Replace ${targets} in this photo with COMPLETELY different ${styleName}-style models: new silhouette, new arms, new back, new legs — ` +
+      `a coherent real-world product, in the same position and at a realistic size. Multiple identical seats (e.g. dining chairs) all become the ` +
+      `SAME new model, same count, tucked at their table facing it. Keep EVERYTHING else in the image strictly identical — walls, floor, ` +
+      `lighting, decor, all other furniture, camera framing and image proportions. Photorealistic.`;
+    const edited = await withTracking(
+      { step: "generation", projectId, provider: providerName, requestPayload: { promptName: "seat_autofix", prompt: editPrompt } },
+      () => getImageProvider(providerName).editImage(editPrompt, gen.imageBuffer as unknown as ImageInput),
+    );
+    await logPipelineEvent({ project_id: projectId, event: "generate", step: "seat-autofix", provider: providerName, duration_ms: Date.now() - t0, metadata: { seats: bad.map((s) => s.element_id) } });
+    return { imageBuffer: edited.imageBuffer, mimeType: edited.mimeType };
+  } catch (e) {
+    console.warn(`[seatfix] ${projectId}: contrôle/retouche échoué (non bloquant):`, e instanceof Error ? e.message : e);
+    return gen;
+  }
+}
+
+export async function buildFixedFeaturesSummary(profiles: ElementProfile[]): Promise<string> {
   const count = (cat: string) => profiles.filter((p) => p.category === cat).length;
   const parts: string[] = [];
   const w = count("window"); if (w) parts.push(`${w} fenêtre(s)`);
   const fd = count("french_door"); if (fd) parts.push(`${fd} porte(s)-fenêtre(s)`);
   const d = count("door"); if (d) parts.push(`${d} porte(s)`);
   const wo = count("wall_opening"); if (wo) parts.push(`${wo} ouverture(s)/passage(s) vers une autre pièce`);
+  // Points lumineux FIXES (plafonnier/applique) — data-driven via le flag
+  // fixed_lightpoint de la taxonomie. Le NOMBRE exact injecté verrouille le
+  // compte : le swap en place reste permis, l'AJOUT de luminaires (lustre,
+  // rail de spots, plafonniers surnuméraires) devient une violation explicite
+  // du set à reproduire. 0 est aussi une information ("no ceiling light").
+  const lp = await countLightpoints(profiles);
+  parts.push(
+    lp > 0
+      ? `EXACTLY ${lp} fixed ceiling/wall light point(s) — swap fixtures in place, never add one`
+      : `NO ceiling or wall light point (0) — never add a ceiling or wall light`,
+  );
   // Fixtures FIXES à reproduire à l'identique (jamais déplacer/supprimer/ajouter/recolorer).
   // ⚠️ inclut le CHAUFFE-EAU/ballon (était absent → la génération le supprimait), et le poêle.
   const KW = /escalier|staircase|stair|chemin|fireplace|po[êe]le|radiat|chauffe[- ]?eau|water[- ]?heater|ballon|cumulus|poutre|beam|colonne|column|pilier|pillar/i;
@@ -170,12 +330,27 @@ const LEAN_INVENTORY_SUFFIX =
   '"material_family", "surface_features", "condition" et "dims" de chaque élément ' +
   '(ne les émets pas du tout). Conserve bien "movable" et tous les autres champs.';
 
+export // Ajouté EN CODE à TOUTES les détections (photo de base ET inventaire du rendu) :
+// un objet vu uniquement dans un miroir/reflet n'existe pas dans la pièce — le
+// compter créait des lignes de courses fantômes (feedback démo 2026-07-09).
+const NO_REFLECTION_SUFFIX =
+  "\n\nIMPORTANT — MIROIRS : n'inventorie JAMAIS un objet visible UNIQUEMENT dans un miroir, " +
+  "une vitre ou un reflet. Seuls les objets physiquement présents dans la pièce comptent. " +
+  "Le miroir lui-même est un élément (mirror) ; son contenu reflété n'en est pas." +
+  "\n\nIMPORTANT — OUVERTURES : inventorie TOUTES les ouvertures, même partiellement visibles ou " +
+  "en bord de cadre. Une porte majoritairement VITRÉE (petits carreaux, style atelier/verrière, " +
+  "porte-fenêtre) = french_door, même intérieure et même OUVERTE — jamais une simple door, jamais " +
+  "ignorée. Rater une ouverture fait construire un mur à sa place en génération (grave).";
+
 export async function detectElementProfiles(
   projectId: string,
   sourceImage: ImageInput,
   label: string,
   roomType?: string,
   opts?: { withBbox?: boolean },
+  // Sortie annexe optionnelle (non cassante) : room_scale estimé par la même
+  // détection — petit/moyen/grand salon ne se meublent pas pareil.
+  out?: { roomScale?: "small" | "medium" | "large" },
 ): Promise<ElementProfile[]> {
   const tDet = Date.now();
   // Taxonomie DB-driven : la liste des catégories autorisées est injectée depuis
@@ -185,9 +360,12 @@ export async function detectElementProfiles(
   // withBbox = inventaire du rendu : on émet AUSSI les attrs V3 (tous les meubles du rendu
   // sont des achats potentiels) → score structuré pour les AJOUTS (pièces vides), et on
   // OMET les champs DIY (lean) : cet inventaire ne sert qu'au matching.
+  const ROOM_SCALE_SUFFIX =
+    `\nROOM SCALE: wrap the output as {"room_scale": "small|medium|large", "elementProfiles": [...]} — ` +
+    `room_scale = overall floor area of the room judged from the photo (small <15m², medium 15-25m², large >25m²).`;
   const template = opts?.withBbox
-    ? detPrompt.resolvedTemplate + BBOX_SUFFIX + buildAttrsInstruction() + LEAN_INVENTORY_SUFFIX
-    : detPrompt.resolvedTemplate;
+    ? detPrompt.resolvedTemplate + NO_REFLECTION_SUFFIX + BBOX_SUFFIX + buildAttrsInstruction() + LEAN_INVENTORY_SUFFIX
+    : detPrompt.resolvedTemplate + NO_REFLECTION_SUFFIX + ROOM_SCALE_SUFFIX;
   const detResult = await withTracking(
     {
       step: "vision_detection",
@@ -210,6 +388,10 @@ export async function detectElementProfiles(
   const rawProfiles: RawProfile[] = Array.isArray(detParsed)
     ? (detParsed as RawProfile[])
     : ((detParsed as { elementProfiles?: RawProfile[] } | null)?.elementProfiles ?? []);
+  if (out) {
+    const rs = (detParsed as { room_scale?: string } | null)?.room_scale;
+    if (rs === "small" || rs === "medium" || rs === "large") out.roomScale = rs;
+  }
 
   // Remap déterministe : la détection range souvent les fixtures techniques
   // reconnaissables (radiateur, chauffe-eau, escalier) dans "other" → on les
@@ -218,8 +400,14 @@ export async function detectElementProfiles(
   // ajouter une fixture = ajouter une catégorie + keywords, zéro code ici.
   const remap = await getCategoryKeywordRemap(roomType);
   const remapCategory = (category: string, element: string, description: string): string => {
-    if (category !== "other") return category;
     const hay = `${element} ${description}`.toLowerCase();
+    // Signal FORT : la description COMMENCE par un mot-clé d'une autre catégorie
+    // (« Pouf rond en tissu… » classé chair → pouf). Corrige les mauvaises classes
+    // de la détection, pas seulement les "other" (bug projet fpvZ : poufs en chair
+    // → matching chaises/housses).
+    const leading = remap.find((r) => r.slug !== category && r.keywords.some((k) => hay.startsWith(k.toLowerCase())));
+    if (leading) return leading.slug;
+    if (category !== "other") return category;
     const hit = remap.find((r) => r.keywords.some((k) => hay.includes(k.toLowerCase())));
     return hit?.slug ?? category;
   };
@@ -382,9 +570,10 @@ async function detectSourceProfilesCached(
   if (inflight) return inflight;
   const run = (async () => {
     const sourceImage = await loadImage(photoUrl);
-    const profiles = await detectElementProfiles(projectId, sourceImage, label, project.roomType);
+    const out: { roomScale?: "small" | "medium" | "large" } = {};
+    const profiles = await detectElementProfiles(projectId, sourceImage, label, project.roomType, undefined, out);
     if (profiles.length > 0) {
-      await updateProject(projectId, { visionOutput: profiles, visionDetectionPhotoUrl: photoUrl });
+      await updateProject(projectId, { visionOutput: profiles, visionDetectionPhotoUrl: photoUrl, ...(out.roomScale ? { roomScale: out.roomScale } : {}) });
     }
     return profiles;
   })().finally(() => inflightDetection.delete(key));
@@ -675,7 +864,7 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
     throw new Error("Project incomplete: missing basePhotoUrl, selectedStyleId or roomType");
   }
 
-  const sourceImage = await loadImage(project.basePhotoUrl);
+  let sourceImage = await loadImage(project.basePhotoUrl);
 
   // 1. Détection — RÉUTILISE les profils produits par l'analyse (review). La
   // détection n'est plus relancée ici (1 appel Vision en moins par génération).
@@ -690,6 +879,42 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
     console.log(`[pipeline:generate] réutilise ${profiles.length} profils de l'analyse (pas de 2e appel Vision)`);
   }
   await updateProject(projectId, { detectedFurniture: profilesToFurniture(profiles) });
+
+  // Masquage sièges (flag SEAT_BLUR_CANARY, ACTIF par défaut, =0 pour couper) :
+  // pixelise les sièges de l'image d'entrée pour casser l'ancre de silhouette
+  // (sinon le modèle re-skinne le même canapé), en UNE seule génération.
+  // Gates : uniquement si la pièce contient des sièges (aucun appel sinon), et
+  // jamais sur les catégories gardées/customisées (leur forme doit rester
+  // visible). Échec = pas de flou = comportement normal.
+  // Flux EXPERT : pas de masquage — les sièges du rendu fake sont de toute
+  // façon remplacés par de VRAIS produits au swap NB2 (l'ancre de silhouette
+  // n'a aucun impact final) → on économise l'appel bbox et les 4-5 s.
+  let canaryPlanNote = "";
+  const isBlurTarget = (c: string) => SEAT_CATS.has(c) || LIGHT_CATS.includes(c) || MIRROR_CATS.includes(c);
+  const hasBlurTargets = profiles.some((p) => isBlurTarget(p.category));
+  if (SEAT_BLUR_CANARY && hasBlurTargets && project.mode !== "expert") {
+    try {
+      const decisions = Array.isArray(project.element_decisions) ? project.element_decisions : [];
+      // Un siège garde sa forme visible si KEEP ou customisation RENDABLE
+      // (même logique que formatDesignPlan) ; une customisation NON-rendable est
+      // dégradée en REPLACE dans le plan image → elle DOIT être pixelisée.
+      const renderableSlugs = project.diyMode === "beta" ? await getRenderableActionSlugs() : null;
+      const keepsShape = (d: ElementDecision) =>
+        d.mismatch_type === "none" || (d.action_slug != null && (renderableSlugs === null || renderableSlugs.has(d.action_slug)));
+      const keptSeatCats = [...new Set(
+        decisions.filter((d) => isBlurTarget(d.category) && keepsShape(d)).map((d) => d.category),
+      )];
+      const srcBytes = await fetchImageBytes(project.basePhotoUrl);
+      const blurred = await blurSeatsInSource(srcBytes, projectId, keptSeatCats);
+      if (blurred.blurredCount > 0) {
+        sourceImage = blurred.buffer as unknown as ImageInput;
+        canaryPlanNote = blurred.planNote;
+        console.log(`[canary:seat-blur] ${projectId}: ${blurred.blurredCount} siège(s) pixelisé(s)${keptSeatCats.length ? ` (exclus: ${keptSeatCats.join(", ")})` : ""}`);
+      }
+    } catch (e) {
+      console.warn(`[canary:seat-blur] ${projectId}: échec (non bloquant):`, e instanceof Error ? e.message : e);
+    }
+  }
 
   // 2. Style context — la déclinaison colorée tourne avec le nombre de
   // générations déjà faites (1re génération = déclinaison par défaut).
@@ -721,11 +946,11 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
     roomType: project.roomType,
     furnitureDefaults,
     visionJson: JSON.stringify(profiles, null, 2),
-    fixedFeatures: buildFixedFeaturesSummary(profiles),
+    fixedFeatures: await buildFixedFeaturesSummary(profiles),
     // Éléments détectés à retirer pour ce type de pièce (asset ∩ détection).
     removeList: buildRemoveList(profiles, removeCategories),
     userInstructions,
-    designPlan: designPlan || "None — restyle freely to fit the style.",
+    designPlan: `${designPlan || "None — restyle freely to fit the style."}\n${await buildLightingPlanLine(profiles, styleName)}${buildRoomScaleLine(project.roomScale)}${canaryPlanNote}`,
   };
 
   // Flux DIY beta : variante de prompt sous slug dédié (RESTYLE meuble en
@@ -741,6 +966,22 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
     () => getImageProvider(genPrompt.prompt.provider).generateFromText(genPrompt.resolvedTemplate, sourceImage),
   );
   console.log(`[pipeline:generate] generation: ${Date.now() - t1}ms, ${Math.round(genResult.imageBuffer.length / 1024)}KB`);
+
+  // AUDIT→RETOUCHE points lumineux : si le rendu a AJOUTÉ un luminaire fixe au lieu
+  // de swapper le point existant, une passe d'édition retire l'excédent.
+  const fixedGen = await enforceLightpointCount(
+    projectId,
+    { imageBuffer: genResult.imageBuffer, mimeType: genResult.mimeType },
+    await countLightpoints(profiles),
+    genPrompt.prompt.provider,
+  );
+  // AUDIT→RETOUCHE sièges morphés (dernier recours — le prompt a atteint son
+  // plafond sur la silhouette) : même modèle re-skinné → une édition sans ancre.
+  const seatFixed = await enforceSeatReplacement(
+    projectId, sourceImage, fixedGen, profiles, styleName, genPrompt.prompt.provider,
+  );
+  genResult.imageBuffer = seatFixed.imageBuffer;
+  genResult.mimeType = seatFixed.mimeType;
 
   // NOTE: audit_quality prompt exists but is intentionally not called here.
   // Audit belongs in a future "finalize" step triggered explicitly by the user,
@@ -829,10 +1070,10 @@ export async function runDispositionsPipeline(projectId: string): Promise<string
     roomType: project.roomType,
     furnitureDefaults,
     visionJson: JSON.stringify(profiles, null, 2),
-    fixedFeatures: buildFixedFeaturesSummary(profiles),
+    fixedFeatures: await buildFixedFeaturesSummary(profiles),
     removeList: buildRemoveList(profiles, removeCategories),
     userInstructions,
-    designPlan: designPlan || "None — restyle freely to fit the style.",
+    designPlan: `${designPlan || "None — restyle freely to fit the style."}\n${await buildLightingPlanLine(profiles, styleName)}`,
   };
 
   // Flux DIY beta : variante sous slug dédié (cf. runGenerationPipeline).
@@ -853,7 +1094,16 @@ export async function runDispositionsPipeline(projectId: string): Promise<string
         () => getImageProvider(genPrompt.prompt.provider).generateFromText(genPrompt.resolvedTemplate, sourceImage),
       );
       console.log(`[pipeline:dispositions] #${i + 1} ${Date.now() - t1}ms`);
-      const url = await saveRender(result.imageBuffer, project.storageFolder, result.mimeType, `disposition_${i + 1}`);
+      const fixed = await enforceLightpointCount(
+        projectId,
+        { imageBuffer: result.imageBuffer, mimeType: result.mimeType },
+        await countLightpoints(profiles),
+        genPrompt.prompt.provider,
+      );
+      const seatFixed = await enforceSeatReplacement(
+        projectId, sourceImage, fixed, profiles, styleName, genPrompt.prompt.provider,
+      );
+      const url = await saveRender(seatFixed.imageBuffer, project.storageFolder, seatFixed.mimeType, `disposition_${i + 1}`);
       await logPipelineEvent({
         project_id: projectId, event: "generate", step: `disposition_${i + 1}`,
         provider: result.providerUsed, duration_ms: result.durationMs, render_url: url,
@@ -869,6 +1119,9 @@ export async function runDispositionsPipeline(projectId: string): Promise<string
 export async function runIterationPipeline(
   projectId: string,
   userRequest: string,
+  // Tap-to-target : élément désigné au doigt sur le rendu — libération PRÉCISE
+  // du verrou de liste (bypass du mapping mots-clés) + cible nommée dans le prompt.
+  opts?: { targetElementIds?: string[]; targetLabel?: string },
 ): Promise<void> {
   const project = await getProject(projectId);
   if (!project) throw new Error(`Project not found: ${projectId}`);
@@ -888,9 +1141,10 @@ export async function runIterationPipeline(
   // pousserait le modèle à RE-exécuter les REPLACE (il re-dessine le canapé
   // d'origine, change des lampes non demandées). On préserve l'image telle quelle
   // et on n'applique QUE userRequest.
+  const effectiveRequest = opts?.targetLabel ? `${opts.targetLabel} : ${userRequest}` : userRequest;
   const iterPrompt = await resolvePrompt(
     "iterate_generic",
-    { userRequest },
+    { userRequest: effectiveRequest },
     { strict: false },
   );
   const result = await withTracking(
@@ -907,7 +1161,15 @@ export async function runIterationPipeline(
     iterationCount: iterCount + 1,
     // mémorise la demande d'édition → sert au diff pour distinguer un vrai
     // changement voulu d'un faux positif sur un élément gardé.
-    editRequests: [...(project.editRequests ?? []), userRequest],
+    editRequests: [...(project.editRequests ?? []), effectiveRequest],
+    // VERROU DE LISTE : snapshot des propositions actuelles + demande à relâcher —
+    // le recalcul post-itération ne rejouera QUE les catégories visées par la
+    // demande, le reste est repris tel quel (listLock.ts). Cible désignée au
+    // doigt → libération par element_id, pas de parsing mots-clés.
+    lockedShoppingList: project.shoppingList?.length ? project.shoppingList : project.lockedShoppingList ?? null,
+    ...(opts?.targetElementIds?.length
+      ? { pendingReleaseElementIds: [...(project.pendingReleaseElementIds ?? []), ...opts.targetElementIds] }
+      : { pendingReleaseRequests: [...(project.pendingReleaseRequests ?? []), userRequest] }),
     ...CLEAR_FINALIZE,
   });
   console.log(`[pipeline:iterate] success, render: ${resultUrl}`);
@@ -1064,10 +1326,11 @@ export async function confirmChanges(
 // Catégories qu'on ne liste PAS en addition (architecture/surfaces + déco sans produit
 // catalogue exploitable) — alignées sur le NON_SHOPPABLE du matcher, + floor (surface,
 // géré comme candidat, pas comme meuble ajouté).
+// 2026-07-10 (Alexis) : miroirs, lampes de table et plafonniers ACTIVÉS — le
+// catalogue les couvre désormais (mirror 321, table_lamp 334, pendant_lamp 637).
 const ADDITION_SKIP = new Set([
-  "other", "frame", "mirror", "plant", "decor_object",
+  "other", "frame", "plant", "decor_object",
   "wall", "ceiling", "window", "door", "french_door", "wall_opening", "floor",
-  "lamp", "table_lamp", "ceiling_light",
 ]);
 
 /**
@@ -1078,6 +1341,15 @@ const ADDITION_SKIP = new Set([
  * rendu dont la catégorie n'est pas déjà couverte par un candidat (élément de l'AVANT).
  * Pièce vide → aucun candidat meuble → tout le mobilier du rendu devient addition.
  */
+// Recouvrement de deux bbox normalisées (IoU) — dédup géométrique des additions.
+function bboxIoU(a: Bbox, b: Bbox): number {
+  const x1 = Math.max(a.x, b.x), y1 = Math.max(a.y, b.y);
+  const x2 = Math.min(a.x + a.w, b.x + b.w), y2 = Math.min(a.y + a.h, b.y + b.h);
+  const inter = Math.max(0, x2 - x1) * Math.max(0, y2 - y1);
+  const union = a.w * a.h + b.w * b.h - inter;
+  return union > 0 ? inter / union : 0;
+}
+
 function reconcileRenderAdditions(
   renderProfiles: ElementProfile[],
   candidates: ElementDecision[],
@@ -1090,8 +1362,13 @@ function reconcileRenderAdditions(
   }
   const seen = new Map<string, number>();
   const adds: Alteration[] = [];
+  // Élément FANTÔME : la détection émet parfois un élément qu'elle déclare
+  // elle-même ne pas voir (« Non visible », hors champ) → jamais une ligne
+  // d'achat (matching aveugle à ~0.4, projet fpvZ « chaises à 40% »).
+  const GHOST = /non visible|not visible|invisible|hors[- ]champ|barely visible|cannot be seen/i;
   for (const p of renderProfiles) {
     if (p.movable === false || ADDITION_SKIP.has(p.category)) continue;
+    if (GHOST.test(p.description ?? "") || !(p.description ?? "").trim()) continue;
     const c = resolveCatalogCategory(p.category, taxonomy);
     if (!c) continue; // non shoppable
     const used = seen.get(c) ?? 0;
@@ -1227,6 +1504,13 @@ export function precomputeFinalAssets(projectId: string, trigger: string): void 
 async function analyzeRender(projectId: string, project: Project): Promise<RenderAnalysis> {
   // generatedRenderUrl est garanti non-null par l'appelant (ensureFinalAssets).
   const renderUrl = project.generatedRenderUrl as string;
+  // Remap catégorie par mot-clé de tête sur la description APRÈS (même table que la
+  // détection) : ce que le rendu contient prime sur la catégorie d'origine.
+  const remapTable = await getCategoryKeywordRemap(project.roomType);
+  const afterCategoryRemap = (afterDesc: string): string | null => {
+    const hay = afterDesc.toLowerCase();
+    return remapTable.find((r) => r.keywords.some((k) => hay.startsWith(k.toLowerCase())))?.slug ?? null;
+  };
   // Liste = INTENTION (décisions review) GATÉE par confirmation visuelle.
   //  - "keep" (none) : jamais listé (filtre dur → zéro faux positif).
   //  - "customize"/"replace" : candidats → on vérifie sur le rendu s'ils ont
@@ -1293,15 +1577,40 @@ async function analyzeRender(projectId: string, project: Project): Promise<Rende
   //  - non jugé (architecture exclue / audit incomplet) → on préserve, candidats présumés OK.
   const effective: ElementDecision[] = decisions.map((d) => {
     const wasCandidate = d.mismatch_type === "surface" || d.mismatch_type === "structural";
+    // Fragment tronqué au bord du cadre (ex. fauteuil du 1er plan « visible
+    // partiellement ») : injugeable par l'audit (sliver sur le composite) ET
+    // inmatchable (crop = bruit) → jamais shoppé. Sans ce garde-fou, la
+    // présomption "non jugé → candidat présumé appliqué" l'envoyait en achat
+    // alors que le rendu l'a laissé tel quel (cas réel y8skkjRMfEOlStp_Vxsz4).
+    if (wasCandidate && isFrameTruncatedFragment(bboxById.get(d.element_id))) {
+      return { ...d, mismatch_type: "none" as const, action_slug: null, supply_items: null, qty: null };
+    }
     const judged = judgedIds.has(d.element_id);
     const changed = appliedIds.has(d.element_id); // appliedIds = éléments que le rendu a changés
     const after = afterById.get(d.element_id);
+
+    // Élément DISPARU du rendu (l'audit décrit l'après comme « retiré/supprimé ») :
+    // « changé » par disparition ≠ un achat — il n'y a RIEN à acheter pour lui (son
+    // éventuel remplaçant est détecté comme ADDITION par l'inventaire). Sans ce
+    // garde-fou : « Tabouret de bar noir retiré » ×4 en liste d'achat, puis 4
+    // chaises INSÉRÉES au rendu par le swap expert (projet CVp7yLGh).
+    if (/retiré|supprimé|removed|deleted|disparu|absent du rendu/i.test(after ?? "")) {
+      return { ...d, mismatch_type: "none" as const, action_slug: null, supply_items: null, qty: null };
+    }
 
     if (judged && changed) {
       let base: ElementDecision = wasCandidate
         ? d
         : { ...d, mismatch_type: "structural", action_slug: null, supply_items: null, qty: null };
-      if (after) base = { ...base, description: after };
+      if (after) {
+        base = { ...base, description: after };
+        // La ligne shoppe ce que le rendu CONTIENT : si l'après décrit clairement une
+        // autre catégorie (« Table basse ronde… » pour un mange-debout remplacé), la
+        // catégorie suit — sinon la ligne garde une catégorie sans produits et devient
+        // insourçable (bar_table → 0 propositions, projet CVp7yLGh).
+        const newCat = afterCategoryRemap(after);
+        if (newCat && newCat !== base.category) base = { ...base, category: newCat };
+      }
       // Mur changé sans fourniture configurée (ex. action fresco_wall → supply_items []) :
       // on injecte une fourniture "Peinture" pour qu'il apparaisse ET soit matché par couleur.
       if (base.category === "wall" && base.mismatch_type === "surface" && (base.supply_items?.length ?? 0) === 0) {
@@ -1356,7 +1665,17 @@ async function analyzeRender(projectId: string, project: Project): Promise<Rende
   let additionsToUse = additions;
   const invRes = await additionsPromise;
   if (invRes.ok) {
-    additionsToUse = invRes.adds;
+    // DÉDUP GÉOMÉTRIQUE : une « addition » dont la bbox recouvre fortement celle
+    // d'un candidat jugé est le MÊME objet physique re-détecté sous une autre
+    // catégorie (table du coin = bar_table côté décision ET side_table côté
+    // inventaire, projet CVp7yLGh) — jamais une deuxième ligne d'achat.
+    const candBoxes = [...bboxById.values()];
+    additionsToUse = invRes.adds.filter(
+      (a) => !a.bbox || !candBoxes.some((cb) => bboxIoU(a.bbox!, cb) > 0.5),
+    );
+    if (additionsToUse.length < invRes.adds.length) {
+      console.log(`[pipeline:final] dédup géométrique: ${invRes.adds.length - additionsToUse.length} addition(s) = objet(s) déjà couvert(s)`);
+    }
     // bbox des ajouts (détectées sur le rendu) → bboxById, pour qu'ils obtiennent un crop
     // comme les candidats (matching image↔image au lieu de texte seul).
     for (const a of additionsToUse) {
@@ -1398,15 +1717,23 @@ async function buildMatchesAndScore(
   analysis: RenderAnalysis,
 ): Promise<ShoppingAssets> {
   // Copie fraîche du squelette (on mute matches/scoring). Maps reconstruites depuis le cache.
-  const shoppingList: ShoppingItem[] = analysis.items.map((it) => ({ ...it }));
+  const newItems: ShoppingItem[] = analysis.items.map((it) => ({ ...it }));
   const bboxById = new Map<string, Bbox>(Object.entries(analysis.bboxById));
   const elementHexById = new Map<string, string>(Object.entries(analysis.elementHexById));
   const elementAttrsById = new Map<string, Record<string, unknown>>(Object.entries(analysis.elementAttrsById));
   const built = analysis.builtShoppingList;
 
+  // VERROU DE LISTE — composition ET matches (feedback Alexis : un refresh ne doit
+  // RIEN changer, pour sortir de l'aléa vision) : les lignes verrouillées sont
+  // reprises telles quelles ; la nouvelle analyse n'apporte que les catégories
+  // relâchées par une itération et les catégories absentes du verrou.
+  const releasedCategories = await mapRequestsToCategories(project.pendingReleaseRequests ?? []);
+  const releasedElementIds = new Set(project.pendingReleaseElementIds ?? []);
+  const { items: shoppingList, toMatchIdx } = carryOverLockedMatches(newItems, project.lockedShoppingList, releasedCategories, releasedElementIds);
+
   // CROP du rendu par item : on découpe la zone de l'élément (bbox de l'audit) dans le
   // RENDU → embedding IMAGE (cible image↔image, bien plus discriminant que texte→image).
-  // bbox absente (ajout net, audit incomplet) → crop null → blend en texte seul.
+  // bbox absente (ajout net, audit incomplet, ligne verrouillée) → crop null.
   const renderBytes = await fetchImageBytes(analysis.renderUrl).catch((e) => {
     console.warn("[crop] rendu illisible, texte seul:", e instanceof Error ? e.message : e);
     return null;
@@ -1419,18 +1746,31 @@ async function buildMatchesAndScore(
     }),
   );
 
-  // Matching NEUF en BLEND (crop image + description texte), pondéré par catégorie ×
-  // source — EN PLUS du raw audit. UN appel Jina texte + UN appel Jina crops (batch).
+  // Matching NEUF en BLEND (image + attrs — le texte ne sert qu'au retrieval),
+  // pondéré par catégorie × source. Seuls les items à matcher passent (verrou).
+  // NB : les items DIY (meuble gardé et repeint/teinté) GARDENT leurs propositions
+  // produits — c'est le plan B si le rendu n'a pas respecté la customisation
+  // (décision Alexis 2026-07-10 : ne pas sur-enforcer). L'UI met les fournitures
+  // en premier ; avec le scoring attrs (forme/couleur), les propositions restent
+  // cohérentes avec le meuble réellement visible dans le rendu.
+  if (toMatchIdx.length < shoppingList.length) {
+    console.log(`[pipeline:final] verrou de liste: ${shoppingList.length - toMatchIdx.length} item(s) repris tels quels, ${toMatchIdx.length} à matcher (relâchés: ${[...releasedCategories].join(", ") || "aucun"})`);
+  }
   const matchResults = await matchPartnerProductsBlendBatch(
-    shoppingList.map((it, i) => ({
-      category: it.category,
-      description: `${it.name} ${it.detail ?? ""}`.trim(),
+    toMatchIdx.map((i) => ({
+      category: shoppingList[i].category,
+      description: `${shoppingList[i].name} ${shoppingList[i].detail ?? ""}`.trim(),
       crop: crops[i],
-      colorHex: it.elementId ? elementHexById.get(it.elementId) : undefined,
-      attrs: it.elementId ? elementAttrsById.get(it.elementId) : undefined,
+      colorHex: shoppingList[i].elementId ? elementHexById.get(shoppingList[i].elementId!) : undefined,
+      attrs: shoppingList[i].elementId ? elementAttrsById.get(shoppingList[i].elementId!) : undefined,
     })),
+    4,
+    // Bonus de style (réversible MATCH_STYLE_BONUS) : les produits taggés du style
+    // du projet remontent dans le classement — jamais de pénalité pour les autres.
+    { styleId: project.selectedStyleId },
   );
-  shoppingList.forEach((it, i) => { it.matches = matchResults[i]; });
+  toMatchIdx.forEach((itemIdx, k) => { shoppingList[itemIdx].matches = matchResults[k]; });
+  const toMatchSet = new Set(toMatchIdx);
 
   // Débogage scoring (/final) : attache à chaque item les attributs DÉTECTÉS SUR LE RENDU
   // (le « target ») + la règle de pondération de sa catégorie (image vs attrs, poids/attribut).
@@ -1447,6 +1787,7 @@ async function buildMatchesAndScore(
   for (let i = 0; i < shoppingList.length; i++) {
     const it = shoppingList[i];
     if (it.category !== "floor") continue;
+    if (!toMatchSet.has(i) && (it.matches?.length ?? 0) > 0) continue; // sol verrouillé → repris tel quel
     it.matches = await matchFloorProductsBlend(
       `${it.name} ${it.detail ?? ""}`.trim(),
       crops[i],
@@ -1516,15 +1857,25 @@ async function buildMatchesAndScore(
     ),
   };
 
+  // VERROU EXPERT : les pièces réellement intégrées au rendu expert (swap NB2) sont
+  // ré-injectées dans TOUTE liste reconstruite, produit exact en tête — un meuble
+  // visible dans le rendu ne peut jamais disparaître de la liste (bug démo 2026-07-09).
+  const current = await getProject(projectId);
+  const finalList = enforceExpertIntegratedPieces(shoppingList, current?.expertIntegratedPieces);
+
   // Anti-staleness (précalcul en fond) : si le rendu a changé pendant le matching
   // (itération), on ne persiste pas une liste calculée sur l'ancien rendu — le
   // CLEAR_FINALIZE de l'itération vient de vider shoppingList, l'écraser la figerait.
-  const current = await getProject(projectId);
   if (current?.generatedRenderUrl === analysis.renderUrl) {
-    await updateProject(projectId, { shoppingList, scoreFoyer, builtShoppingList: built });
+    // Le verrou est rafraîchi sur ce que le user va VOIR ; les demandes d'itération
+    // en attente sont consommées (les catégories relâchées viennent d'être rejouées).
+    await updateProject(projectId, {
+      shoppingList: finalList, scoreFoyer, builtShoppingList: built,
+      lockedShoppingList: finalList, pendingReleaseRequests: [], pendingReleaseElementIds: [],
+    });
   } else {
     console.log("[pipeline:final] rendu changé pendant le matching → liste non persistée (stale)");
   }
-  console.log(`[pipeline:final] (matching) ${shoppingList.length} items scorés`);
-  return { shoppingList, scoreFoyer };
+  console.log(`[pipeline:final] (matching) ${finalList.length} items scorés`);
+  return { shoppingList: finalList, scoreFoyer };
 }

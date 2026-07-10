@@ -19,6 +19,9 @@ import {
   MATCH_BLEND_ALPHA,
   MATCH_MIN_SIMILARITY,
   MATCH_COLOR_FAMILY_RESTRICT,
+  MATCH_STYLE_BONUS,
+  MATCH_STYLE_BONUS_CORE,
+  MATCH_STYLE_BONUS_COMPAT,
 } from "@/lib/constants";
 import {
   getMatchingWeights,
@@ -33,13 +36,14 @@ import type { ProductMatch } from "@/lib/types";
 // Catégorie d'item → catégorie catalogue. null = non-shoppable (pas de match).
 const CATEGORY_ALIASES: Record<string, string> = {
   dining_chair: "chair",
+  // Luminaires activés 2026-07-10 : catégories catalogue réelles.
+  ceiling_light: "pendant_lamp",
+  lamp: "table_lamp",
 };
 const NON_SHOPPABLE = new Set([
   // architecture / non-produit (floor EST shoppable → revêtements de sol LM)
   "wall", "ceiling", "window", "door", "french_door", "wall_opening",
-  "frame", "mirror", "plant", "decor_object", "other",
-  // pas (encore) dans le catalogue
-  "ceiling_light", "table_lamp", "lamp",
+  "frame", "plant", "decor_object", "other",
 ]);
 
 function catalogCategory(cat: string): string | null {
@@ -166,15 +170,26 @@ async function applyReferentialScore(
     m.attrScores = details.map((d) => ({
       key: d.key, render: d.render, product: d.product, weight: d.weight, sim: d.sim, compared: d.compared,
     }));
-    // Le SCORE (ranking) n'intègre le structuré QUE s'il y a un crop image (sinon on garde le
-    // score blend texte tel quel → on ne change pas un ranking texte-seul déjà bon).
-    if (m.simImage == null) continue;
+    // RANKING = IMAGE + ATTRS uniquement. Le cosine TEXTE ne pèse plus jamais dans le
+    // score final (décision Alexis 2026-07-10 : il faussait plus qu'il ne sécurisait —
+    // cas meuble TV : ranking 100% texte à 0.75 + bonus style pendant que le produit
+    // aux attrs parfaits dormait dans le pool). Le texte ne sert plus qu'au RETRIEVAL
+    // du pool (RPC) et de score par défaut quand AUCUN autre signal n'existe.
+    if (m.simImage == null) {
+      // Sans crop : les ATTRS font le classement quand ils existent ; sinon le score
+      // reste le blend texte du retrieval (aucun autre signal disponible).
+      if (coverage > 0) {
+        m.similarity = Math.max(0, Math.min(1, Math.round(score * 1000) / 1000));
+        m.imgWeight = 0;
+      }
+      continue;
+    }
     const wEff = wEffForCoverage(category, coverage);
-    // cov 0 (élément OU produit sans attrs comparables) → le texte structuré n'existe pas →
-    // fallback sur le cosine texte générique pour ne pas sous-scorer.
-    const textSide = coverage > 0 ? score : (m.simText ?? score);
-    m.similarity = Math.max(0, Math.min(1, Math.round((m.simImage * wEff + textSide * (1 - wEff)) * 1000) / 1000));
-    m.imgWeight = Math.round(wEff * 100) / 100; // poids image effectif (debug)
+    // cov 0 (élément OU produit sans attrs comparables) → image pure (plus de fallback texte).
+    m.similarity = coverage > 0
+      ? Math.max(0, Math.min(1, Math.round((m.simImage * wEff + score * (1 - wEff)) * 1000) / 1000))
+      : m.simImage;
+    m.imgWeight = coverage > 0 ? Math.round(wEff * 100) / 100 : 1; // poids image effectif (debug)
   }
   return matches.sort((a, b) => (b.similarity - a.similarity) || ((b.structScore ?? 0) - (a.structScore ?? 0)));
 }
@@ -240,6 +255,45 @@ function flagOrFilterByThreshold(matches: ProductMatch[], weights: MatchingWeigh
   return out;
 }
 
+// Bonus de STYLE (réversible, cf. constants) : re-rank du pool par bonus additif quand
+// le produit est taggé du style du projet — "core" (style_affinity, le produit incarne
+// le style) > "compatible" (metadata.style_compatible). Jamais de pénalité : un produit
+// non taggé garde son score (le backfill des tags est progressif). Un seul SELECT par
+// pool (ids indexés) ; en cas d'échec DB on rend le pool inchangé (bonus ≠ critique).
+async function applyStyleBonus(matches: ProductMatch[], styleId?: string | null): Promise<ProductMatch[]> {
+  if (!MATCH_STYLE_BONUS || !styleId || matches.length === 0) return matches;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const supabase = createSupabaseAdmin() as any;
+    const { data, error } = await supabase
+      .from("partner_products")
+      .select("id, style_affinity, metadata")
+      .in("id", matches.map((m) => m.id));
+    if (error || !data) return matches;
+    const byId = new Map<string, { core: string[]; compat: string[] }>(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data.map((r: any) => [r.id, {
+        core: (r.style_affinity ?? []) as string[],
+        compat: ((r.metadata?.style_compatible ?? []) as string[]),
+      }]),
+    );
+    for (const m of matches) {
+      const tags = byId.get(m.id);
+      if (!tags) continue;
+      if (tags.core.includes(styleId)) {
+        m.similarity = Math.round((m.similarity + MATCH_STYLE_BONUS_CORE) * 1000) / 1000;
+        m.styleTagHit = "core";
+      } else if (tags.compat.includes(styleId)) {
+        m.similarity = Math.round((m.similarity + MATCH_STYLE_BONUS_COMPAT) * 1000) / 1000;
+        m.styleTagHit = "compatible";
+      }
+    }
+    return matches.sort((a, b) => b.similarity - a.similarity);
+  } catch {
+    return matches;
+  }
+}
+
 async function embedCrops(crops: (Buffer | null | undefined)[]): Promise<Map<number, number[]>> {
   const present = crops.map((c, i) => ({ i, c })).filter((x): x is { i: number; c: Buffer } => !!x.c);
   const out = new Map<number, number[]>();
@@ -265,6 +319,7 @@ async function embedCrops(crops: (Buffer | null | undefined)[]): Promise<Map<num
 export async function matchPartnerProductsBlendBatch(
   items: { category: string; description: string; crop?: Buffer | null; colorHex?: string | null; attrs?: Record<string, unknown> | null }[],
   topN = 4,
+  opts?: { styleId?: string | null },
 ): Promise<ProductMatch[][]> {
   const cats = items.map((it) => catalogCategory(it.category));
   const textTargets = items
@@ -310,9 +365,11 @@ export async function matchPartnerProductsBlendBatch(
       // hors top-N blend. On NE filtre PLUS par seuil ici (le neuf doit toujours sortir).
       const matches = await rpcBlend(cropByIdx.get(i) ?? null, desc, cat, Math.max(topN, 30), weights, items[i].colorHex);
       // Score RÉFERENTIEL d'abord (final = image·w_eff + structuré·(1−w_eff)) sur TOUT le pool,
-      // puis on MARQUE (sans éliminer) le neuf sous le seuil → le top-N neuf sort toujours.
+      // puis BONUS DE STYLE (re-rank additif sur le pool complet — un produit du bon style
+      // hors top-N peut remonter), puis on MARQUE (sans éliminer) le neuf sous le seuil.
       const scored = await applyReferentialScore(matches, cat, items[i].attrs);
-      const flagged = flagOrFilterByThreshold(scored, weights);
+      const styled = await applyStyleBonus(scored, opts?.styleId);
+      const flagged = flagOrFilterByThreshold(styled, weights);
       return flagged.slice(0, topN);
     }),
   );

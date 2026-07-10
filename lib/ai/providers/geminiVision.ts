@@ -1,5 +1,5 @@
 import type { MediaResolution } from "@google/genai";
-import { getGenAIClient } from "../gemini";
+import { getGenAIClient, resolveGeminiModel } from "../gemini";
 import { toInlineData } from "../imageInput";
 import { withRetry } from "../retry";
 import type { VisionProvider, ImageInput, VisionResult, VisionOptions } from "../types";
@@ -18,7 +18,7 @@ export class GeminiVisionProvider implements VisionProvider {
   async analyze(prompt: string, images: ImageInput[], opts?: VisionOptions): Promise<VisionResult> {
     const start = Date.now();
     const ai = getGenAIClient();
-    const model = opts?.model ?? MODEL;
+    const model = resolveGeminiModel(opts?.model ?? MODEL);
 
     const parts: VisionPart[] = [{ text: prompt }];
     for (const img of images) {

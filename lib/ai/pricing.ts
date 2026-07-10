@@ -29,6 +29,15 @@ const DEFAULT_PRICING: Record<string, PricingEntry> = {
   "gemini_vision/gemini-2.5-flash": {
     per_1m_input_tokens: 0.30, per_1m_output_tokens: 2.50,
   },
+  // Alias servis au nouveau projet (clé NANO_BANANA_API_KEY) — les modèles 2.5
+  // texte sont bloqués pour les nouveaux projets. Tarifs approximatifs (Gemini 3
+  // Flash) — à recaler sur la première facture.
+  "gemini_vision/gemini-flash-lite-latest": {
+    per_1m_input_tokens: 0.15, per_1m_output_tokens: 0.60,
+  },
+  "gemini_vision/gemini-flash-latest": {
+    per_1m_input_tokens: 0.50, per_1m_output_tokens: 3.00,
+  },
   "nano_banana/gemini-2.5-flash-image": {
     per_image_out: 0.039, per_1m_input_tokens: 0.30,
   },

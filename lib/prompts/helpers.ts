@@ -28,16 +28,25 @@ export async function loadStyleContext(
 
   if (error || !data) throw new Error(`Style not found: ${styleId}`);
 
-  const d = data.data as AmbianceData;
+  const d = data.data as AmbianceData & { beauty?: string; avoid?: string[] };
+  // Qualificatif architecture : les signatures de style citent des éléments
+  // architecturaux (cheminée marbre, parquet point de Hongrie, moulures…) que
+  // le modèle AJOUTE à des pièces qui n'en ont pas (cheminée inventée ×2, banc
+  // nuit 2026-07-10) — on borne la liste au lieu d'éditer les 18 assets.
   const signature = d.signature?.length
-    ? `. signature elements: ${d.signature.join(", ")}`
+    ? `. signature elements (architectural ones — fireplace, mouldings, parquet pattern, ceiling rose — ONLY if the photo already shows them; NEVER add them): ${d.signature.join(", ")}`
     : "";
+  // Référent beauté (seed-style-beauty.mjs) : la direction artistique qui rend le
+  // style DÉSIRABLE + les pièges qui l'enlaidissent. Contrepoids des règles
+  // restrictives : on dit enfin au modèle à quoi ressemble un rendu réussi.
+  const beauty = d.beauty ? `. craft — what makes this style gorgeous: ${d.beauty}` : "";
+  const avoid = d.avoid?.length ? `. NEVER: ${d.avoid.join("; ")}` : "";
 
   const colorway = buildColorwayDirective(d.colorways ?? [], opts);
 
   return {
     styleName: d.name,
-    styleMood: `${d.mood}. palette: ${d.palette.join(", ")}. materials: ${d.materials.join(", ")}${signature}${colorway.part}`,
+    styleMood: `${d.mood}. palette: ${d.palette.join(", ")}. materials: ${d.materials.join(", ")}${signature}${beauty}${avoid}${colorway.part}`,
     colorwaySlug: colorway.slug,
   };
 }
@@ -195,6 +204,57 @@ const ARCH_SURFACE_CATEGORIES = new Set(["wall", "floor", "ceiling"]);
 // mode beta — l'enjeu par pièce est nul et chaque ligne dilue le plan.
 const DECOR_GROUP_CATEGORIES = new Set(["decor_object", "frame", "mirror", "plant", "cushion"]);
 
+// Assises : le modèle image « remplace » trop souvent par la même silhouette
+// retapissée (banc seventies 2026-07-09 : 2/3 canapés = cousin de l'original).
+// On exige un changement de GÉOMÉTRIE sans prescrire de modèle cible (l'aléa
+// du rendu reste entier — n'importe quel modèle du style, mais pas la copie).
+const SEAT_CATEGORIES = new Set(["sofa", "armchair", "chair", "dining_chair", "bench"]);
+const SEAT_REPLACE_SUFFIX =
+  " The new piece must ALSO have a visibly different SILHOUETTE (different arm shape, back height, base or overall geometry) — any style-matching model, but never the original shape re-upholstered." +
+  " The new piece is a COHERENT real-world product that could exist in a store — NEVER a hybrid keeping parts of the old piece (e.g. the old metal legs under a new rattan back): every part (legs, frame, seat, back) belongs to the SAME new model.";
+
+// Fidélité de catégorie (banc wave3, s09 : « fauteuils » rendus comme des
+// chaises de table) : un fauteuil remplacé doit rester un VRAI fauteuil.
+const ARMCHAIR_REPLACE_SUFFIX =
+  " It must be a REAL lounge armchair — generous padded seat and armrests, made for relaxing — never a dining-style chair.";
+
+// CANAPÉ : la consigne textuelle générique ne suffit pas — le modèle image recopie
+// la géométrie de l'original en changeant tissu/capitonnage (bancs 2026-07-09/10 :
+// 2/3 canapés identiques retapissés, y compris avec la règle silhouette). On tire
+// donc AU SORT un archétype de silhouette INCOMPATIBLE avec l'original (repéré par
+// sa description) et on l'impose comme direction : l'aléa demeure (tirage + liberté
+// du modèle à l'intérieur de l'archétype), la copie devient impossible. NB : pour
+// permettre un vrai changement de forme, la ligne canapé parle de « same area »,
+// pas de « same footprint » (une empreinte identique = la même géométrie).
+const SOFA_SILHOUETTES: { hint: string; excl: RegExp }[] = [
+  { hint: "a STRAIGHT sofa with visible legs and slim arms", excl: /droit|straight/i },
+  { hint: "a CURVED, organically rounded sofa", excl: /courb|arrondi|curved|organic/i },
+  { hint: "a LOW-SLUNG sofa on a plinth base, no visible legs", excl: /\bbas\b|plinth|low[- ]slung/i },
+  { hint: "an L-SHAPED corner sofa with a chaise section", excl: /angle|modul|m[ée]ridienne|chaise|corner|panoramique/i },
+];
+function sofaSilhouetteDirective(description: string): string {
+  const candidates = SOFA_SILHOUETTES.filter((s) => !s.excl.test(description));
+  const pick = candidates[Math.floor(Math.random() * candidates.length)] ?? SOFA_SILHOUETTES[0];
+  return ` Build the NEW sofa as ${pick.hint}, in the target style — a deliberately DIFFERENT geometry from the current sofa (it only needs to fit roughly the same area of the room, NOT the same footprint).`;
+}
+
+// NE JAMAIS citer le look de l'original dans une ligne REPLACE : le modèle image
+// le lit comme la description de la CIBLE et le reproduit (banc 2026-07-10 :
+// « coussins décoratifs bleus » recopiés deux runs de suite, y compris marqués
+// « must DISAPPEAR » — la négation n'existe pas en génération d'image). L'objet
+// est désigné par sa catégorie seule ; un repère descriptif COURT (1re proposition
+// de la description) n'est gardé que si une autre pièce de MÊME catégorie n'est
+// pas remplacée (désambiguïsation nécessaire).
+function replaceTargetLabel(
+  d: { category: string; description?: string | null },
+  ambiguous: boolean,
+): string {
+  const cat = d.category.replace(/_/g, " ");
+  if (!ambiguous) return cat;
+  const shortDesc = (d.description ?? "").split(/[,.(]/)[0].trim();
+  return shortDesc ? `${cat} (${shortDesc})` : cat;
+}
+
 /**
  * Transforme les décisions par élément (après review) en un plan lisible pour
  * les prompts image (génération + itération). On n'inclut que les éléments
@@ -241,6 +301,26 @@ export function formatDesignPlan(
   const beta = Boolean(opts?.renderableSlugs);
   const decorReplacements: string[] = [];
   let decorCount = 0;
+  // Beta : les KEEP d'objets (hors surfaces murales — la liberté de style y
+  // reste entière) sont énoncés en UNE ligne compacte. Silencieux, ils étaient
+  // systématiquement violés (banc nuit 2026-07-10 : tableaux conservés
+  // supprimés/remplacés dans 6 sessions sur 8).
+  const keptDescs: string[] = [];
+  if (beta) {
+    const keptCount = new Map<string, number>();
+    for (const d of decisions) {
+      if (d.mismatch_type !== "none" || ARCH_SURFACE_CATEGORIES.has(d.category)) continue;
+      const desc = (d.description ?? d.category).trim().replace(/\s+/g, " ");
+      if (desc) keptCount.set(desc, (keptCount.get(desc) ?? 0) + 1);
+    }
+    for (const [desc, n] of keptCount) keptDescs.push(n > 1 ? `${desc} (×${n})` : desc);
+  }
+
+  // Nombre TOTAL d'instances par catégorie (keep inclus) : une ligne REPLACE dont
+  // le groupe ne couvre pas toutes les instances de sa catégorie a besoin d'un
+  // repère descriptif court pour viser la bonne pièce (cf. replaceTargetLabel).
+  const totalCatCount = new Map<string, number>();
+  for (const d of decisions) totalCatCount.set(d.category, (totalCatCount.get(d.category) ?? 0) + 1);
 
   for (const d of decisions) {
     if (d.mismatch_type !== "surface" && d.mismatch_type !== "structural") continue;
@@ -259,7 +339,11 @@ export function formatDesignPlan(
     else groups.set(key, { d, count: 1 });
   }
 
-  const lines: string[] = [];
+  // RESTYLE d'abord, REPLACE ensuite : les customisations (cœur du flux DIY)
+  // en tête de plan sont mieux suivies par le modèle image que noyées entre
+  // les remplacements (banc DIY 2026-07-09 : RESTYLE fins ignorés en plan long).
+  const restyleLines: string[] = [];
+  const replaceLines: string[] = [];
   for (const { d, count } of groups.values()) {
     const many = count > 1;
     // Groupe murs (beta) : libellé générique, pas la description du 1er mur.
@@ -288,30 +372,60 @@ export function formatDesignPlan(
       // Beta : le label ANGLAIS du verdict prime pour le prompt image (banc :
       // « Teinter le bois en espresso » 0/4 vs « Stain the wood dark espresso » 2/2).
       const label = (beta ? d.action_label_en : null) ?? d.action_label ?? "personnaliser la finition pour s'accorder au style";
-      lines.push(
-        `- RESTYLE ${what}${tag}: ${label}${qty}. Keep shape, size and position.`,
+      // « must be clearly visible » : banc nuit 2026-07-10 — les restyles de
+      // finition (teinte bois, abat-jour, moulures) étaient souvent ignorés,
+      // l'objet restant à l'identique dans le rendu.
+      // Repeindre = peinture OPAQUE : le modèle transformait « repeindre » en
+      // effet bois teinté (impossible sur un meuble peint — projet réel 1KL1DfGJ).
+      const paintClause = /paint|peindre|peinture/i.test(`${d.action_slug ?? ""} ${label}`)
+        ? " The finish is opaque PAINT in the stated colour — never exposed wood grain, stain or varnish."
+        : "";
+      restyleLines.push(
+        `- RESTYLE ${what}${tag}: ${label}${qty}. It stays the SAME object (same shape, size, position, structure) — only this finish changes, and the change must be unmistakably visible, never left looking unchanged.${paintClause}`,
       );
     } else if (beta) {
       // REPLACE beta : ligne COMPACTE — le boilerplate répété ×N noie le plan
       // (banc JwnjVV3W) ; les règles d'application vivent dans le template.
-      lines.push(
-        `- REPLACE ${many ? `the ${count} ` : ""}${what}${tag}: a clearly different model${many ? ` — all ${count} identical, the SAME new model` : ""}, same footprint and position. Never the original recolored.`,
+      replaceLines.push(
+        d.category === "sofa"
+          ? `- REPLACE the sofa: a clearly different model, same position in the room.${sofaSilhouetteDirective(d.description ?? "")}`
+          : `- REPLACE ${many ? `the ${count} ` : "the "}${replaceTargetLabel(d, (totalCatCount.get(d.category) ?? 0) > count)}${many ? "s" : ""}: a clearly different model${many ? ` — all ${count} identical, the SAME new model` : ""}, same footprint and position. Never the original recolored.${SEAT_CATEGORIES.has(d.category) ? SEAT_REPLACE_SUFFIX : ""}${d.category === "armchair" ? ARMCHAIR_REPLACE_SUFFIX : ""}`,
       );
     } else {
       // REPLACE : instruction propre et explicite. On IGNORE volontairement
       // action_label (souvent une suggestion "retapisser/repeindre" héritée du
       // verdict qui CONTREDIT le remplacement et fait halluciner le modèle).
-      lines.push(
-        `- REPLACE ${many ? `the ${count} ` : ""}${what}${tag}: put ${many ? `${count} ` : "a "}clearly different, style-matching ${many ? "pieces" : "piece"} in the same place(s) — same footprint and position. Do NOT reupholster or recolor the original.`,
+      replaceLines.push(
+        d.category === "sofa"
+          ? `- REPLACE the sofa: put a clearly different, style-matching sofa at the same position in the room.${sofaSilhouetteDirective(d.description ?? "")}`
+          : `- REPLACE ${many ? `the ${count} ` : "the "}${replaceTargetLabel(d, (totalCatCount.get(d.category) ?? 0) > count)}${many ? "s" : ""}: put ${many ? `${count} ` : "a "}clearly different, style-matching ${many ? "pieces" : "piece"} in the same place(s) — same footprint and position. Do NOT reupholster or recolor the original.${SEAT_CATEGORIES.has(d.category) ? SEAT_REPLACE_SUFFIX : ""}${d.category === "armchair" ? ARMCHAIR_REPLACE_SUFFIX : ""}`,
       );
     }
   }
 
-  // Ligne récapitulative de la petite déco à remplacer (beta).
+  const lines = [...restyleLines, ...replaceLines];
+  if (keptDescs.length > 0) {
+    lines.unshift(
+      `- KEEP strictly unchanged (same object, same colour, same place): ${keptDescs.slice(0, 8).join("; ")}${keptDescs.length > 8 ? "; …" : ""}. ` +
+        `Recolouring or reupholstering a KEEP item is a FAILURE. The ONLY allowed addition on a kept seat: style-matching cushions or a throw laid on it (they tie it into the new style without touching the seat itself).`,
+    );
+  }
+  // Sol KEEP (beta) : silencieux, le style impose son motif (chevrons/damier ×4
+  // au banc nuit 2026-07-10) — or un sol non budgété doit rester le sol réel.
+  // Les murs restent volontairement libres (la couleur fait partie du wow).
+  if (beta && decisions.some((d) => d.category === "floor" && d.mismatch_type === "none")) {
+    lines.unshift(
+      `- FLOOR: keep the existing floor EXACTLY as in the photo — same material, same colour, same plank/tile size and same laying pattern (do not switch to herringbone, checkerboard or any other pattern).`,
+    );
+  }
+
+  // Ligne récapitulative de la petite déco NON alignée au style : RETIRÉE, pas
+  // remplacée (remaster Alexis 2026-07-10 — la nouvelle déco vient de la mise en
+  // scène du style, pas d'un remplacement pièce à pièce qui crée du patchwork).
   if (decorCount > 0) {
     const detail = decorReplacements.slice(0, 4).join("; ");
     lines.push(
-      `- REPLACE the small decor as a group (${decorCount} item${decorCount > 1 ? "s" : ""}: ${detail}${decorReplacements.length > 4 ? "; …" : ""}): quiet, style-matching pieces — different objects, never the originals recolored.`,
+      `- REMOVE the small decor that does not fit the style (${decorCount} item${decorCount > 1 ? "s" : ""}: ${detail}${decorReplacements.length > 4 ? "; …" : ""}): take them OUT of the room — do not replace them one-for-one; a bare surface is fine, the style's own staging brings any new decor where the composition needs it.`,
     );
   }
 
