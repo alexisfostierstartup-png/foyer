@@ -36,7 +36,7 @@
         {"slug": "greige", "label": "Greige clair", "walls": "light greige walls", "accents": "tone-on-tone greige and cream with matte black details"},
         {"slug": "noir-bois", "label": "Noir & bois", "walls": "warm off-white walls", "accents": "matte black accents with warm natural wood"}
       ],
-      "moodboardUrl": "/moodboards/moderne.svg"
+      "moodboardUrl": "/moodboards/modern_1.jpeg"
     }
   },
   {
@@ -181,7 +181,7 @@
         {"slug": "bleu-petrole", "label": "Bleu pétrole", "walls": "repaint the walls in a deep petrol blue", "accents": "petrol blue with brass and walnut"},
         {"slug": "noir-or", "label": "Noir & or", "walls": "repaint the walls in a deep charcoal black", "accents": "charcoal walls with gold details and cream seating"}
       ],
-      "moodboardUrl": "/moodboards/luxe.svg"
+      "moodboardUrl": "/moodboards/haussmannien_1.jpg"
     }
   },
   {
