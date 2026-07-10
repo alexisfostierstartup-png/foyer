@@ -249,24 +249,24 @@
     }
   },
   {
-    "slug": "cottage-anglais",
+    "slug": "campagne-francaise",
     "data": {
-      "name": "Cottage anglais",
-      "description": "Papier peint fleuri, boiseries sauge, meubles chinés. Le charme de la campagne anglaise.",
-      "longDescription": "La campagne anglaise réconfortante : papiers peints fleuris, soubassements peints, noyer ancien et textiles brodés. Un charme d'antiquaire, généreux et vécu. Idéal pour les maisons de campagne, les chambres douillettes et les amoureux du motif.",
-      "palette": ["#7D8B62", "#F2EBDA", "#D9A1A6", "#6E4A2F", "#C9D6BE"],
-      "materials": ["floral wallpaper", "painted wainscot panelling", "aged walnut", "antique brass", "chintz", "needlepoint textiles"],
-      "mood": "genteel english countryside nostalgia, floral-on-floral layering, soft daylight with small shaded lamps, collected-antique charm",
-      "signature": ["botanical floral wallpaper", "two-tone painted wainscot with dado rail", "antique mahogany chests and dressers", "fresh garden flowers in vases", "displayed floral china"],
+      "name": "Campagne française",
+      "description": "Pierre, lin lavé et bois patiné — la maison de famille dans son jus, sans le kitsch.",
+      "longDescription": "La maison de famille française : murs à la chaux, bois patiné, lin lavé, faïence et bouquets de fleurs des champs. Un charme vécu, simple et généreux, sans le kitsch rustique. Idéal pour les maisons de campagne, les longères rénovées et les intérieurs qui cherchent une âme.",
+      "palette": ["#F0E7D8", "#8E9C77", "#7E96A6", "#BC6F4A", "#D8A79A"],
+      "materials": ["patinated wood", "washed linen", "stoneware", "unlacquered brass", "aged terracotta", "rush and cane"],
+      "mood": "warm french countryside home, sun-washed lived-in comfort, limewashed walls and patinated wood, washed linen and faded florals, stoneware pitchers and wildflowers, relaxed family elegance",
+      "signature": ["linen slipcovered sofa in washed neutral tones", "patinated wood armoire or buffet with turned legs", "rush-seat or cane chairs", "stoneware pitchers filled with wildflowers", "faded floral or toile cushions and quilts", "thick painted wall mouldings with a coloured cornice", "vintage floral wallpaper in small touches (one panel or alcove, never all walls)", "aged gilt or wooden framed mirror"],
       "colorways": [
-        {"slug": "rose-sauge", "label": "Rose & sauge", "walls": "floral wallpaper over painted wainscot in soft sage", "accents": "rose and sage floral-on-floral layering, aged walnut"},
-        {"slug": "bleu-wedgwood", "label": "Bleu Wedgwood", "walls": "soft wedgwood-blue painted wainscot with blue-toned floral wallpaper above", "accents": "blue-and-white chintz, antique brass and aged walnut"},
-        {"slug": "creme-beurre", "label": "Crème beurre", "walls": "buttery cream walls with painted wainscot", "accents": "yellow and leaf-green florals, warm antique wood"},
-        {"slug": "vert-feuille", "label": "Vert feuille", "walls": "repaint the wainscot in a leafy green with floral wallpaper above", "accents": "green-dominant florals with rose touches, needlepoint textiles"}
+        {"slug": "chaux-sauge", "label": "Chaux & sauge", "walls": "limewashed antique cream walls", "accents": "sage green woodwork, washed linen and aged wood"},
+        {"slug": "bleu-francais", "label": "Bleu français", "walls": "repaint the panelling and mouldings in dusty french blue over cream walls", "accents": "dusty blue woodwork with cream linen and aged brass"},
+        {"slug": "terre-cuite", "label": "Terre cuite", "walls": "warm cream limewashed walls", "accents": "terracotta, faded rose and olive textiles on patinated wood"},
+        {"slug": "vert-olive", "label": "Vert olive", "walls": "repaint the mouldings and cornice line in deep olive over antique cream walls", "accents": "olive and leaf-green accents with faded florals"}
       ],
-      "moodboardUrl": "/moodboards/cottage-anglais_1.jpg",
-      "beauty": "Cosy layered comfort: warm woods, soft plaids, books and ceramics; muted heritage tones (sage, cream, oxblood accents); gentle patterns SMALL and balanced (one armchair, one cushion) — inviting, lived-in, never fussy",
-      "avoid": ["floral wallpaper covering walls", "chintz on every surface", "doily-grandma accumulation", "dark cluttered Victorian pastiche"]
+      "moodboardUrl": "/style-refs/campagne-france_1.jpeg",
+      "beauty": "The render must capture warm, directional golden-hour sunlight casting soft, long shadows across the room. Compositions should feel casually layered and lived-in, prioritizing organic textures and a soft-focus depth of field to evoke effortless charm. Walls carry the charm: thick painted mouldings with a coloured cornice line, and a small touch of vintage wallpaper — applied as wall finishes.",
+      "avoid": ["Stark minimalist layouts or empty surfaces", "High-gloss plastics and modern synthetic materials", "Saturated neon or cold, high-contrast color schemes", "Perfectly symmetrical, sterile staging"]
     }
   },
   {
