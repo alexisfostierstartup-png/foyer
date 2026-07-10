@@ -257,9 +257,10 @@ function replaceTargetLabel(
 
 /**
  * Transforme les décisions par élément (après review) en un plan lisible pour
- * les prompts image (génération + itération). On n'inclut que les éléments
- * ACTIONNABLES (personnaliser/remplacer) ; les "garder" sont déjà couverts par
- * la règle d'ancrage du prompt de génération. Retourne "" si rien d'actionnable.
+ * les prompts image (génération + itération) : les customisations/remplacements
+ * en instructions explicites, plus une ligne compacte pour les "garder" (hors
+ * surfaces murales) — la règle d'ancrage seule du prompt de génération ne
+ * suffit pas à les protéger (bench 2026-07-10). Retourne "" si rien à dire.
  */
 export function formatDesignPlan(
   decisions: Array<{
