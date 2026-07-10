@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ExternalLink, Pencil, Link2, Star, RefreshCw, Loader2 } from "lucide-react";
+import { ExternalLink, Pencil, Link2, Star, RefreshCw, Loader2, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { ProgressBar } from "@/components/create/ProgressBar";
 import { BeforeAfterSlider } from "@/components/create/BeforeAfterSlider";
+import { RenderHotspots } from "@/components/create/RenderHotspots";
 import { ShoppingCard, useDebug } from "@/components/create/ShoppingCard";
 import { ExpertOverridesProvider } from "@/components/create/expertOverrides";
 
@@ -253,6 +254,12 @@ type Props = {
   diyBeta?: boolean;
   productOverrides?: Record<string, number> | null;
   customProducts?: Record<string, CustomProduct> | null;
+  // Expert : URL du rendu IA d'origine (fake) → bouton de comparaison sous le slider
+  // (remplace l'ancien écran /expert supprimé du parcours).
+  fakeRenderUrl?: string | null;
+  // Hotspots : bbox par element_id sur le rendu affiché (null si analyse absente
+  // ou périmée) → dots + popover matches + tap-to-target.
+  bboxById?: Record<string, { x: number; y: number; w: number; h: number }> | null;
 };
 
 export function FinalScreen({
@@ -268,7 +275,10 @@ export function FinalScreen({
   diyBeta = false,
   productOverrides = null,
   customProducts = null,
+  fakeRenderUrl = null,
+  bboxById = null,
 }: Props) {
+  const [showFake, setShowFake] = useState(false);
   const router = useRouter();
   const { user, profile, wallet } = useUser();
   const [tabIdx, setTabIdx] = useState(0);
@@ -440,13 +450,37 @@ export function FinalScreen({
         <ProgressBar currentStep={5} labels={STEPS} />
 
         <main className={cn("mx-auto w-full flex-1 px-5 pt-6", debug ? "max-w-[820px]" : "max-w-[480px]", expertMode ? "pb-32" : "pb-24")}>
-          {/* Before / After slider */}
-          <BeforeAfterSlider
-            before={beforeUrl}
-            after={afterUrl}
-            initialPos={20}
-            className="rounded-2xl"
-          />
+          {/* Before / After slider (expert : bouton bas-droit pour basculer
+              rendu réel ↔ rendu IA d'origine, comme l'ancien écran expert) */}
+          <div className="relative">
+            <BeforeAfterSlider
+              before={beforeUrl}
+              after={showFake && fakeRenderUrl ? fakeRenderUrl : afterUrl}
+              initialPos={20}
+              className="rounded-2xl"
+            />
+            {/* Hotspots meubles (dots + matches + tap-to-target) — masqués côté
+                rendu fake (les bboxes appartiennent au rendu affiché par défaut)
+                et tant que la liste n'est pas prête. */}
+            {bboxById && !showFake && !listPending && (
+              <RenderHotspots
+                projectId={projectId}
+                items={shoppingList}
+                bboxById={bboxById}
+                showModify={!expertMode}
+              />
+            )}
+            {fakeRenderUrl && (
+              <button
+                type="button"
+                onClick={() => setShowFake((v) => !v)}
+                className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5 rounded-full bg-foyer-ink/75 px-3 py-1.5 text-[12px] font-medium text-white backdrop-blur transition-opacity hover:bg-foyer-ink"
+              >
+                <Eye className="size-3.5" aria-hidden />
+                {showFake ? "Voir le rendu réel" : "Voir le rendu IA"}
+              </button>
+            )}
+          </div>
 
           {/* Live edit button */}
           <button

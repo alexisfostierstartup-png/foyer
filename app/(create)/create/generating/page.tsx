@@ -15,5 +15,5 @@ export default async function GeneratingPage({
   if (!project.selectedStyleId) redirect(`/create/style?projectId=${projectId}`);
   if (project.generatedRenderUrl) redirect(`/create/${projectId}`);
 
-  return <GeneratingScreen projectId={projectId} />;
+  return <GeneratingScreen projectId={projectId} expert={project.mode === "expert"} hasDecisions={(project.element_decisions?.length ?? 0) > 0} />;
 }

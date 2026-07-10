@@ -4,10 +4,13 @@ import { IterateScreen } from "@/components/create/IterateScreen";
 
 export default async function IteratePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ projectId: string }>;
+  searchParams: Promise<{ target?: string; label?: string }>;
 }) {
   const { projectId } = await params;
+  const { target, label } = await searchParams;
 
   const project = await getProject(projectId);
   if (!project) redirect("/create");
@@ -23,6 +26,7 @@ export default async function IteratePage({
       projectId={projectId}
       currentRenderUrl={currentRenderUrl}
       expert={isExpert}
+      target={target && label ? { elementId: target, label } : null}
     />
   );
 }

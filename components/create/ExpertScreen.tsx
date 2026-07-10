@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, Sparkles, ArrowLeft, ShoppingBag, SlidersHorizontal, Eye } from "lucide-react";
+import { Loader2, Sparkles, ArrowLeft, ShoppingBag, Eye } from "lucide-react";
 
 type ExpertProduct = { category: string; name: string; imageUrl: string };
 
@@ -122,7 +122,8 @@ export function ExpertScreen({ projectId, basePhotoUrl, initialExpertUrl, fakeUr
         </>
       )}
 
-      {/* Les 2 options après le rendu réel */}
+      {/* Un seul chemin après le rendu réel : la liste de courses (l'itération a été
+          retirée du parcours expert — scope resserré 2026-07-09). */}
       <div className="sticky bottom-0 mt-8 flex flex-col gap-2.5 border-t border-foyer-border bg-foyer-cream/95 py-3 backdrop-blur">
         <button
           type="button"
@@ -131,14 +132,6 @@ export function ExpertScreen({ projectId, basePhotoUrl, initialExpertUrl, fakeUr
           className="flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-foyer-sage font-medium text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:-translate-y-0.5 disabled:opacity-60"
         >
           <ShoppingBag className="size-5" aria-hidden /> Ma liste de courses
-        </button>
-        <button
-          type="button"
-          disabled={loading}
-          onClick={() => router.push(`/create/${projectId}/iterate`)}
-          className="flex h-[52px] w-full items-center justify-center gap-2 rounded-full border border-foyer-border font-medium text-foyer-ink transition-colors hover:bg-foyer-border/30 disabled:opacity-60"
-        >
-          <SlidersHorizontal className="size-4" aria-hidden /> Affiner le sol ou la peinture
         </button>
       </div>
     </div>

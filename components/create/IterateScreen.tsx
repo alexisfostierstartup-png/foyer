@@ -59,14 +59,26 @@ function buildUserRequest(
   return parts.join(". ");
 }
 
-type Props = { projectId: string; currentRenderUrl: string; expert?: boolean };
+type Props = {
+  projectId: string;
+  currentRenderUrl: string;
+  expert?: boolean;
+  // Tap-to-target : meuble désigné au doigt sur le rendu (/final) → mode ciblé.
+  target?: { elementId: string; label: string } | null;
+};
 
-export function IterateScreen({ projectId, currentRenderUrl, expert = false }: Props) {
+// Suggestions du mode ciblé (un meuble précis désigné).
+const TARGET_SUGGESTIONS = ["Remplacer par un autre modèle", "Changer la couleur", "Plus grand", "Plus petit", "Enlever ce meuble"];
+
+export function IterateScreen({ projectId, currentRenderUrl, expert = false, target = null }: Props) {
   const router = useRouter();
   const [openCat, setOpenCat] = useState<string | null>(null);
   const [selections, setSelections] = useState<Record<string, string[]>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [targetOn, setTargetOn] = useState(Boolean(target));
+  const [targetNote, setTargetNote] = useState("");
+  const targeting = targetOn && target != null;
 
   function toggleOption(catId: string, option: string) {
     setSelections((prev) => {
@@ -78,7 +90,7 @@ export function IterateScreen({ projectId, currentRenderUrl, expert = false }: P
     });
   }
 
-  const userRequest = buildUserRequest(selections, notes);
+  const userRequest = targeting ? targetNote.trim() : buildUserRequest(selections, notes);
   const hasChanges = userRequest.length > 0;
 
   async function handleApply() {
@@ -88,7 +100,11 @@ export function IterateScreen({ projectId, currentRenderUrl, expert = false }: P
       const res = await fetch(`/api/projects/${projectId}/iterate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userRequest }),
+        body: JSON.stringify(
+          targeting
+            ? { userRequest, targetElementIds: [target.elementId], targetLabel: target.label }
+            : { userRequest },
+        ),
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => null)) as { error?: string } | null;
@@ -122,6 +138,49 @@ export function IterateScreen({ projectId, currentRenderUrl, expert = false }: P
           />
         </div>
 
+        {/* Mode ciblé (tap-to-target) : un meuble précis, une consigne libre. */}
+        {targeting && (
+          <div className="mt-5 rounded-2xl border border-foyer-sage/40 bg-white p-4">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-2 rounded-full bg-foyer-sage/15 px-3 py-1 text-[13px] font-medium text-foyer-sage">
+                Cible : {target.label}
+              </span>
+              <button
+                type="button"
+                onClick={() => setTargetOn(false)}
+                className="text-[13px] text-foyer-muted underline underline-offset-2 hover:text-foyer-ink"
+              >
+                Retirer la cible
+              </button>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {TARGET_SUGGESTIONS.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setTargetNote(s)}
+                  className={cn(
+                    "rounded-full px-3 py-1.5 text-sm transition-colors",
+                    targetNote === s
+                      ? "border-2 border-foyer-ink bg-foyer-ink/5 text-foyer-ink"
+                      : "border border-foyer-border text-foyer-muted hover:text-foyer-ink",
+                  )}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+            <textarea
+              value={targetNote}
+              onChange={(e) => setTargetNote(e.target.value)}
+              placeholder={`Que faire de « ${target.label} » ?`}
+              rows={2}
+              className="mt-3 w-full resize-none rounded-xl border border-foyer-border bg-foyer-cream px-3 py-2.5 text-sm text-foyer-ink outline-none placeholder:text-foyer-muted focus:border-foyer-ink"
+            />
+          </div>
+        )}
+
+        {!targeting && (
         <div className="mt-5 divide-y divide-foyer-border overflow-hidden rounded-2xl border border-foyer-border bg-white">
           {CATEGORIES.map((cat) => {
             const open = openCat === cat.id;
@@ -190,6 +249,7 @@ export function IterateScreen({ projectId, currentRenderUrl, expert = false }: P
             );
           })}
         </div>
+        )}
       </main>
 
       <div className="fixed inset-x-0 bottom-0 border-t border-foyer-border bg-foyer-cream/95 px-5 py-3 backdrop-blur">

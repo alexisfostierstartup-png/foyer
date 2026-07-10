@@ -33,6 +33,13 @@ export default async function FinalPage({
       ? project.expertRenderUrl
       : project.generatedRenderUrl!;
 
+  // Hotspots (dots sur le rendu) : bboxes de l'audit — seulement si l'analyse
+  // correspond au rendu AFFICHÉ (une itération invalide les anciennes positions).
+  const bboxById =
+    project.renderAnalysis && project.renderAnalysis.renderUrl === displayRenderUrl
+      ? project.renderAnalysis.bboxById
+      : null;
+
   return (
     <FinalScreen
       projectId={projectId}
@@ -45,7 +52,9 @@ export default async function FinalPage({
       liveEditsUsed={project.live_edits_used ?? 0}
       pendingList={pendingList}
       expertMode={project.mode === "expert"}
+      fakeRenderUrl={project.mode === "expert" && project.expertRenderUrl ? project.generatedRenderUrl : null}
       diyBeta={project.diyMode === "beta"}
+      bboxById={bboxById}
       productOverrides={project.productOverrides ?? null}
       customProducts={project.customProducts ?? null}
     />

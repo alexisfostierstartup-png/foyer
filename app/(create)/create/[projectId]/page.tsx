@@ -13,9 +13,9 @@ export default async function ProjectPage({
   if (!project) redirect("/create");
   if (!project.generatedRenderUrl) redirect(`/create/generating?projectId=${projectId}`);
 
-  // Flux expert : on NE MONTRE PAS le rendu fictif (fake). On file directement au
-  // rendu RÉEL (produits + décisions), qui affichera le fake en survol pour la dérive.
-  if (project.mode === "expert") redirect(`/create/${projectId}/expert`);
+  // Parcours expert COURT (2026-07-09) : plus d'écran intermédiaire — la liste
+  // shoppable (/final) est l'écran terminal et affiche le rendu expert.
+  if (project.mode === "expert") redirect(`/create/${projectId}/final`);
 
   return (
     <RenderScreen

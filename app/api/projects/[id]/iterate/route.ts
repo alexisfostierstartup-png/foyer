@@ -19,11 +19,20 @@ export async function POST(
     return NextResponse.json(RATE_LIMITED_BODY, { status: 429 });
   }
 
-  const { userRequest } = (await request.json()) as { userRequest: string };
+  const { userRequest, targetElementIds, targetLabel } = (await request.json()) as {
+    userRequest: string;
+    // Tap-to-target : élément désigné sur le rendu (libération précise du verrou).
+    targetElementIds?: string[];
+    targetLabel?: string;
+  };
 
   if (!userRequest?.trim()) {
     return NextResponse.json({ error: "userRequest manquant" }, { status: 400 });
   }
+  const target =
+    Array.isArray(targetElementIds) && targetElementIds.length > 0 && targetElementIds.every((t) => typeof t === "string" && t.length < 64)
+      ? { targetElementIds: targetElementIds.slice(0, 8), targetLabel: typeof targetLabel === "string" ? targetLabel.slice(0, 80) : undefined }
+      : undefined;
 
   try {
     // Flux expert : on itère (sol/peinture) sur le RENDU RÉEL (expertRenderUrl),
@@ -35,7 +44,7 @@ export async function POST(
       return NextResponse.json({ ok: true, projectId: id });
     }
 
-    await runIterationPipeline(id, userRequest.trim());
+    await runIterationPipeline(id, userRequest.trim(), target);
     // Recalcul shopping en fond sur le nouveau rendu (levier perf 1). Une itération
     // suivante déclenche son propre calcul ; l'ancien ne persiste pas (anti-staleness).
     after(() => precomputeFinalAssets(id, "iterate"));

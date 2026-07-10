@@ -23,6 +23,7 @@ export default async function StylePage({
       roomType={project.roomType}
       basePhotoUrl={project.basePhotoUrl}
       styles={styles}
+      expert={project.mode === "expert"}
     />
   );
 }

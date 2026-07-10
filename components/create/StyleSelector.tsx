@@ -16,6 +16,9 @@ type StyleSelectorProps = {
   roomType: RoomType;
   basePhotoUrl: string;
   styles: Style[];
+  // Mode expert : parcours court (style → génération directe, pas d'écran review —
+  // l'analyse tourne automatiquement pendant la génération).
+  expert?: boolean;
 };
 
 export function StyleSelector({
@@ -23,6 +26,7 @@ export function StyleSelector({
   roomType,
   basePhotoUrl,
   styles,
+  expert = false,
 }: StyleSelectorProps) {
   const router = useRouter();
   const [selectedStyleId, setSelectedStyleId] = useState<string | null>(null);
@@ -42,7 +46,7 @@ export function StyleSelector({
         setSubmitting(false);
         return;
       }
-      router.push(`/create/${projectId}/review`);
+      router.push(expert ? `/create/generating?projectId=${projectId}` : `/create/${projectId}/review`);
     } catch {
       toast.error("Erreur lors de l'enregistrement de l'ambiance");
       setSubmitting(false);

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runExpertRenderPipeline } from "@/lib/ai/expert";
+import { ensureFinalAssets } from "@/lib/ai/pipeline";
+import { getProject } from "@/lib/storage/projects";
 import { logPipelineError } from "@/lib/ai/logger";
 import { isTransientAiError } from "@/lib/ai/retry";
 import { getClientIp, checkRateLimit, RATE_LIMITED_BODY } from "@/lib/security/rateLimit";
@@ -18,6 +20,11 @@ export async function POST(
   }
 
   try {
+    // Parcours court (plus d'écran /expert qui préparait la liste en amont) : la
+    // shopping list — dont selectExpertPieces tire les produits à intégrer — est
+    // garantie ici avant le swap.
+    const project = await getProject(id);
+    if (!project?.shoppingList?.length) await ensureFinalAssets(id);
     const url = await runExpertRenderPipeline(id);
     return NextResponse.json({ ok: true, projectId: id, expertRenderUrl: url });
   } catch (err) {

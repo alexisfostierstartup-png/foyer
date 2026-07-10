@@ -20,7 +20,17 @@ const MESSAGES = [
   "On finalise le rendu…",
 ];
 
-export function GeneratingScreen({ projectId }: { projectId: string }) {
+export function GeneratingScreen({
+  projectId,
+  expert = false,
+  hasDecisions = false,
+}: {
+  projectId: string;
+  // Parcours expert court : pas d'écran review — l'analyse puis le rendu expert
+  // s'enchaînent ici automatiquement → atterrissage direct sur /final.
+  expert?: boolean;
+  hasDecisions?: boolean;
+}) {
   const router = useRouter();
   const [messageIndex, setMessageIndex] = useState(0);
   const [failed, setFailed] = useState(false);
@@ -31,6 +41,16 @@ export function GeneratingScreen({ projectId }: { projectId: string }) {
     setFailed(false);
     setPaywallTrigger(null);
     try {
+      // Expert sans review : l'analyse (décisions par élément) n'a pas été lancée
+      // par l'écran review — on la joue ici, elle nourrit le plan et la liste.
+      if (expert && !hasDecisions) {
+        const a = await fetch(`/api/projects/${projectId}/analyze`, { method: "POST" });
+        if (!a.ok) {
+          toast.error("L'analyse de la pièce a échoué. Réessayez.");
+          setFailed(true);
+          return;
+        }
+      }
       const res = await fetch(`/api/projects/${projectId}/generate`, {
         method: "POST",
       });
@@ -49,12 +69,24 @@ export function GeneratingScreen({ projectId }: { projectId: string }) {
         setFailed(true);
         return;
       }
+      if (expert) {
+        // Rendu expert (liste de courses + swap produits réels côté route) → /final direct.
+        const er = await fetch(`/api/projects/${projectId}/expert-render`, { method: "POST" });
+        if (!er.ok) {
+          const data = (await er.json().catch(() => null)) as { error?: string } | null;
+          toast.error(data?.error ?? "Le rendu expert a échoué. Réessayez.");
+          setFailed(true);
+          return;
+        }
+        router.push(`/create/${projectId}/final`);
+        return;
+      }
       router.push(`/create/${projectId}`);
     } catch {
       toast.error("La génération a échoué. Réessayez.");
       setFailed(true);
     }
-  }, [projectId, router]);
+  }, [projectId, router, expert, hasDecisions]);
 
   useEffect(() => {
     const interval = setInterval(() => {
