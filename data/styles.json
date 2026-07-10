@@ -34,7 +34,8 @@
         {"slug": "taupe-bois", "label": "Taupe & bois", "walls": "warm off-white walls", "accents": "taupe, greige and natural wood accents"},
         {"slug": "bleu-nuit", "label": "Bleu nuit", "walls": "repaint the walls in a deep night blue", "accents": "night-blue walls with warm wood and off-white seating"},
         {"slug": "greige", "label": "Greige clair", "walls": "light greige walls", "accents": "tone-on-tone greige and cream with matte black details"},
-        {"slug": "noir-bois", "label": "Noir & bois", "walls": "warm off-white walls", "accents": "matte black accents with warm natural wood"}
+        {"slug": "noir-bois", "label": "Noir & bois", "walls": "warm off-white walls", "accents": "matte black accents with warm natural wood"},
+        {"slug": "bordeaux", "label": "Bordeaux", "walls": "warm cream walls", "accents": "deep burgundy upholstery with cream, warm wood and brass accents"}
       ],
       "moodboardUrl": "/moodboards/modern_1.jpeg"
     }
