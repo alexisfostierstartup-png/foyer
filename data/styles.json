@@ -37,7 +37,9 @@
         {"slug": "noir-bois", "label": "Noir & bois", "walls": "warm off-white walls", "accents": "matte black accents with warm natural wood"},
         {"slug": "bordeaux", "label": "Bordeaux", "walls": "warm cream walls", "accents": "deep burgundy upholstery with cream, warm wood and brass accents"}
       ],
-      "moodboardUrl": "/moodboards/modern_1.jpeg"
+      "moodboardUrl": "/moodboards/modern_1.jpeg",
+      "beauty": "Crisp architectural daylight layered with soft indirect accents (cove or concealed LED); a calm neutral base lifted by ONE warm sculptural element — wood slab table or statement chair; clean sight lines, matte finishes, generous breathing room — the polish of a high-end show flat that still feels lived-in",
+      "avoid": ["grey rental-flat blandness (flat lighting, zero texture)", "glossy plastic or cheap chrome finishes", "tech clutter — visible cables, oversized TV dominating the room", "showroom symmetry with no personal touch"]
     }
   },
   {
@@ -182,7 +184,9 @@
         {"slug": "bleu-petrole", "label": "Bleu pétrole", "walls": "repaint the walls in a deep petrol blue", "accents": "petrol blue with brass and walnut"},
         {"slug": "noir-or", "label": "Noir & or", "walls": "repaint the walls in a deep charcoal black", "accents": "charcoal walls with gold details and cream seating"}
       ],
-      "moodboardUrl": "/moodboards/haussmannien_1.jpg"
+      "moodboardUrl": "/moodboards/haussmannien_1.jpg",
+      "beauty": "Warm architectural lighting grazing veined marble and deep velvet; a cream base with disciplined brushed-brass accents; ONE dramatic jewel-tone gesture (emerald or petrol seating) against hotel-suite order — everything precious, nothing shouting",
+      "avoid": ["gold-everything bling and mirrored furniture", "baroque ornament and gilded curlicues", "crowded opulence — several statement pieces competing", "cool blue-white lighting that deadens marble and brass"]
     }
   },
   {
