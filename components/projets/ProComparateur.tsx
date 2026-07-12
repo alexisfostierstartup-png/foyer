@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Pencil } from "lucide-react";
+import { ArrowUpRight, ChevronLeft, ChevronRight, Pencil } from "lucide-react";
 import type { DossierProVue, PieceVue, VarianteVue } from "@/lib/projetsPro";
 
 const eur = (n: number) => `${Math.round(n).toLocaleString("fr-FR")} €`;
@@ -73,33 +73,148 @@ function PieceVueBloc({ piece }: { piece: PieceVue }) {
     );
   }
 
+  if (piece.affichage === "diaporama") return <Diaporama piece={piece} />;
+
   return (
     <div className="grid gap-6 md:grid-cols-2">
       {piece.variantes.map((v, i) => (
-        <ColonneProjet key={v.projectId} variante={v} rang={i + 1} piece={piece.label} />
+        <CarteProjet
+          key={v.projectId}
+          variante={v}
+          eyebrow={`${piece.label} ${i + 1}`}
+        />
       ))}
     </div>
   );
 }
 
-function ColonneProjet({
+/**
+ * Diaporama cyclique : le projet courant en grand, ses deux voisins réduits de part et
+ * d'autre — celui d'avant à gauche, celui d'après à droite — en visuel seul. Au-delà du
+ * dernier on revient au premier, et inversement.
+ */
+function Diaporama({ piece }: { piece: PieceVue }) {
+  const n = piece.variantes.length;
+  const [i, setI] = useState(piece.depart);
+
+  // Le modulo positif : (-1 % 5) vaut -1 en JS, ce qui sortirait du tableau au premier
+  // clic vers la gauche.
+  const at = (k: number) => ((k % n) + n) % n;
+  const aller = (pas: number) => setI((k) => at(k + pas));
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") aller(-1);
+      if (e.key === "ArrowRight") aller(1);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [n]);
+
+  const courant = piece.variantes[at(i)];
+  const avant = piece.variantes[at(i - 1)];
+  const apres = piece.variantes[at(i + 1)];
+
+  return (
+    <div>
+      <div className="relative flex items-start justify-center">
+        {/* Voisins : visuel seul, en retrait. Masqués sous lg — la carte centrale y prend
+            toute la largeur et les aperçus seraient illisibles. */}
+        <Apercu variante={avant} cote="gauche" onClick={() => aller(-1)} />
+
+        <div className="w-full max-w-xl">
+          <CarteProjet
+            variante={courant}
+            eyebrow={`${piece.label} — ${at(i) + 1} / ${n}`}
+          />
+        </div>
+
+        <Apercu variante={apres} cote="droite" onClick={() => aller(1)} />
+      </div>
+
+      {/* Navigation */}
+      <div className="mt-6 flex items-center justify-center gap-4">
+        <BoutonNav direction="gauche" onClick={() => aller(-1)} />
+        <div className="flex gap-1.5">
+          {piece.variantes.map((v, k) => (
+            <button
+              key={v.projectId}
+              aria-label={`Aller à ${v.style}`}
+              aria-current={k === at(i)}
+              onClick={() => setI(k)}
+              className={[
+                "h-1.5 rounded-full transition-all",
+                k === at(i) ? "w-6 bg-foyer-ink" : "w-1.5 bg-foyer-border hover:bg-foyer-muted",
+              ].join(" ")}
+            />
+          ))}
+        </div>
+        <BoutonNav direction="droite" onClick={() => aller(1)} />
+      </div>
+    </div>
+  );
+}
+
+function Apercu({
   variante,
-  rang,
-  piece,
+  cote,
+  onClick,
 }: {
   variante: VarianteVue;
-  rang: number;
-  piece: string;
+  cote: "gauche" | "droite";
+  onClick: () => void;
 }) {
+  if (!variante.renderUrl) return null;
+
+  return (
+    <button
+      onClick={onClick}
+      aria-label={`Voir ${variante.style}`}
+      title={variante.style}
+      className={[
+        "absolute top-16 hidden w-[22%] overflow-hidden rounded-2xl border border-foyer-border",
+        "opacity-55 shadow-sm transition-all duration-300 hover:opacity-90 lg:block",
+        cote === "gauche" ? "left-0 -rotate-1" : "right-0 rotate-1",
+      ].join(" ")}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={variante.renderUrl}
+        alt=""
+        className="aspect-[4/3] w-full object-cover"
+      />
+    </button>
+  );
+}
+
+function BoutonNav({
+  direction,
+  onClick,
+}: {
+  direction: "gauche" | "droite";
+  onClick: () => void;
+}) {
+  const Icone = direction === "gauche" ? ChevronLeft : ChevronRight;
+  return (
+    <button
+      onClick={onClick}
+      aria-label={direction === "gauche" ? "Style précédent" : "Style suivant"}
+      className="flex h-10 w-10 items-center justify-center rounded-full border border-foyer-border bg-white text-foyer-ink transition-colors hover:bg-foyer-ink hover:text-foyer-cream"
+    >
+      <Icone className="h-5 w-5" />
+    </button>
+  );
+}
+
+function CarteProjet({ variante, eyebrow }: { variante: VarianteVue; eyebrow: string }) {
   const { style, renderUrl, items, total, sansPrix, projectId, listePrete } = variante;
 
   return (
-    <section className="flex flex-col rounded-3xl border border-foyer-border bg-white p-5">
+    <section className="flex h-full flex-col rounded-3xl border border-foyer-border bg-white p-5">
       {/* 1 — le style */}
       <div className="mb-4">
-        <p className="text-[12px] uppercase tracking-[0.18em] text-foyer-muted">
-          {piece} {rang}
-        </p>
+        <p className="text-[12px] uppercase tracking-[0.18em] text-foyer-muted">{eyebrow}</p>
         <h2 className="mt-0.5 font-serif text-2xl text-foyer-ink">{style}</h2>
       </div>
 
@@ -109,7 +224,7 @@ function ColonneProjet({
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={renderUrl}
-            alt={`${piece} — style ${style}`}
+            alt={`${eyebrow} — style ${style}`}
             className="aspect-[4/3] w-full object-cover"
           />
         ) : (

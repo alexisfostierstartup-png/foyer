@@ -23,9 +23,20 @@ export type VarianteConfig = {
   styleLabel?: string;
 };
 
+/**
+ * Comment la pièce se présente. `colonnes` = deux directions côte à côte (le défaut).
+ * `diaporama` = un carrousel cyclique : le projet courant en grand, ses deux voisins
+ * en visuel seul, légèrement décalés. C'est de la CONFIG, pas un cas particulier codé en
+ * dur : n'importe quelle pièce peut basculer d'un mode à l'autre.
+ */
+export type Affichage = "colonnes" | "diaporama";
+
 export type PieceConfig = {
   slug: string;
   label: string;
+  affichage?: Affichage;
+  /** Projet ouvert en premier. Absent → le premier de la liste. */
+  debut?: string;
   /** Vide = pièce annoncée mais pas encore travaillée (onglet visible, état vide). */
   variantes: VarianteConfig[];
 };
@@ -53,7 +64,19 @@ export const DOSSIERS_PRO: DossierProConfig[] = [
           { projectId: "sVObM1O5kqXWyRpdZ_Vxl" },
         ],
       },
-      { slug: "salle-a-manger", label: "Salle à manger", variantes: [] },
+      {
+        slug: "salle-a-manger",
+        label: "Salle à manger",
+        affichage: "diaporama",
+        debut: "gIgy56Zp5IZLJYUNkxKhK", // on ouvre sur le japandi
+        variantes: [
+          { projectId: "SRGdM5x7fKC9lvKu2e3u2" }, // bohème
+          { projectId: "gIgy56Zp5IZLJYUNkxKhK" }, // japandi
+          { projectId: "zHU_vib6qMAAVTSy-k4MV" }, // color block
+          { projectId: "VmC_BeUULYiyfNpxUHmsJ" }, // moderne
+          { projectId: "RMzzdoiYYKS3WGc6H4LRu" }, // scandinave
+        ],
+      },
       {
         slug: "chambre",
         label: "Chambre",
@@ -85,7 +108,14 @@ export type VarianteVue = {
   listePrete: boolean;
 };
 
-export type PieceVue = { slug: string; label: string; variantes: VarianteVue[] };
+export type PieceVue = {
+  slug: string;
+  label: string;
+  affichage: Affichage;
+  /** Index de départ dans `variantes` (0 si `debut` n'est pas résolu). */
+  depart: number;
+  variantes: VarianteVue[];
+};
 
 export type DossierProVue = {
   client: string;
@@ -127,7 +157,21 @@ export async function getDossierPro(
           };
         }),
       );
-      return { slug: piece.slug, label: piece.label, variantes: variantes.filter((v) => v !== null) };
+      const retenues = variantes.filter((v) => v !== null);
+      // On cherche l'index APRÈS filtrage : si un projet a disparu de la base, le départ
+      // pointerait sinon sur une autre variante que celle voulue.
+      const depart = Math.max(
+        0,
+        retenues.findIndex((v) => v.projectId === piece.debut),
+      );
+
+      return {
+        slug: piece.slug,
+        label: piece.label,
+        affichage: piece.affichage ?? "colonnes",
+        depart,
+        variantes: retenues,
+      };
     }),
   );
 
