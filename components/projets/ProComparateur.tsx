@@ -387,6 +387,13 @@ function Detail({ variante }: { variante: VarianteVue }) {
 }
 
 /**
+ * Interrupteur : l'édition depuis un dossier pro est VOLONTAIREMENT désactivée pour
+ * l'instant. Passer à `true` la rallume — la mécanique (duplication + route /fork) est en
+ * place et testée, seul le bouton est bloqué.
+ */
+const EDITION_ACTIVE = false;
+
+/**
  * « Modifier ce projet » — n'ouvre PAS le projet illustré : il en duplique un et ouvre la
  * copie. Le dossier pro montre des projets MASTER au client ; les retoucher directement
  * détruirait ce qu'il regarde (une régénération écrase le rendu, sans historique).
@@ -397,6 +404,7 @@ function BoutonModifier({ projectId }: { projectId: string }) {
   const [erreur, setErreur] = useState<string | null>(null);
 
   const dupliquer = async () => {
+    if (!EDITION_ACTIVE) return;
     setEnCours(true);
     setErreur(null);
     try {
@@ -414,8 +422,9 @@ function BoutonModifier({ projectId }: { projectId: string }) {
     <div className="mt-4">
       <button
         onClick={dupliquer}
-        disabled={enCours}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-foyer-ink px-5 py-3 text-[14px] font-medium text-foyer-cream transition-opacity hover:opacity-90 disabled:opacity-60"
+        disabled={enCours || !EDITION_ACTIVE}
+        aria-disabled={!EDITION_ACTIVE}
+        className="inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-full bg-foyer-ink px-5 py-3 text-[14px] font-medium text-foyer-cream transition-opacity disabled:opacity-40 enabled:cursor-pointer enabled:hover:opacity-90"
       >
         {enCours ? (
           <>
@@ -431,7 +440,10 @@ function BoutonModifier({ projectId }: { projectId: string }) {
         )}
       </button>
       <p className="mt-2 text-center text-[12px] text-foyer-muted">
-        {erreur ?? "Une copie est créée : le projet présenté ici reste intact."}
+        {erreur ??
+          (EDITION_ACTIVE
+            ? "Une copie est créée : le projet présenté ici reste intact."
+            : "Bientôt disponible.")}
       </p>
     </div>
   );
