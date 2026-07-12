@@ -143,16 +143,32 @@ function Diaporama({ piece }: { piece: PieceVue }) {
   const avant = piece.variantes[at(i - 1)];
   const apres = piece.variantes[at(i + 1)];
 
+  // À DEUX variantes, il n'y a qu'un aller-retour : les deux flèches mèneraient au même
+  // projet et afficheraient le même nom, ce qui est déroutant. On n'en montre donc qu'une,
+  // du côté où l'autre projet se trouve VRAIMENT — à droite tant qu'on est sur le premier,
+  // à gauche une fois passé sur le second (c'est le signe de son écart cyclique).
+  const alterne = n === 2;
+  const cote: "gauche" | "droite" = ecart(at(i + 1)) > 0 ? "droite" : "gauche";
+
   return (
     <div>
       {/* Navigation EN HAUT : chaque flèche annonce le style vers lequel elle mène, plutôt
           que de laisser deviner. Alignée sur la carte (max-w-xl) et non sur toute la
           largeur, sinon les libellés flotteraient loin d'elle sur grand écran.
-          À deux variantes, gauche et droite mènent au même projet — les deux libellés sont
-          alors identiques, et c'est exact : le cycle n'a qu'un autre style. */}
+          Les <span/> vides tiennent la place de la flèche absente : sans eux, la seule
+          flèche restante serait poussée à gauche par `justify-between`. */}
       <div className="mx-auto mb-4 flex max-w-xl items-center justify-between gap-3">
-        <BoutonStyle direction="gauche" style={avant.style} onClick={() => aller(-1)} />
-        <BoutonStyle direction="droite" style={apres.style} onClick={() => aller(1)} />
+        {alterne && cote === "droite" ? (
+          <span />
+        ) : (
+          <BoutonStyle direction="gauche" style={avant.style} onClick={() => aller(-1)} />
+        )}
+
+        {alterne && cote === "gauche" ? (
+          <span />
+        ) : (
+          <BoutonStyle direction="droite" style={apres.style} onClick={() => aller(1)} />
+        )}
       </div>
 
       <div className="relative">
