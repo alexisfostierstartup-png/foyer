@@ -43,7 +43,8 @@ export async function POST(
     // les vrais produits arrivent derrière (/final polle déjà /shopping-status).
     const project = await getProject(id);
     if (project?.mode === "expert") {
-      await runExpertIteration(id, userRequest.trim());
+      // `target` était perdu ici : le tap-to-target ne servait qu'au flux standard.
+      await runExpertIteration(id, userRequest.trim(), target);
       after(() => reintegrateExpertAdditions(id).catch((e) => logPipelineError(id, "expert-reintegrate", e)));
       return NextResponse.json({ ok: true, projectId: id });
     }

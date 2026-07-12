@@ -257,6 +257,15 @@ function closestNb2Ratio(width: number, height: number): string {
   return NB2_RATIOS.reduce((best, cur) => (Math.abs(cur[1] - r) < Math.abs(best[1] - r) ? cur : best))[0];
 }
 
+// RÉSOLUTION DE SORTIE. Le défaut de l'API est "1K" — on ne l'envoyait pas, donc CHAQUE
+// passe régénérait toute l'image en 1K. Or les passes s'enchaînent : le swap se fait par
+// paquets de 3 produits (8 meubles = 3 générations), plus une génération par itération.
+// Chaque re-génération repart de la sortie précédente → la perte se COMPOSE, et au bout
+// de 2-3 itérations l'image est visiblement molle (QA Alexis 2026-07-12). En 2K, chaque
+// passe dispose de 4× plus de pixels : la dégradation par passe devient négligeable.
+// output_format png : sans lui, une sortie JPEG rajouterait une compression à chaque tour.
+const NB2_RESOLUTION = "2K";
+
 async function callNb2(prompt: string, imageUris: string[], aspectRatio?: string): Promise<{ buffer: Buffer; mimeType: string }> {
   const key = process.env.FAL_API_KEY;
   if (!key) throw new Error("FAL_API_KEY manquant");
@@ -264,7 +273,14 @@ async function callNb2(prompt: string, imageUris: string[], aspectRatio?: string
   const res = await fetch(FAL_ENDPOINT, {
     method: "POST",
     headers: { Authorization: `Key ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt, image_urls: imageUris, num_images: 1, ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}) }),
+    body: JSON.stringify({
+      prompt,
+      image_urls: imageUris,
+      num_images: 1,
+      resolution: NB2_RESOLUTION,
+      output_format: "png",
+      ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}),
+    }),
   });
   const json = (await res.json()) as { images?: { url: string }[]; detail?: unknown };
   if (!res.ok) {
@@ -667,19 +683,38 @@ export async function reintegrateExpertAdditions(projectId: string): Promise<{ a
   return { added: newItems.length };
 }
 
-export async function runExpertIteration(projectId: string, userRequest: string): Promise<string> {
+export async function runExpertIteration(
+  projectId: string,
+  userRequest: string,
+  // Meuble DÉSIGNÉ au doigt sur le rendu (tap-to-target). Le flux expert le jetait :
+  // la route ne le transmettait pas. NB2 recevait donc une consigne GLOBALE (« change la
+  // suspension ») sans savoir sur quoi se concentrer, et se croyait autorisé à re-rendre
+  // toute la scène — il a ainsi ajouté une chaise à manger au milieu du salon alors qu'on
+  // ne lui demandait que la suspension (QA Alexis 2026-07-12). Nommer la cible ancre
+  // l'édition.
+  target?: { targetLabel?: string },
+): Promise<string> {
   const project = await getProject(projectId);
   if (!project) throw new Error(`Project not found: ${projectId}`);
   const parentUrl = project.expertRenderUrl;
   if (!parentUrl) throw new Error("Pas de rendu expert à affiner.");
 
+  const cible = target?.targetLabel?.trim()
+    ? `The change concerns ONE object and one only: the ${target.targetLabel.trim()}. Everything else in the room is FROZEN. `
+    : "";
+
   const prompt =
     `Apply ONLY the following change to this room photo: ${userRequest}. ` +
+    cible +
     `Keep EVERYTHING ELSE exactly as it is — all furniture and its exact positions, all decor, ` +
     `the layout, the windows, doors, ceiling, lighting, and the SAME camera angle and framing. ` +
     `Only change what the request explicitly asks (e.g. the floor or the wall paint). Preserve the ` +
     `exact perspective and a photorealistic look with natural lighting and contact shadows. ` +
-    `STRICT RULES: add NOTHING new to the scene; never add, duplicate or move a light fixture; ` +
+    `Preserve the input image's sharpness, texture and grain: do NOT smooth, repaint or re-render ` +
+    `areas you were not asked to change — copy them through untouched. ` +
+    `STRICT RULES: add NOTHING new to the scene — no extra chair, table, seat or any other object, ` +
+    `even if the room looks like it could use one; never duplicate an existing piece of furniture; ` +
+    `never add, duplicate or move a light fixture; ` +
     `mirrors reflect THIS room only (never an object absent from the room); spaces seen through ` +
     `doors or openings stay exactly as they are.`;
 
