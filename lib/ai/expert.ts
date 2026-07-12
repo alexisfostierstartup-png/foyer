@@ -434,23 +434,36 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
   );
   for (const id of userPicked) replaceIds.add(id);
   const pieces = selectExpertPieces(swappable, overrides, customProducts, replaceIds);
+
+  // BASE DU SWAP. Par défaut le fake : il porte le style validé, et repartir de lui
+  // à chaque fois évite d'empiler les éditions (dégradation de l'image).
+  // MAIS si le rendu expert a été ITÉRÉ, il contient des meubles que le fake n'a
+  // jamais eus (« ajoute une table et des chaises »). Repartir du fake les EFFACE :
+  // c'est ce qui a fait disparaître table et chaises au clic sur « Nouveau rendu »,
+  // alors que la base de données les gardait — image et liste se contredisaient
+  // (QA Alexis 2026-07-12). Dans ce cas, on swappe sur le rendu expert courant.
+  const base =
+    project.expertIterated && project.expertRenderUrl
+      ? project.expertRenderUrl
+      : project.generatedRenderUrl;
+
   if (pieces.length === 0) {
-    // Rien à remplacer (tous les meubles gardés, pièce déjà bien meublée) → le rendu
-    // réel = le fake tel quel (pas de 400 : c'est un résultat légitime).
-    console.log(`[expert] ${projectId} : aucun gros meuble à swapper → rendu réel = fake`);
-    await updateProject(projectId, { expertRenderUrl: project.generatedRenderUrl });
-    return project.generatedRenderUrl;
+    // Rien à remplacer (tous les meubles gardés, pièce déjà bien meublée) → on garde
+    // la base telle quelle (pas de 400 : c'est un résultat légitime).
+    console.log(`[expert] ${projectId} : aucun gros meuble à swapper → rendu réel = base`);
+    await updateProject(projectId, { expertRenderUrl: base });
+    return base;
   }
 
   console.log(
-    `[expert] ${projectId} : swap-sur-fake — ${pieces.length} meubles (${pieces.map((p) => p.category).join(", ")})`,
+    `[expert] ${projectId} : swap sur ${project.expertIterated ? "le rendu expert ITÉRÉ" : "le fake"} — ${pieces.length} meubles (${pieces.map((p) => p.category).join(", ")})`,
   );
-  const result = await swapOnFake(project.generatedRenderUrl, pieces, project.roomType);
+  const result = await swapOnFake(base, pieces, project.roomType);
   if (!result) {
-    // Aucune image produit valide → on NE génère PAS (anti-hallucination) : rendu = fake.
-    console.warn(`[expert] ${projectId} : aucune image produit valide → rendu réel = fake`);
-    await updateProject(projectId, { expertRenderUrl: project.generatedRenderUrl });
-    return project.generatedRenderUrl;
+    // Aucune image produit valide → on NE génère PAS (anti-hallucination) : on garde la base.
+    console.warn(`[expert] ${projectId} : aucune image produit valide → rendu réel = base`);
+    await updateProject(projectId, { expertRenderUrl: base });
+    return base;
   }
   const { buffer, mimeType, integrated } = result;
 
@@ -661,7 +674,9 @@ export async function runExpertIteration(projectId: string, userRequest: string)
   const { buffer, mimeType } = await callNb2(prompt, [await toDataUri(parentUrl)]);
   const n = (project.iterationCount ?? 0) + 1;
   const url = await saveRender(buffer, project.storageFolder, mimeType, `iterate_${n}`);
-  await updateProject(projectId, { expertRenderUrl: url, iterationCount: n });
+  // expertIterated : à partir d'ici, le rendu expert peut contenir des meubles que
+  // le fake n'a jamais eus → le fake n'est plus une base de swap valide.
+  await updateProject(projectId, { expertRenderUrl: url, iterationCount: n, expertIterated: true });
   console.log(`[expert] ${projectId} : itération expert #${n} sauvegardée`);
   return url;
 }

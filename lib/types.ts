@@ -191,6 +191,10 @@ export type Project = {
   // rideaux conservés) puis MEUBLÉE avec les VRAIS produits du catalogue (gros
   // meubles) — flux /expert-create.
   expertRenderUrl?: string | null;
+  // Le rendu expert a été ITÉRÉ (« ajoute une table et des chaises ») → il contient
+  // des meubles que le rendu fictif n'a jamais eus. Le fake cesse alors d'être une
+  // base valide pour le swap : repartir de lui EFFACERAIT l'itération.
+  expertIterated?: boolean;
   // Coquille vide de la pièce (mobilier retiré, architecture conservée) — étape 1
   // du rendu expert. Mise en cache : la photo de base ne change jamais, on ne la
   // re-vide donc pas à chaque régénération.
