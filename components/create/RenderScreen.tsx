@@ -11,7 +11,6 @@ import { PAYWALL_DISABLED } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/lib/auth/useUser";
 import { saveProject } from "@/lib/auth/actions";
-import type { RoomType } from "@/lib/types";
 
 const STEPS = ["Photo", "Style", "Mobilier", "Rendu", "Projet"];
 
@@ -19,10 +18,10 @@ type Props = {
   projectId: string;
   beforeUrl: string;
   afterUrl: string;
-  roomType: RoomType;
+  roomLabel: string;
 };
 
-export function RenderScreen({ projectId, beforeUrl, afterUrl, roomType }: Props) {
+export function RenderScreen({ projectId, beforeUrl, afterUrl, roomLabel }: Props) {
   const router = useRouter();
   const { user, profile } = useUser();
   const [navigating, setNavigating] = useState<"final" | "iterate" | null>(null);
@@ -64,8 +63,6 @@ export function RenderScreen({ projectId, beforeUrl, afterUrl, roomType }: Props
       toast.info("Copiez ce lien : " + window.location.href);
     }
   }
-
-  const roomLabel = roomType === "chambre" ? "chambre" : "salon";
 
   return (
     <>

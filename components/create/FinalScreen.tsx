@@ -260,6 +260,10 @@ type Props = {
   // Hotspots : bbox par element_id sur le rendu affiché (null si analyse absente
   // ou périmée) → dots + popover matches + tap-to-target.
   bboxById?: Record<string, { x: number; y: number; w: number; h: number }> | null;
+  // Squelette d'items issu de l'ANALYSE (phase A) : les pins s'affichent dès que
+  // l'analyse existe, sans attendre le matching catalogue (phase B) — popover
+  // « Pas encore de propositions » en attendant la liste.
+  analysisItems?: ShoppingItem[] | null;
 };
 
 export function FinalScreen({
@@ -277,6 +281,7 @@ export function FinalScreen({
   customProducts = null,
   fakeRenderUrl = null,
   bboxById = null,
+  analysisItems = null,
 }: Props) {
   const [showFake, setShowFake] = useState(false);
   const router = useRouter();
@@ -289,6 +294,12 @@ export function FinalScreen({
   const [scoreFoyer, setScoreFoyer] = useState<ScoreFoyer | undefined>(initialScoreFoyer);
   const [refreshing, setRefreshing] = useState(false);
   const [listPending, setListPending] = useState(pendingList);
+  // Bboxes + squelette d'items en ÉTAT (pas seulement props) : la page est servie
+  // AVANT le calcul avec bboxById=null figé — le poll les met à jour dès que
+  // l'analyse (phase A) existe → pins pendant le matching ET sans reload
+  // (pins invisibles même liste prête, QA Alexis 2026-07-11).
+  const [bboxState, setBboxState] = useState(bboxById);
+  const [skeletonItems, setSkeletonItems] = useState(analysisItems);
 
   // Mode « préparation » : la liste se calcule en fond (déclenchée par la page) —
   // on polle le statut jusqu'à son arrivée. Le statut relance lui-même un calcul
@@ -306,8 +317,16 @@ export function FinalScreen({
           ready: boolean;
           shoppingList?: ShoppingItem[];
           scoreFoyer?: ScoreFoyer;
+          analysis?: {
+            bboxById: Record<string, { x: number; y: number; w: number; h: number }>;
+            items?: ShoppingItem[];
+          } | null;
         };
         if (stopped) return;
+        if (data.analysis) {
+          setBboxState(data.analysis.bboxById);
+          if (data.analysis.items?.length) setSkeletonItems(data.analysis.items);
+        }
         if (data.ready && data.shoppingList) {
           stopped = true;
           clearInterval(interval);
@@ -460,13 +479,15 @@ export function FinalScreen({
               className="rounded-2xl"
             />
             {/* Hotspots meubles (dots + matches + tap-to-target) — masqués côté
-                rendu fake (les bboxes appartiennent au rendu affiché par défaut)
-                et tant que la liste n'est pas prête. */}
-            {bboxById && !showFake && !listPending && (
+                rendu fake (les bboxes appartiennent au rendu affiché par défaut).
+                Liste en cours de calcul → pins quand même, depuis le squelette
+                d'items de l'ANALYSE (les positions viennent de la détection, pas
+                du matching) ; les propositions arrivent avec la liste. */}
+            {bboxState && !showFake && (!listPending || (skeletonItems?.length ?? 0) > 0) && (
               <RenderHotspots
                 projectId={projectId}
-                items={shoppingList}
-                bboxById={bboxById}
+                items={listPending ? (skeletonItems ?? []) : shoppingList}
+                bboxById={bboxState}
                 showModify={!expertMode}
                 selected={expertMode ? sel : undefined}
                 onSelect={

@@ -248,6 +248,14 @@ En **unités** (quantités incluses) : `kept` (conservés), `secondhand`, `ecoNe
 - **Catalogue** : `seed-test-catalog.ts` (Piloterr), `sync-awin.ts` (`--file`/`--force`), `backfill-text-embeddings.ts` (`--all`), `backfill-color-hex.ts` (couleur dominante sharp, Accept jpeg/webp).
 - **Diagnostic matching (lecture seule, ne persistent rien)** : `validate-blend.ts`, `validate-additions.ts`, `diag-embedding.ts`, `diag-project.ts`, `diag-color.ts`, `audit-dump.ts`.
 
+### ⚠️ TOUJOURS FAIRE UN CANARY AVANT UN RUN À GRANDE ÉCHELLE
+
+Tout script qui appelle une API payante (Gemini Vision, etc.) **ET** persiste en base (`scripts/audit-attrs.ts`, `backfill-attrs.ts`, `backfill-style-tags.ts`, etc.) doit d'abord tourner sur un **échantillon minimal** (1 catégorie à faible volume, `--ids=`, `--limit=`) **en foreground**, puis **vérifier en base** (requête directe, pas juste lire le log) que les champs attendus sont bien écrits — avant de le relancer en arrière-plan sur tout le scope.
+
+**Pourquoi** : bug du 2026-07-11 — `audit-attrs.ts` mettait `attrs_model` (qui vit dans `metadata`, pas une colonne) au niveau racine de l'`.update()`. PostgREST rejette la requête ENTIÈRE (400), mais l'appel `.update()` n'était pas suivi d'un check d'erreur → écriture silencieusement ratée, alors que le script affichait quand même `✅ N produits traités, 0 échecs`. Des centaines d'appels Gemini payants ont tourné dans le vide sans qu'aucun signal ne le révèle avant qu'un run parallèle (autre session) ne reproduise l'erreur brute et la remonte.
+
+**Comment appliquer** : le log qui dit "0 échecs" ne prouve RIEN sur la persistance réelle — toujours vérifier que `error` est bien lu sur le retour de `.update()`/`.insert()`, et faire un aller-retour DB (`select` sur 2-3 lignes juste écrites) après le canary, avant de laisser tourner un run de plusieurs centaines/milliers de produits en background.
+
 ---
 
 ## 16. Limites connues & roadmap

@@ -134,6 +134,9 @@ export type ShoppingItem = {
   // Élément source (decision.element_id) → permet de retrouver son crop/bbox dans le rendu
   // pour le matching image↔image. Absent pour les ajouts nets (détectés sans bbox).
   elementId?: string;
+  // TOUS les element_id fusionnés sur cette ligne (quantity > 1) : un hotspot par
+  // exemplaire sur le rendu (ex. 2 lampadaires = 1 ligne ×2 mais 2 pins).
+  elementIds?: string[];
   // Rendu EXPERT : ce produit a été RÉELLEMENT intégré au rendu (swap NB2). La ligne
   // est AUTORITAIRE : matches[0] = le produit exact du rendu, jamais écrasée par une
   // re-dérivation vision (cf. enforceExpertIntegratedPieces).

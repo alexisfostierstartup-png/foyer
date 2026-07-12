@@ -78,7 +78,7 @@ function ScoreBreakdown({ m }: { m: ProductMatch }) {
         {m.colorDeltaE != null && <span>ΔE {m.colorDeltaE}</span>}
         {m.belowThreshold && <span className="rounded bg-amber-100 px-1 text-amber-700">confiance faible</span>}
       </div>
-      {m.attrScores && m.attrScores.length > 0 && (
+      {m.attrScores && m.attrScores.length > 0 ? (
         <div className="mt-1 grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-x-3 gap-y-0.5">
           {m.attrScores.map((a) => (
             <span
@@ -93,6 +93,15 @@ function ScoreBreakdown({ m }: { m: ProductMatch }) {
               {a.product ?? "?"}<span className="opacity-50"> ·w{a.weight}</span>
             </span>
           ))}
+        </div>
+      ) : (
+        // Aucun attribut comparé = le PRODUIT n'est pas taggé (les ~8 000 du catalogue
+        // sans metadata.attrs). Conséquence NON évidente : le score devient l'image PURE
+        // (partnerMatch : coverage 0 → similarity = simImage) — le produit échappe donc à
+        // tout contrôle de forme/matière et peut gagner sur un simple beau packshot.
+        // On l'affiche au lieu de laisser un vide qui se lit comme « rien à signaler ».
+        <div className="mt-1 rounded bg-amber-50 px-1.5 py-0.5 text-[11px] text-amber-700">
+          produit sans attributs → scoré à l&apos;IMAGE SEULE (aucun contrôle forme/matière)
         </div>
       )}
     </div>

@@ -22,9 +22,13 @@ const EXPERT_CATEGORIES = [
   "bed",
   "nightstand",
   "bench",
-  // Suspensions/plafonniers en dernier (swap le plus délicat — point plafond fixe).
+  // Luminaires MOBILES : swap simple (aucun point électrique à respecter).
+  "floor_lamp",
+  "table_lamp",
+  // Luminaires FIXES en dernier (swap le plus délicat — point plafond/mur imposé).
   "ceiling_light",
   "pendant_lamp",
+  "wall_sconce",
 ] as const;
 
 // Nom lisible injecté dans le prompt (le modèle doit savoir QUEL meuble ajouter,
@@ -61,19 +65,30 @@ const CATEGORY_NOUN: Record<string, string> = {
   ceiling_light: "ceiling pendant light",
   pendant_lamp: "ceiling pendant light",
   chandelier: "ceiling pendant light",
+  // Luminaires sortis de la blocklist 2026-07-11 : sans ce libellé, selectExpertPieces
+  // les retenait mais le prompt les nommait « floor lamp » via le fallback slug — ici on
+  // fixe le nom exact, et l'apparence vient toujours de l'image de référence.
+  floor_lamp: "floor lamp",
+  table_lamp: "table lamp",
+  lamp: "lamp",
+  wall_sconce: "wall sconce",
+  wall_light: "wall sconce",
 };
 
 // Ce qu'on NE remplace PAS par un produit catalogue dans le rendu (v1) : petite
 // déco, textile, luminaires, architecture/fixes. Approche BLOCKLIST (extensible :
 // tout meuble non listé ici EST remplaçable — pas de whitelist à faire grossir).
 const NON_REPLACEABLE = new Set([
-  // déco / accessoires
+  // déco / accessoires : trop petits ou trop nombreux pour un swap fiable, et le style
+  // les met en scène très bien lui-même. Périmètre confirmé par Alexis (2026-07-11) :
+  // plaid, coussins, vases, miroir, petite déco restent hors swap.
   "cushion", "pillow", "throw", "frame", "artwork", "art", "painting", "poster", "mirror",
   "plant", "vase", "book", "books", "decor", "decoration", "tableware", "clock", "candle",
-  // luminaires NON swappés : lampes mobiles et appliques. Les SUSPENSIONS/plafonniers
-  // (ceiling_light/pendant) sont swappés depuis 2026-07-10 (go Alexis) — le produit
-  // exact de la liste remplace la suspension du rendu, au même point.
-  "lamp", "floor_lamp", "table_lamp", "wall_light", "wall_sconce", "sconce", "light",
+  // LUMINAIRES : plus aucun n'est bloqué (go Alexis 2026-07-11 — les suspensions
+  // l'avaient été le 2026-07-10, on aligne le reste). Un lampadaire / une lampe à poser
+  // / une applique de la liste remplace donc bien celui du rendu. Les luminaires FIXES
+  // (applique, plafonnier) sont swappés AU MÊME POINT électrique — garde-fou dans le
+  // prompt de swap, jamais un second luminaire ajouté.
   // textile / ouvertures souples
   "curtains", "curtain", "blinds", "drapes",
   // architecture / éléments fixes
@@ -92,6 +107,7 @@ const ROOM_LABEL: Record<string, string> = {
   salon: "living room",
   chambre: "bedroom",
   chambre_parentale: "bedroom",
+  chambre_enfant: "child's bedroom",
 };
 
 // On plafonne le nombre de références envoyées à NB2 (au-delà, il peut saturer).
@@ -333,13 +349,18 @@ async function swapChunk(
     `as it looks — a repainted or customized piece keeps its EXACT paint colour and finish from this ` +
     `photo, pixel-faithful — even next ` +
     `to a replaced one (e.g. if you replace the bar stools, KEEP the bar/high table they surround; ` +
-    `if you replace dining chairs, KEEP the dining table). Also keep unchanged: all wall art and ` +
+    `if you replace dining chairs, KEEP the dining table). Also keep unchanged — EXCEPT any piece ` +
+    `explicitly listed above, which MUST be replaced: all wall art and ` +
     `frames, mirrors, lamps and light fixtures, plants, vases, cushions, books, tableware and small ` +
     `decor, the curtains, the wall colors and finishes, the ceiling, the window, the floor, and the ` +
     `entire styling, lighting and camera framing. Preserve the exact exposure and white balance. ` +
     `STRICT RULES — violating any of these ruins the result: add NOTHING that is not in this photo ` +
     `or in the product list above (no extra furniture, lamp, plant or decor); NEVER add, duplicate ` +
-    `or move a ceiling or wall light fixture; every MIRROR shows a plausible reflection of THIS very ` +
+    `or move a ceiling or wall light fixture — the ONE allowed change is swapping a LISTED pendant or ` +
+    `wall sconce for its product AT THE SAME electrical point (same count of fixtures, same ceiling/wall ` +
+    `point, never a second one, never relocated). A LISTED floor or table lamp is swapped in place, ` +
+    `standing exactly where the old one stood, at its real-world height; ` +
+    `every MIRROR shows a plausible reflection of THIS very ` +
     `room only — never an object that does not exist in the room, never a duplicated fixture in the ` +
     `reflection; rooms and spaces visible through open doors or wall openings stay EXACTLY as in this ` +
     `photo (do not furnish or restyle them); each replaced piece touches the floor with natural ` +
@@ -368,11 +389,26 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
   const shoppingList = (project.shoppingList ?? []) as ShoppingItem[];
   const overrides = (project.productOverrides ?? {}) as Record<string, number>;
   const customProducts = (project.customProducts ?? {}) as Record<string, CustomProduct>;
+  // Pièces que le swap a le droit de toucher :
+  //  1. les REPLACE du plan (décision structural) ;
+  //  2. les ADDITIONS du rendu — meubles que le fake a CRÉÉS (bibliothèque, suspension) :
+  //     ils n'ont aucune décision, donc `replaceIds` seul les excluait et ils restaient
+  //     des objets inventés, impossibles à acheter (QA Alexis 2026-07-11). Ils sont par
+  //     construction VISIBLES dans le fake (ils viennent de son inventaire vision) → le
+  //     garde-fou anti-BORGEBY (« si la pièce n'est pas sur la photo, n'ajoute RIEN »)
+  //     vit dans le prompt de swap, pas ici.
+  // Les KEEP/CUSTOMIZE restent intouchables via `protectedCats` ci-dessous.
+  const decisionIds = new Set((project.element_decisions ?? []).map((d) => d.element_id));
   const replaceIds = new Set(
     (project.element_decisions ?? [])
       .filter((d) => d.mismatch_type === "structural")
       .map((d) => d.element_id),
   );
+  for (const it of shoppingList) {
+    if (it.elementId && !decisionIds.has(it.elementId) && it.source !== "diy") {
+      replaceIds.add(it.elementId);
+    }
+  }
   // CATÉGORIES PROTÉGÉES : le user GARDE ou CUSTOMISE un meuble de cette catégorie
   // → le swap n'y touche pas du tout. Le ciblage texte de NB2 ne sait pas viser un
   // objet précis quand deux semblables coexistent (la ligne ex-bar_table recatégorisée
@@ -382,7 +418,17 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
       .filter((d) => d.mismatch_type === "none" || d.mismatch_type === "surface")
       .map((d) => d.category),
   );
-  const swappable = shoppingList.filter((it) => !protectedCats.has(it.category));
+  // CHOIX EXPLICITE DU USER : « Choisir un produit précis » sur un élément écrase
+  // la protection ET le gating replaceIds. Le user s'est contredit (il avait dit
+  // « je customise »), on le suit : hiérarchie user > DIY > colorway.
+  // Sans ça, l'override était lu par selectExpertPieces APRÈS ce filtre, sur une
+  // liste dont l'élément avait déjà disparu → le choix partait à la poubelle sans
+  // le moindre log (meuble TV du projet 51NekyJs0Qt, QA Alexis 2026-07-11).
+  const userPicked = new Set<string>([...Object.keys(overrides), ...Object.keys(customProducts)]);
+  const swappable = shoppingList.filter(
+    (it) => !protectedCats.has(it.category) || (it.elementId != null && userPicked.has(it.elementId)),
+  );
+  for (const id of userPicked) replaceIds.add(id);
   const pieces = selectExpertPieces(swappable, overrides, customProducts, replaceIds);
   if (pieces.length === 0) {
     // Rien à remplacer (tous les meubles gardés, pièce déjà bien meublée) → le rendu

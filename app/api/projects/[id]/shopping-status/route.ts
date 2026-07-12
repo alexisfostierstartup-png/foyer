@@ -1,6 +1,7 @@
 import { NextResponse, after } from "next/server";
 import { getProject } from "@/lib/storage/projects";
 import { precomputeFinalAssets } from "@/lib/ai/pipeline";
+import { resolveHotspots } from "@/lib/shopping/hotspots";
 
 // Le GET est instantané, mais la relance éventuelle du calcul via after()
 // tourne dans le budget de la route.
@@ -19,14 +20,22 @@ export async function GET(
   const project = await getProject(id);
   if (!project) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
+  // ANALYSE (phase A) dès qu'elle existe pour le rendu affiché : les pins
+  // (bboxes + squelette d'items) s'affichent PENDANT le matching, et surtout
+  // SANS recharger la page — la prop serveur bboxById est figée d'avant le
+  // calcul (pins invisibles même liste prête, QA Alexis 2026-07-11).
+  const hotspots = resolveHotspots(project);
+  const analysis = hotspots.bboxById ? hotspots : null;
+
   if (project.shoppingList) {
     return NextResponse.json({
       ready: true,
       shoppingList: project.shoppingList,
       scoreFoyer: project.scoreFoyer,
+      analysis,
     });
   }
 
   after(() => precomputeFinalAssets(id, "status"));
-  return NextResponse.json({ ready: false });
+  return NextResponse.json({ ready: false, analysis });
 }

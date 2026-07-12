@@ -27,7 +27,7 @@ export default async function RendusPage() {
   const visibleProjects = isExpert ? userProjects : userProjects.slice(0, NEOPHYTE_LIMIT);
   const hiddenCount = isExpert ? 0 : Math.max(0, userProjects.length - NEOPHYTE_LIMIT);
 
-  const ROOM_LABEL: Record<string, string> = { salon: "Salon", chambre: "Chambre" };
+  const ROOM_LABEL: Record<string, string> = { salon: "Salon", chambre: "Chambre", chambre_parentale: "Chambre parentale", chambre_enfant: "Chambre enfant" };
 
   return (
     <div className="p-6 lg:p-8">

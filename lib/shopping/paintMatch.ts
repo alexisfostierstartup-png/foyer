@@ -4,48 +4,213 @@
  * la compare en ΔE (CIELAB) à la couleur de chaque produit peinture (metadata.color_hex,
  * pré-calculée depuis features.Couleur). Le plus proche en teinte gagne.
  */
+import sharp from "sharp";
 import { getVisionProvider } from "@/lib/ai/provider";
 import type { ImageInput } from "@/lib/ai/types";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
-import { hexToLab, deltaE } from "@/lib/color";
+import { hexToLab, hexToRgb, deltaE } from "@/lib/color";
 import type { ProductMatch } from "@/lib/types";
 
-const WALL_COLORS_PROMPT = `Cette image contient DEUX photos CÔTE À CÔTE : moitié GAUCHE = AVANT (pièce d'origine), moitié DROITE = APRÈS (rendu). Identifie chaque MUR dont la COULEUR DE PEINTURE a possiblement CHANGÉ entre AVANT et APRÈS. Pour CHAQUE mur concerné, donne sa couleur AVANT (GAUCHE) ET APRÈS (DROITE) : hex en MI-TON (sans reflet ni ombre) + un court label (ex. "mur d'accent", "mur du fond"). ⚠️ NE LISTE PAS un mur resté de la même couleur. Un mur qui reste blanc/crème/clair — même légèrement plus clair, plus chaud ou plus lumineux dans le rendu — n'est PAS repeint (artefact de rendu) : NE LE LISTE PAS. Ne fusionne jamais plusieurs murs de couleurs différentes. Sois fidèle à la teinte ET à la saturation, et donne un hex AVANT vraiment représentatif de l'origine. Ignore plafond, sol, meubles, rideaux, fenêtres. Réponds en JSON STRICT, rien d'autre : {"walls":[{"hex_avant":"#RRGGBB","hex_apres":"#RRGGBB","label":"..."}]}. Si aucun mur n'a changé de couleur : {"walls":[]}.`;
+// Le modèle ne JUGE plus la couleur — il LOCALISE seulement les murs, dans les deux
+// panneaux. La teinte est ensuite MESURÉE dans les pixels (sampleHex). Motif : sur un
+// mur passé de gris à beige chaud (visible à l'œil, #a7a090 → #b0a084 en pixels réels),
+// Gemini rapportait « #EBEAE6 → #F4F1EA », soit ΔE 3 — il échantillonne les zones lavées
+// par la lumière et sous-estime. Aucun seuil ne rattrape ça (le bruit d'ombre d'un mur
+// INCHANGÉ fait déjà ΔE 1,5-4,5) : il fallait cesser de lui demander un jugement de
+// couleur (projet -2XwsDxGA 2026-07-11).
+const WALL_COLORS_PROMPT = `Cette image contient DEUX photos CÔTE À CÔTE : moitié GAUCHE = AVANT (pièce d'origine), moitié DROITE = APRÈS (rendu). C'est la MÊME pièce sous le même angle.
+
+Liste CHAQUE mur peint visible (même s'il te semble inchangé — c'est un calcul en aval qui décidera). Pour CHAQUE mur, donne :
+- "label" : un court repère (ex. "mur de gauche", "mur du fond", "mur derrière le canapé")
+- "box_avant" : [ymin, xmin, ymax, xmax] (entiers 0-1000 sur l'image ENTIÈRE) — une zone de PEINTURE PURE de ce mur dans la moitié GAUCHE (AVANT)
+- "box_apres" : idem pour LE MÊME mur dans la moitié DROITE (APRÈS)
+- "paint_group" : un ENTIER (1, 2, 3…) identifiant LE POT DE PEINTURE utilisé sur ce mur dans l'APRÈS.
+
+RÈGLE DU paint_group — c'est la question la plus importante :
+Deux pans peints avec LA MÊME peinture portent le MÊME paint_group, même s'ils n'ont pas l'air d'avoir la même couleur à l'écran. Un pan à l'ombre, un pan éclairé en plein par une fenêtre, un mur de biais, un retour d'angle : la lumière change énormément la teinte APPARENTE (un beige au soleil vire à l'orangé, à l'ombre au brun), mais c'est LE MÊME POT. Tu vois la lumière, toi — sers-t'en. Ne donne des paint_group DIFFÉRENTS que si le peintre a vraiment ouvert deux pots de couleurs différentes (ex. un mur d'accent terracotta contre trois murs blancs, ou un soubassement foncé sous un haut clair).
+En cas de doute, donne le MÊME paint_group : un mur repeint en une seule couleur ne doit pas se retrouver facturé en trois pots.
+
+Les deux boîtes doivent cadrer une surface de mur NUE et bien éclairée : PAS de meuble, cadre, rideau, fenêtre, plinthe, plafond, ni zone d'ombre marquée ou de reflet. Plutôt petites et franchement au centre du pan de mur. box_avant doit être dans la moitié GAUCHE, box_apres dans la moitié DROITE.
+
+Réponds en JSON STRICT, rien d'autre : {"walls":[{"label":"...","paint_group":1,"box_avant":[ymin,xmin,ymax,xmax],"box_apres":[ymin,xmin,ymax,xmax]}]}`;
 
 const norm = (h: string) => `#${h.trim().replace(/^#/, "").toLowerCase()}`;
 const validHex = (h?: string) => !!h && /^#?[0-9a-fA-F]{6}$/.test(h.trim());
 
-// Buffer anti-bruit : si AVANT et APRÈS sont à ΔE < ce seuil, le mur n'a PAS vraiment été
-// repeint (vision_detect ne renvoie jamais EXACTEMENT le même hex) → on ne propose pas de peinture.
-const WALL_UNCHANGED_DELTAE = 8;
+// Seuil anti-bruit sur des couleurs MESURÉES (plus des estimations du modèle) : on peut
+// donc descendre à 5. Un mur non repeint ne varie que par la lumière/l'exposition entre les
+// deux images ; un vrai repeint, même subtil (gris → beige chaud), le dépasse largement.
+const WALL_UNCHANGED_DELTAE = 5;
 
-export type WallColor = { hex: string; label: string };
+// bbox du mur repeint, normalisée 0-1 sur le COMPOSITE entier (l'appelant la
+// reprojette sur le panneau APRÈS via mapCompositeBoxToRender) → pin peinture.
+// `bboxes` : un mur "fusionné" (même peinture sur plusieurs pans) garde UN pin
+// par pan tout en ne comptant qu'UNE ligne d'achat.
+export type Bbox2 = { x: number; y: number; w: number; h: number };
+// `group` : le pot de peinture, tel que le MODÈLE VISION l'a identifié (paint_group).
+// C'est lui qui fait foi pour le regroupement — cf. mergeWallColors.
+export type WallColor = { hex: string; label: string; group?: number; bbox?: Bbox2; bboxes?: Bbox2[] };
 
-// Compare AVANT|APRÈS (composite) → 1 couleur par mur RÉELLEMENT repeint. Double garde-fou :
-// (1) le prompt n'émet que les murs qui semblent changés ; (2) buffer ΔE avant/après (le hex
-// avant ≈ après = bruit vision → écarté). Pas de moyenne globale entre murs de couleurs ≠.
+// ── Rationalisation : plusieurs pans du MÊME mur repeint = UNE peinture ──────
+// L'ombre et l'exposition décalent la LUMINANCE (L*) mais pas la TEINTE : sur un
+// cas réel (projet QAWf50S1), 3 pans du même beige donnaient Δab 0,1-1,7 alors que
+// deux vraies couleurs sont à Δab ≥ 9 (sauge clair/foncé) et 18-41 pour le piège
+// beige↔jaune. On fusionne donc sur la distance CHROMA/TEINTE (a*,b*), avec un
+// garde-fou ΔE global pour ne pas fondre un bicolore volontaire de même teinte
+// (ex. soubassement foncé + haut clair : Δab faible mais ΔE ~22).
+const SAME_PAINT_AB = 6; // Δ(a*,b*) — au-delà, teintes différentes → 2 lignes
+// Garde-fou ΔE desserré 14 → 20 (2026-07-11) : depuis que la couleur est MESURÉE sur
+// les pixels, un pan à l'ombre lit bien plus sombre. Mesuré sur cas réels : un mur et
+// sa colonne d'angle (MÊME peinture) donnent ΔE 15,2 / Δab 2,1, tandis que deux murs
+// VRAIMENT différents (beige vs sauge) donnent ΔE 15,8 / Δab 7,4 — le ΔE ne discrimine
+// PAS (15,2 vs 15,8), seul le Δab le fait. À 14, la colonne à l'ombre devenait une 2e
+// ligne de peinture. À 20, elle fusionne, et un vrai bicolore de même teinte (ΔE ~22)
+// reste séparé.
+const SAME_PAINT_DE = 20;
+
+function isSamePaint(h1: string, h2: string): boolean {
+  const a = hexToLab(h1), b = hexToLab(h2);
+  if (!a || !b) return false;
+  const dAB = Math.sqrt((a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2);
+  return dAB < SAME_PAINT_AB && deltaE(a, b) < SAME_PAINT_DE;
+}
+
+// Moyenne RGB des pans fusionnés → hex représentatif (mi-ton du mur réel).
+function averageHex(hexes: string[]): string {
+  const rgbs = hexes.map(hexToRgb).filter(Boolean) as [number, number, number][];
+  if (rgbs.length === 0) return hexes[0];
+  const avg = [0, 1, 2].map((i) => Math.round(rgbs.reduce((s, c) => s + c[i], 0) / rgbs.length));
+  return `#${avg.map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+}
+
+/**
+ * Un pot de peinture = UNE ligne d'achat (avec un pin par pan).
+ *
+ * Le regroupement suit le `paint_group` du MODÈLE VISION, pas la distance entre
+ * pixels. Raison (projet 51NekyJs0Qt, 2026-07-11) : trois pans d'UNE MÊME peinture
+ * mesuraient Δab 16,1 / ΔE 16,1, alors que deux murs de couleurs VRAIMENT
+ * différentes (beige vs sauge, cf. plus haut) mesuraient Δab 7,4 / ΔE 15,8. La
+ * paire « identique » était donc PLUS ÉLOIGNÉE que la paire « différente » : aucun
+ * seuil, sur aucune des deux métriques, ne peut séparer ces deux cas. La lumière
+ * (baie vitrée, retour d'angle à l'ombre) décale la teinte mesurée bien plus fort
+ * qu'un changement de peinture. C'est la MESURE qui est corrompue, pas le seuil qui
+ * est mal réglé — d'où les allers-retours 14 → 20 sur SAME_PAINT_DE.
+ *
+ * Le modèle, lui, VOIT l'ombre et sait la compenser. On lui demande donc le
+ * regroupement, et on ne garde la distance pixel qu'en repli s'il ne le fournit pas.
+ * Le hex mesuré reste la source de vérité pour MATCHER le produit peinture.
+ */
+export function mergeWallColors(walls: WallColor[]): WallColor[] {
+  const groups: { key: number | null; members: WallColor[] }[] = [];
+  for (const w of walls) {
+    const g =
+      w.group != null
+        ? groups.find((grp) => grp.key === w.group)
+        : groups.find((grp) => isSamePaint(grp.members[0].hex, w.hex)); // repli
+    if (g) g.members.push(w);
+    else groups.push({ key: w.group ?? null, members: [w] });
+  }
+  return groups.map(({ members }) => {
+    const bboxes = members.map((m) => m.bbox).filter(Boolean) as Bbox2[];
+    return {
+      hex: members.length > 1 ? averageHex(members.map((m) => m.hex)) : members[0].hex,
+      // Plusieurs pans d'une même peinture : libellé générique plutôt qu'une
+      // énumération (« mur de gauche · mur du fond · … ») illisible en liste.
+      label: members.length > 1 ? "murs" : members[0].label,
+      bbox: bboxes[0],
+      bboxes,
+    };
+  });
+}
+
+// box_2d Gemini = [ymin, xmin, ymax, xmax] en 0-1000 (convention OBLIGATOIRE,
+// cf. leçon bbox 2026-07-10) → {x,y,w,h} normalisé 0-1.
+function parseBox2d(raw: unknown): Bbox2 | undefined {
+  if (!Array.isArray(raw) || raw.length !== 4) return undefined;
+  const [ymin, xmin, ymax, xmax] = raw.map(Number);
+  if ([ymin, xmin, ymax, xmax].some((v) => !Number.isFinite(v))) return undefined;
+  const b = { x: xmin / 1000, y: ymin / 1000, w: (xmax - xmin) / 1000, h: (ymax - ymin) / 1000 };
+  return b.w > 0 && b.h > 0 ? b : undefined;
+}
+
+/**
+ * Couleur MESURÉE dans les pixels d'une zone (moyenne 8×8 après resize) — remplace le
+ * jugement de couleur du modèle, qui sous-estimait systématiquement (cf. WALL_COLORS_PROMPT).
+ */
+async function sampleHex(image: Buffer, box: Bbox2): Promise<string | null> {
+  try {
+    const meta = await sharp(image).metadata();
+    const W = meta.width ?? 0;
+    const H = meta.height ?? 0;
+    if (!W || !H) return null;
+    const left = Math.max(0, Math.min(W - 1, Math.round(box.x * W)));
+    const top = Math.max(0, Math.min(H - 1, Math.round(box.y * H)));
+    const width = Math.max(1, Math.min(W - left, Math.round(box.w * W)));
+    const height = Math.max(1, Math.min(H - top, Math.round(box.h * H)));
+    if (width < 4 || height < 4) return null;
+    const { data } = await sharp(image)
+      .extract({ left, top, width, height })
+      .resize(8, 8, { fit: "fill" })
+      .removeAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    let r = 0, g = 0, b = 0;
+    const n = data.length / 3;
+    for (let i = 0; i + 2 < data.length; i += 3) { r += data[i]; g += data[i + 1]; b += data[i + 2]; }
+    const hx = (v: number) => Math.round(v / n).toString(16).padStart(2, "0");
+    return `#${hx(r)}${hx(g)}${hx(b)}`;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Murs RÉELLEMENT repeints. Le modèle LOCALISE les murs dans les deux panneaux ; la
+ * couleur est MESURÉE dans les pixels, puis comparée en ΔE. Le seuil peut donc être
+ * bas (5) : on ne compare plus deux estimations bruitées, mais deux mesures.
+ */
 export async function getChangedWallColors(composite: ImageInput): Promise<WallColor[]> {
   try {
     const res = await getVisionProvider("gemini_vision").analyze(WALL_COLORS_PROMPT, [composite], {
       model: "gemini-2.5-flash",
     });
-    const walls = (res.parsed as { walls?: Array<{ hex_avant?: string; hex_apres?: string; hex?: string; label?: string }> } | null)?.walls ?? [];
-    const out: WallColor[] = [];
-    const seen = new Set<string>();
-    for (const w of walls) {
-      const apresRaw = w.hex_apres ?? w.hex; // tolère l'ancien format {hex}
-      if (!validHex(apresRaw)) continue;
-      const apres = norm(apresRaw!);
-      // Buffer : avant ≈ après → mur non repeint (bruit vision) → on saute.
-      if (validHex(w.hex_avant)) {
-        const la = hexToLab(norm(w.hex_avant!)), lb = hexToLab(apres);
-        if (la && lb && deltaE(la, lb) < WALL_UNCHANGED_DELTAE) continue;
-      }
-      if (seen.has(apres)) continue;
-      seen.add(apres);
-      out.push({ hex: apres, label: (w.label ?? "mur").trim() || "mur" });
+    const walls =
+      (res.parsed as {
+        walls?: Array<{ label?: string; paint_group?: unknown; box_avant?: unknown; box_apres?: unknown }>;
+      } | null)?.walls ?? [];
+
+    // La mesure exige les octets ; sans eux (cas théorique), on ne devine pas.
+    if (!Buffer.isBuffer(composite)) {
+      console.warn("[paintMatch] composite non-Buffer → mesure pixel impossible");
+      return [];
     }
-    return out;
+
+    const out: WallColor[] = [];
+    for (const w of walls) {
+      const boxAvant = parseBox2d(w.box_avant);
+      const boxApres = parseBox2d(w.box_apres);
+      if (!boxAvant || !boxApres) continue;
+
+      const hexAvant = await sampleHex(composite, boxAvant);
+      const hexApres = await sampleHex(composite, boxApres);
+      if (!hexAvant || !hexApres) continue;
+
+      const la = hexToLab(hexAvant);
+      const lb = hexToLab(hexApres);
+      if (!la || !lb) continue;
+      const dE = deltaE(la, lb);
+      if (dE < WALL_UNCHANGED_DELTAE) continue; // même peinture, seule la lumière varie
+
+      const group = Number(w.paint_group);
+      out.push({
+        hex: hexApres,
+        label: (w.label ?? "mur").trim() || "mur",
+        group: Number.isFinite(group) ? group : undefined,
+        bbox: boxApres,
+      });
+    }
+    // Pans d'un même pot de peinture → UNE seule ligne d'achat (un pin par pan).
+    return mergeWallColors(out);
   } catch (e) {
     console.warn("[paintMatch] couleurs murs:", e instanceof Error ? e.message : e);
     return [];

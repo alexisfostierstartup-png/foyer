@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getProject } from "@/lib/storage/projects";
+import { getRoomTypes } from "@/lib/db/assets";
 import { RenderScreen } from "@/components/create/RenderScreen";
 
 export default async function ProjectPage({
@@ -17,12 +18,18 @@ export default async function ProjectPage({
   // shoppable (/final) est l'écran terminal et affiche le rendu expert.
   if (project.mode === "expert") redirect(`/create/${projectId}/final`);
 
+  // Libellé FR = source de vérité room_defaults (data-driven, cf. picker de pièce) —
+  // remplace un binaire chambre/salon qui affichait "Voilà votre salon" pour tout
+  // roomType hors "chambre" (bug pour chambre_parentale/chambre_enfant).
+  const roomTypes = await getRoomTypes();
+  const roomLabel = roomTypes.find((r) => r.slug === project.roomType)?.label.toLowerCase() ?? "pièce";
+
   return (
     <RenderScreen
       projectId={project.id}
       beforeUrl={project.basePhotoUrl}
       afterUrl={project.generatedRenderUrl}
-      roomType={project.roomType}
+      roomLabel={roomLabel}
     />
   );
 }

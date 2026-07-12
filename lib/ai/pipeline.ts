@@ -3,9 +3,9 @@ import path from "path";
 import sharp from "sharp";
 import { nanoid } from "nanoid";
 import { resolvePrompt } from "@/lib/prompts/engine";
-import { loadStyleContext, loadRoomDefaults, loadRoomRemoveCategories, formatUserInstructions, formatDesignPlan, type UserChoicesInput } from "@/lib/prompts/helpers";
+import { loadStyleContext, loadRoomDefaults, loadRoomRemoveCategories, formatUserInstructions, formatDesignPlan, ARCH_SURFACE_CATEGORIES, type UserChoicesInput } from "@/lib/prompts/helpers";
 import { getElementCategoryEnum, getElementCategories, getAllowedActionsByCategory, getCategoryKeywordRemap, getFloorPresets } from "@/lib/db/assets";
-import type { DecisionAction } from "@/lib/db/assets";
+import type { DecisionAction, ElementCategory } from "@/lib/db/assets";
 import { mergeShoppingItems, resolveCatalogCategory } from "@/lib/shopping/categories";
 import { getImageProvider, getVisionProvider } from "./provider";
 import { saveRender } from "./saveRender";
@@ -24,8 +24,8 @@ import { reconcilePlan } from "@/lib/shopping/reconcile";
 import { buildShoppingList, builtToLegacyShoppingList } from "@/lib/shopping/build";
 import { matchPartnerProductsBlendBatch, matchFloorProductsBlend } from "@/lib/shopping/partnerMatch";
 import { buildAttrsInstruction, CATEGORY_W, ATTR_WEIGHTS } from "@/lib/shopping/attributeScore";
-import { schemaForCategory } from "@/lib/shopping/attributeSchemaV3";
-import { extractCrop, isFrameTruncatedFragment, type Bbox } from "@/lib/shopping/crop";
+import { schemaForCategory, getSchemaV3 } from "@/lib/shopping/attributeSchemaV3";
+import { extractCrop, isFrameTruncatedFragment, dominantHexFromImage, parseBox2d, type Bbox } from "@/lib/shopping/crop";
 import { matchPaintByColor, getChangedWallColors, type WallColor } from "@/lib/shopping/paintMatch";
 import type { ImageInput } from "./types";
 import { getAllDiyActions, getCandidateActions, getRenderableActionSlugs } from "@/lib/diy/rules";
@@ -264,6 +264,35 @@ JSON strict: {"same_model": [<element_ids des sièges restés le même modèle r
   }
 }
 
+/**
+ * bbox du PRODUIT dans sa photo catalogue (box_2d Gemini, convention native 0-1000).
+ * Sert à embedder le produit sur son OBJET et non sur toute la scène : une photo
+ * « lifestyle » (le meuble noyé dans un canapé + étagères + plantes) donnait un cosinus
+ * bien plus bas qu'un packshot, indépendamment du meuble — le score image mesurait le
+ * cadrage du photographe autant que le produit (QA Alexis 2026-07-11).
+ * Renvoie null si l'objet remplit déjà la photo (packshot : rien à gagner) ou en échec.
+ */
+export async function detectProductBbox(imageBytes: Buffer): Promise<Bbox | null> {
+  try {
+    const res = await getVisionProvider("gemini_vision").analyze(
+      "Cette image est une photo produit de mobilier ou de décoration, parfois en situation " +
+        "(le produit posé dans une pièce meublée). Donne la boîte englobante SERRÉE du PRODUIT " +
+        "PRINCIPAL vendu — pas les meubles du décor autour, pas les objets posés dessus. " +
+        'JSON STRICT : {"box_2d": [ymin, xmin, ymax, xmax]} en ENTIERS 0-1000 (origine en haut à gauche).',
+      [imageBytes as unknown as ImageInput],
+      { model: "gemini-flash-lite-latest", mediaResolution: "medium" },
+    );
+    const box = parseBox2d((res.parsed as { box_2d?: unknown } | null)?.box_2d);
+    if (!box) return null;
+    // Packshot : l'objet occupe déjà ~toute l'image → cropper n'apporte rien et le
+    // léger inset risquerait de rogner le produit.
+    if (box.w * box.h > 0.8) return null;
+    return box;
+  } catch {
+    return null;
+  }
+}
+
 export async function buildFixedFeaturesSummary(profiles: ElementProfile[]): Promise<string> {
   const count = (cat: string) => profiles.filter((p) => p.category === cat).length;
   const parts: string[] = [];
@@ -324,10 +353,15 @@ type RawProfile = Partial<ElementProfile> & { element_id?: string };
  */
 // Instruction bbox ajoutée EN CODE pour la seule détection d'inventaire du RENDU (pas de
 // modif du prompt partagé → la détection de base/review n'est pas touchée).
+// box_2d [ymin, xmin, ymax, xmax] 0-1000 : convention NATIVE de Gemini, la seule
+// qu'il respecte. L'ancien format [x, y, w, h] 0-1 était rendu tantôt en 0-1,
+// tantôt en 0-1000 façon box_2d selon l'élément → pins hors de leur objet
+// (lampadaires sur le tapis, bibliothèque au sol — QA Alexis 2026-07-11).
 const BBOX_SUFFIX =
   "\n\nEN PLUS de la structure ci-dessus, ajoute à CHAQUE élément de elementProfiles : " +
-  '(1) "bbox": [x, y, w, h] — boîte englobante dans CETTE image, valeurs 0-1 (x,y = coin haut-gauche ; ' +
-  "w,h = largeur/hauteur en fraction de l'image), cadre SERRÉ autour de l'objet ; " +
+  '(1) "box_2d": [ymin, xmin, ymax, xmax] — boîte englobante SERRÉE autour de l\'objet dans CETTE image, ' +
+  "en ENTIERS de 0 à 1000 (origine en haut à gauche : ymin/ymax = bord haut/bas, xmin/xmax = bord gauche/droit). " +
+  "Respecte EXACTEMENT cet ordre et cette échelle 0-1000 ; " +
   '(2) "color_hex": la couleur DOMINANTE de l\'objet (pas du fond/sol) en hexadécimal "#rrggbb".';
 
 // Inventaire du RENDU (matching shopping) : les champs DIY ne servent qu'à l'analyse
@@ -435,7 +469,12 @@ export async function detectElementProfiles(
       condition: p.condition ?? "good",
       movable: p.movable ?? true,
       dims: p.dims ?? {},
-      bbox: opts?.withBbox ? (parseBbox((p as { bbox?: unknown }).bbox) ?? undefined) : undefined,
+      // box_2d (convention native) d'abord ; repli sur l'ancien champ bbox.
+      bbox: opts?.withBbox
+        ? (parseBox2d((p as { box_2d?: unknown }).box_2d) ??
+           parseBbox((p as { bbox?: unknown }).bbox) ??
+           undefined)
+        : undefined,
       color_hex: opts?.withBbox ? parseHex((p as { color_hex?: unknown }).color_hex) : undefined,
       attrs: opts?.withBbox && p.attrs && typeof p.attrs === "object" && !Array.isArray(p.attrs)
         ? (p.attrs as Record<string, unknown>)
@@ -1303,7 +1342,7 @@ export async function confirmChanges(
   composite: ImageInput,
   afterLeftFrac: number,
   afterWidthFrac: number,
-): Promise<{ appliedIds: Set<string>; judgedIds: Set<string>; additions: Alteration[]; afterById: Map<string, string>; bboxById: Map<string, Bbox>; attrsById: Map<string, Record<string, unknown>> }> {
+): Promise<{ appliedIds: Set<string>; judgedIds: Set<string>; replacedIds: Set<string>; additions: Alteration[]; afterById: Map<string, string>; bboxById: Map<string, Bbox>; attrsById: Map<string, Record<string, unknown>> }> {
   const candidatesJson = JSON.stringify(
     candidates.map((d) => ({
       element_id: d.element_id,
@@ -1353,7 +1392,7 @@ export async function confirmChanges(
   }
   );
   const parsed = result.parsed as {
-    results?: Array<{ element_id?: string; changed?: boolean; after?: string; bbox?: unknown; attrs?: unknown }>;
+    results?: Array<{ element_id?: string; changed?: boolean; change_kind?: string; after?: string; bbox?: unknown; attrs?: unknown }>;
     additions?: Array<{ element?: string; category?: string; detail?: string }>;
   } | null;
 
@@ -1366,10 +1405,16 @@ export async function confirmChanges(
   const bboxById = new Map<string, Bbox>();
   // attrs structurés V3 de l'élément (état APRÈS) → score structuré du matching (Étape 2).
   const attrsById = new Map<string, Record<string, unknown>>();
+  // LE RENDU FAIT FOI : éléments que le rendu a REMPLACÉS (objet différent) et non
+  // simplement re-finis. Un « repeindre la table basse » que le rendu a en fait
+  // remplacée par une AUTRE table doit se vendre comme une table, pas comme un pot
+  // de peinture (QA Alexis 2026-07-11) — le plan DIY n'est qu'une intention.
+  const replacedIds = new Set<string>();
   for (const r of parsed?.results ?? []) {
     if (typeof r.element_id !== "string") continue;
     judgedIds.add(r.element_id);
     if (r.changed) appliedIds.add(r.element_id); // appliedIds = éléments que le rendu a CHANGÉS
+    if (r.changed && r.change_kind === "replaced") replacedIds.add(r.element_id);
     if (r.after && r.after.trim()) afterById.set(r.element_id, r.after.trim());
     const compBox = parseBbox(r.bbox);
     if (compBox) {
@@ -1391,7 +1436,7 @@ export async function confirmChanges(
       shoppingImpact: "to_buy_secondhand",
     }));
 
-  return { appliedIds, judgedIds, additions, afterById, bboxById, attrsById };
+  return { appliedIds, judgedIds, replacedIds, additions, afterById, bboxById, attrsById };
 }
 
 // Catégories qu'on ne liste PAS en addition (architecture/surfaces + déco sans produit
@@ -1425,6 +1470,12 @@ function reconcileRenderAdditions(
   renderProfiles: ElementProfile[],
   candidates: ElementDecision[],
   taxonomy: Map<string, string | null>,
+  // Catégories FIXES mais shoppables (fixed_lightpoint + catalog_category en taxo :
+  // ceiling_light→pendant_lamp, wall_sconce) : movable=false car point électrique,
+  // mais un luminaire suspendu au rendu est un PRODUIT achetable — sans cette
+  // exemption, une suspension swappée n'était jamais shoppée quand la détection
+  // de base avait raté le point (projet QAWf50S1 2026-07-10).
+  fixedShoppable?: Set<string>,
 ): Alteration[] {
   const covered = new Map<string, number>(); // multiset des catégories catalogue de l'AVANT
   for (const d of candidates) {
@@ -1438,7 +1489,7 @@ function reconcileRenderAdditions(
   // d'achat (matching aveugle à ~0.4, projet fpvZ « chaises à 40% »).
   const GHOST = /non visible|not visible|invisible|hors[- ]champ|barely visible|cannot be seen/i;
   for (const p of renderProfiles) {
-    if (p.movable === false || ADDITION_SKIP.has(p.category)) continue;
+    if ((p.movable === false && !fixedShoppable?.has(p.category)) || ADDITION_SKIP.has(p.category)) continue;
     if (GHOST.test(p.description ?? "") || !(p.description ?? "").trim()) continue;
     const c = resolveCatalogCategory(p.category, taxonomy);
     if (!c) continue; // non shoppable
@@ -1471,7 +1522,12 @@ export async function computeRenderAdditions(
 ): Promise<Alteration[]> {
   const renderImg = await loadImage(renderUrl);
   const renderProfiles = await detectElementProfiles(projectId, renderImg, "render_inventory", roomType, { withBbox: true });
-  const adds = reconcileRenderAdditions(renderProfiles, candidates, taxonomy);
+  const fixedShoppable = new Set(
+    (await getElementCategories().catch(() => [] as ElementCategory[]))
+      .filter((c) => c.fixed_lightpoint && c.catalog_category)
+      .map((c) => c.slug),
+  );
+  const adds = reconcileRenderAdditions(renderProfiles, candidates, taxonomy, fixedShoppable);
   console.log(`[pipeline:final] inventaire rendu: ${renderProfiles.length} éléments détectés → ${adds.length} additions`);
   return adds;
 }
@@ -1599,6 +1655,8 @@ async function analyzeRender(projectId: string, project: Project): Promise<Rende
   //    l'original donc d'aucune décision.
   let appliedIds = new Set<string>();
   let judgedIds = new Set<string>();
+  // Éléments que le RENDU a remplacés par un autre objet (vs simplement re-finis).
+  let replacedIds = new Set<string>();
   let additions: Alteration[] = [];
   let afterById = new Map<string, string>();
   let bboxById = new Map<string, Bbox>();
@@ -1634,11 +1692,23 @@ async function analyzeRender(projectId: string, project: Project): Promise<Rende
     ]);
     appliedIds = r.appliedIds;
     judgedIds = r.judgedIds;
+    replacedIds = r.replacedIds;
     additions = r.additions;
     afterById = r.afterById;
     bboxById = r.bboxById;
     r.attrsById.forEach((v, k) => elementAttrsById.set(k, v));
     wallColors = wallColorsRes;
+    // bbox de chaque PAN repeint (émises sur le composite) → reprojetées sur le
+    // rendu, sous les clés de l'item peinture : `paint-<hex>`, `paint-<hex>-2`…
+    // Une peinture = UNE ligne d'achat mais UN pin par pan (demande Alexis
+    // 2026-07-11 : 3 pans du même beige ≠ 3 pots à acheter).
+    for (const w of wallColors) {
+      const key = `paint-${w.hex.replace("#", "")}`;
+      const boxes = (w.bboxes?.length ? w.bboxes : w.bbox ? [w.bbox] : [])
+        .map((b) => mapCompositeBoxToRender(b, comp.afterLeftFrac, comp.afterWidthFrac))
+        .filter(Boolean) as Bbox[];
+      boxes.forEach((b, i) => bboxById.set(i === 0 ? key : `${key}-${i + 1}`, b));
+    }
   }
 
   // La LISTE reflète le RENDU, pas seulement les décisions initiales :
@@ -1673,6 +1743,14 @@ async function analyzeRender(projectId: string, project: Project): Promise<Rende
       let base: ElementDecision = wasCandidate
         ? d
         : { ...d, mismatch_type: "structural", action_slug: null, supply_items: null, qty: null };
+      // LE RENDU FAIT FOI (2026-07-11) : une customisation (« repeindre la table basse »)
+      // que le rendu a en réalité REMPLACÉE par un autre objet devient un achat de
+      // meuble — sinon on vendait de la peinture pour une table qui n'existe plus.
+      // Les surfaces d'architecture (mur/sol/plafond) sont exclues : elles ne sont
+      // jamais « remplacées », seulement repeintes.
+      if (base.mismatch_type === "surface" && replacedIds.has(d.element_id) && !ARCH_SURFACE_CATEGORIES.has(base.category)) {
+        base = { ...base, mismatch_type: "structural", action_slug: null, supply_items: null, qty: null };
+      }
       if (after) {
         base = { ...base, description: after };
         // La ligne shoppe ce que le rendu CONTIENT : si l'après décrit clairement une
@@ -1817,18 +1895,56 @@ async function buildMatchesAndScore(
     }),
   );
 
+  // PEINTURE DIY sur MEUBLE : l'item propose de la PEINTURE (ΔE couleur, comme
+  // les murs), JAMAIS des produits de la catégorie du meuble — le pin « Peinture —
+  // table basse » qui propose des tables basses est un contresens (QA Alexis
+  // 2026-07-11, projet QAWf50S1 ; remplace le « plan B produits » du 2026-07-10
+  // pour les seules fournitures peinture).
+  const paintDiyIdx = new Set<number>();
+  for (let i = 0; i < shoppingList.length; i++) {
+    const it = shoppingList[i];
+    if (it.source === "diy" && it.category !== "wall" && it.category !== "paint" && /peinture|peindre/i.test(it.name)) {
+      paintDiyIdx.add(i);
+    }
+  }
+  for (const i of paintDiyIdx) {
+    const it = shoppingList[i];
+    // Couleur cible = la teinte SÉMANTIQUE de l'objet (attribut hex du schéma :
+    // top_color pour une table, color pour un siège…). Les deux autres sources sont
+    // des MOYENNES DE PIXELS sur le crop — elles avalent l'ombre portée, le sol et
+    // les objets posés dessus : une table basse BLANCHE (#ffffff en attribut) sortait
+    // en #aa9f8f gris-brun, et on proposait de la peinture grise (QA Alexis
+    // 2026-07-11, projet -2XwsDxGA). Elles ne servent plus que de repli.
+    const attrs = it.elementId ? elementAttrsById.get(it.elementId) : undefined;
+    const hexAttrKeys = getSchemaV3(schemaForCategory(it.category))
+      .filter((a) => a.type === "hex")
+      .map((a) => a.key);
+    const attrHex = hexAttrKeys
+      .map((k) => attrs?.[k])
+      .find((v): v is string => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v));
+
+    const hex =
+      attrHex ??
+      (it.elementId ? elementHexById.get(it.elementId) : undefined) ??
+      (crops[i] ? await dominantHexFromImage(crops[i]!) : null);
+    if (!hex) { it.matches = []; continue; } // pas de couleur fiable → fournitures seules
+    it.targetHex = hex;
+    it.matches = await matchPaintByColor(hex);
+  }
+
   // Matching NEUF en BLEND (image + attrs — le texte ne sert qu'au retrieval),
   // pondéré par catégorie × source. Seuls les items à matcher passent (verrou).
-  // NB : les items DIY (meuble gardé et repeint/teinté) GARDENT leurs propositions
-  // produits — c'est le plan B si le rendu n'a pas respecté la customisation
+  // NB : les items DIY non-peinture (teinte, poignées…) GARDENT leurs propositions
+  // produits — plan B si le rendu n'a pas respecté la customisation
   // (décision Alexis 2026-07-10 : ne pas sur-enforcer). L'UI met les fournitures
   // en premier ; avec le scoring attrs (forme/couleur), les propositions restent
   // cohérentes avec le meuble réellement visible dans le rendu.
-  if (toMatchIdx.length < shoppingList.length) {
-    console.log(`[pipeline:final] verrou de liste: ${shoppingList.length - toMatchIdx.length} item(s) repris tels quels, ${toMatchIdx.length} à matcher (relâchés: ${[...releasedCategories].join(", ") || "aucun"})`);
+  const productMatchIdx = toMatchIdx.filter((i) => !paintDiyIdx.has(i));
+  if (productMatchIdx.length < shoppingList.length) {
+    console.log(`[pipeline:final] verrou de liste: ${shoppingList.length - productMatchIdx.length} item(s) repris tels quels, ${productMatchIdx.length} à matcher (relâchés: ${[...releasedCategories].join(", ") || "aucun"})`);
   }
   const matchResults = await matchPartnerProductsBlendBatch(
-    toMatchIdx.map((i) => ({
+    productMatchIdx.map((i) => ({
       category: shoppingList[i].category,
       description: `${shoppingList[i].name} ${shoppingList[i].detail ?? ""}`.trim(),
       crop: crops[i],
@@ -1840,8 +1956,8 @@ async function buildMatchesAndScore(
     // du projet remontent dans le classement — jamais de pénalité pour les autres.
     { styleId: project.selectedStyleId },
   );
-  toMatchIdx.forEach((itemIdx, k) => { shoppingList[itemIdx].matches = matchResults[k]; });
-  const toMatchSet = new Set(toMatchIdx);
+  productMatchIdx.forEach((itemIdx, k) => { shoppingList[itemIdx].matches = matchResults[k]; });
+  const toMatchSet = new Set(productMatchIdx);
 
   // Débogage scoring (/final) : attache à chaque item les attributs DÉTECTÉS SUR LE RENDU
   // (le « target ») + la règle de pondération de sa catégorie (image vs attrs, poids/attribut).
@@ -1887,9 +2003,15 @@ async function buildMatchesAndScore(
   const wallColors = analysis.wallColors;
   if (wallColors.length > 0) {
     try {
-      // Template = item peinture DIY existant (action repaint) si présent ; sinon gabarit
-      // par défaut (mur repeint à l'itération, hors action DIY).
-      const existing = shoppingList.filter((it) => it.source === "diy" && /peinture|peindre/i.test(it.name));
+      // Template = item peinture DIY MURAL uniquement (catégorie wall) ; sinon gabarit
+      // par défaut (mur repeint à l'itération, hors action DIY). Les peintures DIY
+      // de MEUBLE (repaint table basse…) restent des items à part entière : le
+      // filtre par nom seul les capturait — l'item du meuble disparaissait et les
+      // items muraux héritaient de son elementId/detail → pin du meuble libellé
+      // « Peinture — mur derrière le canapé » (projet QAWf50S1 2026-07-10).
+      const existing = shoppingList.filter(
+        (it) => it.source === "diy" && it.category === "wall" && /peinture|peindre/i.test(it.name),
+      );
       const template: ShoppingItem = existing[0] ?? {
         id: "paint", name: "Peinture", category: "paint", detail: "peinture",
         priceMin: 0, priceMax: 0, source: "diy", merchants: [], quantity: 1,
@@ -1899,9 +2021,17 @@ async function buildMatchesAndScore(
         if (i >= 0) shoppingList.splice(i, 1);
       }
       for (const w of wallColors) {
+        const key = `paint-${w.hex.replace("#", "")}`;
+        // Un pin par PAN peint de cette même couleur (clés posées par analyzeRender).
+        const pinKeys = [key, `${key}-2`, `${key}-3`, `${key}-4`].filter((k) => bboxById.has(k));
         shoppingList.push({
           ...template,
-          id: `paint-${w.hex.replace("#", "")}`,
+          id: key,
+          // catégorie "paint" (pas "wall") + elementId(s) = clés des bbox murs
+          // → pins sur les murs (wall/floor/ceiling restent sans hotspot).
+          category: "paint",
+          elementId: pinKeys[0],
+          elementIds: pinKeys.length ? pinKeys : undefined,
           name: wallColors.length > 1 ? `Peinture — ${w.label}` : "Peinture",
           targetHex: w.hex,
           matches: await matchPaintByColor(w.hex),

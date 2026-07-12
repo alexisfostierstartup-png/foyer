@@ -19,11 +19,17 @@ const TARGET_SUGGESTIONS = ["Remplacer par un autre modèle", "Changer la couleu
 
 type Bbox = { x: number; y: number; w: number; h: number };
 
-// Catégories sans hotspot : surfaces (contrôles dédiés) et peinture.
-const NO_HOTSPOT = new Set(["wall", "floor", "ceiling", "paint"]);
+// Catégories sans hotspot : surfaces à contrôles dédiés sous l'image. La
+// PEINTURE murale, elle, a un pin (demande Alexis 2026-07-11) : positionné via
+// la bbox du mur repeint (bboxById["paint-<hex>"], posée par analyzeRender).
+const NO_HOTSPOT = new Set(["wall", "floor", "ceiling"]);
 
 type Hotspot = {
   elementId: string;
+  // Ligne shopping porteuse (elementId primaire de l'item) : le choix d'un
+  // produit depuis N'IMPORTE quel pin d'une ligne ×N s'applique à LA ligne.
+  // elementId reste l'exemplaire précis (tap-to-target sur CE meuble-là).
+  selectId: string;
   name: string;
   cx: number; // centre bbox, en % du rendu
   cy: number;
@@ -102,27 +108,40 @@ export function RenderHotspots({
     const seen = new Set<string>();
     const out: Hotspot[] = [];
     for (const it of items) {
-      if (!it.elementId || seen.has(it.elementId) || NO_HOTSPOT.has(it.category)) continue;
-      let b = bboxById[it.elementId];
-      if (!b || b.w <= 0 || b.h <= 0) continue;
-      // L'audit mélange parfois les échelles 0-1 et 0-1000 AU SEIN d'une même
-      // bbox (ex. x normalisé, y en millièmes) → normalisation PAR COMPOSANTE.
-      const n = (v: number) => (v > 1.5 ? v / 1000 : v);
-      b = { x: n(b.x), y: n(b.y), w: n(b.w), h: n(b.h) };
-      if (b.w <= 0 || b.h <= 0 || b.x + b.w > 1.2 || b.y + b.h > 1.2) continue;
+      // UN pin PAR exemplaire fusionné (elementIds) — 2 lampadaires sur une
+      // ligne ×2 = 2 pins ; repli sur elementId pour les lignes non fusionnées.
+      const ids = it.elementIds?.length ? it.elementIds : it.elementId ? [it.elementId] : [];
+      if (ids.length === 0 || NO_HOTSPOT.has(it.category)) continue;
       const thumbs = (it.matches ?? [])
         .map((m, idx) => ({ url: m.primary_image_url, alt: m.name, idx }))
         .filter((t): t is { url: string; alt: string; idx: number } => Boolean(t.url))
         .slice(0, 4);
       if (thumbs.length === 0 && !showModify) continue; // rien à montrer ni à faire
-      seen.add(it.elementId);
-      out.push({
-        elementId: it.elementId,
-        name: it.name,
-        cx: Math.min(97, Math.max(3, (b.x + b.w / 2) * 100)),
-        cy: Math.min(95, Math.max(5, (b.y + b.h / 2) * 100)),
-        thumbs,
-      });
+      for (const id of ids) {
+        if (seen.has(id)) continue;
+        let b = bboxById[id];
+        if (!b || b.w <= 0 || b.h <= 0) continue;
+        // L'audit mélange parfois les échelles 0-1 et 0-1000 AU SEIN d'une même
+        // bbox (ex. x normalisé, y en millièmes) → normalisation PAR COMPOSANTE.
+        const n = (v: number) => (v > 1.5 ? v / 1000 : v);
+        b = { x: n(b.x), y: n(b.y), w: n(b.w), h: n(b.h) };
+        // Un meuble TRONQUÉ au bord du cadre revient parfois avec w/h = coordonnée
+        // max (pas une taille) → x+w ou y+h > 1. On CLAMPE à l'image au lieu de
+        // jeter le pin (fauteuil du 1er plan sans pin mais listé = incohérence,
+        // projet QAWf50S1 2026-07-11) ; seuls les slivers dégénérés sont écartés.
+        b = { x: Math.min(1, Math.max(0, b.x)), y: Math.min(1, Math.max(0, b.y)), w: b.w, h: b.h };
+        b = { ...b, w: Math.min(b.w, 1 - b.x), h: Math.min(b.h, 1 - b.y) };
+        if (b.w <= 0.02 || b.h <= 0.02) continue;
+        seen.add(id);
+        out.push({
+          elementId: id,
+          selectId: it.elementId ?? id,
+          name: it.name,
+          cx: Math.min(97, Math.max(3, (b.x + b.w / 2) * 100)),
+          cy: Math.min(95, Math.max(5, (b.y + b.h / 2) * 100)),
+          thumbs,
+        });
+      }
     }
     return out;
   }, [items, bboxById, showModify]);
@@ -145,7 +164,7 @@ export function RenderHotspots({
       )}
       {hotspots.map((h) => {
         const open = openId === h.elementId;
-        const chosen = selected?.[h.elementId] ?? 0;
+        const chosen = selected?.[h.selectId] ?? 0;
         // Placement mesuré au viewport à l'ouverture ; recentrée près des bords.
         const above = openAbove;
         return (
@@ -195,7 +214,7 @@ export function RenderHotspots({
                         <button
                           key={t.idx}
                           type="button"
-                          onClick={() => onSelect?.(h.elementId, t.idx)}
+                          onClick={() => onSelect?.(h.selectId, t.idx)}
                           aria-pressed={isChosen}
                           title={t.alt}
                           className={`relative overflow-hidden rounded-lg border transition-shadow ${

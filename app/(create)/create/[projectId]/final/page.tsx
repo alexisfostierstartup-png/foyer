@@ -3,6 +3,7 @@ import { after } from "next/server";
 import { getProject } from "@/lib/storage/projects";
 import { FinalScreen } from "@/components/create/FinalScreen";
 import { precomputeFinalAssets } from "@/lib/ai/pipeline";
+import { resolveHotspots } from "@/lib/shopping/hotspots";
 
 export const maxDuration = 90;
 
@@ -33,12 +34,9 @@ export default async function FinalPage({
       ? project.expertRenderUrl
       : project.generatedRenderUrl!;
 
-  // Hotspots (dots sur le rendu) : bboxes de l'audit — seulement si l'analyse
-  // correspond au rendu AFFICHÉ (une itération invalide les anciennes positions).
-  const bboxById =
-    project.renderAnalysis && project.renderAnalysis.renderUrl === displayRenderUrl
-      ? project.renderAnalysis.bboxById
-      : null;
+  // Hotspots (dots sur le rendu) : bboxes de l'audit, valides pour le rendu affiché
+  // — y compris en expert, dont le rendu dérive du fake analysé. Cf. resolveHotspots.
+  const { bboxById, items: analysisItems } = resolveHotspots(project);
 
   return (
     <FinalScreen
@@ -55,6 +53,7 @@ export default async function FinalPage({
       fakeRenderUrl={project.mode === "expert" && project.expertRenderUrl ? project.generatedRenderUrl : null}
       diyBeta={project.diyMode === "beta"}
       bboxById={bboxById}
+      analysisItems={analysisItems}
       productOverrides={project.productOverrides ?? null}
       customProducts={project.customProducts ?? null}
     />
