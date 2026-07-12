@@ -164,6 +164,49 @@
     transform: translateX(100%);
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Diaporama pro (components/projets/ProComparateur.tsx) — « tourniquet ».
+ * Les cartes arrivent DEPUIS le côté d'où l'on vient, avec une rotation 3D légère :
+ * c'est ce pivot, plus qu'un simple glissement, qui donne la sensation de faire
+ * tourner un plateau. La perspective est portée par l'élément lui-même pour rester
+ * indépendante du parent.
+ * ------------------------------------------------------------------------- */
+@keyframes tourniquet-depuis-droite {
+  from {
+    opacity: 0.25;
+    transform: perspective(1400px) translateX(16%) rotateY(-9deg) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(1400px) translateX(0) rotateY(0) scale(1);
+  }
+}
+@keyframes tourniquet-depuis-gauche {
+  from {
+    opacity: 0.25;
+    transform: perspective(1400px) translateX(-16%) rotateY(9deg) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(1400px) translateX(0) rotateY(0) scale(1);
+  }
+}
+
+.tourniquet-droite {
+  animation: tourniquet-depuis-droite 0.45s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+.tourniquet-gauche {
+  animation: tourniquet-depuis-gauche 0.45s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* Respecte le réglage système : pas de mouvement imposé. */
+@media (prefers-reduced-motion: reduce) {
+  .tourniquet-droite,
+  .tourniquet-gauche {
+    animation: none;
+  }
+}
 /* ---------------------------------------------------------------------------
  * Foyer landing v2 — utilitaires & overrides scopés (réplique éditoriale)
  * Les overrides de tokens (warm card/border/muted…) sont limités à .foyer-v2

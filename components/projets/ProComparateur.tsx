@@ -96,11 +96,20 @@ function PieceVueBloc({ piece }: { piece: PieceVue }) {
 function Diaporama({ piece }: { piece: PieceVue }) {
   const n = piece.variantes.length;
   const [i, setI] = useState(piece.depart);
+  // Sens du dernier déplacement : il décide du côté d'où les cartes pivotent.
+  const [sens, setSens] = useState(1);
 
   // Le modulo positif : (-1 % 5) vaut -1 en JS, ce qui sortirait du tableau au premier
   // clic vers la gauche.
   const at = (k: number) => ((k % n) + n) % n;
-  const aller = (pas: number) => setI((k) => at(k + pas));
+  const aller = (pas: number) => {
+    setSens(pas >= 0 ? 1 : -1);
+    setI((k) => at(k + pas));
+  };
+  const allerA = (k: number) => {
+    setSens(k >= at(i) ? 1 : -1);
+    setI(k);
+  };
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -116,25 +125,42 @@ function Diaporama({ piece }: { piece: PieceVue }) {
   const avant = piece.variantes[at(i - 1)];
   const apres = piece.variantes[at(i + 1)];
 
+  // On avance → les cartes entrent par la droite, et inversement.
+  const tourniquet = sens > 0 ? "tourniquet-droite" : "tourniquet-gauche";
+
   return (
     <div>
       <div className="relative flex items-start justify-center">
         {/* Voisins : encart beige (nom du style + visuel), glissé SOUS la carte centrale —
             c'est ce chevauchement qui fait lire un diaporama plutôt que trois cartes.
             Masqués sous lg : la carte centrale y prend toute la largeur. */}
-        <Apercu variante={avant} cote="gauche" onClick={() => aller(-1)} />
+        {/* `key` = l'identité de la carte : sans lui React réutilise le nœud et
+            l'animation ne rejouerait pas d'un style à l'autre. */}
+        <Apercu
+          key={`g-${avant.projectId}`}
+          variante={avant}
+          cote="gauche"
+          onClick={() => aller(-1)}
+          animation={tourniquet}
+        />
 
         {/* z-10 : la carte courante passe PAR-DESSUS les aperçus. */}
-        <div className="relative z-10 w-full max-w-xl">
+        <div key={courant.projectId} className={`relative z-10 w-full max-w-xl ${tourniquet}`}>
           <CarteProjet
             variante={courant}
             eyebrow={`${piece.label} — ${at(i) + 1} / ${n}`}
           />
         </div>
 
-        <Apercu variante={apres} cote="droite" onClick={() => aller(1)} />
+        <Apercu
+          key={`d-${apres.projectId}`}
+          variante={apres}
+          cote="droite"
+          onClick={() => aller(1)}
+          animation={tourniquet}
+        />
 
-        {/* Flèches rondes, à hauteur du visuel central. */}
+        {/* Flèches rondes, alignées sur le visuel des aperçus. */}
         <BoutonNav direction="gauche" onClick={() => aller(-1)} flottant />
         <BoutonNav direction="droite" onClick={() => aller(1)} flottant />
       </div>
@@ -151,7 +177,7 @@ function Diaporama({ piece }: { piece: PieceVue }) {
               key={v.projectId}
               aria-label={`Aller à ${v.style}`}
               aria-current={k === at(i)}
-              onClick={() => setI(k)}
+              onClick={() => allerA(k)}
               className={[
                 "h-1.5 rounded-full transition-all",
                 k === at(i) ? "w-6 bg-foyer-ink" : "w-1.5 bg-foyer-border hover:bg-foyer-muted",
@@ -171,10 +197,12 @@ function Apercu({
   variante,
   cote,
   onClick,
+  animation,
 }: {
   variante: VarianteVue;
   cote: "gauche" | "droite";
   onClick: () => void;
+  animation: string;
 }) {
   if (!variante.renderUrl) return null;
 
@@ -186,11 +214,14 @@ function Apercu({
         // top-[132px] : cale le visuel de l'aperçu sur celui de la carte centrale, qui
         // commence sous son bandeau (surtitre + nom du style).
         "absolute top-[132px] z-0 hidden w-[27%] rounded-2xl border border-foyer-border",
-        "bg-[#f2ebdf] p-3 shadow-sm transition-all duration-300 lg:block",
+        "bg-[#f2ebdf] p-3 shadow-sm lg:block",
         "opacity-80 hover:opacity-100",
-        // Chevauchement volontaire avec la carte centrale (qui est en z-10) : l'aperçu
-        // passe DESSOUS, ce qui donne la profondeur du diaporama.
-        cote === "gauche" ? "left-[3%]" : "right-[3%]",
+        // L'aperçu (z-0) passe SOUS la carte centrale (z-10) sur ~40 % de sa largeur :
+        // la carte fait 576px centrée, donc son bord tombe à ~24 % du rail ; en calant
+        // l'aperçu (27 % de large) à 8 %, il en disparaît un gros tiers. C'est ce
+        // recouvrement franc qui donne l'effet de découverte.
+        cote === "gauche" ? "left-[8%]" : "right-[8%]",
+        animation,
       ].join(" ")}
     >
       {/* Le nom se cale du côté VISIBLE : c'est le bord intérieur de l'aperçu qui passe
@@ -232,9 +263,12 @@ function BoutonNav({
         "flex h-11 w-11 items-center justify-center rounded-full border border-foyer-border",
         "bg-white text-foyer-ink shadow-sm transition-colors hover:bg-foyer-ink hover:text-foyer-cream",
         flottant
-          ? // z-20 : au-dessus des aperçus ET de la carte centrale, sinon la flèche
-            // disparaîtrait sous l'un ou l'autre selon la largeur d'écran.
-            `absolute top-[290px] z-20 hidden lg:flex ${direction === "gauche" ? "left-0" : "right-0"}`
+          ? // Alignée sur le VISUEL de l'aperçu, pas sur la carte centrale : l'aperçu
+            // démarre à 132px, son image sous 12px de marge + le nom du style (~32px),
+            // et fait ~207px de haut → centre à ~284px, moins la moitié du bouton (22px).
+            // z-20 : au-dessus des aperçus ET de la carte centrale, sinon la flèche
+            // disparaîtrait sous l'un ou l'autre.
+            `absolute top-[262px] z-20 hidden lg:flex ${direction === "gauche" ? "left-0" : "right-0"}`
           : "",
       ].join(" ")}
     >
