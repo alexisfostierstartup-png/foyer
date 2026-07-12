@@ -1,9 +1,10 @@
 import { getProject, updateProject } from "@/lib/storage/projects";
-import { fetchImageBytes, computeRenderAdditions } from "@/lib/ai/pipeline";
+import { fetchImageBytes, computeRenderAdditions, buildBeforeAfterComposite, confirmChanges, mapCompositeBoxToRender } from "@/lib/ai/pipeline";
 import { saveRender } from "@/lib/ai/saveRender";
 import { enforceExpertIntegratedPieces } from "@/lib/shopping/integratedPieces";
 import { matchAlterationsToCatalog } from "@/lib/shopping/matcher";
-import { matchPartnerProductsBlendBatch } from "@/lib/shopping/partnerMatch";
+import { matchPartnerProductsBlendBatch, matchFloorProductsBlend } from "@/lib/shopping/partnerMatch";
+import { getChangedWallColors, matchPaintByColor, type WallColor } from "@/lib/shopping/paintMatch";
 import { extractCrop } from "@/lib/shopping/crop";
 import { getElementCategories } from "@/lib/db/assets";
 import type { RoomType, ShoppingItem, CustomProduct, ExpertIntegratedPiece, ProductMatch } from "@/lib/types";
@@ -739,6 +740,115 @@ export async function reintegrateExpertAdditions(projectId: string): Promise<{ a
     `[expert] ${projectId} : ${newPieces.length} vrai(s) produit(s) intégré(s) dans le rendu itéré (${newPieces.map((p) => p.category).join(", ")})`,
   );
   return { added: newItems.length };
+}
+
+/**
+ * Referme la boucle pour les SURFACES (sol, murs) après une itération expert.
+ *
+ * Une itération est une pure édition d'image : « change le sol » repeint un parquet
+ * INVENTÉ, qui ne vient d'aucun produit. Jusqu'ici il n'entrait nulle part : le swap
+ * expert ne touche qu'aux MEUBLES (floor et wall sont dans NON_REPLACEABLE), et
+ * reintegrateExpertAdditions ne gère que le mobilier. Résultat : l'utilisateur changeait
+ * son sol, l'image était superbe, et le sol était INACHETABLE (QA Alexis 2026-07-12).
+ *
+ * On rejoue donc la seule partie « surfaces » de l'analyse, sur le rendu expert courant :
+ * le sol a-t-il changé (→ ligne + produits similaires, comme la peinture), et quels murs
+ * ont été repeints (→ pots de peinture par ΔE). Le rendu, lui, reste celui de l'itération :
+ * on ne régénère AUCUNE image ici, on ne fait que rendre achetable ce qui est déjà à
+ * l'écran. Deux appels vision, zéro génération.
+ */
+export async function reintegrateExpertSurfaces(projectId: string): Promise<{ sol: boolean; murs: number }> {
+  const project = await getProject(projectId);
+  if (!project || project.mode !== "expert" || !project.expertRenderUrl || !project.basePhotoUrl) {
+    return { sol: false, murs: 0 };
+  }
+
+  const comp = await buildBeforeAfterComposite(project.basePhotoUrl, project.expertRenderUrl);
+  const compBuf = comp.buffer as unknown as Parameters<typeof confirmChanges>[2];
+
+  const surfaces = (project.element_decisions ?? []).filter(
+    (d) => d.category === "floor" || d.category === "wall",
+  );
+
+  const [audit, wallColors] = await Promise.all([
+    surfaces.length
+      ? confirmChanges(projectId, surfaces, compBuf, comp.afterLeftFrac, comp.afterWidthFrac).catch(() => null)
+      : Promise.resolve(null),
+    getChangedWallColors(compBuf).catch(() => [] as WallColor[]),
+  ]);
+
+  const list = [...((project.shoppingList ?? []) as ShoppingItem[])];
+  const analysis = project.renderAnalysis;
+  const bboxById: Record<string, { x: number; y: number; w: number; h: number }> = { ...(analysis?.bboxById ?? {}) };
+  let solChange = false;
+
+  // ── LE SOL ────────────────────────────────────────────────────────────────
+  const solDec = surfaces.find((d) => d.category === "floor");
+  if (audit && solDec && audit.appliedIds.has(solDec.element_id)) {
+    const desc = audit.afterById.get(solDec.element_id)?.trim();
+    const box = audit.bboxById.get(solDec.element_id);
+    if (desc) {
+      solChange = true;
+      if (box) bboxById[solDec.element_id] = box;
+      const renderBytes = await fetchImageBytes(project.expertRenderUrl).catch(() => null);
+      const crop = renderBytes && box ? await extractCrop(renderBytes, box).catch(() => null) : null;
+      const matches = await matchFloorProductsBlend(desc, crop, 4, audit.attrsById.get(solDec.element_id));
+
+      const i = list.findIndex((it) => it.category === "floor");
+      const ligne: ShoppingItem = {
+        ...(i >= 0 ? list[i] : {
+          id: `floor-${solDec.element_id}`,
+          category: "floor",
+          detail: "",
+          priceMin: 0, priceMax: 0,
+          source: "new" as const,
+          merchants: [],
+          elementId: solDec.element_id,
+        }),
+        name: desc,
+        matches,
+      } as ShoppingItem;
+      if (i >= 0) list[i] = ligne; else list.push(ligne);
+      console.log(`[expert] ${projectId} : sol changé par l'itération → « ${desc.slice(0, 40)} », ${matches.length} produit(s)`);
+    }
+  }
+
+  // ── LES MURS ──────────────────────────────────────────────────────────────
+  // Un pot par POT DE PEINTURE (paint_group), un pin par pan. Mêmes clés que
+  // analyzeRender (`paint-<hex>`), donc les pins se posent au même endroit.
+  if (wallColors.length > 0) {
+    for (let i = list.length - 1; i >= 0; i--) if (list[i].category === "paint") list.splice(i, 1);
+    for (const w of wallColors) {
+      const key = `paint-${w.hex.replace("#", "")}`;
+      const boxes = (w.bboxes?.length ? w.bboxes : w.bbox ? [w.bbox] : [])
+        .map((b) => mapCompositeBoxToRender(b, comp.afterLeftFrac, comp.afterWidthFrac))
+        .filter(Boolean) as { x: number; y: number; w: number; h: number }[];
+      boxes.forEach((b, i) => { bboxById[i === 0 ? key : `${key}-${i + 1}`] = b; });
+
+      list.push({
+        id: key,
+        name: "Peinture",
+        category: "paint",
+        detail: w.label,
+        priceMin: 0, priceMax: 0,
+        source: "diy",
+        merchants: [],
+        quantity: 1,
+        elementId: boxes.length ? key : undefined,
+        targetHex: w.hex,
+        matches: await matchPaintByColor(w.hex, 4),
+      } as ShoppingItem);
+    }
+    console.log(`[expert] ${projectId} : ${wallColors.length} peinture(s) murale(s) → ligne(s) d'achat`);
+  }
+
+  if (!solChange && wallColors.length === 0) return { sol: false, murs: 0 };
+
+  await updateProject(projectId, {
+    shoppingList: list,
+    ...(analysis ? { renderAnalysis: { ...analysis, bboxById } } : {}),
+  });
+  return { sol: solChange, murs: wallColors.length };
 }
 
 export async function runExpertIteration(

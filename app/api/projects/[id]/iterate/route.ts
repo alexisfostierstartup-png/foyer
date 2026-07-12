@@ -1,6 +1,6 @@
 import { NextResponse, after } from "next/server";
 import { precomputeFinalAssets, runIterationPipeline } from "@/lib/ai/pipeline";
-import { runExpertIteration, reintegrateExpertAdditions } from "@/lib/ai/expert";
+import { runExpertIteration, reintegrateExpertAdditions, reintegrateExpertSurfaces } from "@/lib/ai/expert";
 import { getProject } from "@/lib/storage/projects";
 import { logPipelineError } from "@/lib/ai/logger";
 import { getClientIp, checkRateLimit, RATE_LIMITED_BODY } from "@/lib/security/rateLimit";
@@ -45,7 +45,15 @@ export async function POST(
     if (project?.mode === "expert") {
       // `target` était perdu ici : le tap-to-target ne servait qu'au flux standard.
       await runExpertIteration(id, userRequest.trim(), target);
-      after(() => reintegrateExpertAdditions(id).catch((e) => logPipelineError(id, "expert-reintegrate", e)));
+      after(async () => {
+        // MOBILIER ajouté par l'itération → matché et incrusté (vrais produits).
+        await reintegrateExpertAdditions(id).catch((e) => logPipelineError(id, "expert-reintegrate", e));
+        // SURFACES (sol, murs) modifiées par l'itération → lignes d'achat. Le rendu
+        // reste celui de l'itération (le sol y est inventé), mais il devient
+        // ACHETABLE : sans ça, « change le sol » donnait une image superbe et un sol
+        // invendable. Aucune image régénérée ici, seulement deux appels vision.
+        await reintegrateExpertSurfaces(id).catch((e) => logPipelineError(id, "expert-surfaces", e));
+      });
       return NextResponse.json({ ok: true, projectId: id });
     }
 

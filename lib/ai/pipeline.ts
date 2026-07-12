@@ -1334,7 +1334,7 @@ function mapCompositePointToRender(
   return { x, y: cy };
 }
 
-function mapCompositeBoxToRender(
+export function mapCompositeBoxToRender(
   box: Bbox,
   afterLeftFrac: number,
   afterWidthFrac: number,
