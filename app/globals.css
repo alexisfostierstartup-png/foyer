@@ -194,10 +194,10 @@
 }
 
 .tourniquet-droite {
-  animation: tourniquet-depuis-droite 0.45s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation: tourniquet-depuis-droite 0.585s cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 .tourniquet-gauche {
-  animation: tourniquet-depuis-gauche 0.45s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation: tourniquet-depuis-gauche 0.585s cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
 /* Respecte le réglage système : pas de mouvement imposé. */

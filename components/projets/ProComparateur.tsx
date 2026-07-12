@@ -268,7 +268,7 @@ function BoutonNav({
             // et fait ~207px de haut → centre à ~284px, moins la moitié du bouton (22px).
             // z-20 : au-dessus des aperçus ET de la carte centrale, sinon la flèche
             // disparaîtrait sous l'un ou l'autre.
-            `absolute top-[262px] z-20 hidden lg:flex ${direction === "gauche" ? "left-0" : "right-0"}`
+            `absolute top-[262px] z-20 hidden lg:flex ${direction === "gauche" ? "left-[2%]" : "right-[2%]"}`
           : "",
       ].join(" ")}
     >
