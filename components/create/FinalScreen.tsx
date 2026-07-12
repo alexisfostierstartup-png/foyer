@@ -541,7 +541,7 @@ export function FinalScreen({
       <div className="flex flex-1 flex-col">
         <ProgressBar currentStep={5} labels={STEPS} />
 
-        <main className={cn("mx-auto w-full flex-1 px-5 pt-6", debug ? "max-w-[820px]" : "max-w-[480px]", expertMode ? "pb-32" : "pb-24")}>
+        <main className={cn("mx-auto w-full flex-1 px-5 pt-6", debug ? "max-w-[820px]" : "max-w-[480px]", (expertMode || orderUrls.length > 0) ? "pb-36" : "pb-24")}>
           {/* Before / After slider (expert : bouton bas-droit pour basculer
               rendu réel ↔ rendu IA d'origine, comme l'ancien écran expert) */}
           <div className="relative">
@@ -778,21 +778,12 @@ export function FinalScreen({
           </div>
           )}
 
-          {/* Action primaire unique. « Affiner encore » et « Recommencer un projet »
-              retirés : l'affinage a déjà son entrée (« Édition live » + les pins),
-              et repartir de zéro n'a rien à faire en bas d'une liste d'achat. */}
+          {/* « Affiner encore » et « Recommencer un projet » retirés : l'affinage a déjà
+              son entrée (« Édition live » + les pins), et repartir de zéro n'a rien à
+              faire en bas d'une liste d'achat. « Commander » est monté dans la barre
+              flottante — il doit rester atteignable sans scroller jusqu'en bas. */}
           {!listPending && (
-            <div className="mt-8 flex flex-col gap-3">
-              {orderUrls.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => { for (const url of orderUrls) window.open(url, "_blank"); }}
-                  className="flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-foyer-sage font-medium text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:-translate-y-0.5"
-                >
-                  <ShoppingBag className="size-4" aria-hidden />
-                  Commander
-                </button>
-              )}
+            <div className="mt-8">
               {/* Le projet est fini : on peut se payer une passe 4K dont le seul but est
                   la netteté. L'image téléchargée ne remplace PAS le rendu du projet. */}
               <button
@@ -812,31 +803,60 @@ export function FinalScreen({
         </main>
       </div>
 
-      {/* Mode expert : barre « Nouveau rendu » — accumule les modifs, un seul re-render. */}
-      {expertMode && (
+      {/* BARRE FLOTTANTE — « Commander » (primaire) et « Nouveau rendu » (secondaire).
+          Elle n'apparaissait qu'en mode expert : y monter « Commander » tel quel l'aurait
+          fait disparaître pour tous les autres. Elle s'affiche donc dès qu'il y a quelque
+          chose à commander. Le rendu alternatif est SECONDAIRE : c'est l'achat qui est
+          l'action principale, pas la régénération. */}
+      {!listPending && (orderUrls.length > 0 || expertMode) && (
         <div className="fixed inset-x-0 bottom-0 border-t border-foyer-border bg-foyer-cream/95 px-5 py-3 backdrop-blur">
-          <div className="mx-auto flex max-w-[480px] flex-col gap-1">
-            <button
-              type="button"
-              disabled={changedCount < 1 || rerendering}
-              onClick={handleNewRender}
-              className={cn(
-                "flex h-[52px] w-full items-center justify-center gap-2 rounded-full font-medium transition-all",
-                changedCount < 1 || rerendering
-                  ? "cursor-not-allowed bg-foyer-border text-foyer-muted"
-                  : "bg-foyer-sage text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] hover:-translate-y-0.5",
+          <div className="mx-auto flex max-w-[480px] flex-col gap-1.5">
+            <div className="flex items-center gap-2.5">
+              {orderUrls.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => { for (const url of orderUrls) window.open(url, "_blank"); }}
+                  className="flex h-[52px] flex-1 items-center justify-center gap-2 rounded-full bg-foyer-sage font-medium text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:-translate-y-0.5"
+                >
+                  <ShoppingBag className="size-4" aria-hidden />
+                  Commander
+                </button>
               )}
-            >
-              {rerendering ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" aria-hidden /> Nouveau rendu en cours…
-                </>
-              ) : changedCount >= 1 ? (
-                `Nouveau rendu avec les ${changedCount} élément${changedCount > 1 ? "s" : ""} modifié${changedCount > 1 ? "s" : ""}`
-              ) : (
-                "Choisissez un produit alternatif pour relancer un rendu"
+              {expertMode && (
+                <button
+                  type="button"
+                  disabled={changedCount < 1 || rerendering}
+                  onClick={handleNewRender}
+                  className={cn(
+                    "flex h-[52px] flex-1 items-center justify-center gap-2 rounded-full border font-medium transition-all",
+                    changedCount < 1 || rerendering
+                      ? "cursor-not-allowed border-foyer-border text-foyer-muted"
+                      : "border-foyer-ink text-foyer-ink hover:bg-foyer-ink/5",
+                  )}
+                >
+                  {rerendering ? (
+                    <><Loader2 className="size-4 animate-spin" aria-hidden /> Rendu en cours…</>
+                  ) : (
+                    <>
+                      <RefreshCw className="size-4" aria-hidden />
+                      Nouveau rendu
+                      {changedCount >= 1 && (
+                        <span className="rounded-full bg-foyer-ink/10 px-1.5 text-[12px] font-semibold">
+                          {changedCount}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </button>
               )}
-            </button>
+            </div>
+            {/* L'ancien libellé disait pourquoi le bouton est éteint ; sur un demi-bouton
+                il ne tient plus. On le sort en note, sinon l'utilisateur ne comprend pas. */}
+            {expertMode && changedCount < 1 && !rerendering && (
+              <p className="text-center text-[12px] text-foyer-muted">
+                Choisissez un produit alternatif pour relancer un rendu
+              </p>
+            )}
           </div>
         </div>
       )}
