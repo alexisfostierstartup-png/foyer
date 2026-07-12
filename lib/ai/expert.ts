@@ -113,6 +113,7 @@ const ROOM_LABEL: Record<string, string> = {
   chambre: "bedroom",
   chambre_parentale: "bedroom",
   chambre_enfant: "child's bedroom",
+  salle_a_manger: "dining room",
 };
 
 // On plafonne le nombre de références envoyées à NB2 (au-delà, il peut saturer).
