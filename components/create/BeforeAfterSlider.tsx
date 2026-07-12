@@ -8,6 +8,9 @@ type Props = {
   alt?: string;
   className?: string;
   initialPos?: number;
+  /** Position du curseur (0-100), remontée au parent : les calques posés PAR-DESSUS
+   *  l'image (hotspots) doivent pouvoir se cacher sous la moitié « avant ». */
+  onPosChange?: (pos: number) => void;
 };
 
 export function BeforeAfterSlider({
@@ -16,10 +19,13 @@ export function BeforeAfterSlider({
   alt = "Avant / Après",
   className = "",
   initialPos = 52,
+  onPosChange,
 }: Props) {
   const [pos, setPos] = useState(initialPos);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
+
+  useEffect(() => { onPosChange?.(pos); }, [pos, onPosChange]);
 
   const move = useCallback((clientX: number) => {
     const el = containerRef.current;

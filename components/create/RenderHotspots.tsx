@@ -43,6 +43,7 @@ export function RenderHotspots({
   showModify,
   selected,
   onSelect,
+  sliderPos = 0,
 }: {
   projectId: string;
   items: ShoppingItem[];
@@ -52,6 +53,9 @@ export function RenderHotspots({
   /** Choix utilisateur par elementId (index dans matches). */
   selected?: Record<string, number>;
   onSelect?: (elementId: string, matchIdx: number) => void;
+  /** Position du curseur avant/après (0-100). Les pins désignent des meubles du
+   *  rendu APRÈS : sous la moitié « avant », ils pointeraient dans le vide. */
+  sliderPos?: number;
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
   // Placement vertical mesuré à l'ouverture : au-dessus du point si la place
@@ -163,6 +167,9 @@ export function RenderHotspots({
         />
       )}
       {hotspots.map((h) => {
+        // Le pin désigne un meuble du rendu APRÈS. Passé sous le curseur, il
+        // flotterait au-dessus de la photo AVANT, où le meuble n'existe pas.
+        if (h.cx < sliderPos) return null;
         const open = openId === h.elementId;
         const chosen = selected?.[h.selectId] ?? 0;
         // Placement mesuré au viewport à l'ouverture ; recentrée près des bords.

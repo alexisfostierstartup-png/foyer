@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ExternalLink, Pencil, Link2, Star, RefreshCw, Loader2, Eye } from "lucide-react";
+import { ExternalLink, Pencil, Link2, Star, RefreshCw, Loader2, Eye, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { ProgressBar } from "@/components/create/ProgressBar";
 import { BeforeAfterSlider } from "@/components/create/BeforeAfterSlider";
@@ -284,6 +284,10 @@ export function FinalScreen({
   analysisItems = null,
 }: Props) {
   const [showFake, setShowFake] = useState(false);
+  // Position du curseur avant/après : les pins passés SOUS la moitié « avant »
+  // pointeraient un meuble qui n'existe pas dans la photo d'origine.
+  const [sliderPos, setSliderPos] = useState(20);
+  const [pinsOn, setPinsOn] = useState(true);
   const router = useRouter();
   const { user, profile, wallet } = useUser();
   const [tabIdx, setTabIdx] = useState(0);
@@ -483,17 +487,19 @@ export function FinalScreen({
               after={showFake && fakeRenderUrl ? fakeRenderUrl : afterUrl}
               initialPos={20}
               className="rounded-2xl"
+              onPosChange={setSliderPos}
             />
             {/* Hotspots meubles (dots + matches + tap-to-target) — masqués côté
                 rendu fake (les bboxes appartiennent au rendu affiché par défaut).
                 Liste en cours de calcul → pins quand même, depuis le squelette
                 d'items de l'ANALYSE (les positions viennent de la détection, pas
                 du matching) ; les propositions arrivent avec la liste. */}
-            {bboxState && !showFake && (!listPending || (skeletonItems?.length ?? 0) > 0) && (
+            {pinsOn && bboxState && !showFake && (!listPending || (skeletonItems?.length ?? 0) > 0) && (
               <RenderHotspots
                 projectId={projectId}
                 items={listPending ? (skeletonItems ?? []) : shoppingList}
                 bboxById={bboxState}
+                sliderPos={sliderPos}
                 showModify={!expertMode}
                 selected={expertMode ? sel : undefined}
                 onSelect={
@@ -518,11 +524,24 @@ export function FinalScreen({
                 }
               />
             )}
+            {/* Les pins encombrent quand on veut juste REGARDER le rendu → on doit
+                pouvoir les éteindre. z-40 : au-dessus de la couche hotspots (z-30). */}
+            {bboxState && !showFake && (
+              <button
+                type="button"
+                onClick={() => setPinsOn((v) => !v)}
+                aria-pressed={pinsOn}
+                className="absolute bottom-3 left-3 z-40 flex items-center gap-1.5 rounded-full bg-foyer-ink/75 px-3 py-1.5 text-[12px] font-medium text-white backdrop-blur transition-opacity hover:bg-foyer-ink"
+              >
+                <MapPin className="size-3.5" aria-hidden />
+                {pinsOn ? "Masquer les repères" : "Afficher les repères"}
+              </button>
+            )}
             {fakeRenderUrl && (
               <button
                 type="button"
                 onClick={() => setShowFake((v) => !v)}
-                className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5 rounded-full bg-foyer-ink/75 px-3 py-1.5 text-[12px] font-medium text-white backdrop-blur transition-opacity hover:bg-foyer-ink"
+                className="absolute bottom-3 right-3 z-40 flex items-center gap-1.5 rounded-full bg-foyer-ink/75 px-3 py-1.5 text-[12px] font-medium text-white backdrop-blur transition-opacity hover:bg-foyer-ink"
               >
                 <Eye className="size-3.5" aria-hidden />
                 {showFake ? "Voir le rendu réel" : "Voir le rendu IA"}
