@@ -67,17 +67,17 @@ function Ligne({ item }: { item: ProjetVitrine["items"][number] }) {
         <p className="text-[12px] text-muted-foreground">{p.merchant?.replace(/_/g, " ")}</p>
       </div>
       <div className="flex shrink-0 items-center gap-3">
-        {/* Prix de la LIGNE, pas prix unitaire : les chaises sont un lot de deux, et il en
-            faut deux lots pour les quatre chaises de la pièce. Afficher 769 € alors que la
-            ligne pèse 1 538 € dans le total rendait celui-ci impossible à vérifier. Le ×2
-            à gauche du prix dit d'où vient le chiffre. */}
+        {/* Le badge et le prix se lisent COMME UNE MULTIPLICATION : « 2 × 769 € ». D'où le
+            prix UNITAIRE ici, et surtout pas celui de la ligne — « 2 × 1 538 € » se lirait
+            3 076 €. Ce sont bien 1 538 € que cette ligne pèse dans le total général (deux
+            lots de deux chaises pour les quatre chaises de la pièce). */}
         {item.quantity > 1 && (
           <span className="rounded-full px-2 py-0.5 text-[12px] font-medium text-ink ring-1 ring-line">
             {item.quantity} ×
           </span>
         )}
         <span className="font-display text-lg text-ink">
-          {p.price != null ? eur(p.price * item.quantity) : "—"}
+          {p.price != null ? eur(p.price) : "—"}
         </span>
         {p.url && (
           <a
