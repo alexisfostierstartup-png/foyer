@@ -89,27 +89,25 @@ function PieceVueBloc({ piece }: { piece: PieceVue }) {
 }
 
 /**
- * Diaporama cyclique : le projet courant en grand, ses deux voisins réduits de part et
- * d'autre — celui d'avant à gauche, celui d'après à droite — en visuel seul. Au-delà du
- * dernier on revient au premier, et inversement.
+ * Diaporama cyclique — un vrai tourniquet.
+ *
+ * Les cinq cartes sont montées EN PERMANENCE et ne changent jamais d'identité : seul
+ * leur `transform` bouge quand l'index change. C'est ce qui fait qu'une carte latérale
+ * VOYAGE physiquement jusqu'au centre, au lieu d'apparaître en fondu à sa place (ce que
+ * faisait la version précédente, d'où l'effet de clignotement).
+ *
+ * Trois positions : centre (échelle 1, blanc, contenu complet), voisins (réduits, beiges,
+ * glissés sous la carte centrale) et les autres, poussés dehors et transparents — ce sont
+ * eux qui entrent en scène au coup suivant.
  */
 function Diaporama({ piece }: { piece: PieceVue }) {
   const n = piece.variantes.length;
   const [i, setI] = useState(piece.depart);
-  // Sens du dernier déplacement : il décide du côté d'où les cartes pivotent.
-  const [sens, setSens] = useState(1);
 
-  // Le modulo positif : (-1 % 5) vaut -1 en JS, ce qui sortirait du tableau au premier
+  // Modulo positif : (-1 % 5) vaut -1 en JS, ce qui sortirait du tableau au premier
   // clic vers la gauche.
   const at = (k: number) => ((k % n) + n) % n;
-  const aller = (pas: number) => {
-    setSens(pas >= 0 ? 1 : -1);
-    setI((k) => at(k + pas));
-  };
-  const allerA = (k: number) => {
-    setSens(k >= at(i) ? 1 : -1);
-    setI(k);
-  };
+  const aller = (pas: number) => setI((k) => at(k + pas));
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -122,47 +120,107 @@ function Diaporama({ piece }: { piece: PieceVue }) {
   }, [n]);
 
   const courant = piece.variantes[at(i)];
-  const avant = piece.variantes[at(i - 1)];
-  const apres = piece.variantes[at(i + 1)];
 
-  // On avance → les cartes entrent par la droite, et inversement.
-  const tourniquet = sens > 0 ? "tourniquet-droite" : "tourniquet-gauche";
+  /** Distance CYCLIQUE à la carte courante : -2..+2 pour cinq cartes. */
+  const ecart = (k: number) => {
+    let d = k - at(i);
+    if (d > n / 2) d -= n;
+    if (d < -n / 2) d += n;
+    return d;
+  };
 
   return (
     <div>
-      <div className="relative flex items-start justify-center">
-        {/* Voisins : encart beige (nom du style + visuel), glissé SOUS la carte centrale —
-            c'est ce chevauchement qui fait lire un diaporama plutôt que trois cartes.
-            Masqués sous lg : la carte centrale y prend toute la largeur. */}
-        {/* `key` = l'identité de la carte : sans lui React réutilise le nœud et
-            l'animation ne rejouerait pas d'un style à l'autre. */}
-        <Apercu
-          key={`g-${avant.projectId}`}
-          variante={avant}
-          cote="gauche"
-          onClick={() => aller(-1)}
-          animation={tourniquet}
-        />
+      <div className="relative">
+        {/* Le rail. Hauteur fixe : les cartes sont en absolu, elles ne la portent pas. */}
+        <div className="relative mx-auto h-[500px] w-full max-w-xl">
+          {piece.variantes.map((v, k) => {
+            const d = ecart(k);
+            const actif = d === 0;
+            const voisin = Math.abs(d) === 1;
 
-        {/* z-10 : la carte courante passe PAR-DESSUS les aperçus. */}
-        <div key={courant.projectId} className={`relative z-10 w-full max-w-xl ${tourniquet}`}>
-          <CarteProjet
-            variante={courant}
-            eyebrow={`${piece.label} — ${at(i) + 1} / ${n}`}
-          />
+            // Un voisin est décalé de 55 % de sa largeur et réduit à 0,52 : il finit
+            // recouvert sur ~40 % par la carte centrale. Les cartes lointaines attendent
+            // plus loin encore, invisibles, prêtes à entrer.
+            const x = actif ? 0 : (d < 0 ? -1 : 1) * (voisin ? 55 : 78);
+            const echelle = actif ? 1 : voisin ? 0.52 : 0.42;
+
+            return (
+              <button
+                key={v.projectId}
+                onClick={() => setI(k)}
+                disabled={actif}
+                aria-label={actif ? undefined : `Voir ${v.style}`}
+                aria-current={actif}
+                className={[
+                  "absolute inset-x-0 top-0 rounded-3xl border border-foyer-border p-3 shadow-sm",
+                  // Tout est animé par le MÊME nœud : translation, échelle, couleur de
+                  // fond (beige → blanc en arrivant au centre) et opacité.
+                  "transition-all duration-[600ms] ease-[cubic-bezier(0.22,0.61,0.36,1)]",
+                  "motion-reduce:transition-none",
+                  actif ? "z-30 cursor-default bg-white" : "z-10 bg-[#f2ebdf]",
+                  // Sous lg, la carte centrale prend toute la largeur : les voisines y
+                  // seraient illisibles et déborderaient.
+                  actif
+                    ? "opacity-100"
+                    : voisin
+                      ? "opacity-0 hover:opacity-100 lg:opacity-90"
+                      : "pointer-events-none opacity-0",
+                ].join(" ")}
+                style={{ transform: `translateX(${x}%) scale(${echelle})` }}
+              >
+                {/* Le surtitre ne concerne que la carte courante — il s'efface sur les
+                    voisines plutôt que d'être retiré, pour que toutes gardent la même
+                    hauteur (sinon leur géométrie sauterait pendant le voyage). */}
+                <p
+                  className={[
+                    "px-2 pt-2 text-left text-[12px] uppercase tracking-[0.18em] text-foyer-muted",
+                    "transition-opacity duration-[600ms]",
+                    actif ? "opacity-100" : "opacity-0",
+                  ].join(" ")}
+                >
+                  {piece.label} — {k + 1} / {n}
+                </p>
+                {/* Le nom se cale du côté VISIBLE : c'est le bord INTÉRIEUR d'une voisine
+                    qui passe sous la carte centrale, donc un libellé aligné à gauche se
+                    ferait couper sur la voisine de droite. */}
+                <p
+                  className={[
+                    "mb-2 truncate px-2 font-serif text-2xl text-foyer-ink",
+                    d > 0 ? "text-right" : "text-left",
+                  ].join(" ")}
+                >
+                  {v.style}
+                </p>
+
+                <div className="overflow-hidden rounded-2xl bg-foyer-cream">
+                  {v.renderUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={v.renderUrl}
+                      alt={`${piece.label} — style ${v.style}`}
+                      className="aspect-[4/3] w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex aspect-[4/3] w-full items-center justify-center text-[13px] text-foyer-muted">
+                      Rendu en cours
+                    </div>
+                  )}
+                </div>
+              </button>
+            );
+          })}
         </div>
 
-        <Apercu
-          key={`d-${apres.projectId}`}
-          variante={apres}
-          cote="droite"
-          onClick={() => aller(1)}
-          animation={tourniquet}
-        />
-
-        {/* Flèches rondes, alignées sur le visuel des aperçus. */}
+        {/* Flèches rondes, calées sur le visuel des cartes voisines. */}
         <BoutonNav direction="gauche" onClick={() => aller(-1)} flottant />
         <BoutonNav direction="droite" onClick={() => aller(1)} flottant />
+      </div>
+
+      {/* Le détail de la carte courante, sous le rail : il ne voyage pas (une liste de
+          courses réduite à 0,52 serait illisible), il se substitue. */}
+      <div className="relative z-30 mx-auto -mt-2 max-w-xl rounded-3xl border border-foyer-border bg-white px-5 pb-5">
+        <Detail key={courant.projectId} variante={courant} />
       </div>
 
       {/* Pastilles. Les flèches y reviennent sous lg, où les flottantes sont masquées :
@@ -177,7 +235,7 @@ function Diaporama({ piece }: { piece: PieceVue }) {
               key={v.projectId}
               aria-label={`Aller à ${v.style}`}
               aria-current={k === at(i)}
-              onClick={() => allerA(k)}
+              onClick={() => setI(k)}
               className={[
                 "h-1.5 rounded-full transition-all",
                 k === at(i) ? "w-6 bg-foyer-ink" : "w-1.5 bg-foyer-border hover:bg-foyer-muted",
@@ -193,57 +251,6 @@ function Diaporama({ piece }: { piece: PieceVue }) {
   );
 }
 
-function Apercu({
-  variante,
-  cote,
-  onClick,
-  animation,
-}: {
-  variante: VarianteVue;
-  cote: "gauche" | "droite";
-  onClick: () => void;
-  animation: string;
-}) {
-  if (!variante.renderUrl) return null;
-
-  return (
-    <button
-      onClick={onClick}
-      aria-label={`Voir ${variante.style}`}
-      className={[
-        // top-[132px] : cale le visuel de l'aperçu sur celui de la carte centrale, qui
-        // commence sous son bandeau (surtitre + nom du style).
-        "absolute top-[132px] z-0 hidden w-[27%] rounded-2xl border border-foyer-border",
-        "bg-[#f2ebdf] p-3 shadow-sm lg:block",
-        "opacity-80 hover:opacity-100",
-        // L'aperçu (z-0) passe SOUS la carte centrale (z-10) sur ~40 % de sa largeur :
-        // la carte fait 576px centrée, donc son bord tombe à ~24 % du rail ; en calant
-        // l'aperçu (27 % de large) à 8 %, il en disparaît un gros tiers. C'est ce
-        // recouvrement franc qui donne l'effet de découverte.
-        cote === "gauche" ? "left-[8%]" : "right-[8%]",
-        animation,
-      ].join(" ")}
-    >
-      {/* Le nom se cale du côté VISIBLE : c'est le bord intérieur de l'aperçu qui passe
-          sous la carte centrale, et un libellé aligné à gauche s'y ferait couper. */}
-      <p
-        className={[
-          "mb-2 truncate px-1 font-serif text-[16px] text-foyer-ink",
-          cote === "gauche" ? "text-left" : "text-right",
-        ].join(" ")}
-      >
-        {variante.style}
-      </p>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={variante.renderUrl}
-        alt=""
-        className="aspect-[4/3] w-full rounded-xl object-cover"
-      />
-    </button>
-  );
-}
-
 function BoutonNav({
   direction,
   onClick,
@@ -251,7 +258,7 @@ function BoutonNav({
 }: {
   direction: "gauche" | "droite";
   onClick: () => void;
-  /** Posé sur les côtés, à hauteur du visuel central, au-dessus des aperçus. */
+  /** Posé sur les côtés, à hauteur du visuel des cartes voisines. */
   flottant?: boolean;
 }) {
   const Icone = direction === "gauche" ? ChevronLeft : ChevronRight;
@@ -263,12 +270,10 @@ function BoutonNav({
         "flex h-11 w-11 items-center justify-center rounded-full border border-foyer-border",
         "bg-white text-foyer-ink shadow-sm transition-colors hover:bg-foyer-ink hover:text-foyer-cream",
         flottant
-          ? // Alignée sur le VISUEL de l'aperçu, pas sur la carte centrale : l'aperçu
-            // démarre à 132px, son image sous 12px de marge + le nom du style (~32px),
-            // et fait ~207px de haut → centre à ~284px, moins la moitié du bouton (22px).
-            // z-20 : au-dessus des aperçus ET de la carte centrale, sinon la flèche
-            // disparaîtrait sous l'un ou l'autre.
-            `absolute top-[262px] z-20 hidden lg:flex ${direction === "gauche" ? "left-[2%]" : "right-[2%]"}`
+          ? // Une voisine est réduite à 0,52 autour du centre du rail : son visuel se
+            // retrouve centré vers 262px du haut, moins la moitié du bouton (22px).
+            // z-40 : au-dessus de toutes les cartes, sinon la flèche passerait dessous.
+            `absolute top-[240px] z-40 hidden lg:flex ${direction === "gauche" ? "left-[2%]" : "right-[2%]"}`
           : "",
       ].join(" ")}
     >
@@ -277,18 +282,17 @@ function BoutonNav({
   );
 }
 
+/** Carte complète — mode « colonnes ». */
 function CarteProjet({ variante, eyebrow }: { variante: VarianteVue; eyebrow: string }) {
-  const { style, renderUrl, items, total, sansPrix, projectId, listePrete } = variante;
+  const { style, renderUrl } = variante;
 
   return (
     <section className="flex h-full flex-col rounded-3xl border border-foyer-border bg-white p-5">
-      {/* 1 — le style */}
       <div className="mb-4">
         <p className="text-[12px] uppercase tracking-[0.18em] text-foyer-muted">{eyebrow}</p>
         <h2 className="mt-0.5 font-serif text-2xl text-foyer-ink">{style}</h2>
       </div>
 
-      {/* 2 — le visuel */}
       <div className="overflow-hidden rounded-2xl bg-foyer-cream">
         {renderUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -304,7 +308,17 @@ function CarteProjet({ variante, eyebrow }: { variante: VarianteVue; eyebrow: st
         )}
       </div>
 
-      {/* 3 — la liste de courses */}
+      <Detail variante={variante} />
+    </section>
+  );
+}
+
+/** Liste de courses + total + CTA. Partagé par les deux modes d'affichage. */
+function Detail({ variante }: { variante: VarianteVue }) {
+  const { items, total, sansPrix, projectId, listePrete } = variante;
+
+  return (
+    <div className="flex flex-1 flex-col">
       <div className="mt-5 flex-1">
         <h3 className="mb-3 text-[13px] font-medium uppercase tracking-wide text-foyer-muted">
           Liste de courses
@@ -321,11 +335,7 @@ function CarteProjet({ variante, eyebrow }: { variante: VarianteVue; eyebrow: st
                 <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-foyer-cream">
                   {it.product?.imageUrl && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={it.product.imageUrl}
-                      alt=""
-                      className="h-full w-full object-contain"
-                    />
+                    <img src={it.product.imageUrl} alt="" className="h-full w-full object-contain" />
                   )}
                 </div>
 
@@ -357,7 +367,6 @@ function CarteProjet({ variante, eyebrow }: { variante: VarianteVue; eyebrow: st
         )}
       </div>
 
-      {/* 4 — le total */}
       <div className="mt-5 rounded-2xl bg-foyer-cream px-4 py-3">
         <div className="flex items-baseline justify-between">
           <span className="text-[14px] text-foyer-muted">
@@ -372,7 +381,6 @@ function CarteProjet({ variante, eyebrow }: { variante: VarianteVue; eyebrow: st
         )}
       </div>
 
-      {/* 5 — le CTA */}
       <Link
         href={`/create/${projectId}/final`}
         className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-foyer-ink px-5 py-3 text-[14px] font-medium text-foyer-cream transition-opacity hover:opacity-90"
@@ -381,6 +389,6 @@ function CarteProjet({ variante, eyebrow }: { variante: VarianteVue; eyebrow: st
         Modifier ce projet
         <ArrowUpRight className="h-4 w-4" />
       </Link>
-    </section>
+    </div>
   );
 }
