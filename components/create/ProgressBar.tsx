@@ -10,11 +10,17 @@ export function ProgressBar({ currentStep, labels }: ProgressBarProps) {
   return (
     <header className="sticky top-0 z-10 border-b border-foyer-border bg-foyer-cream/95 backdrop-blur">
       <div className="flex items-center justify-between px-5 py-3">
-        <Link
-          href="/"
-          className="font-serif text-xl tracking-tight text-foyer-ink"
-        >
-          Foyer
+        {/* Même logo que la landing : le parcours affichait encore « Foyer » en toutes
+            lettres, alors que la marque est Héra. */}
+        <Link href="/" className="flex items-center gap-2" aria-label="Héra">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/landing/v2/brand/hera-logo-mark-bold.png" alt="" className="h-6 w-auto" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/landing/v2/brand/hera-wordmark-regular-alpha.png"
+            alt="Héra"
+            className="h-5 w-auto"
+          />
         </Link>
       </div>
       <div className="px-5 pb-3">

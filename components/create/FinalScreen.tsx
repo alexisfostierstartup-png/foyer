@@ -296,6 +296,9 @@ export function FinalScreen({
   const [sliderPos, setSliderPos] = useState(20);
   const [pinsOn, setPinsOn] = useState(true);
   const [hdLoading, setHdLoading] = useState(false);
+  // Boîte « Nouveau rendu » : produits alternatifs ET/OU consigne libre.
+  const [newRenderOpen, setNewRenderOpen] = useState(false);
+  const [newRenderPrompt, setNewRenderPrompt] = useState("");
   const router = useRouter();
   const { user, profile, wallet } = useUser();
   const [tabIdx, setTabIdx] = useState(0);
@@ -468,26 +471,58 @@ export function FinalScreen({
     }
   }
 
+  /**
+   * Relance un rendu. Deux leviers, cumulables dans le MÊME geste :
+   *  · les produits alternatifs choisis dans la liste (swap catalogue) ;
+   *  · une consigne libre (« change le sol », « des murs plus clairs ») → itération.
+   *
+   * Le bouton était MORT tant qu'aucun produit n'avait changé : impossible de demander
+   * autre chose depuis là. Il ouvre désormais une boîte de dialogue, même sans
+   * modification de la liste.
+   *
+   * Les deux appels sont séquentiels quand les deux leviers sont utilisés : le swap
+   * d'abord (il ne repose que ce qui a changé), la consigne ensuite, sur le résultat.
+   * Chaque appel = une génération : on ne les lance donc que s'ils ont quelque chose à
+   * faire.
+   */
   async function handleNewRender() {
-    if (changedCount < 1 || rerendering) return;
+    const consigne = newRenderPrompt.trim();
+    if (rerendering || (changedCount < 1 && !consigne)) return;
     setRerendering(true);
+    setNewRenderOpen(false);
     try {
-      const res = await fetch(`/api/projects/${projectId}/product-overrides`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ overrides: sel, customProducts: cust }),
-      });
-      if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        toast.error(data?.error ?? "Le nouveau rendu a échoué. Réessayez.");
-        setRerendering(false);
-        return;
+      if (changedCount >= 1) {
+        const res = await fetch(`/api/projects/${projectId}/product-overrides`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ overrides: sel, customProducts: cust }),
+        });
+        if (!res.ok) {
+          const data = (await res.json().catch(() => null)) as { error?: string } | null;
+          toast.error(data?.error ?? "Le nouveau rendu a échoué. Réessayez.");
+          setRerendering(false);
+          return;
+        }
+      }
+      if (consigne) {
+        const res = await fetch(`/api/projects/${projectId}/iterate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userRequest: consigne }),
+        });
+        if (!res.ok) {
+          const data = (await res.json().catch(() => null)) as { error?: string } | null;
+          toast.error(data?.error ?? "La retouche a échoué. Réessayez.");
+          setRerendering(false);
+          return;
+        }
       }
       // On reste sur /final : le slider y montre déjà le rendu expert à jour.
       // L'ancien écran /expert récapitulait les « vrais meubles intégrés », mais il
       // les RECALCULAIT (selectExpertPieces sur la liste) au lieu de lire
       // expertIntegratedPieces — la seule vérité de ce qui est dans l'image. Après
       // une itération changeant un meuble, les deux divergeaient.
+      setNewRenderPrompt("");
       router.refresh();
       setRerendering(false);
     } catch {
@@ -825,11 +860,11 @@ export function FinalScreen({
               {expertMode && (
                 <button
                   type="button"
-                  disabled={changedCount < 1 || rerendering}
-                  onClick={handleNewRender}
+                  disabled={rerendering}
+                  onClick={() => setNewRenderOpen(true)}
                   className={cn(
                     "flex h-[52px] flex-1 items-center justify-center gap-2 rounded-full border font-medium transition-all",
-                    changedCount < 1 || rerendering
+                    rerendering
                       ? "cursor-not-allowed border-foyer-border text-foyer-muted"
                       : "border-foyer-ink text-foyer-ink hover:bg-foyer-ink/5",
                   )}
@@ -850,13 +885,69 @@ export function FinalScreen({
                 </button>
               )}
             </div>
-            {/* L'ancien libellé disait pourquoi le bouton est éteint ; sur un demi-bouton
-                il ne tient plus. On le sort en note, sinon l'utilisateur ne comprend pas. */}
-            {expertMode && changedCount < 1 && !rerendering && (
-              <p className="text-center text-[12px] text-foyer-muted">
-                Choisissez un produit alternatif pour relancer un rendu
+          </div>
+        </div>
+      )}
+
+      {/* NOUVEAU RENDU — produits alternatifs ET/OU consigne libre, dans le même geste.
+          Le bouton était mort tant qu'aucun produit n'avait changé : on ne pouvait pas
+          demander « change le sol » depuis là. Les deux leviers sont cumulables ; chacun
+          coûte une génération, donc on n'appelle que ceux qui ont quelque chose à faire. */}
+      {newRenderOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-foyer-ink/40 p-4 backdrop-blur-sm sm:items-center"
+          onClick={() => setNewRenderOpen(false)}
+        >
+          <div
+            className="w-full max-w-[440px] rounded-3xl bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="font-serif text-xl text-foyer-ink">Nouveau rendu</h3>
+
+            {changedCount >= 1 && (
+              <p className="mt-2 rounded-xl bg-foyer-sage/10 px-3 py-2 text-[13px] text-foyer-sage">
+                {changedCount} produit{changedCount > 1 ? "s" : ""} alternatif
+                {changedCount > 1 ? "s" : ""} ser{changedCount > 1 ? "ont" : "a"} intégré
+                {changedCount > 1 ? "s" : ""} au rendu.
               </p>
             )}
+
+            <label
+              htmlFor="new-render-prompt"
+              className="mt-4 block text-[14px] font-medium text-foyer-ink"
+            >
+              Autre chose à changer&nbsp;?
+            </label>
+            <p className="mt-0.5 text-[12px] text-foyer-muted">
+              Le sol, les murs, un meuble que vous n&apos;avez pas remplacé… Tout ce qui
+              n&apos;est pas un produit du catalogue passe par ici.
+            </p>
+            <textarea
+              id="new-render-prompt"
+              value={newRenderPrompt}
+              onChange={(e) => setNewRenderPrompt(e.target.value)}
+              rows={3}
+              placeholder="Ex. un parquet plus foncé, des murs plus clairs, enlever la plante du coin…"
+              className="mt-2 w-full resize-none rounded-xl border border-foyer-border bg-foyer-cream px-3 py-2.5 text-[14px] text-foyer-ink outline-none placeholder:text-foyer-muted focus:border-foyer-ink"
+            />
+
+            <div className="mt-5 flex gap-2.5">
+              <button
+                type="button"
+                onClick={() => setNewRenderOpen(false)}
+                className="h-[46px] flex-1 rounded-full border border-foyer-border font-medium text-foyer-ink transition-colors hover:bg-foyer-border/30"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={handleNewRender}
+                disabled={changedCount < 1 && !newRenderPrompt.trim()}
+                className="h-[46px] flex-1 rounded-full bg-foyer-sage font-medium text-white transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:bg-foyer-border disabled:text-foyer-muted disabled:hover:translate-y-0"
+              >
+                Lancer le rendu
+              </button>
+            </div>
           </div>
         </div>
       )}
