@@ -301,12 +301,28 @@ async function callNb2(prompt: string, imageUris: string[], aspectRatio?: string
 // les petites (pouf, chaise, banc) sont ignorées (bench 2026-07-09, 3/3 sessions).
 // → le swap se fait par PASSES CHAÎNÉES de 3 produits max, chaque passe éditant la
 // sortie de la précédente (+1 appel NB2 ≈ $0.08 au-delà de 3 pièces).
-const SWAP_CHUNK_SIZE = 3;
+// UNE SEULE PASSE. Le swap découpait en paquets de 3 — une valeur de DÉPART des tests
+// d'Alexis, jamais mesurée, et coûteuse : 8 meubles = 3 générations = 3 × 0,08 $, et
+// surtout 3 re-générations empilées de l'image entière.
+//
+// Bench du 2026-07-12 (scripts/bench-swap-chunk.ts), même base et mêmes 8 produits :
+//   paquets de 3 → 3 passes, 0,24 $, 50 s — les 6 produits posables sont là, MAIS les
+//                  couleurs ont dérivé (murs saturés, canapé bouclé BLANC devenu beige,
+//                  console modifiée) : chaque passe re-rend toute la scène et l'éloigne.
+//   paquets de 8 → 1 passe,  0,08 $, 20 s — mêmes 6 produits, couleurs FIDÈLES au fictif
+//                  et au produit, image nette.
+// Le découpage était donc pire sur tous les axes. L'API accepte 14 images en entrée ;
+// la limite supposée du modèle n'existait pas.
+const SWAP_CHUNK_SIZE = MAX_PIECES;
 
-async function swapOnFake(
+export async function swapOnFake(
   fakeUrl: string,
   pieces: Piece[],
   roomType: RoomType,
+  // Paramétrable pour le bench : le plafond de 3 vient d'un bench du 2026-07-09 et
+  // n'a jamais été revérifié depuis, alors qu'il coûte 3 passes (3 × 0,08 $) et
+  // 3 générations de dégradation pour 8 meubles. cf. scripts/bench-swap-chunk.ts
+  chunkSize: number = SWAP_CHUNK_SIZE,
 ): Promise<{ buffer: Buffer; mimeType: string; integrated: Piece[] } | null> {
   const room = ROOM_LABEL[roomType] ?? "room";
   // On VALIDE chaque image produit ; on ne garde que les vraies images (anti-garbage).
@@ -328,8 +344,8 @@ async function swapOnFake(
   // Passes chaînées de SWAP_CHUNK_SIZE produits.
   let currentUri = fakeUri;
   let last: { buffer: Buffer; mimeType: string } | null = null;
-  for (let i = 0; i < validated.length; i += SWAP_CHUNK_SIZE) {
-    const chunk = validated.slice(i, i + SWAP_CHUNK_SIZE);
+  for (let i = 0; i < validated.length; i += chunkSize) {
+    const chunk = validated.slice(i, i + chunkSize);
     last = await swapChunk(currentUri, chunk, room, aspectRatio);
     currentUri = `data:${last.mimeType};base64,${last.buffer.toString("base64")}`;
   }
