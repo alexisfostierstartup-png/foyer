@@ -1,6 +1,6 @@
 import { NextResponse, after } from "next/server";
 import { precomputeFinalAssets, runIterationPipeline } from "@/lib/ai/pipeline";
-import { runExpertIteration } from "@/lib/ai/expert";
+import { runExpertIteration, reintegrateExpertAdditions } from "@/lib/ai/expert";
 import { getProject } from "@/lib/storage/projects";
 import { logPipelineError } from "@/lib/ai/logger";
 import { getClientIp, checkRateLimit, RATE_LIMITED_BODY } from "@/lib/security/rateLimit";
@@ -35,12 +35,16 @@ export async function POST(
       : undefined;
 
   try {
-    // Flux expert : on itère (sol/peinture) sur le RENDU RÉEL (expertRenderUrl),
-    // pas le fictif — et la shopping list étant pilotée par les décisions, pas de
-    // recompute matching (qui repartirait du rendu fictif).
+    // Flux expert : on itère sur le RENDU RÉEL (expertRenderUrl), pas le fictif.
+    // Puis on RÉINTÈGRE les meubles que l'itération a pu ajouter : sans ça, une
+    // demande du type « ajoute une table et des chaises » produisait des meubles
+    // fictifs, absents de la liste et donc inachetables (QA Alexis 2026-07-12).
+    // En tâche de fond : l'utilisateur voit son rendu tout de suite, la liste et
+    // les vrais produits arrivent derrière (/final polle déjà /shopping-status).
     const project = await getProject(id);
     if (project?.mode === "expert") {
       await runExpertIteration(id, userRequest.trim());
+      after(() => reintegrateExpertAdditions(id).catch((e) => logPipelineError(id, "expert-reintegrate", e)));
       return NextResponse.json({ ok: true, projectId: id });
     }
 

@@ -1,7 +1,11 @@
 import { getProject, updateProject } from "@/lib/storage/projects";
-import { fetchImageBytes } from "@/lib/ai/pipeline";
+import { fetchImageBytes, computeRenderAdditions } from "@/lib/ai/pipeline";
 import { saveRender } from "@/lib/ai/saveRender";
 import { enforceExpertIntegratedPieces } from "@/lib/shopping/integratedPieces";
+import { matchAlterationsToCatalog } from "@/lib/shopping/matcher";
+import { matchPartnerProductsBlendBatch } from "@/lib/shopping/partnerMatch";
+import { extractCrop } from "@/lib/shopping/crop";
+import { getElementCategories } from "@/lib/db/assets";
 import type { RoomType, ShoppingItem, CustomProduct, ExpertIntegratedPiece, ProductMatch } from "@/lib/types";
 
 // ── Gros meubles à intégrer au rendu expert ─────────────────────────────────
@@ -484,6 +488,139 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
  * au matching du rendu fictif. Le sol/la peinture ne font pas partie du swap
  * expert → c'est ICI qu'on les applique, par-dessus.
  */
+// Architecture pure : jamais un « achat », donc jamais une addition à matcher.
+const NON_DETECTABLE = new Set(["ceiling", "door", "french_door", "window", "wall_opening"]);
+
+/**
+ * Referme la boucle après une itération EXPERT qui a AJOUTÉ du mobilier
+ * (« ajoute une table et des chaises à manger »).
+ *
+ * Sans ça, les meubles ajoutés n'existent QUE dans les pixels : absents de la
+ * liste de courses (donc invendables) et absents d'expertIntegratedPieces (donc
+ * éternellement fictifs). La route /iterate ne recalculait rien en mode expert —
+ * choix légitime tant qu'on n'itérait que sur le sol ou la peinture, faux dès
+ * qu'on ajoute un meuble (QA Alexis 2026-07-12).
+ *
+ * On analyse le rendu expert COURANT (surtout pas le fake : il ignore
+ * l'itération), on isole les ajouts nets, on les matche au catalogue, on les
+ * ajoute à la liste, puis on swappe les vrais produits DANS ce même rendu expert
+ * — ce qui préserve l'itération au lieu de l'écraser.
+ */
+export async function reintegrateExpertAdditions(projectId: string): Promise<{ added: number }> {
+  const project = await getProject(projectId);
+  if (!project || project.mode !== "expert" || !project.expertRenderUrl) return { added: 0 };
+
+  const cats = await getElementCategories().catch(() => []);
+  const taxonomy = new Map(cats.map((c) => [c.slug, c.catalog_category]));
+  const candidates = (project.element_decisions ?? []).filter((d) => !NON_DETECTABLE.has(d.category));
+
+  const adds = await computeRenderAdditions(
+    projectId,
+    project.expertRenderUrl,
+    project.roomType,
+    candidates,
+    taxonomy,
+  );
+
+  // Une itération AJOUTE ; elle ne recrée pas l'existant. Tout ce que la liste
+  // connaît déjà (ou qui est déjà incrusté) n'est pas un ajout : sans ce filtre,
+  // le canapé déjà swappé reviendrait en double à chaque itération.
+  const list = (project.shoppingList ?? []) as ShoppingItem[];
+  const known = new Set<string>([
+    ...list.map((i) => i.category),
+    ...(project.expertIntegratedPieces ?? []).map((p) => p.category),
+  ]);
+  const fresh = adds.filter((a) => a.category && !known.has(a.category));
+
+  if (fresh.length === 0) {
+    console.log(`[expert] ${projectId} : itération sans ajout de mobilier → rien à réintégrer`);
+    return { added: 0 };
+  }
+  console.log(
+    `[expert] ${projectId} : ${fresh.length} meuble(s) ajouté(s) par l'itération (${fresh.map((a) => a.category).join(", ")})`,
+  );
+
+  // ── Matching catalogue des nouveaux venus ──────────────────────────────────
+  const newItems = matchAlterationsToCatalog(fresh, project.selectedStyleId, taxonomy);
+  if (newItems.length === 0) return { added: 0 };
+
+  // Crop de chaque ajout DANS le rendu expert → embedding image↔image (bien plus
+  // discriminant que le texte seul), comme le fait la phase B du pipeline.
+  const renderBytes = await fetchImageBytes(project.expertRenderUrl).catch(() => null);
+  const byElementId = new Map(fresh.filter((a) => a.element_id).map((a) => [a.element_id!, a]));
+  const crops = await Promise.all(
+    newItems.map(async (it) => {
+      const a = it.elementId ? byElementId.get(it.elementId) : undefined;
+      return renderBytes && a?.bbox ? extractCrop(renderBytes, a.bbox).catch(() => null) : null;
+    }),
+  );
+
+  const matches = await matchPartnerProductsBlendBatch(
+    newItems.map((it, i) => {
+      const a = it.elementId ? byElementId.get(it.elementId) : undefined;
+      return {
+        category: it.category,
+        description: `${it.name} ${it.detail ?? ""}`.trim(),
+        crop: crops[i],
+        colorHex: a?.color_hex,
+        attrs: a?.attrs,
+      };
+    }),
+    4,
+    { styleId: project.selectedStyleId },
+  );
+  newItems.forEach((it, i) => { it.matches = matches[i]; });
+
+  // ── Swap des vrais produits DANS le rendu expert courant ───────────────────
+  // replaceIds = null : ces ajouts n'ont aucune décision de review (ils viennent
+  // de l'itération), donc le gating par décisions les exclurait tous.
+  const pieces = selectExpertPieces(
+    newItems,
+    (project.productOverrides ?? {}) as Record<string, number>,
+    (project.customProducts ?? {}) as Record<string, CustomProduct>,
+    null,
+  );
+
+  const mergedList = [...list, ...newItems];
+
+  if (pieces.length === 0) {
+    // Aucun gros meuble swappable (ex. déco) : ils restent fictifs dans l'image,
+    // mais deviennent au moins ACHETABLES. Option 2 en repli automatique.
+    await updateProject(projectId, { shoppingList: mergedList });
+    console.log(`[expert] ${projectId} : ajouts non swappables → ajoutés à la liste seulement`);
+    return { added: newItems.length };
+  }
+
+  const result = await swapOnFake(project.expertRenderUrl, pieces, project.roomType);
+  if (!result) {
+    // Aucune image produit valide → on NE régénère PAS (anti-hallucination) :
+    // le rendu itéré reste tel quel, mais les meubles entrent dans la liste.
+    await updateProject(projectId, { shoppingList: mergedList });
+    console.warn(`[expert] ${projectId} : aucune image produit valide → liste seule, rendu inchangé`);
+    return { added: newItems.length };
+  }
+
+  const url = await saveRender(result.buffer, project.storageFolder, result.mimeType, "expert");
+  const newPieces: ExpertIntegratedPiece[] = result.integrated.map((p) => ({
+    category: p.category,
+    name: p.name,
+    imageUrl: p.imageUrl,
+    elementId: p.elementId ?? null,
+    match: p.match ?? null,
+  }));
+  const allPieces = [...(project.expertIntegratedPieces ?? []), ...newPieces];
+
+  await updateProject(projectId, {
+    expertRenderUrl: url,
+    expertIntegratedPieces: allPieces,
+    shoppingList: enforceExpertIntegratedPieces(mergedList, allPieces),
+  });
+  console.log(
+    `[expert] ${projectId} : ${newPieces.length} vrai(s) produit(s) intégré(s) dans le rendu itéré (${newPieces.map((p) => p.category).join(", ")})`,
+  );
+  return { added: newItems.length };
+}
+
 export async function runExpertIteration(projectId: string, userRequest: string): Promise<string> {
   const project = await getProject(projectId);
   if (!project) throw new Error(`Project not found: ${projectId}`);
