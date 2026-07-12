@@ -79,13 +79,28 @@ export function BeforeAfterSlider({
         />
       </div>
 
-      {/* Labels */}
-      <span className="absolute left-3 top-3 rounded-full bg-foyer-ink/75 px-3 py-1 text-[11px] font-medium tracking-widest text-foyer-cream">
-        AVANT
-      </span>
-      <span className="absolute right-3 top-3 rounded-full bg-foyer-cream/90 px-3 py-1 text-[11px] font-medium tracking-widest text-foyer-ink">
-        APRÈS
-      </span>
+      {/* Labels — chacun enfermé dans SA moitié, avec overflow-hidden : la ligne du
+          curseur les rogne au lieu de leur passer par-dessus. Poussé à fond d'un
+          côté, le badge de ce côté disparaît entièrement, ce qui est le but.
+          `whitespace-nowrap` est indispensable : sans lui, le texte se replierait
+          sur plusieurs lignes à mesure que le conteneur rétrécit, au lieu d'être
+          coupé net. `pointer-events-none` pour ne pas voler le drag au curseur. */}
+      <div
+        className="pointer-events-none absolute inset-y-0 left-0 overflow-hidden"
+        style={{ width: `${pos}%` }}
+      >
+        <span className="absolute left-3 top-3 whitespace-nowrap rounded-full bg-foyer-ink/75 px-3 py-1 text-[11px] font-medium tracking-widest text-foyer-cream">
+          AVANT
+        </span>
+      </div>
+      <div
+        className="pointer-events-none absolute inset-y-0 right-0 overflow-hidden"
+        style={{ left: `${pos}%` }}
+      >
+        <span className="absolute right-3 top-3 whitespace-nowrap rounded-full bg-foyer-cream/90 px-3 py-1 text-[11px] font-medium tracking-widest text-foyer-ink">
+          APRÈS
+        </span>
+      </div>
 
       {/* Divider line */}
       <div
