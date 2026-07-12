@@ -108,6 +108,13 @@ export type ExpertIntegratedPiece = {
   elementId?: string | null;
   // Produit catalogue utilisé (null si produit custom fourni par l'user).
   match?: ProductMatch | null;
+  // Position dans le rendu. Indispensable pour les meubles AJOUTÉS par une itération
+  // expert : l'analyse tourne sur le rendu FICTIF, qui ne les contient pas — elle ne
+  // peut donc pas leur trouver de bbox et les effaçait à chaque recalcul, laissant la
+  // table et les chaises dans la liste mais sans pin (QA Alexis 2026-07-12).
+  // expertIntegratedPieces sait, lui, ce qui est réellement dans l'image : il porte
+  // donc aussi la position.
+  bbox?: { x: number; y: number; w: number; h: number } | null;
 };
 
 export type ShoppingItem = {
@@ -229,6 +236,12 @@ export type Project = {
   // « liste de courses alternative »). elementId → index dans `matches` (0 = meilleur).
   // Le rendu expert utilise ce produit au lieu de matches[0] pour cet élément.
   productOverrides?: Record<string, number> | null;
+  // elementId → ID du produit choisi. REMPLACE productOverrides, qui stockait un
+  // INDICE dans `matches` — or enforceExpertIntegratedPieces réordonne ce tableau à
+  // chaque reconstruction de liste (il remonte le produit intégré en tête). L'indice
+  // désignait donc un AUTRE produit au rendu suivant : le choix de l'utilisateur
+  // dérivait tout seul (projet 51NekyJs0Qt, QA Alexis 2026-07-12). Un ID ne dérive pas.
+  productPicks?: Record<string, string> | null;
   // Rendu expert : les pièces RÉELLEMENT swappées dans le rendu (source de vérité de
   // la liste de courses pour ces meubles) — persistées par runExpertRenderPipeline au
   // moment du swap, ré-injectées dans toute liste recalculée. Jamais dans CLEAR_FINALIZE.

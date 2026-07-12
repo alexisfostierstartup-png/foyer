@@ -1520,6 +1520,27 @@ export async function computeRenderAdditions(
   candidates: ElementDecision[],
   taxonomy: Map<string, string | null>,
 ): Promise<Alteration[]> {
+  return (await computeRenderInventory(projectId, renderUrl, roomType, candidates, taxonomy)).adds;
+}
+
+/**
+ * Inventaire du RENDU (pleine résolution) : additions + TOUS les profils détectés.
+ *
+ * Les profils portent une bbox mesurée sur le rendu ENTIER. Celles de l'audit, elles,
+ * sont émises sur le composite AVANT|APRÈS — une image où le rendu n'occupe que la
+ * moitié de la largeur, donc à résolution DIVISÉE PAR DEUX, puis reprojetées. D'où des
+ * boîtes trop larges dont le centre tombe au bord du meuble : le pin du canapé se
+ * posait sur son accoudoir (QA Alexis 2026-07-12). On expose donc les profils pour
+ * pouvoir préférer LEURS bboxes. Aucun appel vision supplémentaire : cet inventaire
+ * tourne déjà, on jetait simplement les boîtes des éléments non-additions.
+ */
+export async function computeRenderInventory(
+  projectId: string,
+  renderUrl: string,
+  roomType: string | undefined,
+  candidates: ElementDecision[],
+  taxonomy: Map<string, string | null>,
+): Promise<{ adds: Alteration[]; profiles: ElementProfile[] }> {
   const renderImg = await loadImage(renderUrl);
   const renderProfiles = await detectElementProfiles(projectId, renderImg, "render_inventory", roomType, { withBbox: true });
   const fixedShoppable = new Set(
@@ -1529,7 +1550,7 @@ export async function computeRenderAdditions(
   );
   const adds = reconcileRenderAdditions(renderProfiles, candidates, taxonomy, fixedShoppable);
   console.log(`[pipeline:final] inventaire rendu: ${renderProfiles.length} éléments détectés → ${adds.length} additions`);
-  return adds;
+  return { adds, profiles: renderProfiles };
 }
 
 /**
@@ -1832,8 +1853,21 @@ async function analyzeRender(projectId: string, project: Project): Promise<Rende
       if (a.element_id && a.color_hex) elementHexById.set(a.element_id, a.color_hex);
       if (a.element_id && a.attrs) elementAttrsById.set(a.element_id, a.attrs);
     }
+
   } else {
     console.warn("[pipeline:final] détection rendu échouée, fallback additions audit:", invRes.e instanceof Error ? invRes.e.message : invRes.e);
+  }
+
+  // VERROU DE POSITION, pendant du verrou de liste. Les meubles ajoutés par une
+  // itération EXPERT (« ajoute une table et des chaises ») n'existent que dans le rendu
+  // expert : cette analyse tourne sur le rendu FICTIF, elle ne peut donc pas leur
+  // trouver de bbox et les effaçait à chaque recalcul — ils restaient dans la liste
+  // (grâce à enforceExpertIntegratedPieces) mais perdaient leur pin, silencieusement.
+  // expertIntegratedPieces porte désormais leur position : on la réinjecte.
+  for (const piece of project.expertIntegratedPieces ?? []) {
+    if (piece.elementId && piece.bbox && !bboxById.has(piece.elementId)) {
+      bboxById.set(piece.elementId, piece.bbox);
+    }
   }
 
   const plan = reconcilePlan(effective, { elements: [] }, { repairAlreadyUsed: false });

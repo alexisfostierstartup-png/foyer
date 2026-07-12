@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runExpertRenderPipeline } from "@/lib/ai/expert";
-import { updateProject } from "@/lib/storage/projects";
+import { getProject, updateProject } from "@/lib/storage/projects";
 import type { CustomProduct } from "@/lib/types";
 import { logPipelineError } from "@/lib/ai/logger";
 import { isTransientAiError } from "@/lib/ai/retry";
@@ -47,7 +47,20 @@ export async function POST(
   }
 
   try {
-    await updateProject(id, { productOverrides: clean, customProducts: cleanCustom });
+    // L'indice cliqué n'a de sens QUE dans le tableau que l'utilisateur avait sous les
+    // yeux. On le résout en ID produit MAINTENANT, avant que la prochaine
+    // reconstruction de liste ne réordonne `matches` (enforceExpertIntegratedPieces
+    // remonte le produit intégré en tête, décalant tout d'un cran). Sans ça, le choix
+    // dérive vers un autre produit au rendu suivant.
+    const project = await getProject(id);
+    const picks: Record<string, string> = {};
+    for (const [elementId, idx] of Object.entries(clean)) {
+      const item = (project?.shoppingList ?? []).find((it) => it.elementId === elementId);
+      const pid = item?.matches?.[idx]?.id;
+      if (pid) picks[elementId] = pid;
+    }
+
+    await updateProject(id, { productOverrides: clean, productPicks: picks, customProducts: cleanCustom });
     const url = await runExpertRenderPipeline(id);
     return NextResponse.json({ ok: true, projectId: id, expertRenderUrl: url });
   } catch (err) {

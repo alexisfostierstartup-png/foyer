@@ -148,6 +148,10 @@ function selectExpertPieces(
   // telles quelles (la BORGEBY qui se posait à côté de la table conservée = la
   // violation type). null = pas de restriction (rétro-compat tests).
   replaceIds: Set<string> | null = null,
+  // elementId → ID du produit choisi. FAIT FOI sur `overrides` (un indice), qui
+  // dérive dès que `matches` est réordonné. `overrides` reste le repli des projets
+  // créés avant productPicks.
+  picks: Record<string, string> = {},
 ): Piece[] {
   const priority = new Map(EXPERT_CATEGORIES.map((c, i) => [c as string, i]));
   const pieces = shoppingList
@@ -158,8 +162,11 @@ function selectExpertPieces(
       const noun = CATEGORY_NOUN[cat] ?? cat.replace(/_/g, " ");
       // Priorité au produit custom de l'user (par elementId puis par catégorie).
       const cp = (it.elementId ? customProducts[it.elementId] : undefined) ?? customProducts[cat];
+      // 1) l'ID choisi (stable) ; 2) l'indice hérité (fragile) ; 3) le meilleur match.
+      const pickedId = it.elementId ? picks[it.elementId] : undefined;
+      const byId = pickedId ? it.matches?.find((m) => m.id === pickedId) : undefined;
       const idx = (it.elementId && overrides[it.elementId]) || 0;
-      const match = it.matches?.[idx] ?? it.matches?.[0];
+      const match = byId ?? it.matches?.[idx] ?? it.matches?.[0];
       const imageUrl = cp?.imageUrl ?? match?.primary_image_url ?? it.imgUrl;
       if (!imageUrl) return null;
       return {
@@ -433,7 +440,8 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
     (it) => !protectedCats.has(it.category) || (it.elementId != null && userPicked.has(it.elementId)),
   );
   for (const id of userPicked) replaceIds.add(id);
-  const pieces = selectExpertPieces(swappable, overrides, customProducts, replaceIds);
+  const picks = (project.productPicks ?? {}) as Record<string, string>;
+  const pieces = selectExpertPieces(swappable, overrides, customProducts, replaceIds, picks);
 
   // BASE DU SWAP. Par défaut le fake : il porte le style validé, et repartir de lui
   // à chaque fois évite d'empiler les éditions (dégradation de l'image).
@@ -592,6 +600,7 @@ export async function reintegrateExpertAdditions(projectId: string): Promise<{ a
     (project.productOverrides ?? {}) as Record<string, number>,
     (project.customProducts ?? {}) as Record<string, CustomProduct>,
     null,
+    (project.productPicks ?? {}) as Record<string, string>,
   );
 
   const mergedList = [...list, ...newItems];
@@ -640,6 +649,9 @@ export async function reintegrateExpertAdditions(projectId: string): Promise<{ a
     imageUrl: p.imageUrl,
     elementId: p.elementId ?? null,
     match: p.match ?? null,
+    // La bbox voyage AVEC la pièce : l'analyse (qui tourne sur le fake) ne pourra
+    // jamais la retrouver, puisque le fake ne contient pas ce meuble.
+    bbox: (p.elementId ? byElementId.get(p.elementId)?.bbox : undefined) ?? null,
   }));
   const allPieces = [...(project.expertIntegratedPieces ?? []), ...newPieces];
 
