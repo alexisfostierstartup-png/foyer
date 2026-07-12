@@ -98,7 +98,7 @@
     {
       "category": "chair",
       "detected": "Lot de deux chaises effet bois clair",
-      "quantity": 1,
+      "quantity": 2,
       "source": "new",
       "product": {
         "name": "Lot de deux chaises effet bois clair",
@@ -122,7 +122,7 @@
       }
     }
   ],
-  "totalEstimated": 3325,
+  "totalEstimated": 4094,
   "score": {
     "kept": 7,
     "ecoNew": 0,

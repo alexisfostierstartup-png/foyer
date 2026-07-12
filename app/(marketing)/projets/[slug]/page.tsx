@@ -58,15 +58,27 @@ function Ligne({ item }: { item: ProjetVitrine["items"][number] }) {
         <span className="size-16 shrink-0 rounded-xl bg-bone ring-1 ring-line" aria-hidden />
       )}
       <div className="min-w-0 flex-1">
+        {/* La quantité est portée par le badge « 2 × » devant le prix : la répéter ici
+            faisait doublon. */}
         <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
           {FAMILLE[item.category] ?? item.category.replace(/_/g, " ")}
-          {item.quantity > 1 && ` · ×${item.quantity}`}
         </p>
         <p className="mt-0.5 truncate text-[15px] text-ink" title={p.name}>{p.name}</p>
         <p className="text-[12px] text-muted-foreground">{p.merchant?.replace(/_/g, " ")}</p>
       </div>
       <div className="flex shrink-0 items-center gap-3">
-        <span className="font-display text-lg text-ink">{p.price != null ? eur(p.price) : "—"}</span>
+        {/* Prix de la LIGNE, pas prix unitaire : les chaises sont un lot de deux, et il en
+            faut deux lots pour les quatre chaises de la pièce. Afficher 769 € alors que la
+            ligne pèse 1 538 € dans le total rendait celui-ci impossible à vérifier. Le ×2
+            à gauche du prix dit d'où vient le chiffre. */}
+        {item.quantity > 1 && (
+          <span className="rounded-full px-2 py-0.5 text-[12px] font-medium text-ink ring-1 ring-line">
+            {item.quantity} ×
+          </span>
+        )}
+        <span className="font-display text-lg text-ink">
+          {p.price != null ? eur(p.price * item.quantity) : "—"}
+        </span>
         {p.url && (
           <a
             href={p.url}
@@ -95,23 +107,23 @@ export default async function ProjetPage({
 
   return (
     <main className="grain">
-      <div className="mx-auto max-w-4xl px-5 pb-24 pt-28 sm:pt-32">
-        <Link
-          href="/#gallery"
-          className="inline-flex items-center gap-2 text-[13px] text-muted-foreground transition-colors hover:text-ink"
-        >
-          <ArrowLeft className="size-4" aria-hidden />
-          Tous les projets
-        </Link>
-
-        <header className="mt-8">
-          <span className="text-[11px] uppercase tracking-[0.22em] text-forest">{meta.tag}</span>
-          <h1 className="mt-3 font-display text-4xl leading-[1.05] tracking-[-0.02em] sm:text-5xl">
+      {/* Cette page n'a pas de header fixe : le pt-28 d'origine n'était qu'un trou. */}
+      <div className="mx-auto max-w-4xl px-5 pb-24 pt-12 sm:pt-16">
+        <header>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <Link
+              href="/#gallery"
+              className="inline-flex items-center gap-2 text-[13px] text-muted-foreground transition-colors hover:text-ink"
+            >
+              <ArrowLeft className="size-4" aria-hidden />
+              Tous les projets
+            </Link>
+            <span className="h-3.5 w-px bg-line" aria-hidden />
+            <span className="text-[11px] uppercase tracking-[0.22em] text-forest">{meta.tag}</span>
+          </div>
+          <h1 className="mt-4 font-display text-4xl leading-[1.05] tracking-[-0.02em] sm:text-5xl">
             {meta.titre}
           </h1>
-          <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
-            {meta.resume}
-          </p>
         </header>
 
         <div className="mt-10 overflow-hidden rounded-3xl ring-1 ring-line shadow-card-lg">
