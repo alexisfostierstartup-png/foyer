@@ -1309,6 +1309,31 @@ export type ShoppingAssets = { shoppingList: ShoppingItem[]; scoreFoyer: ScoreFo
 // Reprojette une bbox donnée sur le COMPOSITE (normalisée 0-1 sur la largeur totale)
 // vers le RENDU seul (panneau APRÈS). Retourne null si la box tombe dans le panneau
 // AVANT (gauche) — le modèle s'est trompé de moitié → on préfère pas de crop.
+/**
+ * Point d'ancrage du composite → coordonnées du rendu.
+ * Le pin se posait au CENTRE de la bbox. Sur un meuble en L (canapé sectionnel), ce
+ * centre n'est PAS sur le meuble : il tombe dans le creux du L, sur l'accoudoir ou
+ * dans le vide (QA Alexis 2026-07-12). Le modèle renvoie donc un POINT posé sur le
+ * corps de l'objet — l'endroit où il « poserait le doigt ». La bbox reste utilisée
+ * pour le crop du matching, où elle est juste : c'est le CENTRE qui mentait, pas la
+ * boîte.
+ */
+function mapCompositePointToRender(
+  raw: unknown,
+  afterLeftFrac: number,
+  afterWidthFrac: number,
+): { x: number; y: number } | null {
+  if (!Array.isArray(raw) || raw.length !== 2 || afterWidthFrac <= 0) return null;
+  const [px, py] = raw.map(Number);
+  if (![px, py].every(Number.isFinite)) return null;
+  const cx = px / 1000;
+  const cy = py / 1000;
+  if (cx < afterLeftFrac - 0.02) return null; // point côté AVANT → inexploitable
+  const x = (cx - afterLeftFrac) / afterWidthFrac;
+  if (x < 0 || x > 1 || cy < 0 || cy > 1) return null;
+  return { x, y: cy };
+}
+
 function mapCompositeBoxToRender(
   box: Bbox,
   afterLeftFrac: number,
@@ -1342,7 +1367,7 @@ export async function confirmChanges(
   composite: ImageInput,
   afterLeftFrac: number,
   afterWidthFrac: number,
-): Promise<{ appliedIds: Set<string>; judgedIds: Set<string>; replacedIds: Set<string>; additions: Alteration[]; afterById: Map<string, string>; bboxById: Map<string, Bbox>; attrsById: Map<string, Record<string, unknown>> }> {
+): Promise<{ appliedIds: Set<string>; judgedIds: Set<string>; replacedIds: Set<string>; additions: Alteration[]; afterById: Map<string, string>; bboxById: Map<string, Bbox>; anchorById: Map<string, { x: number; y: number }>; attrsById: Map<string, Record<string, unknown>> }> {
   const candidatesJson = JSON.stringify(
     candidates.map((d) => ({
       element_id: d.element_id,
@@ -1392,7 +1417,7 @@ export async function confirmChanges(
   }
   );
   const parsed = result.parsed as {
-    results?: Array<{ element_id?: string; changed?: boolean; change_kind?: string; after?: string; bbox?: unknown; attrs?: unknown }>;
+    results?: Array<{ element_id?: string; changed?: boolean; change_kind?: string; after?: string; anchor?: unknown; bbox?: unknown; attrs?: unknown }>;
     additions?: Array<{ element?: string; category?: string; detail?: string }>;
   } | null;
 
@@ -1403,6 +1428,9 @@ export async function confirmChanges(
   const afterById = new Map<string, string>();
   // bbox de l'élément dans le RENDU (APRÈS) → crop pour le matching image↔image.
   const bboxById = new Map<string, Bbox>();
+  // Point d'ancrage du pin, POSÉ SUR l'objet (le centre de la bbox tombe à côté sur un
+  // meuble en L). Absent → le pin retombe sur le centre de la bbox.
+  const anchorById = new Map<string, { x: number; y: number }>();
   // attrs structurés V3 de l'élément (état APRÈS) → score structuré du matching (Étape 2).
   const attrsById = new Map<string, Record<string, unknown>>();
   // LE RENDU FAIT FOI : éléments que le rendu a REMPLACÉS (objet différent) et non
@@ -1421,6 +1449,8 @@ export async function confirmChanges(
       const renderBox = mapCompositeBoxToRender(compBox, afterLeftFrac, afterWidthFrac);
       if (renderBox) bboxById.set(r.element_id, renderBox);
     }
+    const anchor = mapCompositePointToRender(r.anchor, afterLeftFrac, afterWidthFrac);
+    if (anchor) anchorById.set(r.element_id, anchor);
     if (r.attrs && typeof r.attrs === "object" && !Array.isArray(r.attrs)) {
       attrsById.set(r.element_id, r.attrs as Record<string, unknown>);
     }
@@ -1436,7 +1466,7 @@ export async function confirmChanges(
       shoppingImpact: "to_buy_secondhand",
     }));
 
-  return { appliedIds, judgedIds, replacedIds, additions, afterById, bboxById, attrsById };
+  return { appliedIds, judgedIds, replacedIds, additions, afterById, bboxById, anchorById, attrsById };
 }
 
 // Catégories qu'on ne liste PAS en addition (architecture/surfaces + déco sans produit
@@ -1681,6 +1711,7 @@ async function analyzeRender(projectId: string, project: Project): Promise<Rende
   let additions: Alteration[] = [];
   let afterById = new Map<string, string>();
   let bboxById = new Map<string, Bbox>();
+  let anchorById = new Map<string, { x: number; y: number }>();
   const elementHexById = new Map<string, string>(); // element_id → couleur dominante (hex)
   // element_id → attrs structurés V3 (état APRÈS), pour le score structuré du matching.
   const elementAttrsById = new Map<string, Record<string, unknown>>();
@@ -1717,6 +1748,7 @@ async function analyzeRender(projectId: string, project: Project): Promise<Rende
     additions = r.additions;
     afterById = r.afterById;
     bboxById = r.bboxById;
+    anchorById = r.anchorById;
     r.attrsById.forEach((v, k) => elementAttrsById.set(k, v));
     wallColors = wallColorsRes;
     // bbox de chaque PAN repeint (émises sur le composite) → reprojetées sur le
@@ -1885,6 +1917,7 @@ async function analyzeRender(projectId: string, project: Project): Promise<Rende
     renderUrl,
     items,
     bboxById: Object.fromEntries(bboxById),
+    anchorById: Object.fromEntries(anchorById),
     elementHexById: Object.fromEntries(elementHexById),
     elementAttrsById: Object.fromEntries(elementAttrsById),
     wallColors,

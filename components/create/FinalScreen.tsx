@@ -260,6 +260,8 @@ type Props = {
   // Hotspots : bbox par element_id sur le rendu affiché (null si analyse absente
   // ou périmée) → dots + popover matches + tap-to-target.
   bboxById?: Record<string, { x: number; y: number; w: number; h: number }> | null;
+  // Point d’ancrage du pin, posé SUR l’objet (le centre d’une bbox en L tombe à côté).
+  anchorById?: Record<string, { x: number; y: number }> | null;
   // Squelette d'items issu de l'ANALYSE (phase A) : les pins s'affichent dès que
   // l'analyse existe, sans attendre le matching catalogue (phase B) — popover
   // « Pas encore de propositions » en attendant la liste.
@@ -281,6 +283,7 @@ export function FinalScreen({
   customProducts = null,
   fakeRenderUrl = null,
   bboxById = null,
+  anchorById = null,
   analysisItems = null,
 }: Props) {
   const [showFake, setShowFake] = useState(false);
@@ -303,6 +306,7 @@ export function FinalScreen({
   // l'analyse (phase A) existe → pins pendant le matching ET sans reload
   // (pins invisibles même liste prête, QA Alexis 2026-07-11).
   const [bboxState, setBboxState] = useState(bboxById);
+  const [anchorState, setAnchorState] = useState(anchorById);
   const [skeletonItems, setSkeletonItems] = useState(analysisItems);
 
   // Mode « préparation » : la liste se calcule en fond (déclenchée par la page) —
@@ -323,12 +327,14 @@ export function FinalScreen({
           scoreFoyer?: ScoreFoyer;
           analysis?: {
             bboxById: Record<string, { x: number; y: number; w: number; h: number }>;
+            anchorById?: Record<string, { x: number; y: number }> | null;
             items?: ShoppingItem[];
           } | null;
         };
         if (stopped) return;
         if (data.analysis) {
           setBboxState(data.analysis.bboxById);
+          setAnchorState(data.analysis.anchorById ?? null);
           if (data.analysis.items?.length) setSkeletonItems(data.analysis.items);
         }
         if (data.ready && data.shoppingList) {
@@ -496,6 +502,7 @@ export function FinalScreen({
                 projectId={projectId}
                 items={listPending ? (skeletonItems ?? []) : shoppingList}
                 bboxById={bboxState}
+                anchorById={anchorState}
                 sliderPos={sliderPos}
                 showModify={!expertMode}
                 selected={expertMode ? sel : undefined}

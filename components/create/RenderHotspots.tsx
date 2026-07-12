@@ -40,6 +40,7 @@ export function RenderHotspots({
   projectId,
   items,
   bboxById,
+  anchorById,
   showModify,
   selected,
   onSelect,
@@ -48,6 +49,9 @@ export function RenderHotspots({
   projectId: string;
   items: ShoppingItem[];
   bboxById: Record<string, Bbox>;
+  /** Point posé SUR l'objet par le modèle vision. Prime sur le centre de la bbox, qui
+   *  tombe à côté du meuble dès qu'il n'est pas rectangulaire (canapé en L). */
+  anchorById?: Record<string, { x: number; y: number }> | null;
   /** false en mode expert : l'édition live a son propre bouton. */
   showModify: boolean;
   /** Choix utilisateur par elementId (index dans matches). */
@@ -137,18 +141,25 @@ export function RenderHotspots({
         b = { ...b, w: Math.min(b.w, 1 - b.x), h: Math.min(b.h, 1 - b.y) };
         if (b.w <= 0.02 || b.h <= 0.02) continue;
         seen.add(id);
+        // Le point d'ancrage du modèle prime : il est POSÉ SUR l'objet. Le centre de la
+        // bbox ne l'est pas dès que le meuble n'est pas rectangulaire — sur un canapé
+        // sectionnel, il tombe dans le creux du L (QA Alexis 2026-07-12). Repli sur le
+        // centre de la boîte quand le modèle n'a pas fourni de point.
+        const a = anchorById?.[id];
+        const px = a ? a.x * 100 : (b.x + b.w / 2) * 100;
+        const py = a ? a.y * 100 : (b.y + b.h / 2) * 100;
         out.push({
           elementId: id,
           selectId: it.elementId ?? id,
           name: it.name,
-          cx: Math.min(97, Math.max(3, (b.x + b.w / 2) * 100)),
-          cy: Math.min(95, Math.max(5, (b.y + b.h / 2) * 100)),
+          cx: Math.min(97, Math.max(3, px)),
+          cy: Math.min(95, Math.max(5, py)),
           thumbs,
         });
       }
     }
     return out;
-  }, [items, bboxById, showModify]);
+  }, [items, bboxById, anchorById, showModify]);
 
   if (hotspots.length === 0) return null;
 

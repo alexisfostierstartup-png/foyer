@@ -276,6 +276,11 @@ export type RenderAnalysis = {
   renderUrl: string;
   items: ShoppingItem[]; // squelette (sans matches/scoring)
   bboxById: Record<string, { x: number; y: number; w: number; h: number }>;
+  // Point où POSER le pin, sur le corps de l'objet. Le centre de la bbox tombe à côté
+  // dès que le meuble n'est pas rectangulaire : sur un canapé en L, il atterrit dans le
+  // creux du L (QA Alexis 2026-07-12). La bbox reste la vérité pour le CROP du matching
+  // — c'était son centre qui mentait, pas elle. Absent → repli sur le centre de la bbox.
+  anchorById?: Record<string, { x: number; y: number }>;
   elementHexById: Record<string, string>;
   elementAttrsById: Record<string, Record<string, unknown>>;
   wallColors: { hex: string; label: string }[]; // murs repeints (getChangedWallColors)

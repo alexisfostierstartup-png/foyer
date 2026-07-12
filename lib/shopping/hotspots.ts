@@ -2,10 +2,12 @@ import type { Project, RenderAnalysis } from "@/lib/types";
 
 export type ResolvedHotspots = {
   bboxById: RenderAnalysis["bboxById"] | null;
+  // Point d'ancrage par élément (posé SUR l'objet) — prime sur le centre de la bbox.
+  anchorById: RenderAnalysis["anchorById"] | null;
   items: RenderAnalysis["items"] | null;
 };
 
-const EMPTY: ResolvedHotspots = { bboxById: null, items: null };
+const EMPTY: ResolvedHotspots = { bboxById: null, anchorById: null, items: null };
 
 /**
  * Bboxes + squelette d'items à poser sur le rendu AFFICHÉ.
@@ -40,5 +42,9 @@ export function resolveHotspots(project: Project): ResolvedHotspots {
 
   if (!matchesDisplayed && !derivedFromAnalyzedFake) return EMPTY;
 
-  return { bboxById: analysis.bboxById, items: analysis.items ?? null };
+  return {
+    bboxById: analysis.bboxById,
+    anchorById: analysis.anchorById ?? null,
+    items: analysis.items ?? null,
+  };
 }
