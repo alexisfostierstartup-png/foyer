@@ -257,15 +257,6 @@ function closestNb2Ratio(width: number, height: number): string {
   return NB2_RATIOS.reduce((best, cur) => (Math.abs(cur[1] - r) < Math.abs(best[1] - r) ? cur : best))[0];
 }
 
-// RÉSOLUTION DE SORTIE. Le défaut de l'API est "1K" — on ne l'envoyait pas, donc CHAQUE
-// passe régénérait toute l'image en 1K. Or les passes s'enchaînent : le swap se fait par
-// paquets de 3 produits (8 meubles = 3 générations), plus une génération par itération.
-// Chaque re-génération repart de la sortie précédente → la perte se COMPOSE, et au bout
-// de 2-3 itérations l'image est visiblement molle (QA Alexis 2026-07-12). En 2K, chaque
-// passe dispose de 4× plus de pixels : la dégradation par passe devient négligeable.
-// output_format png : sans lui, une sortie JPEG rajouterait une compression à chaque tour.
-const NB2_RESOLUTION = "2K";
-
 async function callNb2(prompt: string, imageUris: string[], aspectRatio?: string): Promise<{ buffer: Buffer; mimeType: string }> {
   const key = process.env.FAL_API_KEY;
   if (!key) throw new Error("FAL_API_KEY manquant");
@@ -277,7 +268,13 @@ async function callNb2(prompt: string, imageUris: string[], aspectRatio?: string
       prompt,
       image_urls: imageUris,
       num_images: 1,
-      resolution: NB2_RESOLUTION,
+      // Résolution : on garde le défaut de l'API (1K), soit la taille actuelle. La
+      // dégradation ne vient PAS d'un manque de pixels mais du fait que chaque passe
+      // RE-GÉNÈRE toute l'image : monter en 2K ne ferait qu'agrandir la bouillie, en
+      // facturant 50 % de plus. Le vrai levier est le NOMBRE de passes — cf. swapOnFake
+      // et le filtre « ne re-swapper que ce qui a changé » plus bas.
+      // output_format png : sans lui, une sortie JPEG rajouterait une compression
+      // par-dessus la perte générative, à chaque tour. Gratuit, donc pris.
       output_format: "png",
       ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}),
     }),
@@ -457,7 +454,7 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
   );
   for (const id of userPicked) replaceIds.add(id);
   const picks = (project.productPicks ?? {}) as Record<string, string>;
-  const pieces = selectExpertPieces(swappable, overrides, customProducts, replaceIds, picks);
+  const allPieces = selectExpertPieces(swappable, overrides, customProducts, replaceIds, picks);
 
   // BASE DU SWAP. Par défaut le fake : il porte le style validé, et repartir de lui
   // à chaque fois évite d'empiler les éditions (dégradation de l'image).
@@ -466,21 +463,47 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
   // c'est ce qui a fait disparaître table et chaises au clic sur « Nouveau rendu »,
   // alors que la base de données les gardait — image et liste se contredisaient
   // (QA Alexis 2026-07-12). Dans ce cas, on swappe sur le rendu expert courant.
-  const base =
-    project.expertIterated && project.expertRenderUrl
-      ? project.expertRenderUrl
-      : project.generatedRenderUrl;
+  const surRenduItere = Boolean(project.expertIterated && project.expertRenderUrl);
+  const base = surRenduItere ? project.expertRenderUrl! : project.generatedRenderUrl;
+
+  // NE RE-SWAPPER QUE CE QUI A CHANGÉ — c'est LE levier contre la dégradation.
+  //
+  // Chaque passe NB2 RE-GÉNÈRE l'image entière : la perte est générative, pas une
+  // question de pixels (monter en résolution ne ferait qu'agrandir la bouillie). Ce qui
+  // compte, c'est le NOMBRE de passes. Or le swap se fait par paquets de 3 produits :
+  // re-swapper les 8 meubles = 3 générations, à CHAQUE « Nouveau rendu », même si
+  // l'utilisateur n'a changé qu'un seul produit.
+  //
+  // Tant qu'on repartait du fake, la profondeur restait constante (toujours 3 passes
+  // depuis une base propre). Depuis qu'on part du rendu ITÉRÉ — pour ne pas effacer les
+  // meubles ajoutés — ces 3 passes s'EMPILENT sur une image déjà générée, et la perte se
+  // cumule sans fin (QA Alexis 2026-07-12). Sur un rendu itéré, on ne repose donc que les
+  // meubles dont le produit diffère de celui DÉJÀ dans l'image : changer un produit coûte
+  // 1 passe au lieu de 3, et n'en changer aucun n'en coûte aucune.
+  const signature = (p: { match?: ProductMatch | null; imageUrl?: string }) =>
+    p.match?.id ?? p.imageUrl ?? null;
+  const dejaDansLimage = new Map(
+    (project.expertIntegratedPieces ?? []).map((p) => [p.elementId ?? p.category, signature(p)]),
+  );
+  const pieces = surRenduItere
+    ? allPieces.filter((p) => {
+        const cle = p.elementId ?? p.category;
+        return !dejaDansLimage.has(cle) || dejaDansLimage.get(cle) !== signature(p);
+      })
+    : allPieces;
 
   if (pieces.length === 0) {
-    // Rien à remplacer (tous les meubles gardés, pièce déjà bien meublée) → on garde
-    // la base telle quelle (pas de 400 : c'est un résultat légitime).
-    console.log(`[expert] ${projectId} : aucun gros meuble à swapper → rendu réel = base`);
+    // Soit rien à remplacer, soit — sur un rendu itéré — rien qui ait changé : dans les
+    // deux cas, régénérer ne ferait que dégrader l'image pour un résultat identique.
+    console.log(`[expert] ${projectId} : rien de nouveau à swapper → rendu inchangé (0 génération)`);
     await updateProject(projectId, { expertRenderUrl: base });
     return base;
   }
 
   console.log(
-    `[expert] ${projectId} : swap sur ${project.expertIterated ? "le rendu expert ITÉRÉ" : "le fake"} — ${pieces.length} meubles (${pieces.map((p) => p.category).join(", ")})`,
+    `[expert] ${projectId} : swap sur ${surRenduItere ? "le rendu expert ITÉRÉ" : "le fake"} — ` +
+      `${pieces.length}/${allPieces.length} meubles (${pieces.map((p) => p.category).join(", ")}) ` +
+      `→ ${Math.ceil(pieces.length / SWAP_CHUNK_SIZE)} génération(s)`,
   );
   const result = await swapOnFake(base, pieces, project.roomType);
   if (!result) {
@@ -496,13 +519,30 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
   // DANS le rendu fait foi. Persisté ici, ré-injecté dans toute liste recalculée
   // (enforceExpertIntegratedPieces) — un meuble visible dans le rendu ne peut plus
   // disparaître de la liste, quel que soit le re-gating vision du fake.
-  const integratedPieces: ExpertIntegratedPiece[] = integrated.map((p) => ({
+  const reposees: ExpertIntegratedPiece[] = integrated.map((p) => ({
     category: p.category,
     name: p.name,
     imageUrl: p.imageUrl,
     elementId: p.elementId ?? null,
     match: p.match ?? null,
+    // La bbox d'une pièce déjà présente est conservée (cf. fusion juste après) : seule
+    // une pièce reposée perd la sienne, et l'analyse la retrouvera.
+    bbox: null,
   }));
+
+  // FUSION, jamais remplacement. Le swap peut être PARTIEL (on ne repose que ce qui a
+  // changé) : écraser la liste avec les seules pièces reposées effacerait toutes les
+  // autres, pourtant bien présentes dans l'image. On remplace celles qu'on vient de
+  // reposer, on garde les autres telles quelles — avec leur position.
+  const parCle = new Map<string, ExpertIntegratedPiece>(
+    (project.expertIntegratedPieces ?? []).map((p) => [p.elementId ?? p.category, p]),
+  );
+  for (const p of reposees) {
+    const cle = p.elementId ?? p.category;
+    parCle.set(cle, { ...p, bbox: parCle.get(cle)?.bbox ?? null });
+  }
+  const integratedPieces = [...parCle.values()];
+
   // La liste courante est aussi mise à jour immédiatement (pin du produit exact).
   const pinnedList = enforceExpertIntegratedPieces(
     (project.shoppingList ?? []) as ShoppingItem[],
@@ -513,7 +553,9 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
     expertIntegratedPieces: integratedPieces,
     shoppingList: pinnedList,
   });
-  console.log(`[expert] ${projectId} : rendu expert sauvegardé, ${integratedPieces.length} produit(s) épinglés dans la liste`);
+  console.log(
+    `[expert] ${projectId} : rendu sauvegardé — ${reposees.length} produit(s) reposé(s), ${integratedPieces.length} au total dans l'image`,
+  );
   return url;
 }
 
