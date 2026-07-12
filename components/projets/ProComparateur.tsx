@@ -18,20 +18,23 @@ export function ProComparateur({ dossier }: { dossier: DossierProVue }) {
   const piece = dossier.pieces.find((p) => p.slug === pieceActive) ?? dossier.pieces[0];
 
   return (
-    <div className="mx-auto max-w-6xl px-5 py-10">
-      <header className="mb-8">
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-5 sm:py-10">
+      <header className="mb-6 sm:mb-8">
         <p className="text-[12px] uppercase tracking-[0.18em] text-foyer-muted">Dossier client</p>
-        <h1 className="mt-1 font-serif text-4xl text-foyer-ink">{dossier.nom}</h1>
+        <h1 className="mt-1 font-serif text-3xl text-foyer-ink sm:text-4xl">{dossier.nom}</h1>
         <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-foyer-muted">
           {dossier.sousTitre}
         </p>
       </header>
 
-      {/* Onglets de pièce */}
+      {/* Onglets de pièce. En mobile ils défilent horizontalement au lieu de passer à la
+          ligne : quatre pastilles empilées sur deux rangs mangeaient l'écran avant même
+          qu'on ait vu un projet. Les marges négatives font toucher le bord de l'écran, pour
+          qu'on voie que ça défile. */}
       <div
         role="tablist"
         aria-label="Pièces du dossier"
-        className="mb-8 flex flex-wrap gap-2 border-b border-foyer-border pb-3"
+        className="-mx-4 mb-6 flex gap-2 overflow-x-auto border-b border-foyer-border px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:mb-8 sm:flex-wrap sm:overflow-visible sm:px-0"
       >
         {dossier.pieces.map((p) => {
           const actif = p.slug === piece?.slug;
@@ -42,7 +45,7 @@ export function ProComparateur({ dossier }: { dossier: DossierProVue }) {
               aria-selected={actif}
               onClick={() => setPieceActive(p.slug)}
               className={[
-                "rounded-full px-4 py-2 text-[14px] transition-colors",
+                "shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-[14px] transition-colors",
                 actif
                   ? "bg-foyer-ink text-foyer-cream"
                   : "text-foyer-muted hover:bg-foyer-border/40 hover:text-foyer-ink",
@@ -76,8 +79,12 @@ function PieceVueBloc({ piece }: { piece: PieceVue }) {
 
   if (piece.affichage === "diaporama") return <Diaporama piece={piece} />;
 
+  // `grid-cols-1` explicite, et non la piste implicite : celle-ci est dimensionnée sur le
+  // CONTENU (auto = minmax(min-content, max-content)) et n'est pas bornée par le
+  // conteneur. En mobile elle valait 574px pour un écran de 386 — la page défilait
+  // latéralement. `repeat(1, minmax(0,1fr))` la borne.
   return (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
       {piece.variantes.map((v, i) => (
         <CarteProjet
           key={v.projectId}
@@ -133,8 +140,24 @@ function Diaporama({ piece }: { piece: PieceVue }) {
   return (
     <div>
       <div className="relative">
-        {/* Le rail. Hauteur fixe : les cartes sont en absolu, elles ne la portent pas. */}
-        <div className="relative mx-auto h-[500px] w-full max-w-xl">
+        {/* Le rail. Les cartes sont en ABSOLU : elles ne portent pas sa hauteur. Une valeur
+            fixe (500px) marchait sur grand écran mais laissait un grand vide sous la carte
+            en mobile, où elle est bien plus courte (l'image fait 4/3 de la largeur). Un
+            gabarit invisible, en flux normal, donne donc au rail la hauteur EXACTE de la
+            carte courante, à n'importe quelle largeur d'écran. */}
+        <div className="relative mx-auto w-full max-w-xl">
+          {/* Mêmes bordure et rembourrage que les vraies cartes, sinon la hauteur mesurée
+              serait fausse de leur épaisseur. */}
+          <div className="invisible rounded-3xl border border-foyer-border p-3" aria-hidden>
+            <CarteVisuel
+              variante={courant}
+              eyebrow={`${piece.label} — ${at(i) + 1} / ${n}`}
+              alignementNom="left"
+              comparateur={false}
+              actif
+            />
+          </div>
+
           {piece.variantes.map((v, k) => {
             const d = ecart(k);
             const actif = d === 0;
@@ -175,48 +198,28 @@ function Diaporama({ piece }: { piece: PieceVue }) {
                   "transition-all duration-[600ms] ease-[cubic-bezier(0.22,0.61,0.36,1)]",
                   "motion-reduce:transition-none",
                   actif ? "z-30 cursor-default bg-white" : "z-10 bg-[#f2ebdf]",
-                  // Sous lg, la carte centrale prend toute la largeur : les voisines y
-                  // seraient illisibles et déborderaient.
+                  // Sous lg, la carte centrale prend toute la largeur : les autres sont
+                  // RETIRÉES (`hidden`), pas seulement rendues transparentes. Translatées
+                  // de ±55 à 78 % hors du cadre, elles étendaient la zone de défilement et
+                  // la page partait en travers sur un téléphone.
                   actif
                     ? "opacity-100"
                     : voisin
-                      ? "opacity-0 hover:opacity-100 lg:opacity-90"
-                      : "pointer-events-none opacity-0",
+                      ? "hidden lg:block lg:opacity-90 lg:hover:opacity-100"
+                      : "hidden pointer-events-none lg:block lg:opacity-0",
                 ].join(" ")}
                 style={{ transform: `translateX(${x}%) scale(${echelle})` }}
               >
-                {/* Le surtitre ne concerne que la carte courante — il s'efface sur les
-                    voisines plutôt que d'être retiré, pour que toutes gardent la même
-                    hauteur (sinon leur géométrie sauterait pendant le voyage). */}
-                <p
-                  className={[
-                    "px-2 pt-2 text-left text-[12px] uppercase tracking-[0.18em] text-foyer-muted",
-                    "transition-opacity duration-[600ms]",
-                    actif ? "opacity-100" : "opacity-0",
-                  ].join(" ")}
-                >
-                  {piece.label} — {k + 1} / {n}
-                </p>
-                {/* Le nom se cale du côté VISIBLE : c'est le bord INTÉRIEUR d'une voisine
-                    qui passe sous la carte centrale, donc un libellé aligné à gauche se
-                    ferait couper sur la voisine de droite. */}
-                <p
-                  className={[
-                    "mb-2 truncate px-2 font-serif text-2xl text-foyer-ink",
-                    d > 0 ? "text-right" : "text-left",
-                  ].join(" ")}
-                >
-                  {v.style}
-                </p>
-
-                {/* Seule la carte COURANTE porte le comparateur. Les voisines gardent une
-                    image simple : réduites à 0,52 et destinées au clic, une poignée de
-                    glissement y serait inutilisable — et cinq comparateurs montés en même
-                    temps poseraient chacun des écouteurs de souris sur la fenêtre. */}
-                <Visuel
+                <CarteVisuel
                   variante={v}
-                  alt={`${piece.label} — style ${v.style}`}
+                  eyebrow={`${piece.label} — ${k + 1} / ${n}`}
+                  alignementNom={d > 0 ? "right" : "left"}
+                  // Seule la carte COURANTE porte le comparateur. Les voisines gardent une
+                  // image simple : réduites à 0,52 et destinées au clic, une poignée de
+                  // glissement y serait inutilisable — et cinq comparateurs montés en même
+                  // temps poseraient chacun des écouteurs de souris sur la fenêtre.
                   comparateur={actif}
+                  actif={actif}
                 />
               </div>
             );
@@ -230,7 +233,7 @@ function Diaporama({ piece }: { piece: PieceVue }) {
 
       {/* Le détail de la carte courante, sous le rail : il ne voyage pas (une liste de
           courses réduite à 0,52 serait illisible), il se substitue. */}
-      <div className="relative z-30 mx-auto -mt-2 max-w-xl rounded-3xl border border-foyer-border bg-white px-5 pb-5">
+      <div className="relative z-30 mx-auto -mt-2 max-w-xl rounded-3xl border border-foyer-border bg-white px-4 pb-4 sm:px-5 sm:pb-5">
         <Detail key={courant.projectId} variante={courant} />
       </div>
 
@@ -294,6 +297,59 @@ function BoutonNav({
 }
 
 /**
+ * Le contenu d'une carte du diaporama : surtitre, nom du style, visuel. Extrait pour être
+ * partagé avec le GABARIT invisible qui donne sa hauteur au rail — s'il ne rendait pas
+ * exactement le même balisage, la hauteur mesurée serait fausse.
+ */
+function CarteVisuel({
+  variante,
+  eyebrow,
+  alignementNom,
+  comparateur,
+  actif,
+}: {
+  variante: VarianteVue;
+  eyebrow: string;
+  alignementNom: "left" | "right";
+  comparateur: boolean;
+  actif: boolean;
+}) {
+  return (
+    <>
+      {/* Le surtitre ne concerne que la carte courante — il s'EFFACE sur les voisines
+          plutôt que d'être retiré, pour que toutes gardent la même hauteur (sinon leur
+          géométrie sauterait pendant le voyage). */}
+      <p
+        className={[
+          "px-2 pt-2 text-left text-[12px] uppercase tracking-[0.18em] text-foyer-muted",
+          "transition-opacity duration-[600ms]",
+          actif ? "opacity-100" : "opacity-0",
+        ].join(" ")}
+      >
+        {eyebrow}
+      </p>
+      {/* Le nom se cale du côté VISIBLE : c'est le bord INTÉRIEUR d'une voisine qui passe
+          sous la carte centrale, donc un libellé aligné à gauche se ferait couper sur la
+          voisine de droite. */}
+      <p
+        className={[
+          "mb-2 truncate px-2 font-serif text-xl text-foyer-ink sm:text-2xl",
+          alignementNom === "right" ? "text-right" : "text-left",
+        ].join(" ")}
+      >
+        {variante.style}
+      </p>
+
+      <Visuel
+        variante={variante}
+        alt={`${eyebrow} — style ${variante.style}`}
+        comparateur={comparateur}
+      />
+    </>
+  );
+}
+
+/**
  * Le visuel d'un projet. Avec `comparateur`, la photo d'origine se glisse SOUS le rendu et
  * un curseur permet de comparer — ouvert à 20 %, donc largement sur l'après : c'est le
  * rendu qu'on vient voir, la photo d'origine n'est là que pour donner la mesure du chemin
@@ -343,7 +399,7 @@ function CarteProjet({ variante, eyebrow }: { variante: VarianteVue; eyebrow: st
   const { style } = variante;
 
   return (
-    <section className="flex h-full flex-col rounded-3xl border border-foyer-border bg-white p-5">
+    <section className="flex h-full flex-col rounded-3xl border border-foyer-border bg-white p-4 sm:p-5">
       <div className="mb-4">
         <p className="text-[12px] uppercase tracking-[0.18em] text-foyer-muted">{eyebrow}</p>
         <h2 className="mt-0.5 font-serif text-2xl text-foyer-ink">{style}</h2>
