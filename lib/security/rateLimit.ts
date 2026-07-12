@@ -22,6 +22,12 @@ export async function checkRateLimit(
   limit: number,
   windowSeconds = 3600,
 ): Promise<boolean> {
+  // En local, tout arrive de ::1 : le dev, ses tests et les scripts partagent UN seul
+  // compteur, qu'une session de tests sature en une heure (20 générations). Le limiteur
+  // ne protège rien ici — il ne protège que d'un abus depuis une IP tierce, ce qui n'a
+  // de sens qu'en prod. Mettre RATE_LIMIT_LOCAL=1 pour le tester quand même.
+  if (process.env.NODE_ENV !== "production" && process.env.RATE_LIMIT_LOCAL !== "1") return true;
+
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (createSupabaseAdmin() as any).rpc("rate_limit_hit", {
