@@ -1081,6 +1081,25 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
     generatedRenderUrl: renderUrl,
     firstRenderUrl: firstRender,
     iterationCount: 0,
+    // UN NOUVEAU RENDU INVALIDE TOUT CE QUI EN DÉCOULAIT. Ces champs ne sont pas dans
+    // CLEAR_FINALIZE : l'itération standard, elle, doit les conserver — elle pose son
+    // propre verrou juste avant, et le spread de CLEAR_FINALIZE l'écraserait.
+    //
+    // · lockedShoppingList — le verrou de liste est rafraîchi à CHAQUE calcul (« un
+    //   refresh ne doit RIEN changer »). Il survivait donc à une régénération et FIGEAIT
+    //   l'ancienne liste : le rendu changeait, la liste restait celle d'avant. Une pièce
+    //   régénérée en chambre gardait le canapé du rendu précédent (QA Alexis 2026-07-12).
+    // · expertIntegratedPieces — mémoire de ce qui est incrusté dans le rendu EXPERT,
+    //   lequel dérive du fake. Nouveau fake ⇒ mémoire périmée : sans ça,
+    //   enforceExpertIntegratedPieces ré-injectait les meubles du rendu précédent.
+    // · renderAnalysis / expertRenderUrl — recalculés sur le nouveau rendu.
+    lockedShoppingList: undefined,
+    pendingReleaseRequests: [],
+    pendingReleaseElementIds: [],
+    renderAnalysis: undefined,
+    expertRenderUrl: undefined,
+    expertIntegratedPieces: undefined,
+    expertIterated: undefined,
     ...CLEAR_FINALIZE,
   });
   console.log(`[pipeline:generate] done, render: ${renderUrl}`);
