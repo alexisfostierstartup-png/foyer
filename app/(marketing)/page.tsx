@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RevealV2, BeforeAfterV2, FaqV2 } from "@/components/landing/v2/parts";
+import { getProjet } from "@/lib/projets";
 
 /* ============================================================================
  * Landing v2 — réplique éditoriale, marque « Héra » (charte de marque Héra).
@@ -302,13 +303,23 @@ function Process() {
 
 /* -------------------------------- GALLERY -------------------------------- */
 
-const PROJECTS: { img: string; before?: string; tag: string; name: string; surface: string; conserve: string; cout?: string }[] = [
-  { img: IMG.salonParisien, before: IMG.salonParisienBefore, tag: "Haussmann", name: "Salon Parisien", surface: "32 m²", conserve: "68%", cout: "1 674 €" },
+// slug renseigné = la carte devient CLIQUABLE vers /projets/<slug> (le clic était mort).
+const PROJECTS: { img: string; before?: string; tag: string; name: string; surface: string; conserve: string; cout?: string; slug?: string }[] = [
+  // « cout » vient de la MÊME source que la page vitrine (data/projets/*.json) : deux
+  // chiffres codés en dur finiraient par se contredire en public.
+  { img: IMG.salonParisien, before: IMG.salonParisienBefore, tag: "Haussmann", name: "Salon Parisien", surface: "32 m²", conserve: "68%", slug: "appartement-parisien" },
   { img: IMG.japandi, before: IMG.japandiBefore, tag: "Studio", name: "Chambre Japandi", surface: "14 m²", conserve: "55%" },
   { img: IMG.arch4, tag: "Maison", name: "Salle à manger", surface: "22 m²", conserve: "72%" },
 ];
 
-function Gallery() {
+async function Gallery() {
+  // Coût réel du projet, lu dans les données figées — jamais recopié à la main.
+  const couts = new Map<string, string>();
+  for (const p of PROJECTS) {
+    if (!p.slug) continue;
+    const d = await getProjet(p.slug);
+    if (d) couts.set(p.slug, `${Math.round(d.totalEstimated).toLocaleString("fr-FR")} €`);
+  }
   return (
     <section id="gallery" className="relative pt-8 pb-16 sm:pt-10 sm:pb-24 px-5 grain">
       <div className="mx-auto max-w-6xl">
@@ -386,6 +397,16 @@ function Gallery() {
                   </span>
                 )}
               </div>
+              {/* Le clic était MORT : la carte avait cursor-pointer mais aucun lien.
+                  Le lien couvre la carte entière (inset-0), au-dessus des images mais
+                  SOUS le comparateur avant/après, dont la poignée reste manipulable. */}
+              {p.slug && (
+                <Link
+                  href={`/projets/${p.slug}`}
+                  aria-label={`Voir le projet ${p.name}`}
+                  className="absolute inset-0 z-20"
+                />
+              )}
               <div className="p-4 flex items-center justify-between">
                 <div>
                   <h3 className="font-display text-lg">{p.name}</h3>
@@ -393,9 +414,9 @@ function Gallery() {
                 </div>
                 <div className="text-right">
                   <span className="block text-[11px] text-clay font-medium">Conservé {p.conserve}</span>
-                  {p.cout && (
+                  {p.slug && couts.get(p.slug) && (
                     <span className="mt-0.5 block text-[11px] text-muted-foreground">
-                      Coût du projet&nbsp;: <span className="font-display text-[13px] text-ink">{p.cout}</span>
+                      Coût du projet&nbsp;: <span className="font-display text-[13px] text-ink">{couts.get(p.slug!)}</span>
                     </span>
                   )}
                 </div>

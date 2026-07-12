@@ -1,0 +1,133 @@
+{
+  "slug": "appartement-parisien",
+  "projectId": "51NekyJs0Qt-ZEhcB6JOa",
+  "beforeUrl": "/landing/test4.jpeg",
+  "afterUrl": "/landing/test4_apres.png",
+  "items": [
+    {
+      "category": "sofa",
+      "detected": "Canapé arrondi en bouclé blanc crème",
+      "quantity": 1,
+      "source": "new",
+      "product": {
+        "name": "Canapé convertible fabio 4 places en tissu bouclette - beige",
+        "price": 649,
+        "merchant": "maisons_du_monde",
+        "imageUrl": "https://medias.maisonsdumonde.com/images/w_1000/mkp/M26006890_1/canape-convertible-fabio-4-places-en-tissu-bouclette-beige.jpg",
+        "url": "https://www.maisonsdumonde.com/FR/fr/p/canape-convertible-fabio-4-places-en-tissu-bouclette-beige-fabio-M26006890.htm"
+      }
+    },
+    {
+      "category": "tv_stand",
+      "detected": "Commode à tiroirs jaune ocre",
+      "quantity": 1,
+      "source": "new",
+      "product": {
+        "name": "Meuble tv marron",
+        "price": 221.99,
+        "merchant": "maisons_du_monde",
+        "imageUrl": "https://medias.maisonsdumonde.com/images/w_1000/mkp/M25026073_1/meuble-tv-marron.jpg",
+        "url": "https://www.maisonsdumonde.com/FR/fr/p/meuble-tv-marron-bradley-M25026073.htm"
+      }
+    },
+    {
+      "category": "floor_lamp",
+      "detected": "Petite veilleuse en rotin posée sur un tabouret",
+      "quantity": 1,
+      "source": "new",
+      "product": {
+        "name": "Lampadaire en rotin beige 60x60x109 cm",
+        "price": 349,
+        "merchant": "maisons_du_monde",
+        "imageUrl": "https://medias.maisonsdumonde.com/images/w_1000/mkp/M26112397_1/lampadaire-en-rotin-beige-60x60x109-cm.jpg",
+        "url": "https://www.maisonsdumonde.com/FR/fr/p/lampadaire-en-rotin-beige-60x60x109-cm-lumaya-M26112397.htm"
+      }
+    },
+    {
+      "category": "coffee_table",
+      "detected": "Table basse ronde en bois clair",
+      "quantity": 1,
+      "source": "new",
+      "product": {
+        "name": "IDMARKET Table basse ronde JULIETTE 70 cm lattes tasseau bois coloris chêne",
+        "price": 54.99,
+        "merchant": "cdiscount",
+        "imageUrl": "https://www.cdiscount.com/pdt2/8/2/4/1/700x700/idm1756332276824/rw/idmarket-table-basse-ronde-70-cm-juliette-lattes-t.jpg",
+        "url": "https://www.cdiscount.com/maison/meubles-mobilier/idmarket-table-basse-ronde-70-cm-juliette-lattes-t/f-117600104-idm1756332276824.html#mpos=7|mp"
+      }
+    },
+    {
+      "category": "rug",
+      "detected": "Tapis rectangulaire à motifs géométriques",
+      "quantity": 1,
+      "source": "new",
+      "product": {
+        "name": "Tapis - NAZAR RUGS - Aspect jute - Motif losange - 120x170 cm - Jaune",
+        "price": 55.3,
+        "merchant": "cdiscount",
+        "imageUrl": "https://www.cdiscount.com/pdt2/9/5/4/1/700x700/auc3701234279954/rw/tapis-interieur-exterieur-aspect-jute-a-motif-losa.jpg",
+        "url": "https://www.cdiscount.com/maison/tapis/tapis-interieur-exterieur-aspect-jute-a-motif-losa/f-11725-auc3701234279954.html#mpos=13|mp"
+      }
+    },
+    {
+      "category": "ceiling_light",
+      "detected": "Suspension en rotin",
+      "quantity": 1,
+      "source": "new",
+      "product": {
+        "name": "Suspension en rotin tressé D60",
+        "price": 179,
+        "merchant": "maisons_du_monde",
+        "imageUrl": "https://medias.maisonsdumonde.com/image/upload/w_1000/img/suspension-en-rotin-tresse-d60-1000-3-6-165277_1.jpg",
+        "url": "https://www.maisonsdumonde.com/FR/fr/p/suspension-en-rotin-tresse-d60-wild-165277.htm"
+      }
+    },
+    {
+      "category": "dining_table",
+      "detected": "Table à manger ronde en bois finition noyer",
+      "quantity": 1,
+      "source": "new",
+      "product": {
+        "name": "Table à manger ronde en bois finition noyer",
+        "price": 999,
+        "merchant": "maisons_du_monde",
+        "imageUrl": "https://medias.maisonsdumonde.com/images/w_1000/mkp/M25028063_1/table-a-manger-ronde-en-bois-finition-noyer.jpg",
+        "url": "https://www.maisonsdumonde.com/FR/fr/p/table-a-manger-ronde-en-bois-finition-noyer-storm-M25028063.htm"
+      }
+    },
+    {
+      "category": "chair",
+      "detected": "Lot de deux chaises effet bois clair",
+      "quantity": 1,
+      "source": "new",
+      "product": {
+        "name": "Lot de deux chaises effet bois clair",
+        "price": 769,
+        "merchant": "maisons_du_monde",
+        "imageUrl": "https://medias.maisonsdumonde.com/images/w_1000/mkp/M24058476_1/lot-de-deux-chaises-effet-bois-clair.jpg",
+        "url": "https://www.maisonsdumonde.com/FR/fr/p/lot-de-deux-chaises-effet-bois-clair-sand-M24058476.htm"
+      }
+    },
+    {
+      "category": "paint",
+      "detected": "Peinture",
+      "quantity": 1,
+      "source": "diy",
+      "product": {
+        "name": "Peinture mur tomette velours DULUX VALENTINE Crème de couleur 2.25L",
+        "price": 47.9,
+        "merchant": "leroy_merlin",
+        "imageUrl": "https://media.adeo.com/media/5364378/media.jpg?width=800",
+        "url": "https://www.leroymerlin.fr/produits/peinture-mur-tomette-velours-dulux-valentine-creme-de-couleur-2-25l-98917759.html"
+      }
+    }
+  ],
+  "totalEstimated": 3325,
+  "score": {
+    "kept": 7,
+    "ecoNew": 0,
+    "co2SavedKg": 210,
+    "secondhand": 0,
+    "totalEstimated": 1768
+  }
+}
