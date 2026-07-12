@@ -100,6 +100,8 @@ export const DOSSIERS_PRO: DossierProConfig[] = [
 export type VarianteVue = {
   projectId: string;
   style: string;
+  /** Photo d'origine de la pièce — la moitié « avant » du comparateur. */
+  basePhotoUrl: string | null;
   renderUrl: string | null;
   items: TopPick[];
   total: number;
@@ -149,6 +151,7 @@ export async function getDossierPro(
           return {
             projectId: v.projectId,
             style: v.styleLabel ?? labelParSlug.get(styleId) ?? styleId ?? "Sans style",
+            basePhotoUrl: p.basePhotoUrl ?? null,
             renderUrl: displayedRenderUrl(p),
             items,
             total,

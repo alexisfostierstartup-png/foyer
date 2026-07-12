@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowUpRight, ChevronLeft, ChevronRight, Loader2, Pencil } from "lucide-react";
+import { BeforeAfterSlider } from "@/components/create/BeforeAfterSlider";
 import type { DossierProVue, PieceVue, VarianteVue } from "@/lib/projetsPro";
 
 const eur = (n: number) => `${Math.round(n).toLocaleString("fr-FR")} €`;
@@ -146,14 +147,29 @@ function Diaporama({ piece }: { piece: PieceVue }) {
             const echelle = actif ? 1 : voisin ? 0.52 : 0.42;
 
             return (
-              <button
+              // Un <div> et non un <button> : la carte courante contient le comparateur,
+              // qui a sa propre poignée de glissement (un bouton). Un bouton dans un
+              // bouton est invalide et casse le glisser-déposer.
+              <div
                 key={v.projectId}
-                onClick={() => setI(k)}
-                disabled={actif}
+                onClick={actif ? undefined : () => setI(k)}
+                onKeyDown={
+                  actif
+                    ? undefined
+                    : (e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setI(k);
+                        }
+                      }
+                }
+                role={actif ? undefined : "button"}
+                tabIndex={actif ? undefined : 0}
                 aria-label={actif ? undefined : `Voir ${v.style}`}
                 aria-current={actif}
                 className={[
                   "absolute inset-x-0 top-0 rounded-3xl border border-foyer-border p-3 shadow-sm",
+                  actif ? "" : "cursor-pointer",
                   // Tout est animé par le MÊME nœud : translation, échelle, couleur de
                   // fond (beige → blanc en arrivant au centre) et opacité.
                   "transition-all duration-[600ms] ease-[cubic-bezier(0.22,0.61,0.36,1)]",
@@ -193,21 +209,16 @@ function Diaporama({ piece }: { piece: PieceVue }) {
                   {v.style}
                 </p>
 
-                <div className="overflow-hidden rounded-2xl bg-foyer-cream">
-                  {v.renderUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={v.renderUrl}
-                      alt={`${piece.label} — style ${v.style}`}
-                      className="aspect-[4/3] w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex aspect-[4/3] w-full items-center justify-center text-[13px] text-foyer-muted">
-                      Rendu en cours
-                    </div>
-                  )}
-                </div>
-              </button>
+                {/* Seule la carte COURANTE porte le comparateur. Les voisines gardent une
+                    image simple : réduites à 0,52 et destinées au clic, une poignée de
+                    glissement y serait inutilisable — et cinq comparateurs montés en même
+                    temps poseraient chacun des écouteurs de souris sur la fenêtre. */}
+                <Visuel
+                  variante={v}
+                  alt={`${piece.label} — style ${v.style}`}
+                  comparateur={actif}
+                />
+              </div>
             );
           })}
         </div>
@@ -282,9 +293,54 @@ function BoutonNav({
   );
 }
 
+/**
+ * Le visuel d'un projet. Avec `comparateur`, la photo d'origine se glisse SOUS le rendu et
+ * un curseur permet de comparer — ouvert à 20 %, donc largement sur l'après : c'est le
+ * rendu qu'on vient voir, la photo d'origine n'est là que pour donner la mesure du chemin
+ * parcouru. Sans photo d'origine, on retombe simplement sur le rendu seul.
+ */
+function Visuel({
+  variante,
+  alt,
+  comparateur,
+}: {
+  variante: VarianteVue;
+  alt: string;
+  comparateur: boolean;
+}) {
+  const { renderUrl, basePhotoUrl } = variante;
+
+  if (!renderUrl) {
+    return (
+      <div className="flex aspect-[4/3] w-full items-center justify-center rounded-2xl bg-foyer-cream text-[13px] text-foyer-muted">
+        Rendu en cours
+      </div>
+    );
+  }
+
+  if (comparateur && basePhotoUrl) {
+    return (
+      <BeforeAfterSlider
+        before={basePhotoUrl}
+        after={renderUrl}
+        alt={alt}
+        initialPos={20}
+        className="!rounded-2xl"
+      />
+    );
+  }
+
+  return (
+    <div className="overflow-hidden rounded-2xl bg-foyer-cream">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={renderUrl} alt={alt} className="aspect-[4/3] w-full object-cover" />
+    </div>
+  );
+}
+
 /** Carte complète — mode « colonnes ». */
 function CarteProjet({ variante, eyebrow }: { variante: VarianteVue; eyebrow: string }) {
-  const { style, renderUrl } = variante;
+  const { style } = variante;
 
   return (
     <section className="flex h-full flex-col rounded-3xl border border-foyer-border bg-white p-5">
@@ -293,20 +349,7 @@ function CarteProjet({ variante, eyebrow }: { variante: VarianteVue; eyebrow: st
         <h2 className="mt-0.5 font-serif text-2xl text-foyer-ink">{style}</h2>
       </div>
 
-      <div className="overflow-hidden rounded-2xl bg-foyer-cream">
-        {renderUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={renderUrl}
-            alt={`${eyebrow} — style ${style}`}
-            className="aspect-[4/3] w-full object-cover"
-          />
-        ) : (
-          <div className="flex aspect-[4/3] w-full items-center justify-center text-[13px] text-foyer-muted">
-            Rendu en cours
-          </div>
-        )}
-      </div>
+      <Visuel variante={variante} alt={`${eyebrow} — style ${style}`} comparateur />
 
       <Detail variante={variante} />
     </section>
