@@ -36,7 +36,7 @@ export default async function FinalPage({
 
   // Hotspots (dots sur le rendu) : bboxes de l'audit, valides pour le rendu affiché
   // — y compris en expert, dont le rendu dérive du fake analysé. Cf. resolveHotspots.
-  const { bboxById, items: analysisItems } = resolveHotspots(project);
+  const { bboxById, anchorById, items: analysisItems } = resolveHotspots(project);
 
   return (
     <FinalScreen
@@ -53,8 +53,10 @@ export default async function FinalPage({
       fakeRenderUrl={project.mode === "expert" && project.expertRenderUrl ? project.generatedRenderUrl : null}
       diyBeta={project.diyMode === "beta"}
       bboxById={bboxById}
+      anchorById={anchorById}
       analysisItems={analysisItems}
       productOverrides={project.productOverrides ?? null}
+      productPicks={project.productPicks ?? null}
       customProducts={project.customProducts ?? null}
     />
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ExternalLink, Pencil, Link2, Star, RefreshCw, Loader2, Eye, MapPin, ShoppingBag, Download } from "lucide-react";
 import { toast } from "sonner";
@@ -253,6 +253,9 @@ type Props = {
   // la liste est une customisation CONFIRMÉE sur le rendu.
   diyBeta?: boolean;
   productOverrides?: Record<string, number> | null;
+  // elementId → ID du produit choisi. FAIT FOI sur productOverrides (un indice, qui
+  // dérive dès que `matches` est réordonné).
+  productPicks?: Record<string, string> | null;
   customProducts?: Record<string, CustomProduct> | null;
   // Expert : URL du rendu IA d'origine (fake) → bouton de comparaison sous le slider
   // (remplace l'ancien écran /expert supprimé du parcours).
@@ -280,6 +283,7 @@ export function FinalScreen({
   expertMode = false,
   diyBeta = false,
   productOverrides = null,
+  productPicks = null,
   customProducts = null,
   fakeRenderUrl = null,
   bboxById = null,
@@ -372,13 +376,41 @@ export function FinalScreen({
   // ── Liste de courses alternative (mode expert) ─────────────────────────────
   // On accumule les choix de produits alternatifs SANS re-render à chaque clic ;
   // un seul bouton relance le rendu avec les (x) éléments modifiés.
-  const rendered = productOverrides ?? {};
+  //
+  // L'INDICE EST RECALCULÉ À PARTIR DE L'ID CHOISI, jamais lu tel quel. productOverrides
+  // stockait un indice dans `matches` — or ce tableau est réordonné à chaque
+  // reconstruction de liste (le produit intégré remonte en tête). L'indice pointait donc
+  // sur un AUTRE produit après un refresh : Alexis avait choisi « Meuble tv marron », la
+  // carte affichait « Meuble tv 3 portes effet noyer » (QA 2026-07-12). Le serveur a été
+  // corrigé (productPicks, par ID) mais le client lisait toujours l'indice.
+  // Ici on cherche, DANS LE TABLEAU AFFICHÉ, la position du produit réellement choisi.
+  const rendered = useMemo(() => {
+    const out: Record<string, number> = {};
+    for (const it of shoppingList) {
+      if (!it.elementId || !it.matches?.length) continue;
+      const pid = productPicks?.[it.elementId];
+      if (pid) {
+        const i = it.matches.findIndex((m) => m.id === pid);
+        out[it.elementId] = i >= 0 ? i : 0;
+      } else if (productOverrides?.[it.elementId] != null) {
+        // Repli : projets créés avant productPicks. Fragile par construction, mais
+        // c'est tout ce qu'ils ont.
+        out[it.elementId] = productOverrides[it.elementId];
+      }
+    }
+    return out;
+  }, [shoppingList, productPicks, productOverrides]);
   const renderedCustom = customProducts ?? {};
-  const [sel, setSel] = useState<Record<string, number>>(() => ({ ...rendered }));
+  // `selUser` = les clics de l'utilisateur, RIEN d'autre. La sélection affichée est
+  // `rendered` (ce qui est dans l'image) écrasé par ses clics. Initialiser un state avec
+  // `rendered` le figeait au premier montage : quand la liste arrive par le poll, les
+  // indices avaient changé et la sélection pointait à côté.
+  const [selUser, setSelUser] = useState<Record<string, number>>({});
+  const sel = useMemo(() => ({ ...rendered, ...selUser }), [rendered, selUser]);
   const [cust, setCust] = useState<Record<string, CustomProduct>>(() => ({ ...renderedCustom }));
   const [rerendering, setRerendering] = useState(false);
   const chooseProduct = (elementId: string, idx: number) =>
-    setSel((prev) => ({ ...prev, [elementId]: idx }));
+    setSelUser((prev) => ({ ...prev, [elementId]: idx }));
   const setCustomProduct = (elementId: string, cp: CustomProduct | null) =>
     setCust((prev) => {
       const next = { ...prev };
