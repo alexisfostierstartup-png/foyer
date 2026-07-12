@@ -119,11 +119,13 @@ function Diaporama({ piece }: { piece: PieceVue }) {
   return (
     <div>
       <div className="relative flex items-start justify-center">
-        {/* Voisins : visuel seul, en retrait. Masqués sous lg — la carte centrale y prend
-            toute la largeur et les aperçus seraient illisibles. */}
+        {/* Voisins : encart beige (nom du style + visuel), glissé SOUS la carte centrale —
+            c'est ce chevauchement qui fait lire un diaporama plutôt que trois cartes.
+            Masqués sous lg : la carte centrale y prend toute la largeur. */}
         <Apercu variante={avant} cote="gauche" onClick={() => aller(-1)} />
 
-        <div className="w-full max-w-xl">
+        {/* z-10 : la carte courante passe PAR-DESSUS les aperçus. */}
+        <div className="relative z-10 w-full max-w-xl">
           <CarteProjet
             variante={courant}
             eyebrow={`${piece.label} — ${at(i) + 1} / ${n}`}
@@ -131,11 +133,18 @@ function Diaporama({ piece }: { piece: PieceVue }) {
         </div>
 
         <Apercu variante={apres} cote="droite" onClick={() => aller(1)} />
+
+        {/* Flèches rondes, à hauteur du visuel central. */}
+        <BoutonNav direction="gauche" onClick={() => aller(-1)} flottant />
+        <BoutonNav direction="droite" onClick={() => aller(1)} flottant />
       </div>
 
-      {/* Navigation */}
+      {/* Pastilles. Les flèches y reviennent sous lg, où les flottantes sont masquées :
+          sans elles il ne resterait plus rien pour naviguer. */}
       <div className="mt-6 flex items-center justify-center gap-4">
-        <BoutonNav direction="gauche" onClick={() => aller(-1)} />
+        <span className="lg:hidden">
+          <BoutonNav direction="gauche" onClick={() => aller(-1)} />
+        </span>
         <div className="flex gap-1.5">
           {piece.variantes.map((v, k) => (
             <button
@@ -150,7 +159,9 @@ function Diaporama({ piece }: { piece: PieceVue }) {
             />
           ))}
         </div>
-        <BoutonNav direction="droite" onClick={() => aller(1)} />
+        <span className="lg:hidden">
+          <BoutonNav direction="droite" onClick={() => aller(1)} />
+        </span>
       </div>
     </div>
   );
@@ -171,18 +182,32 @@ function Apercu({
     <button
       onClick={onClick}
       aria-label={`Voir ${variante.style}`}
-      title={variante.style}
       className={[
-        "absolute top-16 hidden w-[22%] overflow-hidden rounded-2xl border border-foyer-border",
-        "opacity-55 shadow-sm transition-all duration-300 hover:opacity-90 lg:block",
-        cote === "gauche" ? "left-0 -rotate-1" : "right-0 rotate-1",
+        // top-[132px] : cale le visuel de l'aperçu sur celui de la carte centrale, qui
+        // commence sous son bandeau (surtitre + nom du style).
+        "absolute top-[132px] z-0 hidden w-[27%] rounded-2xl border border-foyer-border",
+        "bg-[#f2ebdf] p-3 shadow-sm transition-all duration-300 lg:block",
+        "opacity-80 hover:opacity-100",
+        // Chevauchement volontaire avec la carte centrale (qui est en z-10) : l'aperçu
+        // passe DESSOUS, ce qui donne la profondeur du diaporama.
+        cote === "gauche" ? "left-[3%]" : "right-[3%]",
       ].join(" ")}
     >
+      {/* Le nom se cale du côté VISIBLE : c'est le bord intérieur de l'aperçu qui passe
+          sous la carte centrale, et un libellé aligné à gauche s'y ferait couper. */}
+      <p
+        className={[
+          "mb-2 truncate px-1 font-serif text-[16px] text-foyer-ink",
+          cote === "gauche" ? "text-left" : "text-right",
+        ].join(" ")}
+      >
+        {variante.style}
+      </p>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={variante.renderUrl}
         alt=""
-        className="aspect-[4/3] w-full object-cover"
+        className="aspect-[4/3] w-full rounded-xl object-cover"
       />
     </button>
   );
@@ -191,16 +216,27 @@ function Apercu({
 function BoutonNav({
   direction,
   onClick,
+  flottant = false,
 }: {
   direction: "gauche" | "droite";
   onClick: () => void;
+  /** Posé sur les côtés, à hauteur du visuel central, au-dessus des aperçus. */
+  flottant?: boolean;
 }) {
   const Icone = direction === "gauche" ? ChevronLeft : ChevronRight;
   return (
     <button
       onClick={onClick}
       aria-label={direction === "gauche" ? "Style précédent" : "Style suivant"}
-      className="flex h-10 w-10 items-center justify-center rounded-full border border-foyer-border bg-white text-foyer-ink transition-colors hover:bg-foyer-ink hover:text-foyer-cream"
+      className={[
+        "flex h-11 w-11 items-center justify-center rounded-full border border-foyer-border",
+        "bg-white text-foyer-ink shadow-sm transition-colors hover:bg-foyer-ink hover:text-foyer-cream",
+        flottant
+          ? // z-20 : au-dessus des aperçus ET de la carte centrale, sinon la flèche
+            // disparaîtrait sous l'un ou l'autre selon la largeur d'écran.
+            `absolute top-[290px] z-20 hidden lg:flex ${direction === "gauche" ? "left-0" : "right-0"}`
+          : "",
+      ].join(" ")}
     >
       <Icone className="h-5 w-5" />
     </button>
