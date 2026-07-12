@@ -77,7 +77,10 @@ function PieceVueBloc({ piece }: { piece: PieceVue }) {
     );
   }
 
-  if (piece.affichage === "diaporama") return <Diaporama piece={piece} />;
+  // `key` sur la pièce : toutes les pièces étant des diaporamas, React réutilisait le même
+  // composant d'un onglet à l'autre et gardait son index — la salle à manger s'ouvrait sur
+  // sa 1re carte au lieu du japandi (son `debut`), selon l'onglet d'où l'on venait.
+  if (piece.affichage === "diaporama") return <Diaporama key={piece.slug} piece={piece} />;
 
   // `grid-cols-1` explicite, et non la piste implicite : celle-ci est dimensionnée sur le
   // CONTENU (auto = minmax(min-content, max-content)) et n'est pas bornée par le
@@ -137,8 +140,21 @@ function Diaporama({ piece }: { piece: PieceVue }) {
     return d;
   };
 
+  const avant = piece.variantes[at(i - 1)];
+  const apres = piece.variantes[at(i + 1)];
+
   return (
     <div>
+      {/* Navigation EN HAUT : chaque flèche annonce le style vers lequel elle mène, plutôt
+          que de laisser deviner. Alignée sur la carte (max-w-xl) et non sur toute la
+          largeur, sinon les libellés flotteraient loin d'elle sur grand écran.
+          À deux variantes, gauche et droite mènent au même projet — les deux libellés sont
+          alors identiques, et c'est exact : le cycle n'a qu'un autre style. */}
+      <div className="mx-auto mb-4 flex max-w-xl items-center justify-between gap-3">
+        <BoutonStyle direction="gauche" style={avant.style} onClick={() => aller(-1)} />
+        <BoutonStyle direction="droite" style={apres.style} onClick={() => aller(1)} />
+      </div>
+
       <div className="relative">
         {/* Le rail. Les cartes sont en ABSOLU : elles ne portent pas sa hauteur. Une valeur
             fixe (500px) marchait sur grand écran mais laissait un grand vide sous la carte
@@ -226,9 +242,6 @@ function Diaporama({ piece }: { piece: PieceVue }) {
           })}
         </div>
 
-        {/* Flèches rondes, calées sur le visuel des cartes voisines. */}
-        <BoutonNav direction="gauche" onClick={() => aller(-1)} flottant />
-        <BoutonNav direction="droite" onClick={() => aller(1)} flottant />
       </div>
 
       {/* Le détail de la carte courante, sous le rail : il ne voyage pas (une liste de
@@ -237,12 +250,8 @@ function Diaporama({ piece }: { piece: PieceVue }) {
         <Detail key={courant.projectId} variante={courant} />
       </div>
 
-      {/* Pastilles. Les flèches y reviennent sous lg, où les flottantes sont masquées :
-          sans elles il ne resterait plus rien pour naviguer. */}
-      <div className="mt-6 flex items-center justify-center gap-4">
-        <span className="lg:hidden">
-          <BoutonNav direction="gauche" onClick={() => aller(-1)} />
-        </span>
+      {/* Pastilles. Les flèches, elles, sont remontées en haut. */}
+      <div className="mt-6 flex items-center justify-center">
         <div className="flex gap-1.5">
           {piece.variantes.map((v, k) => (
             <button
@@ -257,44 +266,41 @@ function Diaporama({ piece }: { piece: PieceVue }) {
             />
           ))}
         </div>
-        <span className="lg:hidden">
-          <BoutonNav direction="droite" onClick={() => aller(1)} />
-        </span>
       </div>
     </div>
   );
 }
 
-function BoutonNav({
+/** Flèche ronde + nom du style vers lequel elle mène. */
+function BoutonStyle({
   direction,
+  style,
   onClick,
-  flottant = false,
 }: {
   direction: "gauche" | "droite";
+  style: string;
   onClick: () => void;
-  /** Posé sur les côtés, à hauteur du visuel des cartes voisines. */
-  flottant?: boolean;
 }) {
   const Icone = direction === "gauche" ? ChevronLeft : ChevronRight;
+  const gauche = direction === "gauche";
+
   return (
     <button
       onClick={onClick}
-      aria-label={direction === "gauche" ? "Style précédent" : "Style suivant"}
+      aria-label={`Voir ${style}`}
       className={[
-        "flex h-11 w-11 items-center justify-center rounded-full border border-foyer-border",
-        "bg-white text-foyer-ink shadow-sm transition-colors hover:bg-foyer-ink hover:text-foyer-cream",
-        flottant
-          ? // Une voisine est réduite à 0,52 autour du centre du rail : son visuel se
-            // retrouve centré vers 262px du haut, moins la moitié du bouton (22px).
-            // z-40 : au-dessus de toutes les cartes, sinon la flèche passerait dessous.
-            `absolute top-[240px] z-40 hidden lg:flex ${direction === "gauche" ? "left-[2%]" : "right-[2%]"}`
-          : "",
+        "group flex min-w-0 items-center gap-2 text-foyer-muted transition-colors hover:text-foyer-ink",
+        gauche ? "flex-row" : "flex-row-reverse",
       ].join(" ")}
     >
-      <Icone className="h-5 w-5" />
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-foyer-border bg-white shadow-sm transition-colors group-hover:bg-foyer-ink group-hover:text-foyer-cream">
+        <Icone className="h-5 w-5" />
+      </span>
+      <span className="truncate font-serif text-[15px] sm:text-base">{style}</span>
     </button>
   );
 }
+
 
 /**
  * Le contenu d'une carte du diaporama : surtitre, nom du style, visuel. Extrait pour être

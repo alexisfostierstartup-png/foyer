@@ -59,6 +59,7 @@ export const DOSSIERS_PRO: DossierProConfig[] = [
       {
         slug: "salon",
         label: "Salon",
+        affichage: "diaporama",
         variantes: [
           { projectId: "tlnbe2pkz_wlUX45cBiLM" },
           { projectId: "sVObM1O5kqXWyRpdZ_Vxl" },
@@ -80,6 +81,7 @@ export const DOSSIERS_PRO: DossierProConfig[] = [
       {
         slug: "chambre",
         label: "Chambre",
+        affichage: "diaporama",
         variantes: [
           { projectId: "mf2qQGivhpUz0nqPv4YAd" },
           { projectId: "PWDbgzbmBhSLghiWZmZYI" },
@@ -88,6 +90,7 @@ export const DOSSIERS_PRO: DossierProConfig[] = [
       {
         slug: "chambre-parentale",
         label: "Chambre parentale",
+        affichage: "diaporama",
         variantes: [
           { projectId: "D__Rc7vGog0FGy9upEMfL" },
           { projectId: "Hev0_ouvwrvcGwsnDoTC7" },
