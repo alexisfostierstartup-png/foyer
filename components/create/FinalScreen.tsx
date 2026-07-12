@@ -397,7 +397,13 @@ export function FinalScreen({
         setRerendering(false);
         return;
       }
-      router.push(`/create/${projectId}/expert`);
+      // On reste sur /final : le slider y montre déjà le rendu expert à jour.
+      // L'ancien écran /expert récapitulait les « vrais meubles intégrés », mais il
+      // les RECALCULAIT (selectExpertPieces sur la liste) au lieu de lire
+      // expertIntegratedPieces — la seule vérité de ce qui est dans l'image. Après
+      // une itération changeant un meuble, les deux divergeaient.
+      router.refresh();
+      setRerendering(false);
     } catch {
       toast.error("Le nouveau rendu a échoué. Réessayez.");
       setRerendering(false);

@@ -62,7 +62,6 @@ function buildUserRequest(
 type Props = {
   projectId: string;
   currentRenderUrl: string;
-  expert?: boolean;
   // Tap-to-target : meuble désigné au doigt sur le rendu (/final) → mode ciblé.
   target?: { elementId: string; label: string } | null;
 };
@@ -70,7 +69,7 @@ type Props = {
 // Suggestions du mode ciblé (un meuble précis désigné).
 const TARGET_SUGGESTIONS = ["Remplacer par un autre modèle", "Changer la couleur", "Plus grand", "Plus petit", "Enlever ce meuble"];
 
-export function IterateScreen({ projectId, currentRenderUrl, expert = false, target = null }: Props) {
+export function IterateScreen({ projectId, currentRenderUrl, target = null }: Props) {
   const router = useRouter();
   const [openCat, setOpenCat] = useState<string | null>(null);
   const [selections, setSelections] = useState<Record<string, string[]>>({});
@@ -112,8 +111,10 @@ export function IterateScreen({ projectId, currentRenderUrl, expert = false, tar
         setLoading(false);
         return;
       }
-      // Expert : on revient au rendu RÉEL (mis à jour) ; standard : liste shopping.
-      router.push(expert ? `/create/${projectId}/expert` : `/create/${projectId}/final`);
+      // Expert comme standard : retour à /final, dont le slider montre le rendu à
+      // jour (l'écran /expert, qui recalculait les meubles intégrés au lieu de les
+      // lire, a été supprimé — il mentait après une itération).
+      router.push(`/create/${projectId}/final`);
     } catch {
       toast.error("L'itération a échoué. Réessayez.");
       setLoading(false);

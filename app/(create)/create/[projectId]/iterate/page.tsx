@@ -25,7 +25,6 @@ export default async function IteratePage({
     <IterateScreen
       projectId={projectId}
       currentRenderUrl={currentRenderUrl}
-      expert={isExpert}
       target={target && label ? { elementId: target, label } : null}
     />
   );
