@@ -583,11 +583,31 @@ export async function reintegrateExpertAdditions(projectId: string): Promise<{ a
 
   const mergedList = [...list, ...newItems];
 
+  // Les pins viennent de renderAnalysis.bboxById. computeRenderAdditions a détecté
+  // la bbox de chaque ajout SUR LE RENDU EXPERT — sans les y reporter, la table et
+  // les chaises seraient dans la liste mais n'auraient AUCUN point sur l'image
+  // (QA Alexis 2026-07-12). On enrichit l'analyse existante au lieu de la remplacer :
+  // les bboxes des meubles d'origine restent valides.
+  const mergedAnalysis = (() => {
+    const a = project.renderAnalysis;
+    if (!a) return undefined;
+    const bboxById = { ...a.bboxById };
+    const elementHexById = { ...a.elementHexById };
+    const elementAttrsById = { ...a.elementAttrsById };
+    for (const add of fresh) {
+      if (!add.element_id) continue;
+      if (add.bbox) bboxById[add.element_id] = add.bbox;
+      if (add.color_hex) elementHexById[add.element_id] = add.color_hex;
+      if (add.attrs) elementAttrsById[add.element_id] = add.attrs;
+    }
+    return { ...a, bboxById, elementHexById, elementAttrsById, items: [...a.items, ...newItems] };
+  })();
+
   if (pieces.length === 0) {
     // Aucun gros meuble swappable (ex. déco) : ils restent fictifs dans l'image,
-    // mais deviennent au moins ACHETABLES. Option 2 en repli automatique.
-    await updateProject(projectId, { shoppingList: mergedList });
-    console.log(`[expert] ${projectId} : ajouts non swappables → ajoutés à la liste seulement`);
+    // mais deviennent au moins ACHETABLES et ÉPINGLÉS. Option 2 en repli automatique.
+    await updateProject(projectId, { shoppingList: mergedList, renderAnalysis: mergedAnalysis });
+    console.log(`[expert] ${projectId} : ajouts non swappables → liste + pins seulement`);
     return { added: newItems.length };
   }
 
@@ -595,8 +615,8 @@ export async function reintegrateExpertAdditions(projectId: string): Promise<{ a
   if (!result) {
     // Aucune image produit valide → on NE régénère PAS (anti-hallucination) :
     // le rendu itéré reste tel quel, mais les meubles entrent dans la liste.
-    await updateProject(projectId, { shoppingList: mergedList });
-    console.warn(`[expert] ${projectId} : aucune image produit valide → liste seule, rendu inchangé`);
+    await updateProject(projectId, { shoppingList: mergedList, renderAnalysis: mergedAnalysis });
+    console.warn(`[expert] ${projectId} : aucune image produit valide → liste + pins, rendu inchangé`);
     return { added: newItems.length };
   }
 
@@ -614,6 +634,7 @@ export async function reintegrateExpertAdditions(projectId: string): Promise<{ a
     expertRenderUrl: url,
     expertIntegratedPieces: allPieces,
     shoppingList: enforceExpertIntegratedPieces(mergedList, allPieces),
+    renderAnalysis: mergedAnalysis, // ← bboxes des ajouts : sans elles, pas de pin
   });
   console.log(
     `[expert] ${projectId} : ${newPieces.length} vrai(s) produit(s) intégré(s) dans le rendu itéré (${newPieces.map((p) => p.category).join(", ")})`,
