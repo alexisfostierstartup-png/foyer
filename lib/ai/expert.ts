@@ -258,7 +258,19 @@ function closestNb2Ratio(width: number, height: number): string {
   return NB2_RATIOS.reduce((best, cur) => (Math.abs(cur[1] - r) < Math.abs(best[1] - r) ? cur : best))[0];
 }
 
-async function callNb2(prompt: string, imageUris: string[], aspectRatio?: string): Promise<{ buffer: Buffer; mimeType: string }> {
+async function callNb2(
+  prompt: string,
+  imageUris: string[],
+  aspectRatio?: string,
+  // Résolution de sortie : "0.5K" | "1K" (défaut API) | "2K" | "4K".
+  // On NE la force PAS dans le parcours normal : la dégradation ne vient pas d'un manque
+  // de pixels mais du fait que chaque passe RE-GÉNÈRE l'image. Monter en résolution
+  // n'agrandirait que la bouillie, en facturant plus cher (2K = 0,12 $, 4K = 0,16 $
+  // contre 0,08 $). Le vrai levier est le NOMBRE de passes.
+  // Seul le téléchargement HD la force (4K) : là, le projet est fini, l'utilisateur le
+  // demande explicitement, et l'image produite ne remplace PAS le rendu du projet.
+  resolution?: "0.5K" | "1K" | "2K" | "4K",
+): Promise<{ buffer: Buffer; mimeType: string }> {
   const key = process.env.FAL_API_KEY;
   if (!key) throw new Error("FAL_API_KEY manquant");
 
@@ -269,14 +281,10 @@ async function callNb2(prompt: string, imageUris: string[], aspectRatio?: string
       prompt,
       image_urls: imageUris,
       num_images: 1,
-      // Résolution : on garde le défaut de l'API (1K), soit la taille actuelle. La
-      // dégradation ne vient PAS d'un manque de pixels mais du fait que chaque passe
-      // RE-GÉNÈRE toute l'image : monter en 2K ne ferait qu'agrandir la bouillie, en
-      // facturant 50 % de plus. Le vrai levier est le NOMBRE de passes — cf. swapOnFake
-      // et le filtre « ne re-swapper que ce qui a changé » plus bas.
       // output_format png : sans lui, une sortie JPEG rajouterait une compression
       // par-dessus la perte générative, à chaque tour. Gratuit, donc pris.
       output_format: "png",
+      ...(resolution ? { resolution } : {}),
       ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}),
     }),
   });
@@ -849,6 +857,46 @@ export async function reintegrateExpertSurfaces(projectId: string): Promise<{ so
     ...(analysis ? { renderAnalysis: { ...analysis, bboxById } } : {}),
   });
   return { sol: solChange, murs: wallColors.length };
+}
+
+/**
+ * TÉLÉCHARGEMENT HD — un tirage 4K du rendu FINI, pour l'utilisateur.
+ *
+ * Chaque itération dégrade un peu l'image (toute passe la re-génère). Une fois le projet
+ * terminé, ce coût n'a plus d'importance : on peut se payer UNE passe en 4K dont le seul
+ * but est de récupérer de la netteté et du détail (0,16 $ contre 0,08 $).
+ *
+ * Le résultat est écrit sous un nom DISTINCT (hd.png) et n'écrase JAMAIS le rendu du
+ * projet. C'est délibéré : NB2 est génératif — même quand on lui ordonne de ne rien
+ * changer, il peut déformer un détail. Et `saveRender` réécrit toujours le même chemin,
+ * sans aucun historique : un upscale raté qui deviendrait LE rendu serait irrécupérable.
+ * L'utilisateur télécharge une image ; son projet, lui, reste intact.
+ */
+export async function renderHd(projectId: string): Promise<string> {
+  const project = await getProject(projectId);
+  if (!project) throw new Error(`Project not found: ${projectId}`);
+
+  const source =
+    project.mode === "expert" && project.expertRenderUrl
+      ? project.expertRenderUrl
+      : project.generatedRenderUrl;
+  if (!source) throw new Error("Pas de rendu à exporter.");
+
+  const prompt =
+    `Upscale this interior photo to a high-resolution, print-quality image. ` +
+    `Change NOTHING about its content: the exact same furniture, the exact same objects, ` +
+    `at the exact same positions and orientations, the same colours, the same wall and floor ` +
+    `finishes, the same lighting and shadows, the same camera angle, perspective and framing. ` +
+    `Add nothing, remove nothing, move nothing, restyle nothing. ` +
+    `Your ONLY job is to restore detail and sharpness: recover fine texture (fabric weave, ` +
+    `wood grain, rattan, plant leaves, wall paint), crisp edges and clean lines, as if the photo ` +
+    `had been shot at high resolution from the start. Keep it photorealistic and natural.`;
+
+  const { buffer, mimeType } = await callNb2(prompt, [await toDataUri(source)], undefined, "4K");
+  // Nom DISTINCT : n'écrase pas expert.png / IN_1.png.
+  const url = await saveRender(buffer, project.storageFolder, mimeType, "hd");
+  console.log(`[expert] ${projectId} : tirage HD 4K généré (le rendu du projet est inchangé)`);
+  return url;
 }
 
 export async function runExpertIteration(

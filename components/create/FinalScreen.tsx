@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ExternalLink, Pencil, Link2, Star, RefreshCw, Loader2, Eye, MapPin, ShoppingBag } from "lucide-react";
+import { ExternalLink, Pencil, Link2, Star, RefreshCw, Loader2, Eye, MapPin, ShoppingBag, Download } from "lucide-react";
 import { toast } from "sonner";
 import { ProgressBar } from "@/components/create/ProgressBar";
 import { BeforeAfterSlider } from "@/components/create/BeforeAfterSlider";
@@ -291,6 +291,7 @@ export function FinalScreen({
   // pointeraient un meuble qui n'existe pas dans la photo d'origine.
   const [sliderPos, setSliderPos] = useState(20);
   const [pinsOn, setPinsOn] = useState(true);
+  const [hdLoading, setHdLoading] = useState(false);
   const router = useRouter();
   const { user, profile, wallet } = useUser();
   const [tabIdx, setTabIdx] = useState(0);
@@ -407,6 +408,33 @@ export function FinalScreen({
         .filter((u): u is string => Boolean(u)),
     ),
   );
+
+  // Tirage HD : on télécharge une IMAGE, le projet ne bouge pas. On force le
+  // téléchargement via un blob plutôt qu'un simple lien : sinon le navigateur ouvrirait
+  // le PNG dans un onglet au lieu de l'enregistrer.
+  async function handleHd() {
+    if (hdLoading) return;
+    setHdLoading(true);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/hd`, { method: "POST" });
+      const data = (await res.json().catch(() => null)) as { url?: string; error?: string } | null;
+      if (!res.ok || !data?.url) {
+        toast.error(data?.error ?? "Le tirage HD a échoué. Réessayez.");
+        return;
+      }
+      const blob = await (await fetch(data.url)).blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `foyer-${projectId}-hd.png`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      toast.success("Image HD téléchargée.");
+    } catch {
+      toast.error("Le tirage HD a échoué. Réessayez.");
+    } finally {
+      setHdLoading(false);
+    }
+  }
 
   async function handleNewRender() {
     if (changedCount < 1 || rerendering) return;
@@ -721,15 +749,31 @@ export function FinalScreen({
           {/* Action primaire unique. « Affiner encore » et « Recommencer un projet »
               retirés : l'affinage a déjà son entrée (« Édition live » + les pins),
               et repartir de zéro n'a rien à faire en bas d'une liste d'achat. */}
-          {!listPending && orderUrls.length > 0 && (
-            <div className="mt-8">
+          {!listPending && (
+            <div className="mt-8 flex flex-col gap-3">
+              {orderUrls.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => { for (const url of orderUrls) window.open(url, "_blank"); }}
+                  className="flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-foyer-sage font-medium text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:-translate-y-0.5"
+                >
+                  <ShoppingBag className="size-4" aria-hidden />
+                  Commander
+                </button>
+              )}
+              {/* Le projet est fini : on peut se payer une passe 4K dont le seul but est
+                  la netteté. L'image téléchargée ne remplace PAS le rendu du projet. */}
               <button
                 type="button"
-                onClick={() => { for (const url of orderUrls) window.open(url, "_blank"); }}
-                className="flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-foyer-sage font-medium text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:-translate-y-0.5"
+                onClick={handleHd}
+                disabled={hdLoading}
+                className="flex h-[52px] w-full items-center justify-center gap-2 rounded-full border border-foyer-border font-medium text-foyer-ink transition-colors hover:bg-foyer-border/30 disabled:opacity-50"
               >
-                <ShoppingBag className="size-4" aria-hidden />
-                Commander
+                {hdLoading ? (
+                  <><Loader2 className="size-4 animate-spin" aria-hidden /> Tirage HD en cours…</>
+                ) : (
+                  <><Download className="size-4" aria-hidden /> Télécharger mon image en HD</>
+                )}
               </button>
             </div>
           )}
