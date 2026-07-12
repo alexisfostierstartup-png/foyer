@@ -179,6 +179,10 @@ export type Project = {
   anon_id?: string;
   is_saved?: boolean;
   live_edits_used?: number;
+  // Projet d'origine, quand celui-ci est une COPIE de travail (cf. lib/storage/fork.ts).
+  // Les dossiers vitrines/pro exposent des projets « master » qui ne doivent jamais être
+  // retouchés : « Modifier ce projet » en duplique un et travaille sur la copie.
+  parentProjectId?: string;
   storageFolder: string;
   roomType: RoomType;
   basePhotoUrl: string;

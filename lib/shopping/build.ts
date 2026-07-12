@@ -69,7 +69,15 @@ export function buildShoppingList(
   for (const d of plan.toReplace) {
     const cat = resolveCatalogCategory(d.category, taxonomy);
     if (!cat) {
-      unmatched.push({ element_id: d.element_id, description: d.description, category: d.category });
+      // Catégorie FERMÉE à la vente : soit elle n'a aucune catégorie catalogue (radiateur,
+      // porte, fenêtre, plafond, escalier…), soit elle en a une mais volontairement exclue
+      // (miroir). Aucun produit ne pourra JAMAIS lui être associé — la ligne « à sourcer »
+      // qu'on créait ici ne donnait donc rien à acheter. Pire : sa description vient de
+      // l'analyse du rendu, d'où des lignes absurdes quand le modèle décrit une
+      // suppression (« radiateur — enlevé pour faire place au lit »). On ne la crée plus.
+      //
+      // À NE PAS confondre avec le vrai « à sourcer » plus bas : catégorie valide, mais
+      // aucun produit trouvé au catalogue. Celui-là reste, il est actionnable.
       continue;
     }
 

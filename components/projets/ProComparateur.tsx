@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { ArrowUpRight, ChevronLeft, ChevronRight, Pencil } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowUpRight, ChevronLeft, ChevronRight, Loader2, Pencil } from "lucide-react";
 import type { DossierProVue, PieceVue, VarianteVue } from "@/lib/projetsPro";
 
 const eur = (n: number) => `${Math.round(n).toLocaleString("fr-FR")} €`;
@@ -381,14 +381,58 @@ function Detail({ variante }: { variante: VarianteVue }) {
         )}
       </div>
 
-      <Link
-        href={`/create/${projectId}/final`}
-        className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-foyer-ink px-5 py-3 text-[14px] font-medium text-foyer-cream transition-opacity hover:opacity-90"
+      <BoutonModifier projectId={projectId} />
+    </div>
+  );
+}
+
+/**
+ * « Modifier ce projet » — n'ouvre PAS le projet illustré : il en duplique un et ouvre la
+ * copie. Le dossier pro montre des projets MASTER au client ; les retoucher directement
+ * détruirait ce qu'il regarde (une régénération écrase le rendu, sans historique).
+ */
+function BoutonModifier({ projectId }: { projectId: string }) {
+  const router = useRouter();
+  const [enCours, setEnCours] = useState(false);
+  const [erreur, setErreur] = useState<string | null>(null);
+
+  const dupliquer = async () => {
+    setEnCours(true);
+    setErreur(null);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/fork`, { method: "POST" });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error ?? "duplication impossible");
+      router.push(`/create/${body.id}/final`);
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : "duplication impossible");
+      setEnCours(false);
+    }
+  };
+
+  return (
+    <div className="mt-4">
+      <button
+        onClick={dupliquer}
+        disabled={enCours}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-foyer-ink px-5 py-3 text-[14px] font-medium text-foyer-cream transition-opacity hover:opacity-90 disabled:opacity-60"
       >
-        <Pencil className="h-4 w-4" />
-        Modifier ce projet
-        <ArrowUpRight className="h-4 w-4" />
-      </Link>
+        {enCours ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Création de votre copie…
+          </>
+        ) : (
+          <>
+            <Pencil className="h-4 w-4" />
+            Modifier ce projet
+            <ArrowUpRight className="h-4 w-4" />
+          </>
+        )}
+      </button>
+      <p className="mt-2 text-center text-[12px] text-foyer-muted">
+        {erreur ?? "Une copie est créée : le projet présenté ici reste intact."}
+      </p>
     </div>
   );
 }
