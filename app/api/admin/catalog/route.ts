@@ -17,14 +17,23 @@ export async function GET(request: Request) {
   // incarne le style) et ?style_compatible=<slug> (metadata.style_compatible).
   const styleCore = searchParams.get("style_core");
   const styleCompatible = searchParams.get("style_compatible");
+  // Mode "IDs uniquement" : sert la sélection en masse cross-page (édition groupée
+  // d'attributs) — renvoie jusqu'à MAX_IDS ids matchant les MÊMES filtres, sans pagination.
+  const idsOnly = searchParams.get("ids_only") === "1";
+  const MAX_IDS = 500;
 
   const supabase = createSupabaseAdmin();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase as any)
     .from("partner_products")
-    .select("id, name, category, merchant, price, partner_tier, source_type, availability_status, primary_image_url, last_synced_at, created_at, metadata, style_affinity", { count: "exact" })
+    .select(
+      idsOnly
+        ? "id"
+        : "id, name, category, merchant, price, partner_tier, source_type, availability_status, primary_image_url, last_synced_at, created_at, metadata, style_affinity",
+      { count: "exact" },
+    )
     .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1);
+    .range(idsOnly ? 0 : offset, idsOnly ? MAX_IDS - 1 : offset + limit - 1);
 
   if (merchant) query = query.eq("merchant", merchant);
   if (category) query = query.eq("category", category);

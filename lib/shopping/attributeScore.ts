@@ -100,8 +100,23 @@ export type AttrScoreLine = {
 // point de Hongrie / bâton rompu = même lame) ; straight_planks ≈ broken_bond
 // (le même parquet droit se pose des deux façons — la distinction ne vaut que
 // pour l'image du rendu, pas pour l'achat).
+// La comparaison des enums est un match de chaîne EXACT : deux valeurs qui désignent
+// la même chose scorent 0. Or le catalogue porte des valeurs d'un vocab plus ancien
+// (dark_wood, black_metal…) alors que le RENDU est extrait avec le vocab courant
+// (wood, metal) → 477 produits perdaient tout le poids de l'attribut EN SILENCE.
+// Ces groupes réconcilient les deux sans re-tagger (la couleur est captée à part par
+// legs_color, donc black_metal/gold_metal sont bien le même MATÉRIAU que metal).
+const MATERIAL_SYNONYMS = [
+  ["wood", "dark_wood", "light_wood", "oak", "walnut", "rattan_cane"],
+  ["metal", "black_metal", "gold_metal", "chrome_metal", "brushed_metal", "colored_metal", "white_metal"],
+  ["stone", "marble", "travertine", "concrete"],
+];
 const ATTR_VALUE_SYNONYMS: Record<string, string[][]> = {
   pattern: [["chevron", "herringbone"], ["straight_planks", "broken_bond"]],
+  legs_material: MATERIAL_SYNONYMS,
+  material: MATERIAL_SYNONYMS,
+  frame_material: MATERIAL_SYNONYMS,
+  base_finish: MATERIAL_SYNONYMS,
 };
 function synonymSim(key: string, a: string, b: string): number | null {
   const groups = ATTR_VALUE_SYNONYMS[key];

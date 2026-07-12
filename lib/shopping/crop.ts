@@ -20,6 +20,23 @@ import sharp from "sharp";
 
 export type Bbox = { x: number; y: number; w: number; h: number };
 
+/**
+ * box_2d Gemini = [ymin, xmin, ymax, xmax] en 0-1000 — la SEULE convention que le
+ * modèle émet de façon fiable. Demander [x, y, w, h] 0-1 donne un mélange des deux
+ * conventions selon les éléments : les boîtes 0-1000 lues comme des 0-1 sortaient de
+ * l'image et le pin atterrissait n'importe où (lampadaires sur le tapis, bibliothèque
+ * au sol — QA Alexis 2026-07-11). On demande box_2d et on convertit ici.
+ * Tolère le 0-1 (échelle détectée) pour ne pas casser un modèle qui normalise déjà.
+ */
+export function parseBox2d(raw: unknown): Bbox | null {
+  if (!Array.isArray(raw) || raw.length !== 4) return null;
+  const [ymin, xmin, ymax, xmax] = raw.map(Number);
+  if ([ymin, xmin, ymax, xmax].some((v) => !Number.isFinite(v))) return null;
+  const s = Math.max(ymin, xmin, ymax, xmax) > 1.5 ? 1000 : 1;
+  const b = { x: xmin / s, y: ymin / s, w: (xmax - xmin) / s, h: (ymax - ymin) / s };
+  return b.w > 0 && b.h > 0 ? b : null;
+}
+
 // Inset de 5 % de chaque côté (padding NÉGATIF) → crop serré sur l'objet, sans décor.
 const PADDING = -0.05;
 
@@ -52,6 +69,23 @@ export function isFrameTruncatedFragment(b?: Bbox | null): boolean {
   const vw = Math.min(1, b.x + b.w) - Math.max(0, b.x);
   const vh = Math.min(1, b.y + b.h) - Math.max(0, b.y);
   return edges >= 2 && vw * vh < 0.15;
+}
+
+// Couleur MOYENNE d'un crop (hex) — cible du matching peinture ΔE quand un
+// meuble repeint (DIY) n'a pas de hex d'audit. Moyenne 8×8 = mi-ton robuste
+// aux reflets ; un crop très hétérogène reste acceptable (la peinture visée
+// domine la surface de l'objet repeint).
+export async function dominantHexFromImage(img: Buffer): Promise<string | null> {
+  try {
+    const { data } = await sharp(img).resize(8, 8, { fit: "fill" }).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+    let r = 0, g = 0, b = 0;
+    const n = data.length / 3;
+    for (let i = 0; i + 2 < data.length; i += 3) { r += data[i]; g += data[i + 1]; b += data[i + 2]; }
+    const hx = (v: number) => Math.round(v / n).toString(16).padStart(2, "0");
+    return `#${hx(r)}${hx(g)}${hx(b)}`;
+  } catch {
+    return null;
+  }
 }
 
 export async function extractCrop(renderImage: Buffer, bbox?: Bbox | null): Promise<Buffer | null> {

@@ -1,11 +1,12 @@
 import type { FurnitureDecision, RoomType } from "@/lib/types";
 
-export const ROOM_TYPES: RoomType[] = ["salon", "chambre", "chambre_parentale"];
+export const ROOM_TYPES: RoomType[] = ["salon", "chambre", "chambre_parentale", "chambre_enfant"];
 
 export const ROOM_LABELS: Record<RoomType, string> = {
   salon: "Salon",
   chambre: "Chambre",
   chambre_parentale: "Chambre parentale",
+  chambre_enfant: "Chambre enfant",
 };
 
 export const DECISIONS: FurnitureDecision[] = ["keep", "customize", "replace"];

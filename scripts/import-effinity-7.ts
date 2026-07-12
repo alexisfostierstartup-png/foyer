@@ -27,11 +27,12 @@ import { ingestFromSource } from "../lib/catalog/ingest";
 const MERCHANTS: { merchant: string; file: string; sourceType: "eco_new" | "secondhand" }[] = [
   { merchant: "cyrillus", file: "/Users/alexis/Downloads/Cyrillus_products_405179771.csv", sourceType: "eco_new" },
   { merchant: "maisons_du_monde", file: "/Users/alexis/Downloads/MaisonsDuMonde_products_405179647.csv", sourceType: "eco_new" },
+  // Réactivé 2026-07-11 (décision explicite, après Cyrillus) — reste en scope actif.
+  { merchant: "blancheporte", file: "/Users/alexis/Downloads/BlanchePorte_products_405184272.csv", sourceType: "eco_new" },
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const MERCHANTS_PAUSED: { merchant: string; file: string; sourceType: "eco_new" | "secondhand" }[] = [
-  { merchant: "blancheporte", file: "/Users/alexis/Downloads/BlanchePorte_products_405184272.csv", sourceType: "eco_new" },
   { merchant: "selency", file: "/Users/alexis/Downloads/Selency_products_405179691.csv", sourceType: "secondhand" },
   { merchant: "stores_rideaux", file: "/Users/alexis/Downloads/StoresRideaux_products_405202037.csv", sourceType: "eco_new" },
   { merchant: "the_cool_republic", file: "/Users/alexis/Downloads/TheCoolRepublic_products_405179724.csv", sourceType: "eco_new" },
@@ -54,15 +55,26 @@ const DECOR = ["mirror", "cushion"];
 
 const ALL_MERCHANTS = MERCHANTS.map((m) => m.merchant);
 
-// Plan = liste ordonnée de (merchant, category) à traiter. Le dédup produit rend tout
-// doublon dans ce plan gratuit (skip immédiat) — donc une phase "priorité" peut se
+// Plan = liste ordonnée de (merchant, category, plafond) à traiter. Le dédup produit rend
+// tout doublon dans ce plan gratuit (skip immédiat) — donc une phase "priorité" peut se
 // contenter de re-couvrir un sous-ensemble déjà inclus dans une phase suivante plus large.
-type Step = { merchant: string; category: string };
-function phase(merchants: string[], categories: string[]): Step[] {
+type Step = { merchant: string; category: string; cap: number };
+function phase(merchants: string[], categories: string[], cap: number): Step[] {
   const steps: Step[] = [];
-  for (const category of categories) for (const merchant of merchants) steps.push({ merchant, category });
+  for (const category of categories) for (const merchant of merchants) steps.push({ merchant, category, cap });
   return steps;
 }
+
+// Plafond relevé à 600/catégorie pour le mobilier+luminaires "importants" (2026-07-11,
+// décision explicite) — le disque a désormais 8 Go avec large marge (VACUUM FULL fait,
+// crise résolue). Déco (mirror/cushion) reste à l'ancien plafond, volontairement pas
+// "importante" (cf. exclusion vase/decorative_object du même jour).
+const CAP_IMPORTANT = 600;
+const CAP_DECOR = 300;
+// MaisonsDuMonde relevé à 2000/catégorie (2026-07-12, décision explicite — revu à la baisse
+// depuis "illimité" : 113k lignes/47k mappées côté MdM aurait pris des heures et pesé sur
+// le disque). Reste au-delà du plafond 600/300 partagé avec les autres marchands.
+const CAP_MDM_UNCAPPED = 2000;
 
 // Ordre demandé (2026-07-07, révisé) :
 //  1. MaisonsDuMonde d'abord sur le gros mobilier (priorité explicite utilisateur).
@@ -70,17 +82,11 @@ function phase(merchants: string[], categories: string[]): Step[] {
 //  3. Luminaires (pendant_lamp repoussé ici, reprend Selency là où interrompu via dédup).
 //  4. Déco.
 const PLAN: Step[] = [
-  ...phase(["maisons_du_monde"], FURNITURE),
-  ...phase(ALL_MERCHANTS, FURNITURE),
-  ...phase(ALL_MERCHANTS, LIGHTING),
-  ...phase(ALL_MERCHANTS, DECOR),
-];
-
-// Plafonné à 300/catégorie (2026-07-08, décision post-incident quota DB) — cf. la
-// suppression manuelle qui a ramené MaisonsDuMonde au même chiffre. Fixé ici pour que les
-// prochains runs n'aient plus jamais besoin de cette correction a posteriori.
-const PER_CATEGORY = 300;
-const MAX_TOTAL = 300;
+  ...phase(["maisons_du_monde"], FURNITURE, CAP_IMPORTANT),
+  ...phase(ALL_MERCHANTS, FURNITURE, CAP_IMPORTANT),
+  ...phase(ALL_MERCHANTS, LIGHTING, CAP_IMPORTANT),
+  ...phase(ALL_MERCHANTS, DECOR, CAP_DECOR),
+].map((s) => (s.merchant === "maisons_du_monde" ? { ...s, cap: CAP_MDM_UNCAPPED } : s));
 
 async function main() {
   const onlyMerchant = process.argv[2];
@@ -91,14 +97,14 @@ async function main() {
   const startedAt = new Date().toISOString();
   console.log(`[import7] démarrage ${startedAt} — ${PLAN.length} étapes (merchant×catégorie)`);
 
-  for (const { merchant, category } of PLAN) {
+  for (const { merchant, category, cap } of PLAN) {
     if (onlyCategory && category !== onlyCategory) continue;
     if (onlyMerchant && merchant !== onlyMerchant) continue;
     const source = sources.get(merchant)!;
     try {
       const stats = await ingestFromSource(source, [category], {
-        perCategory: PER_CATEGORY,
-        maxTotal: MAX_TOTAL,
+        perCategory: cap,
+        maxTotal: cap,
         force: false,
       });
       const inserted = stats.perCategory[category]?.inserted ?? 0;

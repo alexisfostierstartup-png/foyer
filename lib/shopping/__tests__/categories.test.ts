@@ -28,8 +28,26 @@ describe("resolveCatalogCategory", () => {
 
   it("inconnu → null (deviendra 'À sourcer')", () => {
     expect(resolveCatalogCategory("television")).toBeNull();
-    expect(resolveCatalogCategory("chair")).toBeNull();
     expect(resolveCatalogCategory("zzz")).toBeNull();
+  });
+
+  // Ouverture 2026-07-11 : ces catégories sont bien peuplées au catalogue et étaient
+  // rejetées par la whitelist (~7 700 produits inatteignables — un AJOUT du rendu y
+  // était jeté en silence, ex. la suspension du projet dapv_sgkx).
+  it("catégories ouvertes au catalogue (go Alexis)", () => {
+    const taxo = new Map<string, string | null>([["ceiling_light", "pendant_lamp"]]);
+    expect(resolveCatalogCategory("ceiling_light", taxo)).toBe("pendant_lamp");
+    for (const c of ["sideboard", "chair", "dining_table", "table_lamp", "stool", "pouf", "bench", "wall_sconce"]) {
+      expect(resolveCatalogCategory(c)).toBe(c);
+    }
+  });
+
+  // `mirror` reste VOLONTAIREMENT fermé (standby Alexis) : ne pas élargir la surface
+  // que la génération / le swap expert peuvent casser. Ce test garde la décision.
+  it("mirror reste non shoppable même si la taxonomie le mappe", () => {
+    const taxo = new Map<string, string | null>([["mirror", "mirror"]]);
+    expect(resolveCatalogCategory("mirror", taxo)).toBeNull();
+    expect(resolveCatalogCategory("mirror")).toBeNull();
   });
 
   it("taxonomie prioritaire : slug → catalog_category", () => {

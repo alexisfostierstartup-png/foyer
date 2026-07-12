@@ -17,7 +17,21 @@ export type CatalogCategory =
   | "paint"
   | "mouldings"
   | "floor_material"
-  | "other";
+  | "other"
+  // Ouvertes 2026-07-11 (go Alexis) : catégories bien peuplées au catalogue que la
+  // whitelist rejetait, rendant ~7 700 produits inatteignables — un ajout du rendu y
+  // était jeté en silence (la suspension du projet dapv_sgkx), une décision finissait
+  // « À sourcer » sans proposition. `mirror` reste VOLONTAIREMENT dehors (standby
+  // Alexis : ne pas élargir ce que la génération/le swap peuvent toucher).
+  | "sideboard"
+  | "chair"
+  | "pendant_lamp"
+  | "dining_table"
+  | "table_lamp"
+  | "stool"
+  | "pouf"
+  | "bench"
+  | "wall_sconce";
 
 // Slug de style (voir data/styles.json). Union ouverte : les styles sont
 // data-driven, ajouter un style ne doit pas exiger d'éditer ce type.

@@ -40,11 +40,16 @@ describe("formatDesignPlan", () => {
     expect(plan).toContain("Repeindre en crème");
   });
 
-  it("ignore les 'keep' (none)", () => {
+  // 2026-07-10 : les KEEP ne sont plus SILENCIEUX (flux standard ET beta). Muets, ils
+  // étaient systématiquement violés — canapés « à conserver » recolorés par le rendu
+  // (projet i1d6E1vlTmNgb2G3ekk9X). Ils sortent désormais en UNE ligne compacte.
+  it("les 'keep' (none) sortent en ligne KEEP explicite, pas en silence", () => {
     const plan = formatDesignPlan([
       { category: "sofa", description: "Canapé", mismatch_type: "none", action_label: null, qty: null, qty_unit: null },
     ]);
-    expect(plan).toBe("");
+    expect(plan).toContain("KEEP strictly unchanged");
+    expect(plan).toContain("Canapé");
+    expect(plan).not.toContain("REPLACE");
   });
 
   it("beta : les RESTYLE de descriptions différentes restent des lignes séparées (le groupage ×2 dégrade la conformité — banc 2026-07-07)", () => {
@@ -84,7 +89,10 @@ describe("formatDesignPlan", () => {
     const beta = formatDesignPlan(decisions, { renderableSlugs: new Set() });
     const lines = beta.split("\n");
     expect(lines).toHaveLength(2); // canapé + groupe déco
-    expect(beta).toContain("small decor as a group (3 items");
+    // Remaster 2026-07-10 : la petite déco hors style est RETIRÉE (pas remplacée
+    // pièce à pièce, ce qui créait du patchwork) — le test suivait l'ancien libellé.
+    expect(beta).toContain("REMOVE the small decor");
+    expect(beta).toContain("3 items");
     expect(beta).toContain("Vase blanc");
     // Standard : pas de groupage déco
     expect(formatDesignPlan(decisions).split("\n")).toHaveLength(4);

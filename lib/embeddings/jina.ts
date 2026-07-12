@@ -81,6 +81,20 @@ export async function computeImageEmbedding(imageUrl: string): Promise<number[]>
   return emb;
 }
 
+/**
+ * Embedding image depuis les OCTETS (jina-clip-v2 accepte le base64) — sert à embedder
+ * le PRODUIT CROPPÉ sur son objet, et non sa photo entière. Sans ça, la comparaison est
+ * asymétrique : côté rendu on envoie un crop serré, côté produit une photo qui est
+ * parfois un packshot (objet plein cadre) et parfois une scène de salon (canapé,
+ * étagères, plantes) — le cosinus mesure alors le CADRAGE du photographe autant que le
+ * meuble (QA Alexis 2026-07-11 : la bonne table basse, photographiée de loin, perdait
+ * contre un bout de canapé en packshot).
+ */
+export async function computeImageEmbeddingFromBytes(bytes: Buffer): Promise<number[]> {
+  const [emb] = await jinaEmbed([{ image: bytes.toString("base64") }]);
+  return emb;
+}
+
 export async function computeBatchTextEmbeddings(texts: string[]): Promise<number[][]> {
   const results: number[][] = new Array(texts.length);
   const toFetch: Array<{ idx: number; text: string }> = [];

@@ -166,3 +166,37 @@ export function resolveEffinityCategory(pathOrTitle: string): string | null {
   for (const rule of RULES) if (rule.test.test(text)) return rule.category;
   return null;
 }
+
+// ── Cyrillus « partie enfant » (2026-07-12) ──────────────────────────────────────
+// Taxonomie CSV Cyrillus PLATE (category seul, level2-4 vides) sur ces 4 rayons : la
+// distinction enfant/adulte et le TYPE de meuble ne sont lisibles que dans le TITRE produit
+// ("Chaise enfant William" vs "Buffet parisien" — même rayon "MEUBLE DE CHAMBRE"/"ASSISE"/
+// "GROS MOBILIER"/"PETIT MOBILIER"). resolveEffinityCategory() renvoie null pour ces 4
+// rayons (aucune RULE ne matche un libellé aussi générique) — ce résolveur PAR TITRE est un
+// second passage dédié, appelé uniquement pour Cyrillus sur ces rayons précis
+// (lib/catalog/sources/effinity-csv-source.ts), pas une modification du résolveur général.
+export const CYRILLUS_AMBIGUOUS_BUCKETS = new Set(["meuble de chambre", "assise", "gros mobilier", "petit mobilier"]);
+
+const KIDS_SIGNAL = /enfant|b[ée]b[ée]|[ée]colier|maternelle|berceau/;
+
+// Ordonné : premier match gagne. Volontairement restreint aux types avec un schéma Foyer
+// existant et un signal titre net — table à langer/socle à langer/berceau(meuble)/matelas/
+// tête de lit exclus en V1 (volumes trop faibles pour justifier une nouvelle catégorie).
+const KIDS_FURNITURE_RULES: CategoryRule[] = [
+  { category: "bed", test: /\blits?\b/ },
+  { category: "chair", test: /\bchaises?\b/ },
+  { category: "bench", test: /\bbanquettes?\b/ },
+  { category: "desk", test: /\bbureaux?\b/ },
+  { category: "dresser", test: /\bcommodes?\b|\barmoires?\b/ },
+  { category: "nightstand", test: /\bchevets?\b/ },
+];
+
+export function resolveCyrillusKidsCategory(title: string): string | null {
+  const text = norm(title);
+  if (!text || !KIDS_SIGNAL.test(text)) return null;
+  // Matelas explicitement exclu AVANT le matching mobilier : "Matelas pour lit bébé"
+  // contient le mot "lit" mais n'est pas un lit (literie, hors scope V1).
+  if (/\bmatelas\b/.test(text)) return null;
+  for (const rule of KIDS_FURNITURE_RULES) if (rule.test.test(text)) return rule.category;
+  return null;
+}

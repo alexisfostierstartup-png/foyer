@@ -125,7 +125,10 @@ function catalogProductToShoppingItem(
 
 function unmatchedToShoppingItem(alteration: Alteration): ShoppingItem {
   return {
-    id: `unmatched-${alteration.category}-${alteration.element}`,
+    // Clé de fusion sur la DESCRIPTION (pas le type seul) : deux lampadaires
+    // IDENTIQUES fusionnent en 1 ligne ×2 (+1 pin chacun), deux lampadaires
+    // DISTINCTS (descriptions ≠) restent 2 lignes (QA Alexis 2026-07-11).
+    id: `unmatched-${alteration.category}-${alteration.detail || alteration.element}`,
     name: alteration.detail || alteration.element,
     category: alteration.category,
     elementId: alteration.element_id,

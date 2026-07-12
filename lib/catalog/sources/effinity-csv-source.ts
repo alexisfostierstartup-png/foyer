@@ -11,7 +11,7 @@
  * dès le parsing, mémoïsé, pour éviter de re-scanner le fichier à chaque catégorie.
  */
 import { createReadStream } from "fs";
-import { resolveEffinityCategory } from "../effinity-category-map";
+import { resolveEffinityCategory, resolveCyrillusKidsCategory, CYRILLUS_AMBIGUOUS_BUCKETS } from "../effinity-category-map";
 import type { ProductSource, PartnerProductInput } from "../types";
 
 const WANTED_COLUMNS = [
@@ -167,7 +167,13 @@ export class EffinityCsvSource implements ProductSource {
       const pathOrTitle = [row.category, row.category_level2, row.category_level3, row.category_level4]
         .filter(Boolean)
         .join(" > ") || row.title;
-      const category = resolveEffinityCategory(pathOrTitle);
+      let category = resolveEffinityCategory(pathOrTitle);
+      // Cyrillus « partie enfant » (2026-07-12) : rayons trop génériques pour le résolveur
+      // par chemin (cf. commentaire resolveCyrillusKidsCategory) → second passage PAR TITRE,
+      // scopé à ce marchand + ces rayons précis uniquement.
+      if (!category && this.merchant === "cyrillus" && CYRILLUS_AMBIGUOUS_BUCKETS.has(row.category.trim().toLowerCase())) {
+        category = resolveCyrillusKidsCategory(row.title);
+      }
       if (!category) return;
       const input = this.toInput(row, category);
       if (!input) return;

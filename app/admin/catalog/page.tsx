@@ -35,7 +35,7 @@ export default async function AdminCatalogPage() {
   const supabase = createSupabaseAdmin();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [{ data: products, count }, { data: syncRuns }, { data: merchantRows }] = await Promise.all([
+  const [{ data: products, count }, { data: syncRuns }, { data: merchantRows }, { data: categoryRows }] = await Promise.all([
     (supabase as any)
       .from("partner_products")
       .select("id, name, category, merchant, price, partner_tier, source_type, availability_status, primary_image_url, last_synced_at, created_at, metadata, style_affinity", { count: "exact" })
@@ -47,14 +47,15 @@ export default async function AdminCatalogPage() {
       .order("started_at", { ascending: false })
       .limit(20),
     // Marchand = source de vérité partner_merchants (inclut ceux à 0 produit, ex. en pause).
-    // NB : pas de DISTINCT catégorie ici — sur une table qui grossit, `.select("category")`
-    // sans agrégat renverrait des lignes plafonnées (1000 par défaut PostgREST) triées par
-    // valeur, donc potentiellement dominées par une seule grosse catégorie. La liste des
-    // catégories vient de attributeSchemaV3 (SCHEMA_V3), déjà canonique côté client.
     (supabase as any).from("partner_merchants").select("merchant").order("merchant"),
+    // Catégorie = source de vérité RPC distinct_catalog_categories (calculé côté Postgres,
+    // pas plafonné à 1000 lignes comme un SELECT brut) — remplace la liste dérivée de
+    // SCHEMA_V3 qui omettait les catégories sans schéma dédié (curtains, cushion, bed…).
+    (supabase as any).rpc("distinct_catalog_categories"),
   ]);
 
   const merchants = [...new Set((merchantRows ?? []).map((r: { merchant: string }) => r.merchant))] as string[];
+  const categories = ((categoryRows ?? []) as { category: string }[]).map((r) => r.category);
 
   return (
     <CatalogAdmin
@@ -62,6 +63,7 @@ export default async function AdminCatalogPage() {
       totalCount={count ?? 0}
       syncRuns={(syncRuns ?? []) as SyncRun[]}
       merchants={merchants}
+      categories={categories}
     />
   );
 }

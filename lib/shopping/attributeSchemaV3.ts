@@ -15,7 +15,7 @@ export type AttrV3 = { key: string; type: "enum" | "hex"; vocab?: string[]; cond
 export const SCHEMA_V3: Record<string, AttrV3[]> = {
   sofa: [
     { key: "seats", type: "enum", vocab: ["1", "2", "3", "4", "5+"], hint: "Places assises CONFORTABLES, PAS le nombre de coussins : ~60-65 cm de largeur d'assise par place (≤180cm=2 · ~200-250cm=3 · ~260-300cm=4 · 5+ UNIQUEMENT panoramique/U >3m). Un modulable 3 places à 5 coussins = 3 places. En cas de doute, choisis le chiffre INFÉRIEUR (confort, pas optimisation)" },
-    { key: "configuration", type: "enum", vocab: ["straight", "corner_left", "corner_right", "chaise", "modular", "panoramic", "sofa_bed"] },
+    { key: "configuration", type: "enum", vocab: ["straight", "corner_left", "corner_right", "chaise", "modular", "panoramic", "sofa_bed"], hint: "corner_left/corner_right = canapé D'ANGLE (assise en L, dossier des deux côtés) ; gauche/droit = côté où pointe la partie longue VUE DE FACE. chaise = méridienne SANS dossier sur la partie longue (bord ouvert, un seul niveau d'assise). Ne pas confondre : un angle fermé (dossier continu) n'est JAMAIS 'chaise' même si une partie dépasse." },
     { key: "color", type: "hex" },
     { key: "upholstery", type: "enum", vocab: ["fabric", "velvet", "corduroy", "linen", "boucle", "chenille", "leather", "faux_leather"] },
     { key: "legs_type", type: "enum", vocab: ["tapered", "block", "metal_thin", "plinth", "casters", "none"] },
@@ -66,7 +66,7 @@ export const SCHEMA_V3: Record<string, AttrV3[]> = {
     { key: "shape", type: "enum", vocab: ["round", "oval", "rectangular", "square", "nesting", "organic"] },
     { key: "top_material", type: "enum", vocab: ["light_wood", "dark_wood", "oak", "walnut", "white_lacquer", "black", "colored", "marble", "glass", "metal", "travertine", "concrete"], hint: "APPARENCE du plateau. Surface peinte/laquée d'une couleur non standard (gris, vert, bleu…) = 'colored' (teinte exacte dans top_color)" },
     { key: "top_color", type: "hex" },
-    { key: "legs_material", type: "enum", conditional: true, vocab: ["wood", "metal", "plastic", "same_as_top"], hint: "MATIÈRE du pied seulement (pas la couleur, captée par legs_color) : wood, metal, plastic, ou same_as_top si pied dans le même matériau/teinte que le plateau" },
+    { key: "legs_material", type: "enum", conditional: true, vocab: ["wood", "metal", "plastic", "stone", "glass"], hint: "MATIÈRE du pied, et RIEN d'autre (la couleur est captée par legs_color, la finition ne compte pas) : wood (tout bois, clair/foncé/laqué/placage), metal (tout métal, quelle que soit sa couleur ou finition), plastic, stone (marbre, travertin, béton, pierre), glass. Si le pied est dans la MÊME matière que le plateau, indique cette MATIÈRE — jamais une valeur du type « identique au plateau »" },
     { key: "legs_color", type: "hex", conditional: true },
     { key: "legs_type", type: "enum", vocab: ["four_legs", "central", "tapered", "metal_thin", "sled", "casters"] },
     { key: "storage", type: "enum", vocab: ["none", "lower_shelf", "drawers", "lift_top"] },
@@ -115,9 +115,23 @@ export const SCHEMA_V3: Record<string, AttrV3[]> = {
   floor_lamp: [
     // Refonte (harvest : base_material confondait forme et finition) → on sépare
     // base_shape (la forme du socle) de base_finish (le métal/finition).
-    { key: "structure", type: "enum", vocab: ["arc", "column", "tripod", "reading", "multi_arm"], hint: "tripod = 3 pieds écartés visibles · column = fût unique vertical. Regarde le BAS du pied (souvent masqué par un meuble) : si le bas est invisible, juge sur la partie visible sans inventer" },
+    // 'overhang' + 'stick' ajoutés 2026-07-11 (QA Alexis) : deux formes très
+    // courantes n'avaient AUCUNE valeur et tombaient toutes deux en 'column' —
+    // un repli plausible, donc jamais remonté par l'auto-harvest (le modèle ne
+    // répond 'unknown' que s'il ne voit AUCUN fit) :
+    //  · la potence (fût droit + bras au sommet, abat-jour SUSPENDU) → 'overhang'
+    //  · la tige fine + abat-jour posé dessus (le lampadaire le plus banal) → 'stick'
+    // 'column' est désormais réservé à son sens strict : la lampe EST un volume
+    // vertical plein qui diffuse par son corps (colonne tressée, totem) — masse
+    // visuelle radicalement différente d'une tige de 2 cm.
+    // Le critère décisif est COMMENT l'abat-jour est porté, pas la forme du pied.
+    { key: "structure", type: "enum", vocab: ["arc", "overhang", "stick", "column", "tripod", "reading", "multi_arm"], hint: "Juge COMMENT la lumière est portée, dans cet ordre : 3 pieds écartés visibles = 'tripod' · plusieurs bras/spots = 'multi_arm' · bras orientable de liseuse = 'reading' · abat-jour SUSPENDU au bout d'un bras COURBÉ en arc (déporté loin du pied) = 'arc' · abat-jour SUSPENDU au bout d'un bras DROIT ou coudé à angle, fût vertical (potence) = 'overhang' · abat-jour DISTINCT posé AU SOMMET d'une TIGE FINE (barre/tube étroit, métal ou bois) = 'stick' (cas le plus courant) · la lampe EST un VOLUME vertical PLEIN et large qui diffuse la lumière par son corps, sans abat-jour distinct sur une tige (colonne tressée, totem, cocoon) = 'column'. Une tige fine surmontée d'un abat-jour n'est JAMAIS 'column'. Regarde le BAS du pied (souvent masqué par un meuble) : si le bas est invisible, juge sur la partie visible sans inventer" },
     { key: "shade_type", type: "enum", vocab: ["fabric_drum", "metal_dome", "rattan_bamboo", "glass_opal", "paper_lantern", "rectangular", "cage", "none"] },
-    { key: "base_shape", type: "enum", vocab: ["disc", "round_weighted", "square", "tripod", "integrated_shelf"] },
+    // conditional 2026-07-11 : beaucoup de photos produit sont RECADRÉES sur le haut de la
+    // lampe — le socle est purement hors champ (ex. « Lampadaire en acier bronze » EVA, MdM).
+    // Sans 'n/a', le modèle n'avait AUCUNE façon de dire « je ne le vois pas » : il répondait
+    // 'unknown' (à raison — il ne doit pas inventer), ce qui arrêtait tout le run.
+    { key: "base_shape", type: "enum", conditional: true, vocab: ["disc", "round_weighted", "square", "tripod", "integrated_shelf"], hint: "FORME du socle posé au sol. Réponds 'n/a' si le socle n'est PAS VISIBLE sur la photo (cadrage serré sur le haut de la lampe, pied coupé hors cadre, base masquée) — n'invente JAMAIS une forme que tu ne vois pas" },
     { key: "base_finish", type: "enum", conditional: true, vocab: ["black_metal", "white_metal", "gold_brass", "chrome", "brushed_metal", "colored_metal", "wood"], hint: "FINITION du socle/structure. Métal peint d'une couleur non standard (rouge, vert, bleu…) = 'colored_metal' (teinte exacte dans color)" },
     { key: "color", type: "hex" },
   ],
@@ -142,7 +156,7 @@ export const SCHEMA_V3: Record<string, AttrV3[]> = {
     { key: "top_material", type: "enum", vocab: ["light_wood", "dark_wood", "oak", "walnut", "white_lacquer", "black", "colored", "marble", "ceramic", "glass", "metal", "travertine", "concrete"], hint: "APPARENCE du plateau. Surface peinte/laquée d'une couleur non standard (gris, vert, bleu…) = 'colored' (teinte exacte dans top_color)" },
     { key: "top_color", type: "hex" },
     { key: "legs_type", type: "enum", vocab: ["four_legs", "central", "trestle", "sled", "u_frame"] },
-    { key: "legs_material", type: "enum", conditional: true, vocab: ["wood", "metal", "plastic", "same_as_top"], hint: "MATIÈRE du pied seulement (pas la couleur, captée par legs_color) : wood, metal, plastic, ou same_as_top si pied dans le même matériau/teinte que le plateau" },
+    { key: "legs_material", type: "enum", conditional: true, vocab: ["wood", "metal", "plastic", "stone", "glass"], hint: "MATIÈRE du pied, et RIEN d'autre (la couleur est captée par legs_color, la finition ne compte pas) : wood (tout bois, clair/foncé/laqué/placage), metal (tout métal, quelle que soit sa couleur ou finition), plastic, stone (marbre, travertin, béton, pierre), glass. Si le pied est dans la MÊME matière que le plateau, indique cette MATIÈRE — jamais une valeur du type « identique au plateau »" },
     { key: "legs_color", type: "hex", conditional: true },
     { key: "number_of_people", type: "enum", conditional: true, vocab: ["2", "4", "6", "8+"], hint: "nombre de couverts ESTIMÉ d'après la longueur du plateau ; n/a si indéterminable" },
   ],

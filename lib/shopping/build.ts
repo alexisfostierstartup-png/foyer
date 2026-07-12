@@ -143,10 +143,15 @@ export function builtToLegacyShoppingList(built: BuiltShoppingList): ShoppingIte
   const items: ShoppingItem[] = [];
 
   for (const diyEntry of built.diy) {
+    // Cible dans le NOM, pas seulement le detail : sans elle, une fourniture
+    // « Peinture acrylique » d'un repaint MEUBLE se lit comme de la peinture
+    // murale (pin /final confus — feedback Alexis 2026-07-10). Libellé court :
+    // première proposition de la description de l'élément.
+    const target = (diyEntry.element_label || diyEntry.category).split(/[,.(]/)[0].trim().slice(0, 48);
     for (const supply of diyEntry.supply_items) {
       items.push({
         id: `diy-${diyEntry.element_id}-${supply.name.replace(/\s+/g, "-")}`,
-        name: supply.name,
+        name: target ? `${supply.name} — ${target}` : supply.name,
         category: diyEntry.category,
         elementId: diyEntry.element_id,
         detail: `${diyEntry.action_label} — ${diyEntry.element_label}`,

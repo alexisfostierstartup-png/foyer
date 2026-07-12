@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { CatalogProductGallery } from "@/components/admin/CatalogProductGallery";
+import { ProductAttrsEditor } from "@/components/admin/ProductAttrsEditor";
 
 function Badge({ children }: { children: ReactNode }) {
   return (
@@ -128,40 +129,16 @@ export default async function CatalogDetailPage({
             </section>
           )}
 
-          {attrs && Object.keys(attrs).filter((k) => k !== "_error").length > 0 && (
-            <section className="mt-5 rounded-xl border border-foyer-border bg-foyer-cream/40 p-3">
-              <h2 className="text-xs font-semibold uppercase tracking-wide text-foyer-muted">
-                Attributs structurés
-                {typeof metadata.attrs_model === "string" && (
-                  <span className="ml-2 font-normal normal-case text-foyer-muted/70">· {metadata.attrs_model}</span>
-                )}
-              </h2>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {Object.entries(attrs)
-                  .filter(([k]) => k !== "_error")
-                  .map(([k, v]) => (
-                    <span
-                      key={k}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-foyer-border bg-white/70 px-2.5 py-1 text-xs"
-                    >
-                      <span className="text-foyer-muted">{k}</span>
-                      {isHex(v) ? (
-                        <>
-                          <span
-                            className="size-3.5 rounded-sm border border-foyer-border"
-                            style={{ backgroundColor: v }}
-                            aria-hidden
-                          />
-                          <span className="font-mono text-foyer-ink">{v}</span>
-                        </>
-                      ) : (
-                        <span className="font-medium text-foyer-ink">{String(v)}</span>
-                      )}
-                    </span>
-                  ))}
-              </div>
-            </section>
-          )}
+          {/* Attributs structurés — ÉDITABLES (repasse manuelle : clic sur un attribut →
+              vocabulaire fermé de la catégorie). Affiché même sans attrs : c'est
+              justement là qu'on veut pouvoir en saisir. */}
+          <ProductAttrsEditor
+            productId={p.id}
+            category={p.category}
+            initialAttrs={(attrs ?? {}) as Record<string, unknown>}
+            attrsModel={typeof metadata.attrs_model === "string" ? metadata.attrs_model : null}
+            initialManual={(metadata.attrs_manual as string[]) ?? []}
+          />
 
           {p.description && (
             <section className="mt-5">

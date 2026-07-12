@@ -129,11 +129,18 @@ export async function getElementCategories(): Promise<ElementCategory[]> {
  * catégories qui portent des `keywords`, filtrées par type de pièce. La détection
  * réassigne tout profil "other" dont l'élément/description matche un mot-clé.
  */
+// chambre_parentale et chambre_enfant partagent la taxonomie de la chambre (mêmes
+// catégories d'éléments détectables) plutôt que de dupliquer les room_types de chaque
+// asset element_category.
+function bedroomAlias(roomType?: string): string | undefined {
+  return roomType === "chambre_parentale" || roomType === "chambre_enfant" ? "chambre" : roomType;
+}
+
 export async function getCategoryKeywordRemap(
   roomType?: string,
 ): Promise<Array<{ slug: string; keywords: string[] }>> {
   const cats = await getElementCategories().catch(() => [] as ElementCategory[]);
-  const rt = roomType === "chambre_parentale" ? "chambre" : roomType;
+  const rt = bedroomAlias(roomType);
   return cats
     .filter((c) => Array.isArray(c.keywords) && c.keywords.length > 0)
     .filter((c) => !rt || !c.room_types?.length || c.room_types.includes(rt))
@@ -153,8 +160,7 @@ export async function getAllowedActionsByCategory(): Promise<Map<string, Decisio
  */
 export async function getElementCategoryEnum(roomType?: string): Promise<string> {
   const cats = await getElementCategories().catch(() => [] as ElementCategory[]);
-  // La chambre parentale partage la taxonomie de la chambre.
-  const rt = roomType === "chambre_parentale" ? "chambre" : roomType;
+  const rt = bedroomAlias(roomType);
   const filtered = cats.filter(
     (c) => !rt || !c.room_types?.length || c.room_types.includes(rt),
   );

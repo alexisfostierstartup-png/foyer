@@ -198,7 +198,7 @@ export async function formatUserInstructions(
 
 // Surfaces architecturales : RESTYLE toujours valide, REPLACE jamais (on ne
 // « remplace » pas un mur par une pièce différente au même emplacement).
-const ARCH_SURFACE_CATEGORIES = new Set(["wall", "floor", "ceiling"]);
+export const ARCH_SURFACE_CATEGORIES = new Set(["wall", "floor", "ceiling"]);
 
 // Petite déco dont les REPLACE sont groupés en une ligne récapitulative en
 // mode beta — l'enjeu par pièce est nul et chaque ligne dilue le plan.
@@ -410,7 +410,13 @@ export function formatDesignPlan(
   if (keptDescs.length > 0) {
     lines.unshift(
       `- KEEP strictly unchanged (same object, same colour, same place): ${keptDescs.slice(0, 8).join("; ")}${keptDescs.length > 8 ? "; …" : ""}. ` +
-        `Recolouring or reupholstering a KEEP item is a FAILURE. The ONLY allowed addition on a kept seat: style-matching cushions or a throw laid on it (they tie it into the new style without touching the seat itself).`,
+        `A KEEP item is the SAME PHYSICAL PIECE, reproduced pixel-faithfully: same SILHOUETTE and geometry, same size, same number of seats/modules, same orientation, same colour, same material. ` +
+        // Le modèle respectait la lettre (ni recolorisation ni retapissage) en changeant la
+        // GÉOMÉTRIE : canapé droit devenu canapé d'ANGLE, la signature de style tirant dans
+        // ce sens (« low-slung deep-seated sofas ») — projet WzUohGBEDXyYwlsaJLM2P 2026-07-11.
+        `NEVER reshape it toward the target style: a straight sofa NEVER becomes a corner/L-shaped/modular one (and vice-versa), a rectangular table never becomes round, no seat is added or removed. ` +
+        `Recolouring, reupholstering, resizing or reshaping a KEEP item is a FAILURE — the style must flow AROUND it, never through it. ` +
+        `The ONLY allowed addition on a kept seat: style-matching cushions or a throw laid on it (they tie it into the new style without touching the seat itself).`,
     );
   }
   // Sol KEEP (beta) : silencieux, le style impose son motif (chevrons/damier ×4

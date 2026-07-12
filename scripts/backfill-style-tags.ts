@@ -22,7 +22,7 @@ import { readFile } from "fs/promises";
 import path from "path";
 
 const UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36";
-const MODEL = process.argv.includes("--flash") ? "gemini-2.5-flash" : "gemini-2.5-flash-lite";
+const MODEL = process.argv.includes("--flash") ? "gemini-2.5-flash" : "gemini-flash-lite-latest";
 const CONCURRENCY = 12;
 
 function arg(name: string): string | undefined {
