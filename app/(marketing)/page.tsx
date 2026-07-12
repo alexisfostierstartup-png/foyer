@@ -302,8 +302,8 @@ function Process() {
 
 /* -------------------------------- GALLERY -------------------------------- */
 
-const PROJECTS: { img: string; before?: string; tag: string; name: string; surface: string; conserve: string }[] = [
-  { img: IMG.salonParisien, before: IMG.salonParisienBefore, tag: "Haussmann", name: "Salon Parisien", surface: "32 m²", conserve: "68%" },
+const PROJECTS: { img: string; before?: string; tag: string; name: string; surface: string; conserve: string; cout?: string }[] = [
+  { img: IMG.salonParisien, before: IMG.salonParisienBefore, tag: "Haussmann", name: "Salon Parisien", surface: "32 m²", conserve: "68%", cout: "1 674 €" },
   { img: IMG.japandi, before: IMG.japandiBefore, tag: "Studio", name: "Chambre Japandi", surface: "14 m²", conserve: "55%" },
   { img: IMG.arch4, tag: "Maison", name: "Salle à manger", surface: "22 m²", conserve: "72%" },
 ];
@@ -391,7 +391,14 @@ function Gallery() {
                   <h3 className="font-display text-lg">{p.name}</h3>
                   <p className="text-[11px] text-muted-foreground uppercase tracking-wider">{p.surface}</p>
                 </div>
-                <span className="text-[11px] text-clay font-medium">Conservé {p.conserve}</span>
+                <div className="text-right">
+                  <span className="block text-[11px] text-clay font-medium">Conservé {p.conserve}</span>
+                  {p.cout && (
+                    <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                      Coût du projet&nbsp;: <span className="font-display text-[13px] text-ink">{p.cout}</span>
+                    </span>
+                  )}
+                </div>
               </div>
             </RevealV2>
           ))}

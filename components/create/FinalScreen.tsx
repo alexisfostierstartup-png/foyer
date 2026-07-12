@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ExternalLink, Pencil, Link2, Star, RefreshCw, Loader2, Eye, MapPin } from "lucide-react";
+import { ExternalLink, Pencil, Link2, Star, RefreshCw, Loader2, Eye, MapPin, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { ProgressBar } from "@/components/create/ProgressBar";
 import { BeforeAfterSlider } from "@/components/create/BeforeAfterSlider";
 import { RenderHotspots } from "@/components/create/RenderHotspots";
 import { ShoppingCard, useDebug } from "@/components/create/ShoppingCard";
-import { ExpertOverridesProvider } from "@/components/create/expertOverrides";
+import { ExpertOverridesProvider, useExpertOverrides } from "@/components/create/expertOverrides";
 
 // Libellé lisible d'une référence custom (clé = catégorie ou elementId type "sofa_1").
 const REF_LABELS: Record<string, string> = {
@@ -386,6 +386,22 @@ export function FinalScreen({
     .filter((k) => (cust[k]?.imageUrl ?? "") !== (renderedCustom[k]?.imageUrl ?? ""));
   const changedCount = new Set([...changedIdx, ...changedCustom]).size;
 
+  // « Commander » ouvre les pages des produits RÉELLEMENT choisis (référence
+  // sur-mesure > produit sélectionné > meilleur match), pas tous les liens du
+  // catalogue : l'utilisateur commande ce qu'il voit dans sa liste.
+  const orderUrls = Array.from(
+    new Set(
+      shoppingList
+        .map((it) => {
+          const custom = it.elementId ? cust[it.elementId] : undefined;
+          if (custom?.url) return custom.url;
+          const idx = (it.elementId ? sel[it.elementId] : undefined) ?? 0;
+          return (it.matches?.[idx] ?? it.matches?.[0])?.product_url ?? null;
+        })
+        .filter((u): u is string => Boolean(u)),
+    ),
+  );
+
   async function handleNewRender() {
     if (changedCount < 1 || rerendering) return;
     setRerendering(true);
@@ -453,25 +469,6 @@ export function FinalScreen({
     }
   }
 
-  function handleRestart() {
-    if (PAYWALL_DISABLED) {
-      router.push("/create");
-      return;
-    }
-    if (isExpert) {
-      router.push("/create");
-      return;
-    }
-    if (user && hasCredits) {
-      router.push("/create");
-      return;
-    }
-    if (!user || (!hasCredits && !isExpert)) {
-      setPaywallTrigger("second_project");
-      return;
-    }
-    router.push("/create");
-  }
 
   return (
     <ExpertOverridesProvider value={{ enabled: expertMode, selected: sel, choose: chooseProduct, custom: cust, setCustom: setCustomProduct }}>
@@ -714,22 +711,21 @@ export function FinalScreen({
           </div>
           )}
 
-          {/* Actions */}
-          <div className="mt-8 flex flex-col gap-3">
-            <Link
-              href={`/create/${projectId}/iterate`}
-              className="flex h-[52px] w-full items-center justify-center rounded-full border border-foyer-border font-medium text-foyer-ink transition-colors hover:bg-foyer-border/30"
-            >
-              Affiner encore
-            </Link>
-            <button
-              type="button"
-              onClick={handleRestart}
-              className="flex h-[52px] w-full items-center justify-center rounded-full bg-foyer-sage font-medium text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:-translate-y-0.5"
-            >
-              Recommencer un projet
-            </button>
-          </div>
+          {/* Action primaire unique. « Affiner encore » et « Recommencer un projet »
+              retirés : l'affinage a déjà son entrée (« Édition live » + les pins),
+              et repartir de zéro n'a rien à faire en bas d'une liste d'achat. */}
+          {!listPending && orderUrls.length > 0 && (
+            <div className="mt-8">
+              <button
+                type="button"
+                onClick={() => { for (const url of orderUrls) window.open(url, "_blank"); }}
+                className="flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-foyer-sage font-medium text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:-translate-y-0.5"
+              >
+                <ShoppingBag className="size-4" aria-hidden />
+                Commander
+              </button>
+            </div>
+          )}
         </main>
       </div>
 
@@ -895,6 +891,8 @@ function EnhancedListeShoppingTab({
         );
       })}
 
+      <ListTotal items={dedupedList} />
+
       {allUrls.length > 0 && (
         <button
           type="button"
@@ -904,6 +902,53 @@ function EnhancedListeShoppingTab({
           <ExternalLink className="size-4" aria-hidden />
           Tout ouvrir ({allUrls.length} liens)
         </button>
+      )}
+    </div>
+  );
+}
+
+// ── Total de la liste ─────────────────────────────────────────────────────────
+// Le prix additionné est celui RÉELLEMENT AFFICHÉ sur chaque ligne : on relit le
+// même choix que ShoppingCard (référence sur-mesure > produit choisi > meilleur
+// match). Sommer priceMin/priceMax donnerait un total qui ne correspond à aucun
+// prix visible à l'écran, donc invérifiable par l'utilisateur.
+function ListTotal({ items }: { items: ShoppingItem[] }) {
+  const ov = useExpertOverrides();
+
+  let total = 0;
+  let chiffres = 0;
+  let sansPrix = 0;
+
+  for (const it of items) {
+    const qty = it.quantity ?? 1;
+    const custom = it.elementId ? ov?.custom[it.elementId] : undefined;
+    const idx = (it.elementId ? ov?.selected?.[it.elementId] : undefined) ?? 0;
+    const price = custom ? custom.price : (it.matches?.[idx] ?? it.matches?.[0])?.price;
+
+    if (typeof price === "number") {
+      total += price * qty;
+      chiffres += qty;
+    } else {
+      sansPrix += qty;
+    }
+  }
+
+  if (chiffres === 0 && sansPrix === 0) return null;
+
+  return (
+    <div className="rounded-2xl border border-foyer-border bg-white px-5 py-4">
+      <div className="flex items-baseline justify-between">
+        <span className="text-[14px] font-medium text-foyer-ink">
+          Total — {chiffres + sansPrix} article{chiffres + sansPrix > 1 ? "s" : ""}
+        </span>
+        <span className="font-serif text-2xl text-foyer-ink">
+          {Math.round(total).toLocaleString("fr-FR")}&nbsp;€
+        </span>
+      </div>
+      {sansPrix > 0 && (
+        <p className="mt-1 text-[12px] text-foyer-muted">
+          dont {sansPrix} article{sansPrix > 1 ? "s" : ""} encore à sourcer, non compté{sansPrix > 1 ? "s" : ""} dans le total
+        </p>
       )}
     </div>
   );
