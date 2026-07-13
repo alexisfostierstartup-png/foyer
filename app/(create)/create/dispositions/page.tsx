@@ -19,6 +19,7 @@ export default async function DispositionsPage({
     <DispositionsScreen
       projectId={projectId}
       initialUrls={project.dispositionsRenderUrls}
+      hasDecisions={(project.element_decisions?.length ?? 0) > 0}
     />
   );
 }

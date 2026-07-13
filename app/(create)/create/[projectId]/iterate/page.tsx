@@ -26,6 +26,7 @@ export default async function IteratePage({
       projectId={projectId}
       currentRenderUrl={currentRenderUrl}
       target={target && label ? { elementId: target, label } : null}
+      iterationCount={project.iterationCount ?? 0}
     />
   );
 }

@@ -41,9 +41,10 @@ export function GeneratingScreen({
     setFailed(false);
     setPaywallTrigger(null);
     try {
-      // Expert sans review : l'analyse (décisions par élément) n'a pas été lancée
-      // par l'écran review — on la joue ici, elle nourrit le plan et la liste.
-      if (expert && !hasDecisions) {
+      // Personne n'est passé par la review (parcours expert, ou review fermée en
+      // production) : l'analyse par élément n'a jamais tourné. On la joue ici — sans
+      // elle le plan de design est vide et le rendu ignore garder/personnaliser/remplacer.
+      if (!hasDecisions) {
         const a = await fetch(`/api/projects/${projectId}/analyze`, { method: "POST" });
         if (!a.ok) {
           toast.error("L'analyse de la pièce a échoué. Réessayez.");

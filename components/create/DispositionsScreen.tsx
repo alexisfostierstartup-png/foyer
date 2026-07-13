@@ -11,9 +11,11 @@ import { PAYWALL_DISABLED } from "@/lib/constants";
 export function DispositionsScreen({
   projectId,
   initialUrls,
+  hasDecisions = false,
 }: {
   projectId: string;
   initialUrls?: string[];
+  hasDecisions?: boolean;
 }) {
   const router = useRouter();
   const [urls, setUrls] = useState<string[]>(initialUrls ?? []);
@@ -28,6 +30,18 @@ export function DispositionsScreen({
     setFailed(false);
     setPaywallTrigger(null);
     try {
+      // Lancé depuis l'écran de style (review fermée en production) : l'analyse par
+      // élément n'a pas tourné. Sans elle, les 3 dispositions sont générées sans plan
+      // de design (ni garder, ni personnaliser, ni remplacer).
+      if (!hasDecisions) {
+        const a = await fetch(`/api/projects/${projectId}/analyze`, { method: "POST" });
+        if (!a.ok) {
+          toast.error("L'analyse de la pièce a échoué. Réessayez.");
+          setFailed(true);
+          setLoading(false);
+          return;
+        }
+      }
       const res = await fetch(`/api/projects/${projectId}/generate-dispositions`, { method: "POST" });
       if (res.status === 402) {
         const data = (await res.json().catch(() => null)) as { paywall?: PaywallTrigger } | null;
@@ -50,7 +64,7 @@ export function DispositionsScreen({
       setFailed(true);
       setLoading(false);
     }
-  }, [projectId]);
+  }, [projectId, hasDecisions]);
 
   useEffect(() => {
     if (initialUrls?.length) return;

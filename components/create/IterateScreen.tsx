@@ -64,12 +64,19 @@ type Props = {
   currentRenderUrl: string;
   // Tap-to-target : meuble désigné au doigt sur le rendu (/final) → mode ciblé.
   target?: { elementId: string; label: string } | null;
+  /** Modifications déjà jouées. 0 = celle-ci est la modification offerte. */
+  iterationCount?: number;
 };
 
 // Suggestions du mode ciblé (un meuble précis désigné).
 const TARGET_SUGGESTIONS = ["Remplacer par un autre modèle", "Changer la couleur", "Plus grand", "Plus petit", "Enlever ce meuble"];
 
-export function IterateScreen({ projectId, currentRenderUrl, target = null }: Props) {
+export function IterateScreen({
+  projectId,
+  currentRenderUrl,
+  target = null,
+  iterationCount = 0,
+}: Props) {
   const router = useRouter();
   const [openCat, setOpenCat] = useState<string | null>(null);
   const [selections, setSelections] = useState<Record<string, string[]>>({});
@@ -111,10 +118,12 @@ export function IterateScreen({ projectId, currentRenderUrl, target = null }: Pr
         setLoading(false);
         return;
       }
-      // Expert comme standard : retour à /final, dont le slider montre le rendu à
-      // jour (l'écran /expert, qui recalculait les meubles intégrés au lieu de les
-      // lire, a été supprimé — il mentait après une itération).
-      router.push(`/create/${projectId}/final`);
+      // Retour à l'écran du rendu : l'utilisateur VOIT ce que sa demande a donné et
+      // tranche lui-même (valider → liste de courses, ou modifier à nouveau → crédits).
+      // On l'envoyait droit sur /final, sans lui laisser regarder le résultat.
+      // Expert : /create/[id] redirige de lui-même vers /final (écran terminal du flux
+      // expert, qui affiche le rendu à jour) — parcours inchangé.
+      router.push(`/create/${projectId}`);
     } catch {
       toast.error("L'itération a échoué. Réessayez.");
       setLoading(false);
@@ -130,21 +139,27 @@ export function IterateScreen({ projectId, currentRenderUrl, target = null }: Pr
           Qu&apos;aimeriez-vous changer&nbsp;?
         </h1>
 
-        {/* Après CETTE demande, on part directement sur /final : la liste de courses se
-            calcule dans la foulée et on ne repasse pas par l'écran du rendu. L'utilisateur
-            croyait pouvoir enchaîner les retouches (QA Alexis 2026-07-13). L'avertissement
-            vit ICI, au moment où il formule sa demande — c'est là qu'il peut encore la
-            compléter. Sur l'écran précédent, il arrivait trop tôt : rien n'était engagé. */}
+        {/* L'avertissement vit ICI, au moment où l'utilisateur formule sa demande — c'est
+            là qu'il peut encore la compléter. Sur l'écran précédent, il arrivait trop tôt :
+            rien n'était engagé. Et seulement pour la modification OFFERTE : au-delà, il a
+            payé des crédits, lui reparler de la limite du gratuit n'a plus de sens. */}
+        {iterationCount === 0 && (
         <div className="mt-4 flex items-start gap-3 rounded-2xl border border-foyer-ochre/40 bg-foyer-ochre/10 px-4 py-3">
           <Info className="mt-0.5 size-4 shrink-0 text-foyer-ochre" aria-hidden />
           <p className="text-[13px] leading-relaxed text-foyer-ink">
             {/* {" "} explicite : JSX avale l'espace entre </b> et le texte qui suit. */}
-            <b>Vous n&apos;avez qu&apos;une seule demande</b>{" "}
-            avec l&apos;offre gratuite. Juste après, on passe à votre rendu final et à sa
-            liste de courses — vous ne reviendrez pas ici.{" "}
-            <b>Demandez tout d&apos;un coup.</b>
+            <b>
+              Vous ne pourrez modifier ce rendu qu&apos;une seule fois avec l&apos;offre
+              gratuite.
+            </b>{" "}
+            Donc assurez-vous d&apos;effectuer tous vos changements.
+            <br />
+            Mais pas d&apos;inquiétude&nbsp;: si vous n&apos;êtes pas encore satisfait, vous
+            pourrez continuer à modifier votre rendu en achetant des crédits, à partir de
+            5&nbsp;euros, sans aucun abonnement.
           </p>
         </div>
+        )}
 
         <div className="mt-5 overflow-hidden rounded-2xl">
           {/* eslint-disable-next-line @next/next/no-img-element */}

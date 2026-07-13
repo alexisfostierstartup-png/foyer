@@ -42,6 +42,19 @@ export const MAX_FREE_EDITS = 2;
 // Repasser à false pour réactiver.
 export const PAYWALL_DISABLED = true;
 
+// Écran de review (ajuster garder / personnaliser / remplacer élément par élément avant
+// le rendu) : outil de mise au point, pas une étape pour le public. En production le
+// parcours va du style au rendu directement, et les deux CTA de lancement (1 rendu,
+// 3 dispositions) vivent sur l'écran de style. En local il reste accessible.
+// Surcharge dans les deux sens : NEXT_PUBLIC_REVIEW=1 le rouvre (preview Vercel),
+// NEXT_PUBLIC_REVIEW=0 le ferme en local (pour tester le parcours public tel quel).
+export const REVIEW_ENABLED =
+  process.env.NEXT_PUBLIC_REVIEW === "1"
+    ? true
+    : process.env.NEXT_PUBLIC_REVIEW === "0"
+      ? false
+      : process.env.NODE_ENV !== "production";
+
 // Matching catalogue : score = alpha·cosine(image) + (1-alpha)·cosine(texte produit).
 // En dessous du seuil → "À sourcer". À tuner.
 export const MATCH_BLEND_ALPHA = 0.5;

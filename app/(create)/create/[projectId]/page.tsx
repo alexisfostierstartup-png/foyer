@@ -30,6 +30,7 @@ export default async function ProjectPage({
       beforeUrl={project.basePhotoUrl}
       afterUrl={project.generatedRenderUrl}
       roomLabel={roomLabel}
+      iterationCount={project.iterationCount ?? 0}
     />
   );
 }

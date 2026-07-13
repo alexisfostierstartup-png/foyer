@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getProject } from "@/lib/storage/projects";
 import { ReviewScreen } from "@/components/create/ReviewScreen";
 import { getAllowedActionsByCategory, getElementCategories } from "@/lib/db/assets";
+import { REVIEW_ENABLED } from "@/lib/constants";
 import type { ElementDecision } from "@/lib/diy/types";
 
 export default async function ReviewPage({
@@ -12,6 +13,11 @@ export default async function ReviewPage({
   searchParams: Promise<{ vres?: string }>;
 }) {
   const { projectId } = await params;
+
+  // Fermée en production : le parcours public va du style au rendu, sans cet écran de
+  // mise au point. On renvoie à l'écran de style, qui porte les CTA de lancement.
+  if (!REVIEW_ENABLED) redirect(`/create/style?projectId=${projectId}`);
+
   // ?vres=medium|high → A/B de la résolution du verdict (perf). Défaut : non fourni.
   const { vres } = await searchParams;
   const verdictRes = vres === "medium" || vres === "high" ? vres : undefined;

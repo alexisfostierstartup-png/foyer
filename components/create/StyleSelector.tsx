@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { ProgressBar } from "@/components/create/ProgressBar";
 import { StyleCard } from "@/components/create/StyleCard";
+import { REVIEW_ENABLED } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { Style } from "@/lib/types";
 
@@ -26,11 +27,15 @@ export function StyleSelector({
 }: StyleSelectorProps) {
   const router = useRouter();
   const [selectedStyleId, setSelectedStyleId] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [submitting, setSubmitting] = useState<"rendu" | "dispositions" | null>(null);
 
-  async function handleSubmit() {
+  // Sans écran review (production), c'est ici qu'on lance : les deux CTA de la review
+  // remontent sur cet écran, et la génération déclenche elle-même l'analyse de la pièce.
+  const lanceIci = !REVIEW_ENABLED && !expert;
+
+  async function lancer(cible: "rendu" | "dispositions") {
     if (!selectedStyleId) return;
-    setSubmitting(true);
+    setSubmitting(cible);
     try {
       const res = await fetch(`/api/projects/${projectId}/style`, {
         method: "POST",
@@ -39,13 +44,21 @@ export function StyleSelector({
       });
       if (!res.ok) {
         toast.error("Erreur lors de l'enregistrement de l'ambiance");
-        setSubmitting(false);
+        setSubmitting(null);
         return;
       }
-      router.push(expert ? `/create/generating?projectId=${projectId}` : `/create/${projectId}/review`);
+      if (cible === "dispositions") {
+        router.push(`/create/dispositions?projectId=${projectId}`);
+        return;
+      }
+      router.push(
+        expert || !REVIEW_ENABLED
+          ? `/create/generating?projectId=${projectId}`
+          : `/create/${projectId}/review`,
+      );
     } catch {
       toast.error("Erreur lors de l'enregistrement de l'ambiance");
-      setSubmitting(false);
+      setSubmitting(null);
     }
   }
 
@@ -114,19 +127,19 @@ export function StyleSelector({
         {/* Le bouton suivait la largeur de l'ÉCRAN, pas celle du contenu : la barre n'était
             pas bornée alors que la liste l'est à 480px. Sur un écran large, il s'étirait
             seul sur toute la page. */}
-        <div className="mx-auto w-full max-w-[480px]">
+        <div className="mx-auto flex w-full max-w-[480px] flex-col gap-2.5">
           <button
             type="button"
-            disabled={!selectedStyleId || submitting}
-            onClick={handleSubmit}
+            disabled={!selectedStyleId || submitting !== null}
+            onClick={() => lancer("rendu")}
             className={cn(
               "flex h-[52px] w-full items-center justify-center gap-2 rounded-full font-medium transition-all",
-              !selectedStyleId || submitting
+              !selectedStyleId || submitting !== null
                 ? "cursor-not-allowed bg-foyer-border text-foyer-muted"
                 : "bg-foyer-sage text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] hover:-translate-y-0.5 hover:bg-foyer-sage/90 hover:shadow-[0_4px_14px_rgba(107,142,111,0.45)]",
             )}
           >
-            {submitting ? (
+            {submitting === "rendu" ? (
               <>
                 <Loader2 className="size-5 animate-spin" aria-hidden />
                 Patientez…
@@ -135,6 +148,34 @@ export function StyleSelector({
               "Générer le rendu"
             )}
           </button>
+
+          {lanceIci && (
+            <button
+              type="button"
+              disabled={!selectedStyleId || submitting !== null}
+              onClick={() => lancer("dispositions")}
+              className={cn(
+                "flex h-[48px] w-full items-center justify-center gap-2 rounded-full border font-medium transition-colors",
+                !selectedStyleId || submitting !== null
+                  ? "cursor-not-allowed border-foyer-border text-foyer-muted"
+                  : "border-foyer-border text-foyer-ink hover:border-foyer-ink/40 hover:bg-foyer-border/30",
+              )}
+            >
+              {submitting === "dispositions" ? (
+                <>
+                  <Loader2 className="size-5 animate-spin" aria-hidden />
+                  Patientez…
+                </>
+              ) : (
+                <>
+                  Lancer 3 dispositions
+                  <span className="rounded-full bg-foyer-terra/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-foyer-terra">
+                    expert
+                  </span>
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
     </div>

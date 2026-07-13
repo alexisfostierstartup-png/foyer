@@ -6,8 +6,10 @@ import { Loader2, Bookmark, Share2, Check } from "lucide-react";
 import { toast } from "sonner";
 import { ProgressBar } from "@/components/create/ProgressBar";
 import { BeforeAfterSlider } from "@/components/create/BeforeAfterSlider";
+import { CreditsDialog } from "@/components/create/CreditsDialog";
 import { PaywallModal } from "@/components/paywalls/PaywallModal";
 import { PAYWALL_DISABLED } from "@/lib/constants";
+import { ajouterCredits, modifsAutorisees } from "@/lib/credits";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/lib/auth/useUser";
 import { saveProject } from "@/lib/auth/actions";
@@ -19,20 +21,42 @@ type Props = {
   beforeUrl: string;
   afterUrl: string;
   roomLabel: string;
+  /** Modifications DÉJÀ jouées sur ce projet (0 = on sort de la première génération). */
+  iterationCount?: number;
 };
 
-export function RenderScreen({ projectId, beforeUrl, afterUrl, roomLabel }: Props) {
+export function RenderScreen({
+  projectId,
+  beforeUrl,
+  afterUrl,
+  roomLabel,
+  iterationCount = 0,
+}: Props) {
   const router = useRouter();
   const { user, profile } = useUser();
   const [navigating, setNavigating] = useState<"final" | "iterate" | null>(null);
   const [saved, setSaved] = useState(false);
   const [showSavePaywall, setShowSavePaywall] = useState(false);
+  const [showCredits, setShowCredits] = useState(false);
+
+  // On revient ICI après chaque modification : l'utilisateur voit le rendu obtenu et
+  // tranche — il valide, ou il repart en modification. La deuxième demande sort du
+  // gratuit → mur de crédits (achat fictif) avant de rouvrir /iterate.
+  const modifie = iterationCount > 0;
 
   function go(dest: "final" | "iterate") {
     setNavigating(dest);
     router.push(
       dest === "final" ? `/create/${projectId}/final` : `/create/${projectId}/iterate`,
     );
+  }
+
+  function demanderModification() {
+    if (iterationCount >= modifsAutorisees(projectId)) {
+      setShowCredits(true);
+      return;
+    }
+    go("iterate");
   }
 
   async function handleSave() {
@@ -72,7 +96,7 @@ export function RenderScreen({ projectId, beforeUrl, afterUrl, roomLabel }: Prop
         <main className="mx-auto w-full max-w-[480px] lg:max-w-[960px] flex-1 px-5 pb-28 pt-6">
           <div className="flex items-start justify-between">
             <h1 className="font-serif text-[28px] font-medium leading-tight text-foyer-ink">
-              Voilà votre {roomLabel}.
+              {modifie ? "Votre rendu modifié." : `Voilà votre ${roomLabel}.`}
             </h1>
             <div className="flex shrink-0 items-center gap-2 pt-1">
               <button
@@ -104,7 +128,9 @@ export function RenderScreen({ projectId, beforeUrl, afterUrl, roomLabel }: Prop
           </div>
 
           <p className="mt-4 text-center text-[14px] text-foyer-muted">
-            Pas tout à fait ça&nbsp;? Modifiez-le.
+            {modifie
+              ? "Ça vous va ? Sinon, vous pouvez le modifier à nouveau."
+              : "Pas tout à fait ça ? Modifiez-le."}
           </p>
         </main>
 
@@ -123,6 +149,8 @@ export function RenderScreen({ projectId, beforeUrl, afterUrl, roomLabel }: Prop
             >
               {navigating === "final" ? (
                 <Loader2 className="size-4 animate-spin" />
+              ) : modifie ? (
+                "C'est parfait, je valide"
               ) : (
                 "J'adore !"
               )}
@@ -131,7 +159,7 @@ export function RenderScreen({ projectId, beforeUrl, afterUrl, roomLabel }: Prop
             <button
               type="button"
               disabled={navigating !== null}
-              onClick={() => go("iterate")}
+              onClick={demanderModification}
               className={cn(
                 "flex h-[52px] w-full items-center justify-center gap-2 rounded-full border font-medium transition-colors",
                 navigating !== null
@@ -141,6 +169,8 @@ export function RenderScreen({ projectId, beforeUrl, afterUrl, roomLabel }: Prop
             >
               {navigating === "iterate" ? (
                 <Loader2 className="size-4 animate-spin" />
+              ) : modifie ? (
+                "Modifier à nouveau"
               ) : (
                 "Modifier"
               )}
@@ -148,6 +178,20 @@ export function RenderScreen({ projectId, beforeUrl, afterUrl, roomLabel }: Prop
           </div>
         </div>
       </div>
+
+      {showCredits && (
+        <CreditsDialog
+          onClose={() => setShowCredits(false)}
+          onAchat={(credits) => {
+            ajouterCredits(projectId, credits);
+            setShowCredits(false);
+            toast.success(
+              `${credits} crédits ajoutés. Vous pouvez modifier votre rendu.`,
+            );
+            go("iterate");
+          }}
+        />
+      )}
 
       {!PAYWALL_DISABLED && showSavePaywall && (
         <PaywallModal
