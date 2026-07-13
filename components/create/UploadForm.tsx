@@ -110,8 +110,18 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
         return;
       }
 
-      const { projectId: id } = (await res.json()) as { projectId: string };
+      const { projectId: id, basePhotoUrl } = (await res.json()) as {
+        projectId: string;
+        basePhotoUrl?: string;
+      };
       setProjectId(id);
+      // On remplace l'aperçu local par la photo NORMALISÉE par le serveur (toujours du
+      // JPEG, redressée). Un HEIC d'iPhone ne s'affiche que sur Safari : ailleurs,
+      // l'aperçu local restait une vignette cassée alors que l'upload avait réussi.
+      if (basePhotoUrl) {
+        setPreviewUrl(basePhotoUrl);
+        URL.revokeObjectURL(localPreview);
+      }
       setUploading(false);
       // Après le rendu de l'aperçu (d'où le requestAnimationFrame : sans lui, on
       // mesurerait la position d'AVANT le déploiement du bloc).
@@ -243,7 +253,7 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
                     </span>
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/*,.heic,.heif"
                       className="sr-only"
                       onChange={(e) => {
                         handleFileSelect(e.target.files?.[0]);
@@ -271,7 +281,7 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
                     Prendre une photo maintenant
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/*,.heic,.heif"
                       capture="environment"
                       className="sr-only"
                       onChange={(e) => {
@@ -287,7 +297,7 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
                     Changer la photo
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/*,.heic,.heif"
                       className="sr-only"
                       onChange={(e) => {
                         setProjectId(null);
