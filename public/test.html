@@ -316,7 +316,11 @@ const SECTIONS = [
   ${q("C’est crédible ? (on dirait votre vraie pièce redécorée, pas un montage)", scale("libre", "credible", 5, "Montage flagrant", "Ma pièce, en mieux"))}
   ${q("C’est clair ? (vous saviez toujours quoi faire)", scale("libre", "clair", 5, "Perdu(e)", "Limpide"))}
   ${q("Où avez-vous hésité, ou failli abandonner ?", txt("libre", "hesitation", "L’écran, le moment, le pourquoi…", true))}
-  ${q("Auriez-vous constitué un panier d’achat ?", radio("libre", "panier", ["Oui", "Non"], { row: true }))}
+
+  ${/* « Auriez-vous constitué un panier ? » a sauté : l’étape 4 (« Le panier, honnêtement »)
+       pose la même question en plus fin. La poser deux fois donnait deux réponses à arbitrer. */""}
+  ${q("Autre chose à nous dire sur ce premier passage ? (optionnel)",
+    txt("libre", "commentaire", "Une remarque, un détail qui vous a marqué, une idée…", true))}
 
   ${nav(0, 2)}`
 },
@@ -541,14 +545,14 @@ const SECTIONS = [
   <div class="section-eyebrow">Étape 7 / 8 · ~2 min</div>
   <h2>Dernière ligne droite 🏁</h2>
 
-  ${q("Qu’est-ce qui change VRAIMENT la donne avec Héra, pour vous ?", radio("reco", "game_changer", [
+  ${q("Qu’est-ce qui change VRAIMENT la donne avec Héra, pour vous ?", checks("reco", "game_changer", [
     "Pouvoir choisir les meubles que je garde",
     "Avoir la liste de courses déjà faite",
     "Pouvoir me projeter beaucoup plus facilement",
     "Voir de vrais produits achetables dans le rendu",
     "Le temps (et l’argent) que ça m’économise face à un décorateur",
     "Rien : ça ne change pas la donne pour moi",
-  ]), "Une seule réponse : celle sans laquelle Héra ne vous servirait à rien.")}
+  ]), "Plusieurs réponses possibles : tout ce sans quoi Héra ne vous servirait à rien.")}
 
   ${q("Recommanderiez-vous Héra ?", scale("reco", "nps", 10, "Jamais", "Les yeux fermés"))}
   ${q("À qui, concrètement ? Écrivez un prénom.", txt("reco", "prenom_reco", "Le prénom de la personne à qui vous pensez"),
