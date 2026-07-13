@@ -151,13 +151,42 @@ export function buildRoomScaleLine(roomScale?: "small" | "medium" | "large"): st
 
 export async function buildLightingPlanLine(profiles: ElementProfile[], styleName: string): Promise<string> {
   const lights = await lightpointProfiles(profiles);
-  if (lights.length === 0) {
-    return `- LIGHT FIXTURES: this room has NO ceiling or wall light point — add NONE (a floor/table lamp is allowed only per the lighting rule).`;
+  const cats = await getElementCategories().catch(() => [] as ElementCategory[]);
+  const replaceOnly = new Set(cats.filter((c) => c.replace_only).map((c) => c.slug));
+
+  // Les APPLIQUES comptent à part. Fondues dans le total (« exactement 3 points
+  // lumineux »), le modèle ne savait pas combien étaient MURALES — et en peignait une de
+  // plus, parfois sur une porte de placard (projet iZp1c73T, 2026-07-13 : 2 sur la photo,
+  // 3 au rendu). Le compte séparé rend la violation flagrante pour lui.
+  const murales = lights.filter((l) => replaceOnly.has(l.category));
+  const plafond = lights.filter((l) => !replaceOnly.has(l.category));
+
+  const repere = (l: ElementProfile) =>
+    (l.description?.trim() || l.element || l.category).replace(/\s+/g, " ").slice(0, 70);
+
+  const lignes: string[] = [];
+
+  if (plafond.length === 0) {
+    lignes.push(`- CEILING LIGHTS: this room has NO ceiling light point — add NONE (a floor/table lamp is allowed only per the lighting rule).`);
+  } else {
+    // « pendant over the dining table » : biais récurrent du modèle — il en ajoute
+    // une même quand aucun point électrique n'existe là (banc out-lightblur s02).
+    lignes.push(
+      `- CEILING LIGHTS (exactly ${plafond.length}): swap each existing fixture — ${plafond.map(repere).join(" · ")} — for a ${styleName} fixture AT ITS EXACT SAME ceiling point. The result contains EXACTLY ${plafond.length}: not one more, none added elsewhere, none duplicated. A dining table does NOT automatically get a pendant above it — only if one of the existing points is already there.`,
+    );
   }
-  const spots = lights.map((l) => (l.description?.trim() || l.element || l.category).replace(/\s+/g, " ").slice(0, 70)).join(" · ");
-  // « pendant over the dining table » : biais récurrent du modèle — il en ajoute
-  // une même quand aucun point électrique n'existe là (banc out-lightblur s02).
-  return `- LIGHT FIXTURES (exactly ${lights.length}): swap each existing fixture — ${spots} — for a ${styleName} fixture AT ITS EXACT SAME ceiling/wall point. The result contains EXACTLY ${lights.length} fixed fixture(s): not one more, none added elsewhere, none duplicated. A dining table does NOT automatically get a pendant above it — only if one of the existing points is already there.`;
+
+  if (murales.length === 0) {
+    lignes.push(
+      `- WALL SCONCES: this room has ZERO (0). Paint NOT A SINGLE ONE. A sconce is fed by a cable buried in the wall — inventing one promises rewiring we cannot deliver. The output must contain 0 wall sconces.`,
+    );
+  } else {
+    lignes.push(
+      `- WALL SCONCES (exactly ${murales.length}): ${murales.map(repere).join(" · ")}. Swap each for a ${styleName} sconce AT ITS EXACT SAME wall point. The output must contain EXACTLY ${murales.length} — count them before you finish. Do NOT add a ${murales.length + 1}th anywhere, do NOT repeat them along the wall as a decorative motif, and NEVER mount one on a door, a cupboard front, a wardrobe, panelling or any joinery: no cable runs there.`,
+    );
+  }
+
+  return lignes.join("\n");
 }
 
 // ── AUDIT→RETOUCHE ciblé : points lumineux ──────────────────────────────────
@@ -1525,6 +1554,12 @@ function reconcileRenderAdditions(
   // exemption, une suspension swappée n'était jamais shoppée quand la détection
   // de base avait raté le point (projet QAWf50S1 2026-07-10).
   fixedShoppable?: Set<string>,
+  // Catégories REMPLAÇABLES mais jamais AJOUTABLES (assets.element_category.replace_only) :
+  // une applique murale suppose un point électrique dans le mur. Le modèle en peint parfois
+  // une de plus que la photo n'en portait (projet iZp1c73T : 2 sur la photo, 3 au rendu, la
+  // 3e plaquée sur une porte de placard) — sans ce verrou, elle devenait un article
+  // achetable, alors qu'on ne peut ni promettre ni chiffrer le passage du courant.
+  replaceOnly?: Set<string>,
 ): Alteration[] {
   const covered = new Map<string, number>(); // multiset des catégories catalogue de l'AVANT
   for (const d of candidates) {
@@ -1538,6 +1573,7 @@ function reconcileRenderAdditions(
   // d'achat (matching aveugle à ~0.4, projet fpvZ « chaises à 40% »).
   const GHOST = /non visible|not visible|invisible|hors[- ]champ|barely visible|cannot be seen/i;
   for (const p of renderProfiles) {
+    if (replaceOnly?.has(p.category)) continue; // remplaçable, jamais ajoutable
     if ((p.movable === false && !fixedShoppable?.has(p.category)) || ADDITION_SKIP.has(p.category)) continue;
     if (GHOST.test(p.description ?? "") || !(p.description ?? "").trim()) continue;
     const c = resolveCatalogCategory(p.category, taxonomy);
@@ -1592,12 +1628,12 @@ export async function computeRenderInventory(
 ): Promise<{ adds: Alteration[]; profiles: ElementProfile[] }> {
   const renderImg = await loadImage(renderUrl);
   const renderProfiles = await detectElementProfiles(projectId, renderImg, "render_inventory", roomType, { withBbox: true });
+  const categories = await getElementCategories().catch(() => [] as ElementCategory[]);
   const fixedShoppable = new Set(
-    (await getElementCategories().catch(() => [] as ElementCategory[]))
-      .filter((c) => c.fixed_lightpoint && c.catalog_category)
-      .map((c) => c.slug),
+    categories.filter((c) => c.fixed_lightpoint && c.catalog_category).map((c) => c.slug),
   );
-  const adds = reconcileRenderAdditions(renderProfiles, candidates, taxonomy, fixedShoppable);
+  const replaceOnly = new Set(categories.filter((c) => c.replace_only).map((c) => c.slug));
+  const adds = reconcileRenderAdditions(renderProfiles, candidates, taxonomy, fixedShoppable, replaceOnly);
   console.log(`[pipeline:final] inventaire rendu: ${renderProfiles.length} éléments détectés → ${adds.length} additions`);
   return { adds, profiles: renderProfiles };
 }

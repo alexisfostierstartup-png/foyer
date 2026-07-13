@@ -87,11 +87,20 @@ export function StyleSelector({
           {grille(stables)}
 
           {beta.length > 0 && (
-            <div className="mt-8">
-              <h2 className="text-[13px] font-medium text-foyer-ink">
-                Beta <span className="text-foyer-muted">(en cours de finalisation)</span>
-              </h2>
-              <p className="mb-3 mt-0.5 text-[12px] leading-relaxed text-foyer-muted">
+            <div className="mt-10">
+              {/* Filets de part et d'autre : le titre séparait mal les deux groupes, on le
+                  lisait comme un simple libellé de plus. */}
+              <div className="flex items-center gap-3">
+                <span className="h-px flex-1 bg-foyer-border" />
+                <h2 className="whitespace-nowrap text-center font-serif text-[17px] text-foyer-ink">
+                  Beta{" "}
+                  <span className="text-[15px] text-foyer-muted">
+                    (en cours de finalisation)
+                  </span>
+                </h2>
+                <span className="h-px flex-1 bg-foyer-border" />
+              </div>
+              <p className="mb-4 mt-2 text-center text-[12px] leading-relaxed text-foyer-muted">
                 Vous pouvez les tester, mais notre catalogue est encore incomplet sur
                 certaines catégories.
               </p>

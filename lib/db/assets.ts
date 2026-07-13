@@ -101,6 +101,11 @@ export type ElementCategory = {
   // Actions proposées en review pour cette catégorie (défaut : les 3).
   allowed_actions?: DecisionAction[];
   fixed_lightpoint?: boolean;
+  // La catégorie ne peut être que REMPLACÉE, jamais AJOUTÉE : une applique murale
+  // suppose un point électrique dans le mur — en créer une, on ne peut ni le promettre ni
+  // le chiffrer. Ces catégories sont exclues des additions du rendu, même quand le modèle
+  // en peint une de plus.
+  replace_only?: boolean;
   preserve_behind?: boolean;
   // Mots-clés FR/EN pour le remap déterministe : un élément détecté en "other"
   // dont l'élément/description matche un de ces mots est reclassé vers ce slug.
