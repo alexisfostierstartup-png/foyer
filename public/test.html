@@ -15,7 +15,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Hanken Grotesk',system-ui,sans-serif;background:var(--paper);color:var(--encre);font-size:16px;line-height:1.5}
-.wrap{max-width:680px;margin:0 auto;padding:20px 18px 120px}
+.wrap{max-width:680px;margin:0 auto;padding:20px 18px 60px}
 header{display:flex;justify-content:space-between;align-items:center;padding:6px 0 16px}
 .logo{font-family:'Fraunces',serif;font-weight:650;font-size:24px;color:var(--foret)}
 .badge{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muet)}
@@ -41,6 +41,10 @@ p{margin-bottom:12px}
 .opt:hover{border-color:var(--sauge)}
 .opt.sel{border-color:var(--foret);background:#EFF4F0;font-weight:600}
 .opt input{accent-color:var(--foret);width:16px;height:16px;flex:none;pointer-events:none}
+/* Classement : la pastille porte le rang, ou un tiret tant que l'item n'est pas placé. */
+.rank-badge{flex:none;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;border:1.5px solid var(--ligne);color:var(--muet);background:var(--paper)}
+.opt.sel .rank-badge{background:var(--foret);border-color:var(--foret);color:#fff}
 .scale{display:flex;gap:6px}
 .scale button{flex:1;padding:11px 0;border:1.5px solid var(--ligne);background:var(--carte);border-radius:10px;
   font-size:16px;font-weight:600;cursor:pointer;color:var(--encre);transition:background .12s,border-color .12s}
@@ -67,23 +71,13 @@ textarea:focus,input:focus{outline:none;border-color:var(--foret)}
 .checkout{background:var(--foret);border-radius:14px;padding:22px;color:#fff;text-align:center;margin:10px 0 16px}
 .checkout .kicker{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--sauge)}
 .checkout .prix{font-family:'Fraunces',serif;font-size:42px;font-weight:650;color:var(--or)}
-.checkout .desc{color:#DCE6DE;font-size:14px;margin:6px 0 16px}
-.checkout .cta{display:flex;flex-direction:column;gap:8px}
-.checkout .btn{background:var(--or);color:var(--foret)}
-.checkout .btn.ghost{background:transparent;color:#DCE6DE;border-color:#587A68}
+.checkout .desc{color:#DCE6DE;font-size:14px;margin:6px 0 0}
 .reveal{background:#EFF4F0;border:1.5px solid var(--ok);border-radius:10px;padding:12px 14px;font-size:14px;margin:10px 0 18px}
-#quit-btn{position:fixed;bottom:18px;right:18px;z-index:50;background:var(--carte);border:1.5px solid var(--alerte);
-  color:var(--alerte);border-radius:99px;padding:11px 18px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;
-  box-shadow:0 3px 14px rgba(40,40,30,.18)}
-#quit-btn:hover{background:var(--alerte);color:#fff}
-#quit-modal{position:fixed;inset:0;background:rgba(20,25,20,.55);display:none;align-items:center;justify-content:center;z-index:60;padding:18px}
-#quit-modal.open{display:flex}
-#quit-modal .card{max-width:440px;width:100%;margin:0}
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--foret);color:#fff;
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--foret);color:#fff;
   padding:10px 20px;border-radius:99px;font-size:14px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:70}
 .toast.show{opacity:1}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
-@media(max-width:480px){.wrap{padding:14px 14px 120px}h1{font-size:23px}}
+@media(max-width:480px){.wrap{padding:14px 14px 60px}h1{font-size:23px}}
 </style>
 </head>
 <body>
@@ -99,21 +93,6 @@ textarea:focus,input:focus{outline:none;border-color:var(--foret)}
   <main id="app"></main>
 </div>
 
-<button id="quit-btn" title="En usage réel, je serais parti ici">🚪 J’aurais quitté ici</button>
-
-<div id="quit-modal"><div class="card" style="max-height:88vh;overflow-y:auto">
-  <h2 style="margin-bottom:8px">Vous seriez parti ici ?</h2>
-  <p style="font-size:14px;color:var(--muet)">C’est la donnée la plus précieuse du test. Dites-nous où et pourquoi, puis le test continue normalement.</p>
-  <span class="q-label">À quelle étape de l’app ?</span>
-  <div class="opts" id="quit-steps"></div>
-  <span class="q-label" style="margin-top:16px">Et pourquoi ?</span>
-  <textarea id="quit-reason" placeholder="Trop lent / je ne comprends pas quoi faire / le rendu ne me plaît pas / …"></textarea>
-  <div class="nav">
-    <button class="btn ghost" data-act="quit-close">Annuler</button>
-    <button class="btn" data-act="quit-save">Enregistrer</button>
-  </div>
-</div></div>
-
 <div class="toast" id="toast"></div>
 
 <script>
@@ -127,7 +106,7 @@ const PRIX_PACK = 4.99;
 /* ══════════════════════════════════════ */
 
 const params = new URLSearchParams(location.search);
-const S = { session_id: null, sid_app: params.get("sid") || null, data: {}, exits: [], step: 0 };
+const S = { session_id: null, sid_app: params.get("sid") || null, data: {}, step: 0 };
 
 try {
   const draft = JSON.parse(localStorage.getItem("foyer_test") || "null");
@@ -137,8 +116,6 @@ try {
 if (!S.session_id) S.session_id = "ut_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
 const eur = (n) => n.toFixed(2).replace(".", ",") + " €";
-const PAY_OUI = "Oui, je prends le pack";
-const PAY_NON = "Non, je m’arrête là";
 
 /* ─────────── état & sauvegarde ─────────── */
 const setSave = (t) => { document.getElementById("save-state").textContent = t; };
@@ -171,16 +148,16 @@ function pushRemote() {
   clearTimeout(pushT);
   pushT = setTimeout(async () => {
     const profil = S.data.profil || {};
-    const final = S.data.final || {};
+    const reco = S.data.reco || {};
     try {
       const r = await save({
         session_id: S.session_id,
         sid_app: S.sid_app,
         prenom: profil.prenom || null,
-        nom: profil.nom || null,
-        email: final.email || null,
+        nom: null,
+        email: reco.email || null,
         data: S.data,
-        exits: S.exits,
+        exits: [],
         step_reached: "S" + S.step,
         updated_at: new Date().toISOString(),
       });
@@ -226,6 +203,18 @@ function checks(sec, k, options) {
       <input type="checkbox" ${v.includes(o) ? "checked" : ""}>${o}</label>`).join("") + `</div>`;
 }
 
+// CLASSEMENT. On clique dans l’ordre de préférence : la pastille affiche le rang.
+// Recliquer un item déjà classé le retire, et les suivants se renumérotent — sinon
+// on ne pourrait pas corriger une erreur sans tout recommencer.
+function rank(sec, k, options) {
+  const ordre = get(sec, k) || [];
+  return `<div class="opts">` + options.map((o) => {
+    const i = ordre.indexOf(o);
+    return `<label class="opt${i >= 0 ? " sel" : ""}" data-pick="rank" ${attrs(sec, k)} data-v="${esc(o)}">
+      <span class="rank-badge">${i >= 0 ? i + 1 : "–"}</span>${o}</label>`;
+  }).join("") + `</div>`;
+}
+
 // max <= 6 → échelle 1..max ; max = 10 → NPS 0..10
 function scale(sec, k, max, lo, hi) {
   const v = get(sec, k);
@@ -255,317 +244,233 @@ const nav = (prev, next, label) =>
     <button class="btn" data-act="go" data-step="${next}">${label || "Continuer"}</button>
   </div>`;
 
-/* ═══════════════ SECTIONS ═══════════════ */
+/* ═══════════════ SECTIONS ═══════════════
+ * Une idée par bloc, les questions collées au moment d’usage, et le consentement à
+ * payer testé EN CONTEXTE juste après la fonction concernée — pas dans un écran
+ * « moment de vérité » détaché, où il ne mesure plus qu’une opinion.
+ * La démographie est en DERNIER : la demander d’entrée fait fuir, et elle n’éclaire
+ * rien tant que le testeur n’a rien vu.
+ * ═══════════════════════════════════════ */
 const SECTIONS = [
 
 /* 0 */ { id: "accueil", bar: "Bienvenue", render: () => `
   <h1>Bienvenue, et merci d’être là 🌿</h1>
-  <p>Vous allez tester <b>Héra</b>, une app qui transforme la photo d’une pièce en projet déco réaliste, avec les vrais meubles à acheter derrière. Comptez <b>~20 minutes</b> (+ 10 min de bonus si vous nous aimez vraiment).</p>
+  <p>Vous allez tester <b>Héra</b>, une app qui transforme la photo d’une pièce en projet déco réaliste, avec les vrais meubles à acheter derrière. Comptez <b>~15 minutes</b>.</p>
 
   <div class="card">
     <b>Le deal d’honnêteté 🤝</b>
     <p style="margin-top:8px">On ne cherche pas des compliments, on cherche <b>la vérité</b>. Si quelque chose est moche, lent ou incompréhensible, dites-le. C’est exactement pour ça qu’on vous a fait venir.</p>
-    <p style="margin-bottom:0">Et surtout : à tout moment, si <i>en usage réel</i> vous seriez parti, cliquez le bouton <b>« 🚪 J’aurais quitté ici »</b> en bas à droite. C’est la donnée la plus précieuse du test, personne ne sera vexé. Promis.</p>
+    <p style="margin-bottom:0">Et si, en usage réel, vous auriez <b>abandonné</b> à un moment : notez-le. On vous le demandera, et c’est la réponse la plus précieuse du test. Personne ne sera vexé, promis.</p>
   </div>
 
   <div class="notes">
-    <b>Trois choses à savoir avant de commencer :</b>
+    <b>Deux choses à savoir avant de commencer :</b>
     <li>Tout est <b>gratuit et illimité</b> pendant la beta. Si un écran vous propose de payer, vous pouvez accepter : cela modélisera un paiement fictif.</li>
-    <li>Un bug, un truc cassé ? Dites-le nous ici : la page, ce que vous attendiez, ce que vous avez eu. Une capture d’écran si vous l’avez.</li>
+    <li>Un bug, un truc cassé ? Dites-le nous ici : la page, ce que vous attendiez, ce que vous avez eu.</li>
   </div>
 
   ${nav(null, 1, "C’est parti")}`
 },
 
-/* 1 */ { id: "libre", bar: "Exploration libre", render: () => `
-  <div class="section-eyebrow">Étape 1 / 9 · ~8 min</div>
+/* 1 */ { id: "libre", bar: "Premier contact", render: () => `
+  <div class="section-eyebrow">Étape 1 / 8 · ~6 min</div>
   <h2>À vous de jouer, sans guide</h2>
 
   <p>Ouvrez <a href="${APP_URL}/create" target="_blank" rel="noopener"><b>${APP_URL}/create</b></a> dans un autre onglet, et faites <b>votre salon</b>, comme si on n’était pas derrière votre épaule.</p>
-  <p style="font-size:14px;color:var(--muet)">Pourquoi le salon ? C’est là que notre catalogue est le plus musclé : on a un faible pour les canapés. Pas d’inquiétude, juste après vous pourrez vous amuser avec les pièces que vous voulez, la chambre parentale avec dressing ou la salle de billard.</p>
+  <p style="font-size:14px;color:var(--muet)">Pourquoi le salon ? C’est là que notre catalogue est le plus fourni. Vous pourrez jouer avec d’autres pièces juste après.</p>
 
   <div class="card">
     <b>La photo idéale 📸</b>
     <p style="margin:6px 0 0;font-size:14px">Cadrée large (un mur entier visible), en lumière naturelle, et sans vous dedans : Héra redécore les pièces, pas les gens.</p>
   </div>
 
-  <p><b>Revenez ici quand votre salon est fini</b>, c’est à dire quand vous avez vu le rendu et sa liste de courses. Prenez 5 à 10 minutes.</p>
+  <p><b>Revenez ici quand votre salon est fini</b>, c’est-à-dire quand vous avez vu le rendu et sa liste de courses.</p>
 
   ${q("Qu’avez-vous fait spontanément ?", checks("libre", "actions", [
     "J’ai ajouté des contraintes avant le 1er rendu",
-    "J’ai lu la description d’un style (au survol)",
-    "J’ai lancé les 3 rendus d’agencement",
+    "J’ai survolé ou lu la description d’un style",
+    "J’ai lancé les 3 dispositions",
     "J’ai modifié le premier rendu",
     "J’ai changé un meuble qui ne me convenait pas",
-  ]), "Cochez tout ce qui est vrai, zéro jugement. Ne rien cocher est une réponse : ça veut dire que vous êtes allé(e) au plus court.")}
+    "Je n’ai rien fait de tout ça (je suis allé au plus court)",
+  ]), "Cochez tout ce qui est vrai, zéro jugement.")}
 
   ${q("Première impression, à chaud", scale("libre", "impression", 5, "Bof", "Waouh"))}
-
-  ${q("Auriez-vous réalisé un panier d’achat ?", radio("libre", "panier", [
-    "Oui", "Non",
-  ], { row: true }))}
-  ${get("libre", "panier") === "Oui" ? q("De l’ensemble des articles, ou d’une partie ?", radio("libre", "panier_part", [
-    "De l’ensemble", "D’une partie",
-  ], { row: true })) : ""}
-  ${get("libre", "panier") === "Non" ? q("Qu’est-ce qui vous en a empêché ?", txt("libre", "panier_frein", "Dites-nous tout…", true)) : ""}
-
   ${q("C’est crédible ? (on dirait votre vraie pièce redécorée, pas un montage)", scale("libre", "credible", 5, "Montage flagrant", "Ma pièce, en mieux"))}
   ${q("C’est clair ? (vous saviez toujours quoi faire)", scale("libre", "clair", 5, "Perdu(e)", "Limpide"))}
   ${q("Où avez-vous hésité, ou failli abandonner ?", txt("libre", "hesitation", "L’écran, le moment, le pourquoi…", true))}
+  ${q("Auriez-vous constitué un panier d’achat ?", radio("libre", "panier", ["Oui", "Non"], { row: true }))}
 
   ${nav(0, 2)}`
 },
 
-/* 2 */ { id: "guide", bar: "Visite guidée", render: () => {
-  const manque = get("guide", "style_trouve") === "Non, il manque le mien";
-  const pay = get("guide", "paywall");
+/* 2 */ { id: "fonctions", bar: "Les fonctions clés", render: () => {
+  const pay = get("fonctions", "paywall");
   return `
-  <div class="section-eyebrow">Étape 2 / 9 · ~7 min</div>
-  <h2>Visite guidée : les recoins que vous avez peut-être ratés</h2>
-  <p>Maintenant on vous tient la main (gentiment). <b>Repartez sur <a href="${APP_URL}/create" target="_blank" rel="noopener">${APP_URL}/create</a> et ré-uploadez la même photo</b> : ça crée un projet neuf, votre premier reste intact. Puis faites chaque mini-mission.</p>
+  <div class="section-eyebrow">Étape 2 / 8 · ~6 min</div>
+  <h2>Les fonctions clés</h2>
+  <p>Cette fois on vous tient la main. <b>Repartez sur <a href="${APP_URL}/create" target="_blank" rel="noopener">${APP_URL}/create</a> et ré-uploadez la même photo</b> : ça crée un projet neuf, votre premier reste intact. Puis faites chaque mini-mission, et répondez juste en dessous.</p>
 
   <div class="feature-card">
     <h3>🎨 Les styles</h3>
     <div class="fdesc">Sur l’écran « Quelle ambiance ? », parcourez l’ensemble des styles disponibles.</div>
-    ${q("Vous avez trouvé un style qui VOUS ressemble ?", radio("guide", "style_trouve", [
+    ${q("Avez-vous trouvé un style qui vous ressemble ?", radio("fonctions", "style_trouve", [
       "Oui, pile le mien", "À peu près", "Non, il manque le mien",
     ], { row: true }))}
-    ${manque ? q("Lequel manque ?", txt("guide", "style_manque", "Ex. japandi brut, maximalisme kitsch…")) : ""}
-    ${q("Le rendu est-il fidèle au style choisi ?", scale("guide", "style_fidele", 5, "Aucun rapport", "Fidèle"))}
+    ${q("Le rendu est-il fidèle au style choisi ?", scale("fonctions", "style_fidele", 5, "Aucun rapport", "Fidèle"))}
   </div>
 
   <div class="feature-card">
     <h3>🛋️ Garder, personnaliser, remplacer</h3>
     <div class="fdesc">Sur l’écran « Voici ce qu’on va faire », testez les trois options sur des meubles différents.</div>
-    ${q("Votre pièce reste-t-elle la vôtre ? (murs, fenêtres, portes à leur place)", radio("guide", "piece_respectee", [
+    ${q("Votre pièce reste-t-elle la vôtre ? (murs, fenêtres, portes à leur place)", radio("fonctions", "piece_respectee", [
       "Oui, intacte", "Quelques libertés", "Ce n’était plus du tout la même",
-    ], { row: true }))}
-    ${q("Utilité de pouvoir garder ou personnaliser, au lieu de tout remplacer", scale("guide", "gpr_utile", 5, "Gadget", "Indispensable"))}
-    ${q("Choisir meuble par meuble ce qu’on garde et ce qu’on remplace, ça vaut de l’argent ?", radio("guide", "gpr_payer", [
-      "Oui, c’est ce qui fait la valeur du truc",
-      "Non, ça doit être inclus de base",
-      "Non, ça ne m’a rien apporté",
     ]))}
+    ${q("Utilité de pouvoir garder ou personnaliser, plutôt que tout remplacer", scale("fonctions", "utilite_garder", 5, "Gadget", "Indispensable"))}
   </div>
 
   <div class="feature-card">
     <h3>🛒 La liste de courses</h3>
     <div class="fdesc">Ouvrez 2 ou 3 produits de votre liste.</div>
-    ${q("Les produits proposés ressemblent-ils à ceux du rendu ?", scale("guide", "match", 5, "Rien à voir", "Quasi identiques"))}
-    ${q("La liste vous fait gagner du temps, par rapport à chercher vous-même ?", scale("guide", "liste_temps", 5, "Non", "Énormément"))}
+    ${q("Les produits proposés ressemblent-ils à ceux du rendu ?", scale("fonctions", "produits_fideles", 5, "Rien à voir", "Quasi identiques"))}
+    ${q("La liste vous fait-elle gagner du temps, vs chercher vous-même ?", scale("fonctions", "gain_temps", 5, "Non", "Énormément"))}
   </div>
 
   <div class="feature-card">
     <h3>🔁 Peaufiner le rendu</h3>
-    <div class="fdesc">Sur l’écran du rendu, il y a un bouton « Modifier ». Relancez un ou deux ajustements sur des éléments qui ne vous plaisent pas.</div>
-    ${q("Auriez-vous eu envie de continuer à itérer, de peaufiner encore ?", radio("guide", "iterer", [
+    <div class="fdesc">Sur l’écran du rendu, il y a un bouton « Modifier ». Relancez un ou deux ajustements.</div>
+    ${q("Auriez-vous eu envie de continuer à itérer ?", radio("fonctions", "iterer", [
       "Oui, j’aurais enchaîné plusieurs fois",
       "Une ou deux fois de plus, pas davantage",
       "Non, le premier rendu me suffisait",
     ]))}
 
-    <p style="margin-top:16px"><b>C’est exactement là que ça deviendrait payant.</b> En usage réel, une fois vos rendus gratuits épuisés, cet écran apparaît. Répondez comme si c’était votre vrai argent (on sait, c’est plus dur).</p>
+    <p style="margin-top:16px"><b>C’est exactement là que ça deviendrait payant.</b> En usage réel, une fois vos rendus gratuits épuisés, cet écran apparaît. Répondez comme si c’était votre vrai argent.</p>
 
-    <!-- La carte n'est PLUS cliquable : avec ses boutons, on la prenait pour une vraie
-         page de paiement (ou pour une capture d'écran figée) et on ne comprenait pas
-         qu'il fallait répondre. Elle devient une simple MAQUETTE de l'offre, annoncée
-         comme telle ; la décision se prend juste en dessous, avec les mêmes cases que
-         partout ailleurs dans le questionnaire. -->
     <div class="checkout">
       <div class="kicker">L’écran que vous verriez</div>
       <div class="prix">${eur(PRIX_PACK)}</div>
       <div class="desc">Un pack de crédits : de quoi peaufiner encore, ou lancer d’autres pièces. Sans abonnement.</div>
     </div>
 
-    ${q("Auriez-vous payé ?", radio("guide", "paywall", [PAY_OUI, PAY_NON]),
+    ${q("Auriez-vous payé ce pack ?", radio("fonctions", "paywall", [PAY_OUI, PAY_NON]),
       "Il n’y a rien à cliquer dans l’encadré ci-dessus : c’est une maquette. Répondez ici.")}
 
-    ${pay ? `<div class="reveal">✓ Noté : <b>${esc(pay)}</b>. Aucun paiement réel, évidemment, mais votre réponse compte double dans notre cœur.</div>` : ""}
-
-    ${pay === PAY_NON ? q("Qu’est-ce qui vous arrête ?", radio("guide", "stop_raison", [
-      "Trop cher pour ce que c’est",
-      "Le rendu que j’ai déjà me suffit",
-      "Je préfère payer à l’usage, pas un pack",
-      "Le produit ne m’a pas convaincu",
-      "Je ne décide jamais à chaud",
-    ])) : ""}
+    ${pay ? `<div class="reveal">✓ Noté : <b>${esc(pay)}</b>. Aucun paiement réel, évidemment.</div>` : ""}
   </div>
 
   ${nav(1, 3)}`;
 }},
 
-/* 3 */ { id: "dispo", bar: "Les 3 dispositions", render: () => {
-  const vu = get("dispo", "vu");
-  return `
-  <div class="section-eyebrow">Étape 3 / 9 · ~3 min</div>
-  <h2>📐 Les 3 dispositions</h2>
-  <p>Sur l’écran « Voici ce qu’on va faire », à côté de « Lancer 1 rendu », il y a un second bouton : <b>« Lancer 3 dispositions »</b>. Il génère trois agencements différents de votre pièce, dans le même style, et vous en choisissez un.</p>
-  <p style="font-size:14px;color:var(--muet)">Allez-y maintenant, puis revenez. C’est la fonction sur laquelle on hésite le plus : on a besoin de savoir si elle vaut son prix.</p>
+/* 3 */ { id: "valider", bar: "Deux fonctions à valider", render: () => `
+  <div class="section-eyebrow">Étape 3 / 8 · ~5 min</div>
+  <h2>Deux fonctions à valider</h2>
+  <p>Chacune a son propre prix. On vous demande donc si vous paieriez, <b>juste après l’avoir essayée</b>.</p>
 
-  ${q("Vous avez réussi à lancer les 3 dispositions ?", radio("dispo", "vu", [
-    "Oui",
-    "Non, je n’ai pas trouvé le bouton",
-    "Non, ça a échoué ou c’était trop long",
-    "Non, je n’en ai pas eu envie",
-  ], { row: false }))}
-
-  ${vu === "Oui" ? `
-    ${q("Les 3 propositions étaient-elles vraiment différentes les unes des autres ?", radio("dispo", "diverses", [
-      "Oui, trois vraies alternatives", "Un peu", "Non, quasiment les mêmes",
-    ], { row: true }))}
-    ${q("Utile pour vous projeter ?", scale("dispo", "utile", 5, "Sans intérêt", "Très utile"))}
-    ${q("Avez-vous préféré une des 3 dispositions à l’agencement actuel de votre pièce ?", radio("dispo", "prefere", [
-      "Oui, une me plaît davantage",
-      "Non, mon agencement actuel reste le meilleur",
-      "Aucune ne tenait debout (meubles mal placés, circulation impossible…)",
+  <div class="feature-card">
+    <h3>📐 Les 3 dispositions</h3>
+    <div class="fdesc">Sur l’écran « Voici ce qu’on va faire », à côté de « Lancer 1 rendu », il y a « Lancer 3 dispositions » : trois agencements différents de votre pièce, dans le même style.</div>
+    ${q("Avez-vous réussi à lancer les 3 dispositions ?", radio("valider", "dispo_fait", [
+      "Oui",
+      "Non, je n’ai pas trouvé le bouton",
+      "Non, ça a échoué ou c’était trop long",
+      "Non, je n’en ai pas eu envie",
     ]))}
-    ${q("Cette fonction est payante (0,10 €). Sachant cela, l’utiliseriez-vous ?", radio("dispo", "repayer", [
+    ${q("Utile pour vous projeter ?", scale("valider", "dispo_utile", 5, "Sans intérêt", "Très utile"))}
+    ${q("Cette fonction coûte 0,10 €. L’utiliseriez-vous ?", radio("valider", "dispo_payer", [
       "Oui, à chaque projet",
       "Oui, mais seulement sur une pièce compliquée",
       "Non, un seul rendu me suffit",
       "Non, je ne paierais pas pour ça",
     ]))}
-    ${q("Qu’est-ce qui manque pour que ça vaille vraiment le coup ?", txt("dispo", "manque", "Un plan vu de dessus, plus de variantes, pouvoir bouger un meuble soi-même…", true))}
-  ` : ""}
-
-  ${vu && vu !== "Oui" ? q("Dites-nous en deux mots ce qui a bloqué", txt("dispo", "blocage", "Je ne l’ai pas vu, je n’ai pas compris à quoi ça servait…", true)) : ""}
-
-  ${nav(2, 4)}`;
-}},
-
-/* 4 */ { id: "expert", bar: "Le mode Expert", render: () => {
-  const fait = get("expert", "fait");
-  return `
-  <div class="section-eyebrow">Étape 4 / 9 · ~5 min</div>
-  <h2>💎 Le mode Expert</h2>
-  <p>C’est un parcours à part, avec ses propres règles : au lieu de meubles inventés, Héra intègre <b>de vrais produits</b> dans le rendu, et vous pouvez retoucher une zone précise plutôt que tout relancer.</p>
-  <p>Lancez un nouveau projet via <a href="${APP_URL}/expert-create" target="_blank" rel="noopener"><b>${APP_URL}/expert-create</b></a> : indiquez une référence produit si on vous le propose, générez, puis tentez une retouche ciblée du rendu.</p>
-
-  ${q("Vous avez réussi à aller au bout du mode Expert ?", radio("expert", "fait", [
-    "Oui",
-    "Non, je me suis perdu(e) en route",
-    "Non, ça a échoué ou c’était trop long",
-    "Non, je n’en ai pas eu envie",
-  ]))}
-
-  ${fait === "Oui" ? `
-    ${q("Le rendu intègre-t-il de vrais produits (pas des meubles inventés) ?", scale("expert", "reels", 5, "Inventés", "Les vrais"))}
-    ${q("La retouche est-elle ciblée ? (seule la zone demandée change)", radio("expert", "retouche", [
-      "Oui, chirurgical", "À peu près", "Tout a bougé",
-    ], { row: true }))}
-    ${q("Par rapport au parcours normal, l’Expert vous apporte…", radio("expert", "apport", [
-      "Beaucoup : c’est ce mode que j’utiliserais",
-      "Un peu, mais le mode normal me suffirait",
-      "Rien de plus",
-      "C’est plus compliqué, sans être meilleur",
-    ]))}
-
-
-    ${q("Un commentaire sur l’Expert ?", txt("expert", "verbatim", "Ce qui vous a marqué, en bien ou en mal…", true))}
-  ` : ""}
-
-  ${fait && fait !== "Oui" ? q("Dites-nous en deux mots ce qui a bloqué", txt("expert", "blocage", "Je n’ai pas compris quoi faire, ça a planté…", true)) : ""}
-
-  <div class="card">
-    <b>Ce que l’Expert débloque, en résumé 💎</b>
-    <p style="font-size:13.5px;color:var(--muet);margin:4px 0 10px">Tout ce qui suit est réservé aux membres Expert.</p>
-    <div class="notes" style="margin:0">
-      <li><b>Le rendu au réel</b> — de vrais produits du catalogue intégrés dans l’image, au lieu de meubles inventés.</li>
-      <li><b>Modifier un meuble précis</b> — vous choisissez le produit, il apparaît dans le rendu.</li>
-      <li><b>La retouche ciblée</b> — ne relancer qu’une zone, au lieu de tout regénérer.</li>
-      <li><b>Garder l’historique de vos projets</b> — vos rendus sont sauvegardés, vous les retrouvez.</li>
-      <li><b>Des rendus illimités</b> — plus de crédits à compter.</li>
-    </div>
   </div>
 
-  ${q("Sachant tout ça, seriez-vous prêt(e) à payer ?", radio("expert", "paywall", [
-    "Oui — l’abonnement à 15 €/mois (20 € de crédits inclus, résiliable)",
-    "Oui — le pack ponctuel à 15 € (15 € de crédits, sans engagement)",
-    "Non — le mode gratuit me suffit",
-  ]), "Répondez même si vous n’avez pas réussi à aller au bout du mode Expert : c’est l’offre qu’on vous demande de juger, pas votre parcours.")}
+  <div class="feature-card">
+    <h3>💎 Le mode Expert</h3>
+    <div class="fdesc">Lancez un projet via <a href="${APP_URL}/expert-create" target="_blank" rel="noopener">${APP_URL}/expert-create</a>, puis tentez une retouche ciblée du rendu.</div>
+    ${q("Avez-vous réussi à aller au bout du mode Expert ?", radio("valider", "expert_fait", [
+      "Oui",
+      "Non, je me suis perdu(e) en route",
+      "Non, ça a échoué ou c’était trop long",
+      "Non, je n’en ai pas eu envie",
+    ]))}
 
-  ${get("expert", "paywall") === "Non — le mode gratuit me suffit"
-    ? q("Qu’est-ce qui vous ferait changer d’avis ?", txt("expert", "declencheur", "Un prix plus bas, une fonction qui manque, une garantie…", true))
-    : ""}
+    <div class="card">
+      <b>Ce que l’Expert débloque 💎</b>
+      <div class="notes" style="margin:8px 0 0">
+        <li><b>Le rendu au réel</b> — de vrais produits du catalogue intégrés dans l’image, au lieu de meubles inventés.</li>
+        <li><b>Modifier un meuble précis</b> — vous choisissez le produit, il apparaît dans le rendu.</li>
+        <li><b>La retouche ciblée</b> — ne relancer qu’une zone, au lieu de tout regénérer.</li>
+        <li><b>Garder l’historique de vos projets</b> — vos rendus sont sauvegardés.</li>
+        <li><b>Des rendus illimités</b> — plus de crédits à compter.</li>
+      </div>
+    </div>
 
-  ${nav(3, 5)}`;
-}},
+    ${q("Sachant ce que l’Expert débloque, seriez-vous prêt(e) à payer ?", radio("valider", "expert_payer", [
+      "Oui — abonnement 15 €/mois (20 € de crédits inclus, résiliable)",
+      "Oui — pack ponctuel 15 € (15 € de crédits, sans engagement)",
+      "Non — le mode gratuit me suffit",
+    ]), "Répondez même si vous n’avez pas réussi à aller au bout : c’est l’offre qu’on vous demande de juger, pas votre parcours.")}
+  </div>
 
-/* 5 */ { id: "achat", bar: "Le panier", render: () => {
+  ${nav(2, 4)}`
+},
+
+/* 4 */ { id: "achat", bar: "Le panier & le marché", render: () => {
   const a = get("achat", "achat");
   return `
-  <div class="section-eyebrow">Étape 5 / 9 · ~3 min</div>
-  <h2>Parlons du panier (honnêtement)</h2>
+  <div class="section-eyebrow">Étape 4 / 8 · ~3 min</div>
+  <h2>Le panier, honnêtement</h2>
 
-  ${q("La liste de courses de VOTRE salon : vous auriez acheté ?", radio("achat", "achat", [
+  ${q("La liste de courses de votre salon : vous auriez acheté ?", radio("achat", "achat", [
     "Tout ou presque", "Une partie", "Rien",
   ], { row: true }))}
 
   ${a && a !== "Rien" ? q("Grâce à quel rendu ?", radio("achat", "rendu_declencheur", [
-    "Gratuit", "Expert",
-  ], { row: true }),
-    "Le rendu gratuit du départ, ou celui du mode Expert (avec les vrais produits intégrés à l’image) ?") : ""}
+    "Le rendu gratuit du départ", "Le rendu du mode Expert",
+  ])) : ""}
 
   ${a && a !== "Rien" ? q("Pour environ quel montant ?", radio("achat", "montant", [
     "Moins de 100 €", "100 à 300 €", "300 à 600 €", "600 à 1 000 €", "1 000 à 2 000 €", "Plus de 2 000 €",
   ], { row: true })) : ""}
 
-  <!-- CASES À COCHER dans les deux cas : plusieurs raisons coexistent presque toujours
-       (des articles ne plaisaient pas ET c'était trop cher) — un choix unique en
-       écraserait la moitié. Clé "freins" (tableau).
-       (Pas de backtick dans ce commentaire : il vit DANS un template literal, un backtick
-       le refermerait — ce qui a cassé la page une fois.) -->
-  ${a && a !== "Tout ou presque" ? q(
-    a === "Une partie" ? "Pourquoi pas le reste ?" : "Pourquoi ce « non » ?",
-    checks("achat", "freins", [
-      // Cette raison n'a de sens que pour un panier partiel : le rendu plaisait, mais
-      // pas tous les articles. Sur un « Rien », elle serait absurde.
-      ...(a === "Une partie" ? ["Seulement une partie des articles me plaisaient"] : []),
-      "Les produits ne ressemblaient pas assez au rendu",
-      "Trop cher",
-      "Je veux voir et toucher avant d’acheter",
-      "Pas de vrai projet en ce moment",
-      "Je ne fais pas confiance aux liens d’achat",
-      "Autre",
-    ]),
-    "Cochez tout ce qui a joué.") : ""}
-
-  ${q("LA question qui nous obsède : si le catalogue avait proposé un produit PLUS PROCHE de celui du rendu, auriez-vous acheté ?",
+  ${q("Si le catalogue avait proposé un produit plus proche du rendu, votre décision d’achat aurait-elle changé ?",
     radio("achat", "attribution", [
-      "Oui, clairement", "Probablement", "Non, ce n’était pas le produit le problème",
-    ]),
-    "Répondez même si vous auriez acheté : pensez alors aux articles que vous auriez laissés.")}
+      "Oui, j’aurais (davantage) acheté",
+      "Peut-être",
+      "Non, le produit n’était pas le frein",
+    ]))}
 
-  ${q("Votre PROCHAIN projet déco réel, ce serait quand ?", radio("achat", "prochain", [
+  ${q("Votre prochain projet déco réel, ce serait quand ?", radio("achat", "prochain", [
     "C’est maintenant", "Dans les 3 mois", "Cette année", "Pas prévu",
   ], { row: true }))}
 
-  ${q("Chez vous, combien de pièces auriez-vous envie de redécorer avec Héra ?", radio("achat", "nb_pieces", [
-    "0", "1", "2-3", "4 et plus",
+  ${q("Chez vous, combien de pièces aimeriez-vous redécorer avec Héra ?", radio("achat", "nb_pieces", [
+    "0", "1", "2–3", "4 et plus",
   ], { row: true }))}
 
-  ${nav(4, 6)}`;
+  ${nav(3, 5)}`;
 }},
 
-/* 6 */ { id: "mission", bar: "La mission", render: () => `
-  <div class="section-eyebrow">Étape 6 / 9 · ~2 min</div>
+/* 5 */ { id: "mission", bar: "La mission", render: () => `
+  <div class="section-eyebrow">Étape 5 / 8 · ~2 min</div>
   <h2>La mission Héra 🌱</h2>
-  <p>Héra privilégie, dans l’ordre : garder vos meubles, les customiser, la seconde main, puis le neuf durable. Dites-nous ce que ça vaut <b>pour vous</b>.</p>
+  <p>Héra cherche à garder vos meubles avant d’en racheter, à privilégier la seconde main, puis le neuf durable. Dites-nous ce que ça vaut <b>pour vous</b>.</p>
 
-  ${q("Qu’on essaie d’abord de GARDER ou de CUSTOMISER vos meubles", scale("mission", "garder", 5, "Indifférent", "Essentiel"))}
-  ${q("Qu’on propose de la seconde main en priorité", scale("mission", "sm", 5, "Indifférent", "Essentiel"))}
-  ${q("Qu’on propose une alternative neuve plus responsable (même si c’est neuf)", scale("mission", "green", 5, "Indifférent", "Essentiel"))}
+  ${q("Classez ces priorités, de la plus à la moins importante pour vous",
+    rank("mission", "priorites", [
+      "Garder ou customiser mes meubles existants",
+      "Me proposer de la seconde main",
+      "Me proposer une alternative neuve plus responsable",
+    ]),
+    "Cliquez-les dans l’ordre. Recliquez pour retirer.")}
 
-  ${q("Si Héra vous proposait de la seconde main, quelle part de votre panier accepteriez-vous ainsi ?",
-    radio("mission", "sm_part", ["0 %", "25 %", "50 %", "75 %", "100 %"], { row: true }),
-    "La seconde main n’est pas encore branchée dans l’app : répondez pour le Héra de demain.")}
-
-  ${q("Et acheter un meuble d’occasion en ligne, sans le voir, ça vous…", radio("mission", "sm_confiance", [
+  ${q("Acheter un meuble d’occasion en ligne, sans le voir, ça vous…", radio("mission", "sm_confiance", [
     "Va très bien (je le fais déjà)",
     "Va, si les photos sont bonnes",
     "Freine (état, garantie)",
     "Bloque complètement",
-  ]))}
+  ]), "La seconde main n’est pas encore branchée dans l’app : répondez pour le Héra de demain.")}
 
   ${q("Entre une solution 20 % moins chère et la solution éco, vous prenez…", radio("mission", "arbitrage", [
     "La moins chère, sans hésiter",
@@ -574,81 +479,71 @@ const SECTIONS = [
     "L’éco, point",
   ]))}
 
-  ${nav(5, 7)}`
+  ${nav(4, 6)}`
 },
 
-/* 7 */ { id: "immo", bar: "Et côté immobilier ?", render: () => `
-  <div class="section-eyebrow">Étape 7 / 9 · ~2 min</div>
-  <h2>Imaginez : vous cherchez un appartement</h2>
-  <p>Une annonce vous montre chaque pièce <b>déjà projetée à votre goût</b>, avec le coût exact des travaux et des meubles pour y arriver. Et vous pouvez récupérer le projet pour le modifier.</p>
-
-  <div class="card">
-    <b>Voyez-le pour de vrai 👀</b>
-    <p style="margin:6px 0 0;font-size:14px">Un dossier réel, tel qu’un promoteur le remettrait : un onglet par pièce, plusieurs directions de style, et la liste de courses chiffrée sous chacune.</p>
-    <p style="margin:10px 0 0;font-size:14px"><b>Pour voir à quoi ça ressemblerait :</b><br>
-      <a href="${APP_URL}/projets/pro/maxinvest/projet1" target="_blank" rel="noopener"><b>${APP_URL}/projets/pro/maxinvest/projet1</b></a></p>
-    <p style="margin:8px 0 0;font-size:13px;color:var(--muet)">Ouvrez-le avant de répondre.</p>
-  </div>
-
-  ${q("Impact sur votre intérêt pour ce bien", scale("immo", "impact", 5, "Aucun", "Je visite demain"))}
-  ${q("Vous iriez plus volontiers à la visite ?", radio("immo", "visite", ["Oui", "Peut-être", "Non"], { row: true }))}
-  ${q("Ce que ça changerait pour vous (ou pas)", txt("immo", "verbatim", "En une phrase…", true))}
-
-  ${nav(6, 8)}`
-},
-
-/* 8 */ { id: "final", bar: "Dernière ligne droite", render: () => {
-  const n = S.exits.length;
-  const optins = get("final", "optins") || [];
+/* 6 */ { id: "immo", bar: "Côté immobilier", render: () => {
+  const concerne = get("immo", "concerne");
   return `
-  <div class="section-eyebrow">Étape 8 / 9 · ~2 min</div>
+  <div class="section-eyebrow">Étape 6 / 8 · ~2 min</div>
+  <h2>Et côté immobilier ?</h2>
+
+  ${q("Êtes-vous concerné(e) par un projet d’achat, de vente ou d’investissement immobilier ?",
+    radio("immo", "concerne", ["Oui", "Non"], { row: true }))}
+
+  ${concerne === "Non" ? `
+    <div class="reveal">Parfait, cette section ne vous concerne pas. Passez à la suite 👇</div>
+  ` : ""}
+
+  ${concerne === "Oui" ? `
+    <p>Imaginez : une annonce vous montre chaque pièce <b>déjà projetée à votre goût</b>, avec le coût exact des travaux et des meubles pour y arriver. Et vous pouvez récupérer le projet pour le modifier.</p>
+
+    <div class="card">
+      <b>Voyez-le pour de vrai 👀</b>
+      <p style="margin:6px 0 0;font-size:14px">Un dossier réel, tel qu’un promoteur le remettrait : un onglet par pièce, plusieurs directions de style, et la liste de courses chiffrée sous chacune.</p>
+      <p style="margin:10px 0 0;font-size:14px"><b>Pour voir à quoi ça ressemblerait :</b><br>
+        <a href="${APP_URL}/projets/pro/maxinvest/projet1" target="_blank" rel="noopener"><b>${APP_URL}/projets/pro/maxinvest/projet1</b></a></p>
+      <p style="margin:8px 0 0;font-size:13px;color:var(--muet)">Ouvrez-le avant de répondre.</p>
+    </div>
+
+    ${q("Impact sur votre intérêt pour ce bien", scale("immo", "impact", 5, "Aucun", "Je visite demain"))}
+    ${q("Vous iriez plus volontiers à la visite ?", radio("immo", "visite", ["Oui", "Peut-être", "Non"], { row: true }))}
+  ` : ""}
+
+  ${nav(5, 7)}`;
+}},
+
+/* 7 */ { id: "reco", bar: "Recommandation", render: () => {
+  const optins = get("reco", "optins") || [];
+  return `
+  <div class="section-eyebrow">Étape 7 / 8 · ~2 min</div>
   <h2>Dernière ligne droite 🏁</h2>
 
-  ${q("Recommanderiez-vous Héra ?", scale("final", "nps", 10, "Jamais", "Les yeux fermés"))}
-  ${q("À qui, concrètement ? Écrivez un prénom.", txt("final", "prenom_reco", "Le prénom de la personne à qui vous pensez"),
+  ${q("Recommanderiez-vous Héra ?", scale("reco", "nps", 10, "Jamais", "Les yeux fermés"))}
+  ${q("À qui, concrètement ? Écrivez un prénom.", txt("reco", "prenom_reco", "Le prénom de la personne à qui vous pensez"),
     "Si aucun prénom ne vient, c’est une réponse aussi : écrivez « personne ».")}
 
-  ${n ? `<div class="card">Vous avez cliqué « J’aurais quitté ici » <b>${n} fois</b>. Merci, sincèrement.</div>` : ""}
+  ${q("À quel moment, en usage réel, auriez-vous abandonné ?", txt("reco", "abandon", "L’écran, le moment, le pourquoi… ou « je serais allé au bout »", true),
+    "La réponse la plus précieuse du test. Personne ne sera vexé.")}
 
-  ${q("Un moment où vous seriez parti(e) qu’on n’a pas capté ?", txt("final", "sortie_oubliee", "L’écran, le moment, le pourquoi… ou « non, rien »", true))}
-
-  <div class="card">
-    <b>🧪 Modules beta</b>
-    <p style="font-size:13.5px;color:var(--muet);margin:4px 0 14px">Ils ne sont pas forcément actifs le jour de votre test. Répondez selon ce que vous avez vu.</p>
-    ${q("Envoyer une photo d’inspiration (« je veux cette ambiance Pinterest »), vous avez pu tester ?", radio("final", "beta_ref", [
-      "Oui, et j’ai adoré",
-      "Oui, bof",
-      "Pas disponible, mais ça m’intéresserait",
-      "Pas disponible, et ça ne me manque pas",
-    ]))}
-    ${q("Faire le projet à deux (votre moitié, votre coloc…), testé ?", radio("final", "beta_duo", [
-      "Oui, et on a survécu au choix du canapé",
-      "Oui, bof",
-      "Pas disponible, mais on l’aurait fait",
-      "Pas disponible, je décore seul(e), et c’est très bien",
-    ]))}
-  </div>
-
-  ${q("On peut vous recontacter ?", checks("final", "optins", [
-    "Dans 1 mois, pour savoir si vous avez VRAIMENT acheté quelque chose (zéro jugement)",
-    "Pour 10 minutes de questions bonus, tout de suite après",
-    "Pour un échange de 15 minutes en visio, un de ces jours",
+  ${q("On peut vous recontacter ?", checks("reco", "optins", [
+    "Dans 1 mois, pour savoir si vous avez vraiment acheté (zéro jugement)",
+    "Pour un échange de 15 min en visio, un de ces jours",
   ]), "Aucune obligation : si vous ne cochez rien, on ne vous demande rien.")}
 
   ${optins.length ? q("Alors il nous faut un e-mail 📮",
-    `<input type="email" data-field data-sec="final" data-k="email" placeholder="camille@exemple.fr" value="${esc(get("final", "email") || "")}">`,
-    "Uniquement pour ce que vous venez de cocher. Zéro newsletter, zéro liste, zéro « offre exceptionnelle ». Et si vous créez un compte dans Héra, prenez la même adresse : c’est ce qui nous permet de relier vos réponses à vos rendus.") : ""}
+    `<input type="email" data-field data-sec="reco" data-k="email" placeholder="camille@exemple.fr" value="${esc(get("reco", "email") || "")}">`,
+    "Uniquement pour ce que vous venez de cocher. Zéro newsletter, zéro liste.") : ""}
 
-  ${nav(7, 9)}`;
+  ${nav(6, 8)}`;
 }},
 
-/* 9 */ { id: "profil", bar: "Qui êtes-vous ?", render: () => `
-  <div class="section-eyebrow">Étape 9 / 9 · ~2 min</div>
+/* 8 */ { id: "profil", bar: "Qui êtes-vous ?", render: () => `
+  <div class="section-eyebrow">Étape 8 / 8 · ~2 min</div>
   <h2>Faisons connaissance</h2>
-  <p class="intro-time">Juste de quoi relier vos réponses à votre session de test. On ne vous demande pas votre e-mail : on n’a rien à vous vendre.</p>
+  <p class="intro-time">Juste de quoi relier vos réponses à votre session de test.</p>
 
   ${q("Prénom", txt("profil", "prenom", "Camille"))}
-  ${q("Nom", txt("profil", "nom", "Dupont"))}
 
   ${q("Votre âge", radio("profil", "age", [
     "Moins de 25 ans", "25 à 34 ans", "35 à 44 ans", "45 à 54 ans", "55 à 64 ans", "65 ans et plus",
@@ -668,7 +563,7 @@ const SECTIONS = [
     radio("profil", "budget", [
       "Moins de 300 €", "300 à 800 €", "800 à 2 000 €", "2 000 à 5 000 €", "Plus de 5 000 €",
     ], { row: true }),
-    "Prenez votre <b>salon</b> comme référence : une chambre et une cuisine ne pèsent pas le même budget déco.")}
+    "Prenez votre <b>salon</b> comme référence.")}
 
   ${q("Comment avez-vous atterri ici ?", radio("profil", "source", [
     "Une connaissance m’en a parlé",
@@ -683,36 +578,14 @@ const SECTIONS = [
 
   ${checks("profil", "rgpd", ["J’accepte que mes réponses soient utilisées pour améliorer Héra (suppression sur simple demande)."])}
 
-  <div class="nav"><button class="btn ghost" data-act="go" data-step="8">Retour</button>
+  <div class="nav"><button class="btn ghost" data-act="go" data-step="7">Retour</button>
   <button class="btn big" data-act="finish">Envoyer mes réponses 🌿</button></div>`
 },
 
-/* 10 */ { id: "bonus", bar: "Bonus (optionnel)", render: () => `
-  <div class="section-eyebrow">Bonus · ~10 min · optionnel</div>
-  <h2>Vous en voulez encore ? On vous aime déjà.</h2>
-
-  ${q("L’abonnement Expert à 15 €/mois vous semble…",
-    radio("bonus", "abo_percu", ["Donné", "Correct", "Un peu cher", "Hors de prix"], { row: true }))}
-  ${q("Qu’est-ce qui vous ferait passer à l’acte de payer, si ce n’est pas le prix ?",
-    txt("bonus", "declencheur", "Une garantie, un rendu plus fidèle, un vrai projet en cours…", true))}
-
-  ${q("Avez-vous déjà testé d’autres apps déco IA ? Lesquelles, et Héra en comparaison ?",
-    txt("bonus", "concurrents", "RoomGPT, Spacely, Planner 5D… et votre verdict", true))}
-  ${q("La feature de vos rêves, celle qui vous ferait revenir chaque mois",
-    txt("bonus", "reve", "Lâchez-vous, on prend des notes", true))}
-  ${q("Le style que vous avez testé : que faudrait-il améliorer dans le rendu ?",
-    txt("bonus", "style_amelio", "Couleurs, matières, cohérence…", true))}
-  ${q("Un dernier mot, en toute liberté",
-    txt("bonus", "libre", "Vraiment tout ce que vous voulez", true))}
-
-  <div class="nav"><span></span>
-  <button class="btn big" data-act="finish" data-from-bonus="1">Terminer pour de bon 💚</button></div>`
-},
-
-/* 11 */ { id: "merci", bar: "Merci !", render: () => `
+/* 9 */ { id: "merci", bar: "Merci !", render: () => `
   <h1>Merci ${esc((get("profil", "prenom") || "").trim().split(" ")[0] || "")} 💚</h1>
   <p>Vos réponses sont enregistrées. Grâce à vous, Héra sera un peu moins « prometteur » et un peu plus « fini ».</p>
-  <p style="font-size:14px;color:var(--muet)">Vous pouvez fermer cet onglet, ou retourner jouer dans l’app : tout reste gratuit pendant la beta. La salle de billard vous attend.</p>
+
   <div class="card">
     <b>Continuez à tester, en toute liberté 🧭</b>
     <p style="margin-top:8px">Le questionnaire est terminé, mais l’app reste ouverte : promenez-vous, refaites un projet, cassez des choses. Tout est encore gratuit.</p>
@@ -733,9 +606,15 @@ const SECTIONS = [
 },
 ];
 
+// Les deux réponses du paywall : des CONSTANTES, parce que radio() stocke le libellé
+// lui-même — un libellé retouché sans toucher au test « pay === … » casserait la
+// question de relance en silence.
+const PAY_OUI = "Oui, je prends le pack";
+const PAY_NON = "Non, je m’arrête là";
+
 /* ═══════════════ ROUTEUR ═══════════════ */
 const app = document.getElementById("app");
-const LAST_MANDATORY = 9; // index de la dernière section obligatoire
+const LAST_MANDATORY = 8; // index de la dernière section obligatoire (le profil)
 
 function paint() {
   const sec = SECTIONS[S.step];
@@ -746,46 +625,40 @@ function paint() {
   document.getElementById("bar-pct").textContent = pct + " %";
 }
 
-// Re-rendu sur place, sans bouger le scroll : sert aux questions conditionnelles.
+// Re-rend SANS remonter en haut : les questions conditionnelles apparaissent
+// sous le doigt, là où on vient de cliquer.
 function reload() {
   const y = window.scrollY;
   paint();
-  window.scrollTo({ top: y });
+  window.scrollTo(0, y);
 }
 
 function go(i) {
   S.step = i;
   persist();
   paint();
-  window.scrollTo({ top: 0 });
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-function finish(fromBonus) {
-  set("final", "termine", new Date().toISOString());
-  const wantsBonus = (get("final", "optins") || []).some((o) => o.includes("10 minutes"));
-  if (!fromBonus && wantsBonus) {
-    go(10);
-    toast("Vous avez coché le bonus, c’est parti pour 10 minutes de plus !");
-  } else {
-    go(11);
-  }
+function finish() {
+  set("reco", "termine", new Date().toISOString());
+  go(9);
 }
 
 /* ═══════════════ ÉVÉNEMENTS ═══════════════ */
 document.addEventListener("click", (e) => {
-  const etapeEl = e.target.closest("[data-quit-etape]");
-  if (etapeEl) {
-    quitEtape = etapeEl.dataset.quitEtape;
-    renderQuitSteps();
-    return;
-  }
-
-  const pickEl = e.target.closest("[data-pick]");
-  if (pickEl) {
-    const { pick, sec, k, v } = pickEl.dataset;
+  const opt = e.target.closest("[data-pick]");
+  if (opt) {
+    const { pick, sec, k, v } = opt.dataset;
     if (pick === "radio") set(sec, k, v);
     else if (pick === "scale") set(sec, k, Number(v));
     else if (pick === "check") {
+      const cur = get(sec, k) || [];
+      set(sec, k, cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v]);
+    } else if (pick === "rank") {
+      // Recliquer un item classé le RETIRE — les suivants se renumérotent tout seuls
+      // (l'ordre du tableau porte le rang). Sans ça, une erreur de classement
+      // obligerait à recharger la page.
       const cur = get(sec, k) || [];
       set(sec, k, cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v]);
     }
@@ -798,12 +671,9 @@ document.addEventListener("click", (e) => {
   const act = actEl.dataset.act;
 
   if (act === "go") go(Number(actEl.dataset.step));
-  else if (act === "finish") finish(actEl.dataset.fromBonus === "1");
+  else if (act === "finish") finish();
   else if (act === "comment") envoyerCommentaire();
   else if (act === "restart") restart();
-  else if (act === "quit-open") openQuit();
-  else if (act === "quit-close") closeQuit();
-  else if (act === "quit-save") logQuit();
 });
 
 // Texte libre : on enregistre à la frappe (persist est déjà debouncé côté réseau).
@@ -811,61 +681,6 @@ document.addEventListener("input", (e) => {
   const f = e.target.closest("[data-field]");
   if (f) set(f.dataset.sec, f.dataset.k, f.value);
 });
-
-document.getElementById("quit-btn").addEventListener("click", openQuit);
-
-// Les étapes telles que le testeur les voit dans l’app (Photo → Style →
-// Mobilier → Rendu → Projet), plus les écrans annexes. Le questionnaire sait
-// déjà où on en est DANS le questionnaire : ce qu’on ignore, c’est où il aurait
-// lâché dans L’APP. D’où cette question, sans laquelle la sortie n’est pas
-// exploitable.
-const ETAPES_APP = [
-  "Le choix du type de pièce, ou l’upload de la photo",
-  "Les contraintes (ce que je voulais garder)",
-  "Le choix du style",
-  "L’écran « Voici ce qu’on va faire » (le mobilier)",
-  "L’attente pendant la génération",
-  "La découverte du rendu",
-  "La liste de courses",
-  "Les 3 dispositions",
-  "Le mode Expert",
-  "Un écran de paiement",
-  "Autre, ou je ne sais plus",
-];
-
-let quitEtape = null;
-
-function renderQuitSteps() {
-  document.getElementById("quit-steps").innerHTML = ETAPES_APP.map((e) =>
-    `<label class="opt${quitEtape === e ? " sel" : ""}" data-quit-etape="${esc(e)}">
-      <input type="radio" ${quitEtape === e ? "checked" : ""}>${e}</label>`).join("");
-}
-
-function openQuit() {
-  quitEtape = null;
-  renderQuitSteps();
-  document.getElementById("quit-modal").classList.add("open");
-}
-
-function closeQuit() {
-  document.getElementById("quit-modal").classList.remove("open");
-}
-
-function logQuit() {
-  const el = document.getElementById("quit-reason");
-  S.exits.push({
-    step: "S" + S.step,
-    section: SECTIONS[S.step].id,   // où il était dans le questionnaire
-    etape_app: quitEtape,           // où il aurait lâché dans l’app
-    t: new Date().toISOString(),
-    raison: el.value || "",
-  });
-  el.value = "";
-  quitEtape = null;
-  closeQuit();
-  persist();
-  toast("Noté. Merci pour votre franchise, le test continue.");
-}
 
 // Repart d’un brouillon vierge : nouveau session_id, donc nouvelle ligne.
 // Les réponses déjà envoyées restent en base, intactes.
