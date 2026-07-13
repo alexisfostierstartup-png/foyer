@@ -514,17 +514,6 @@ const SECTIONS = [
     ]),
     "Répondez même si vous auriez acheté : pensez alors aux articles que vous auriez laissés.")}
 
-  ${q("Quelle part de votre panier accepteriez-vous en seconde main ?", radio("achat", "sm_part", [
-    "0 %", "25 %", "50 %", "75 %", "100 %",
-  ], { row: true }))}
-
-  ${q("Acheter un meuble d’occasion en ligne sans le voir, ça vous…", radio("achat", "sm_confiance", [
-    "Va très bien (je le fais déjà)",
-    "Va, si les photos sont bonnes",
-    "Freine (état, garantie)",
-    "Bloque complètement",
-  ]))}
-
   ${q("Votre PROCHAIN projet déco réel, ce serait quand ?", radio("achat", "prochain", [
     "C’est maintenant", "Dans les 3 mois", "Cette année", "Pas prévu",
   ], { row: true }))}
@@ -544,6 +533,17 @@ const SECTIONS = [
   ${q("Qu’on essaie d’abord de GARDER ou de CUSTOMISER vos meubles", scale("mission", "garder", 5, "Indifférent", "Essentiel"))}
   ${q("Qu’on propose de la seconde main en priorité", scale("mission", "sm", 5, "Indifférent", "Essentiel"))}
   ${q("Qu’on propose une alternative neuve plus responsable (même si c’est neuf)", scale("mission", "green", 5, "Indifférent", "Essentiel"))}
+
+  ${q("Si Héra vous proposait de la seconde main, quelle part de votre panier accepteriez-vous ainsi ?",
+    radio("mission", "sm_part", ["0 %", "25 %", "50 %", "75 %", "100 %"], { row: true }),
+    "La seconde main n’est pas encore branchée dans l’app : répondez pour le Héra de demain.")}
+
+  ${q("Et acheter un meuble d’occasion en ligne, sans le voir, ça vous…", radio("mission", "sm_confiance", [
+    "Va très bien (je le fais déjà)",
+    "Va, si les photos sont bonnes",
+    "Freine (état, garantie)",
+    "Bloque complètement",
+  ]))}
 
   ${q("Entre une solution 20 % moins chère et la solution éco, vous prenez…", radio("mission", "arbitrage", [
     "La moins chère, sans hésiter",
