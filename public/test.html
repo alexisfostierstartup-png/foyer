@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<title>Foyer · Test utilisateur</title>
+<title>Héra · Test utilisateur</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -89,7 +89,7 @@ textarea:focus,input:focus{outline:none;border-color:var(--foret)}
 <body>
 <div class="wrap">
   <header>
-    <span class="logo">Foyer</span>
+    <span class="logo">Héra</span>
     <span class="badge">Test utilisateur · <span id="save-state">brouillon local</span></span>
   </header>
   <div class="progress">
@@ -259,7 +259,7 @@ const SECTIONS = [
 
 /* 0 */ { id: "accueil", bar: "Bienvenue", render: () => `
   <h1>Bienvenue, et merci d’être là 🌿</h1>
-  <p>Vous allez tester <b>Foyer</b>, une app qui transforme la photo d’une pièce en projet déco réaliste, avec les vrais meubles à acheter derrière. Comptez <b>~20 minutes</b> (+ 10 min de bonus si vous nous aimez vraiment).</p>
+  <p>Vous allez tester <b>Héra</b>, une app qui transforme la photo d’une pièce en projet déco réaliste, avec les vrais meubles à acheter derrière. Comptez <b>~20 minutes</b> (+ 10 min de bonus si vous nous aimez vraiment).</p>
 
   <div class="card">
     <b>Le deal d’honnêteté 🤝</b>
@@ -269,60 +269,15 @@ const SECTIONS = [
 
   <div class="notes">
     <b>Trois choses à savoir avant de commencer :</b>
-    <li>Tout est <b>gratuit et illimité</b> pendant la beta. Si un écran vous propose de payer : ne sortez pas la carte, rien n’est branché (et on ne vous laisserait pas faire).</li>
-    <li>Merci de ne pas visiter <code>/pro</code> : c’est le chantier d’à côté, casque obligatoire.</li>
+    <li>Tout est <b>gratuit et illimité</b> pendant la beta. Si un écran vous propose de payer, vous pouvez accepter : cela modélisera un paiement fictif.</li>
     <li>Un bug, un truc cassé ? Dites-le nous ici : la page, ce que vous attendiez, ce que vous avez eu. Une capture d’écran si vous l’avez.</li>
   </div>
 
   ${nav(null, 1, "C’est parti")}`
 },
 
-/* 1 */ { id: "profil", bar: "Qui êtes-vous ?", render: () => `
-  <div class="section-eyebrow">Étape 1 / 9 · ~2 min</div>
-  <h2>Faisons connaissance</h2>
-  <p class="intro-time">Juste de quoi relier vos réponses à votre session de test. On ne vous demande pas votre e-mail : on n’a rien à vous vendre.</p>
-
-  ${q("Prénom", txt("profil", "prenom", "Camille"))}
-  ${q("Nom", txt("profil", "nom", "Dupont"))}
-
-  ${q("Votre âge", radio("profil", "age", [
-    "Moins de 25 ans", "25 à 34 ans", "35 à 44 ans", "45 à 54 ans", "55 à 64 ans", "65 ans et plus",
-  ], { row: true }))}
-
-  ${q("Avez-vous un projet déco ou d’aménagement en ce moment ?", radio("profil", "projet", [
-    "Oui, en cours (je cherche activement)",
-    "Oui, dans les 12 mois",
-    "Non, je teste par curiosité",
-  ]))}
-
-  ${q("Vous êtes plutôt…", radio("profil", "statut", [
-    "Locataire", "Propriétaire", "Aucun des deux",
-  ], { row: true }))}
-
-  ${q("Budget que vous imagineriez pour redécorer une pièce",
-    radio("profil", "budget", [
-      "Moins de 300 €", "300 à 800 €", "800 à 2 000 €", "2 000 à 5 000 €", "Plus de 5 000 €",
-    ], { row: true }),
-    "Prenez votre <b>salon</b> comme référence : une chambre et une cuisine ne pèsent pas le même budget déco.")}
-
-  ${q("Comment avez-vous atterri ici ?", radio("profil", "source", [
-    "Une connaissance m’en a parlé",
-    "Un proche de l’équipe Foyer (soyez honnête quand même 😄)",
-    "Réseaux sociaux",
-    "Panel ou plateforme de test",
-    "Un article, une newsletter, un podcast",
-    "Autre",
-  ]))}
-
-  ${q("Vous testez sur…", radio("profil", "device", ["Ordinateur", "Téléphone", "Tablette"], { row: true }))}
-
-  ${checks("profil", "rgpd", ["J’accepte que mes réponses soient utilisées pour améliorer Foyer (suppression sur simple demande)."])}
-
-  ${nav(0, 2)}`
-},
-
-/* 2 */ { id: "libre", bar: "Exploration libre", render: () => `
-  <div class="section-eyebrow">Étape 2 / 9 · ~8 min</div>
+/* 1 */ { id: "libre", bar: "Exploration libre", render: () => `
+  <div class="section-eyebrow">Étape 1 / 9 · ~8 min</div>
   <h2>À vous de jouer, sans guide</h2>
 
   <p>Ouvrez <a href="${APP_URL}/create" target="_blank" rel="noopener"><b>${APP_URL}/create</b></a> dans un autre onglet, et faites <b>votre salon</b>, comme si on n’était pas derrière votre épaule.</p>
@@ -330,7 +285,7 @@ const SECTIONS = [
 
   <div class="card">
     <b>La photo idéale 📸</b>
-    <p style="margin:6px 0 0;font-size:14px">Cadrée large (un mur entier visible), en lumière naturelle, et sans vous dedans : Foyer redécore les pièces, pas les gens.</p>
+    <p style="margin:6px 0 0;font-size:14px">Cadrée large (un mur entier visible), en lumière naturelle, et sans vous dedans : Héra redécore les pièces, pas les gens.</p>
   </div>
 
   <p><b>Revenez ici quand votre salon est fini</b>, c’est à dire quand vous avez vu le rendu et sa liste de courses. Prenez 5 à 10 minutes.</p>
@@ -358,14 +313,14 @@ const SECTIONS = [
   ${q("C’est clair ? (vous saviez toujours quoi faire)", scale("libre", "clair", 5, "Perdu(e)", "Limpide"))}
   ${q("Où avez-vous hésité, ou failli abandonner ?", txt("libre", "hesitation", "L’écran, le moment, le pourquoi…", true))}
 
-  ${nav(1, 3)}`
+  ${nav(0, 2)}`
 },
 
-/* 3 */ { id: "guide", bar: "Visite guidée", render: () => {
+/* 2 */ { id: "guide", bar: "Visite guidée", render: () => {
   const manque = get("guide", "style_trouve") === "Non, il manque le mien";
   const pay = get("guide", "paywall");
   return `
-  <div class="section-eyebrow">Étape 3 / 9 · ~7 min</div>
+  <div class="section-eyebrow">Étape 2 / 9 · ~7 min</div>
   <h2>Visite guidée : les recoins que vous avez peut-être ratés</h2>
   <p>Maintenant on vous tient la main (gentiment). <b>Repartez sur <a href="${APP_URL}/create" target="_blank" rel="noopener">${APP_URL}/create</a> et ré-uploadez la même photo</b> : ça crée un projet neuf, votre premier reste intact. Puis faites chaque mini-mission.</p>
 
@@ -434,13 +389,13 @@ const SECTIONS = [
     ])) : ""}
   </div>
 
-  ${nav(2, 4)}`;
+  ${nav(1, 3)}`;
 }},
 
-/* 4 */ { id: "dispo", bar: "Les 3 dispositions", render: () => {
+/* 3 */ { id: "dispo", bar: "Les 3 dispositions", render: () => {
   const vu = get("dispo", "vu");
   return `
-  <div class="section-eyebrow">Étape 4 / 9 · ~3 min</div>
+  <div class="section-eyebrow">Étape 3 / 9 · ~3 min</div>
   <h2>📐 Les 3 dispositions</h2>
   <p>Sur l’écran « Voici ce qu’on va faire », à côté de « Lancer 1 rendu », il y a un second bouton : <b>« Lancer 3 dispositions »</b>. Il génère trois agencements différents de votre pièce, dans le même style, et vous en choisissez un.</p>
   <p style="font-size:14px;color:var(--muet)">Allez-y maintenant, puis revenez. C’est la fonction sur laquelle on hésite le plus : on a besoin de savoir si elle vaut son prix.</p>
@@ -473,15 +428,15 @@ const SECTIONS = [
 
   ${vu && vu !== "Oui" ? q("Dites-nous en deux mots ce qui a bloqué", txt("dispo", "blocage", "Je ne l’ai pas vu, je n’ai pas compris à quoi ça servait…", true)) : ""}
 
-  ${nav(3, 5)}`;
+  ${nav(2, 4)}`;
 }},
 
-/* 5 */ { id: "expert", bar: "Le mode Expert", render: () => {
+/* 4 */ { id: "expert", bar: "Le mode Expert", render: () => {
   const fait = get("expert", "fait");
   return `
-  <div class="section-eyebrow">Étape 5 / 9 · ~5 min</div>
+  <div class="section-eyebrow">Étape 4 / 9 · ~5 min</div>
   <h2>💎 Le mode Expert</h2>
-  <p>C’est un parcours à part, avec ses propres règles : au lieu de meubles inventés, Foyer intègre <b>de vrais produits</b> dans le rendu, et vous pouvez retoucher une zone précise plutôt que tout relancer.</p>
+  <p>C’est un parcours à part, avec ses propres règles : au lieu de meubles inventés, Héra intègre <b>de vrais produits</b> dans le rendu, et vous pouvez retoucher une zone précise plutôt que tout relancer.</p>
   <p>Lancez un nouveau projet via <a href="${APP_URL}/expert-create" target="_blank" rel="noopener"><b>${APP_URL}/expert-create</b></a> : indiquez une référence produit si on vous le propose, générez, puis tentez une retouche ciblée du rendu.</p>
 
   ${q("Vous avez réussi à aller au bout du mode Expert ?", radio("expert", "fait", [
@@ -515,13 +470,13 @@ const SECTIONS = [
 
   ${fait && fait !== "Oui" ? q("Dites-nous en deux mots ce qui a bloqué", txt("expert", "blocage", "Je n’ai pas compris quoi faire, ça a planté…", true)) : ""}
 
-  ${nav(4, 6)}`;
+  ${nav(3, 5)}`;
 }},
 
-/* 6 */ { id: "achat", bar: "Le panier", render: () => {
+/* 5 */ { id: "achat", bar: "Le panier", render: () => {
   const a = get("achat", "achat");
   return `
-  <div class="section-eyebrow">Étape 6 / 9 · ~3 min</div>
+  <div class="section-eyebrow">Étape 5 / 9 · ~3 min</div>
   <h2>Parlons du panier (honnêtement)</h2>
 
   ${q("La liste de courses de VOTRE salon : vous auriez acheté ?", radio("achat", "achat", [
@@ -567,17 +522,17 @@ const SECTIONS = [
     "C’est maintenant", "Dans les 3 mois", "Cette année", "Pas prévu",
   ], { row: true }))}
 
-  ${q("Combien de pièces chez vous mériteraient un coup de Foyer ?", radio("achat", "nb_pieces", [
+  ${q("Combien de pièces chez vous mériteraient un coup de Héra ?", radio("achat", "nb_pieces", [
     "0", "1", "2-3", "4 et plus",
   ], { row: true }))}
 
-  ${nav(5, 7)}`;
+  ${nav(4, 6)}`;
 }},
 
-/* 7 */ { id: "mission", bar: "La mission", render: () => `
-  <div class="section-eyebrow">Étape 7 / 9 · ~2 min</div>
-  <h2>La mission Foyer 🌱</h2>
-  <p>Foyer privilégie, dans l’ordre : garder vos meubles, les customiser, la seconde main, puis le neuf durable. Dites-nous ce que ça vaut <b>pour vous</b>.</p>
+/* 6 */ { id: "mission", bar: "La mission", render: () => `
+  <div class="section-eyebrow">Étape 6 / 9 · ~2 min</div>
+  <h2>La mission Héra 🌱</h2>
+  <p>Héra privilégie, dans l’ordre : garder vos meubles, les customiser, la seconde main, puis le neuf durable. Dites-nous ce que ça vaut <b>pour vous</b>.</p>
 
   ${q("Qu’on essaie d’abord de GARDER ou de CUSTOMISER vos meubles", scale("mission", "garder", 5, "Indifférent", "Essentiel"))}
   ${q("Qu’on propose de la seconde main en priorité", scale("mission", "sm", 5, "Indifférent", "Essentiel"))}
@@ -590,11 +545,11 @@ const SECTIONS = [
     "L’éco, point",
   ]))}
 
-  ${nav(6, 8)}`
+  ${nav(5, 7)}`
 },
 
-/* 8 */ { id: "immo", bar: "Et côté immobilier ?", render: () => `
-  <div class="section-eyebrow">Étape 8 / 9 · ~2 min</div>
+/* 7 */ { id: "immo", bar: "Et côté immobilier ?", render: () => `
+  <div class="section-eyebrow">Étape 7 / 9 · ~2 min</div>
   <h2>Imaginez : vous cherchez un appartement</h2>
   <p>Une annonce vous montre chaque pièce <b>déjà projetée à votre goût</b>, avec le coût exact des travaux et des meubles pour y arriver. Et vous pouvez récupérer le projet pour le modifier.</p>
 
@@ -602,17 +557,17 @@ const SECTIONS = [
   ${q("Vous iriez plus volontiers à la visite ?", radio("immo", "visite", ["Oui", "Peut-être", "Non"], { row: true }))}
   ${q("Ce que ça changerait pour vous (ou pas)", txt("immo", "verbatim", "En une phrase…", true))}
 
-  ${nav(7, 9)}`
+  ${nav(6, 8)}`
 },
 
-/* 9 */ { id: "final", bar: "Dernière ligne droite", render: () => {
+/* 8 */ { id: "final", bar: "Dernière ligne droite", render: () => {
   const n = S.exits.length;
   const optins = get("final", "optins") || [];
   return `
-  <div class="section-eyebrow">Étape 9 / 9 · ~2 min</div>
+  <div class="section-eyebrow">Étape 8 / 9 · ~2 min</div>
   <h2>Dernière ligne droite 🏁</h2>
 
-  ${q("Recommanderiez-vous Foyer ?", scale("final", "nps", 10, "Jamais", "Les yeux fermés"))}
+  ${q("Recommanderiez-vous Héra ?", scale("final", "nps", 10, "Jamais", "Les yeux fermés"))}
   ${q("À qui, concrètement ? Écrivez un prénom.", txt("final", "prenom_reco", "Le prénom de la personne à qui vous pensez"),
     "Si aucun prénom ne vient, c’est une réponse aussi : écrivez « personne ».")}
 
@@ -645,11 +600,55 @@ const SECTIONS = [
 
   ${optins.length ? q("Alors il nous faut un e-mail 📮",
     `<input type="email" data-field data-sec="final" data-k="email" placeholder="camille@exemple.fr" value="${esc(get("final", "email") || "")}">`,
-    "Uniquement pour ce que vous venez de cocher. Zéro newsletter, zéro liste, zéro « offre exceptionnelle ». Et si vous créez un compte dans Foyer, prenez la même adresse : c’est ce qui nous permet de relier vos réponses à vos rendus.") : ""}
+    "Uniquement pour ce que vous venez de cocher. Zéro newsletter, zéro liste, zéro « offre exceptionnelle ». Et si vous créez un compte dans Héra, prenez la même adresse : c’est ce qui nous permet de relier vos réponses à vos rendus.") : ""}
+
+  ${nav(7, 9)}`;
+}},
+
+/* 9 */ { id: "profil", bar: "Qui êtes-vous ?", render: () => `
+  <div class="section-eyebrow">Étape 9 / 9 · ~2 min</div>
+  <h2>Faisons connaissance</h2>
+  <p class="intro-time">Juste de quoi relier vos réponses à votre session de test. On ne vous demande pas votre e-mail : on n’a rien à vous vendre.</p>
+
+  ${q("Prénom", txt("profil", "prenom", "Camille"))}
+  ${q("Nom", txt("profil", "nom", "Dupont"))}
+
+  ${q("Votre âge", radio("profil", "age", [
+    "Moins de 25 ans", "25 à 34 ans", "35 à 44 ans", "45 à 54 ans", "55 à 64 ans", "65 ans et plus",
+  ], { row: true }))}
+
+  ${q("Avez-vous un projet déco ou d’aménagement en ce moment ?", radio("profil", "projet", [
+    "Oui, en cours (je cherche activement)",
+    "Oui, dans les 12 mois",
+    "Non, je teste par curiosité",
+  ]))}
+
+  ${q("Vous êtes plutôt…", radio("profil", "statut", [
+    "Locataire", "Propriétaire", "Aucun des deux",
+  ], { row: true }))}
+
+  ${q("Budget que vous imagineriez pour redécorer une pièce",
+    radio("profil", "budget", [
+      "Moins de 300 €", "300 à 800 €", "800 à 2 000 €", "2 000 à 5 000 €", "Plus de 5 000 €",
+    ], { row: true }),
+    "Prenez votre <b>salon</b> comme référence : une chambre et une cuisine ne pèsent pas le même budget déco.")}
+
+  ${q("Comment avez-vous atterri ici ?", radio("profil", "source", [
+    "Une connaissance m’en a parlé",
+    "Un proche de l’équipe Héra (soyez honnête quand même 😄)",
+    "Réseaux sociaux",
+    "Panel ou plateforme de test",
+    "Un article, une newsletter, un podcast",
+    "Autre",
+  ]))}
+
+  ${q("Vous testez sur…", radio("profil", "device", ["Ordinateur", "Téléphone", "Tablette"], { row: true }))}
+
+  ${checks("profil", "rgpd", ["J’accepte que mes réponses soient utilisées pour améliorer Héra (suppression sur simple demande)."])}
 
   <div class="nav"><button class="btn ghost" data-act="go" data-step="8">Retour</button>
-  <button class="btn big" data-act="finish">Envoyer mes réponses 🌿</button></div>`;
-}},
+  <button class="btn big" data-act="finish">Envoyer mes réponses 🌿</button></div>`
+},
 
 /* 10 */ { id: "bonus", bar: "Bonus (optionnel)", render: () => `
   <div class="section-eyebrow">Bonus · ~10 min · optionnel</div>
@@ -660,7 +659,7 @@ const SECTIONS = [
   ${q("Qu’est-ce qui vous ferait passer à l’acte de payer, si ce n’est pas le prix ?",
     txt("bonus", "declencheur", "Une garantie, un rendu plus fidèle, un vrai projet en cours…", true))}
 
-  ${q("Avez-vous déjà testé d’autres apps déco IA ? Lesquelles, et Foyer en comparaison ?",
+  ${q("Avez-vous déjà testé d’autres apps déco IA ? Lesquelles, et Héra en comparaison ?",
     txt("bonus", "concurrents", "RoomGPT, Spacely, Planner 5D… et votre verdict", true))}
   ${q("La feature de vos rêves, celle qui vous ferait revenir chaque mois",
     txt("bonus", "reve", "Lâchez-vous, on prend des notes", true))}
@@ -675,10 +674,22 @@ const SECTIONS = [
 
 /* 11 */ { id: "merci", bar: "Merci !", render: () => `
   <h1>Merci ${esc((get("profil", "prenom") || "").trim().split(" ")[0] || "")} 💚</h1>
-  <p>Vos réponses sont enregistrées. Grâce à vous, Foyer sera un peu moins « prometteur » et un peu plus « fini ».</p>
+  <p>Vos réponses sont enregistrées. Grâce à vous, Héra sera un peu moins « prometteur » et un peu plus « fini ».</p>
   <p style="font-size:14px;color:var(--muet)">Vous pouvez fermer cet onglet, ou retourner jouer dans l’app : tout reste gratuit pendant la beta. La salle de billard vous attend.</p>
+  <div class="card">
+    <b>Continuez à tester, en toute liberté 🧭</b>
+    <p style="margin-top:8px">Le questionnaire est terminé, mais l’app reste ouverte : promenez-vous, refaites un projet, cassez des choses. Tout est encore gratuit.</p>
+    <p style="margin-bottom:10px">Un détail vous revient ? Un bug, une idée, une remarque ? Écrivez-la ici — vous pouvez en envoyer autant que vous voulez.</p>
+    <textarea id="free-comment" rows="4" placeholder="Ce que vous avez remarqué, ce qui vous a manqué, ce qui vous a plu…"></textarea>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap">
+      <button class="btn" data-act="comment">Soumettre</button>
+      ${(get("merci", "commentaires") || []).length
+        ? `<span style="font-size:13px;color:var(--muet)">${(get("merci", "commentaires") || []).length} commentaire(s) envoyé(s) — merci 💚</span>`
+        : ""}
+    </div>
+  </div>
+
   <div style="display:flex;gap:10px;flex-wrap:wrap">
-    <button class="btn ghost" data-act="download">Télécharger une copie de mes réponses (JSON)</button>
     <button class="btn ghost" data-act="restart">Quelqu’un d’autre veut tester →</button>
   </div>
   <p style="font-size:13px;color:var(--muet);margin-top:12px">« Quelqu’un d’autre veut tester » repart d’une page blanche, sans toucher aux réponses déjà envoyées.</p>`
@@ -751,7 +762,7 @@ document.addEventListener("click", (e) => {
 
   if (act === "go") go(Number(actEl.dataset.step));
   else if (act === "finish") finish(actEl.dataset.fromBonus === "1");
-  else if (act === "download") downloadJSON();
+  else if (act === "comment") envoyerCommentaire();
   else if (act === "restart") restart();
   else if (act === "quit-open") openQuit();
   else if (act === "quit-close") closeQuit();
@@ -826,13 +837,17 @@ function restart() {
   location.reload();
 }
 
-function downloadJSON() {
-  const blob = new Blob([JSON.stringify(S, null, 2)], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "foyer-test-" + S.session_id + ".json";
-  a.click();
-  URL.revokeObjectURL(a.href);
+// Commentaires libres APRÈS le questionnaire : le testeur continue d'explorer l'app,
+// et chaque remarque part s'ajouter à la liste (on n'écrase pas la précédente). Le champ
+// n'est PAS un data-field : celui-ci écrirait une chaîne là où on stocke un tableau.
+function envoyerCommentaire() {
+  const el = document.getElementById("free-comment");
+  const v = (el.value || "").trim();
+  if (!v) { toast("Écrivez d'abord un mot 🙂"); return; }
+  const liste = get("merci", "commentaires") || [];
+  set("merci", "commentaires", [...liste, { t: new Date().toISOString(), texte: v }]);
+  reload();
+  toast("Commentaire envoyé. Continuez à tester !");
 }
 
 paint();
