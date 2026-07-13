@@ -152,12 +152,9 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
       <ProgressBar currentStep={1} labels={STEPS} />
 
       <main className="mx-auto w-full max-w-[480px] lg:max-w-[960px] flex-1 px-5 py-6">
-        <h1 className="font-serif text-[30px] font-medium leading-tight tracking-[-0.02em] text-foyer-ink">
-          Votre pièce, transformée. Réellement.
+        <h1 className="whitespace-nowrap font-serif text-[22px] font-medium leading-tight tracking-[-0.02em] text-foyer-ink sm:text-[28px]">
+          Prêt à trouver la déco de vos rêves&nbsp;?
         </h1>
-        <p className="mt-3 text-[16px] leading-relaxed text-foyer-muted">
-          Prenez une photo, on imagine le projet ET on vous dit où tout acheter.
-        </p>
 
         {/* Room type */}
         <div className="mt-8">

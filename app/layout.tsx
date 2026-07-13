@@ -55,7 +55,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Foyer — Votre pièce, transformée. Réellement.",
+  title: "Héra — Votre pièce, transformée. Réellement.",
   description: "De la photo aux commandes prêtes, on pense le projet avec vous.",
 };
 

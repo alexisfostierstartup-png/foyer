@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Bookmark, Share2, Check } from "lucide-react";
+import { Loader2, Bookmark, Share2, Check, Info } from "lucide-react";
 import { toast } from "sonner";
 import { ProgressBar } from "@/components/create/ProgressBar";
 import { BeforeAfterSlider } from "@/components/create/BeforeAfterSlider";
@@ -101,6 +101,20 @@ export function RenderScreen({ projectId, beforeUrl, afterUrl, roomLabel }: Prop
 
           <div className="mt-5">
             <BeforeAfterSlider before={beforeUrl} after={afterUrl} />
+          </div>
+
+          {/* On arrive sur /final DÈS LA PREMIÈRE modification : la liste de courses est
+              calculée dans la foulée, sans repasser par cet écran. L'utilisateur croyait
+              revenir ici pour valider ou re-modifier (QA Alexis 2026-07-13). On le dit
+              AVANT le clic — un utilisateur prévenu ne se sent pas dépossédé. */}
+          <div className="mx-auto mt-5 flex max-w-[520px] items-start gap-3 rounded-2xl border border-foyer-ochre/40 bg-foyer-ochre/10 px-4 py-3">
+            <Info className="mt-0.5 size-4 shrink-0 text-foyer-ochre" aria-hidden />
+            <p className="text-[13px] leading-relaxed text-foyer-ink">
+              <b>Une seule demande de modification</b>{" "}
+              avec l&apos;offre gratuite. Après elle, on passe directement à votre rendu
+              final et à sa liste de courses — vous ne repasserez pas par cet écran. Prenez
+              le temps de tout demander d&apos;un coup.
+            </p>
           </div>
 
           <p className="mt-4 text-center text-[14px] text-foyer-muted">
