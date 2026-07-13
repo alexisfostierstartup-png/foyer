@@ -68,6 +68,11 @@ textarea:focus,input:focus{outline:none;border-color:var(--foret)}
 .notes{background:#F2EFE6;border-radius:10px;padding:14px;font-size:14px;margin:14px 0}
 .notes > b{display:block;margin-bottom:6px}
 .notes li{margin-left:18px;margin-bottom:4px}
+/* Étapes NUMÉROTÉES : une consigne « faites ceci puis cela » se suit mieux qu'une liste
+   à puces, où l'ordre n'est pas dit. */
+.notes ol{margin:0;padding-left:20px}
+.notes ol li{margin-left:0;margin-bottom:6px;padding-left:2px}
+.notes ol li::marker{font-weight:700;color:var(--foret)}
 .checkout{background:var(--foret);border-radius:14px;padding:22px;color:#fff;text-align:center;margin:10px 0 16px}
 .checkout .kicker{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--sauge)}
 .checkout .prix{font-family:'Fraunces',serif;font-size:42px;font-weight:650;color:var(--or)}
@@ -276,15 +281,21 @@ const SECTIONS = [
   <div class="section-eyebrow">Étape 1 / 8 · ~6 min</div>
   <h2>À vous de jouer, sans guide</h2>
 
-  <p>Ouvrez <a href="${APP_URL}/create" target="_blank" rel="noopener"><b>${APP_URL}/create</b></a> dans un autre onglet, et faites <b>votre salon</b>, comme si on n’était pas derrière votre épaule.</p>
+  <div class="notes">
+    <b>Ce que vous avez à faire :</b>
+    <ol>
+      <li>Ouvrez <a href="${APP_URL}/create" target="_blank" rel="noopener"><b>${APP_URL}/create</b></a> dans un autre onglet.</li>
+      <li>Faites <b>votre salon</b>, comme si on n’était pas derrière votre épaule.</li>
+      <li><b>Revenez ici</b> quand vous avez vu le rendu et sa liste de courses.</li>
+    </ol>
+  </div>
+
   <p style="font-size:14px;color:var(--muet)">Pourquoi le salon ? C’est là que notre catalogue est le plus fourni. Vous pourrez jouer avec d’autres pièces juste après.</p>
 
   <div class="card">
     <b>La photo idéale 📸</b>
     <p style="margin:6px 0 0;font-size:14px">Cadrée large (un mur entier visible), en lumière naturelle, et sans vous dedans : Héra redécore les pièces, pas les gens.</p>
   </div>
-
-  <p><b>Revenez ici quand votre salon est fini</b>, c’est-à-dire quand vous avez vu le rendu et sa liste de courses.</p>
 
   ${q("Qu’avez-vous fait spontanément ?", checks("libre", "actions", [
     "J’ai ajouté des contraintes avant le 1er rendu",
@@ -309,7 +320,14 @@ const SECTIONS = [
   return `
   <div class="section-eyebrow">Étape 2 / 8 · ~6 min</div>
   <h2>Les fonctions clés</h2>
-  <p>Cette fois on vous tient la main. <b>Repartez sur <a href="${APP_URL}/create" target="_blank" rel="noopener">${APP_URL}/create</a> et ré-uploadez la même photo</b> : ça crée un projet neuf, votre premier reste intact. Puis faites chaque mini-mission, et répondez juste en dessous.</p>
+  <div class="notes">
+    <b>Ce que vous avez à faire :</b>
+    <ol>
+      <li>Repartez sur <a href="${APP_URL}/create" target="_blank" rel="noopener"><b>${APP_URL}/create</b></a> et <b>ré-uploadez la même photo</b> : ça crée un projet neuf, votre premier reste intact.</li>
+      <li>Faites chaque mini-mission ci-dessous, dans l’ordre.</li>
+      <li>Répondez aux questions juste après chacune, sans attendre la fin.</li>
+    </ol>
+  </div>
 
   <div class="feature-card">
     <h3>🎨 Les styles</h3>
@@ -513,11 +531,18 @@ const SECTIONS = [
   ${nav(5, 7)}`;
 }},
 
-/* 7 */ { id: "reco", bar: "Recommandation", render: () => {
-  const optins = get("reco", "optins") || [];
-  return `
+/* 7 */ { id: "reco", bar: "Recommandation", render: () => `
   <div class="section-eyebrow">Étape 7 / 8 · ~2 min</div>
   <h2>Dernière ligne droite 🏁</h2>
+
+  ${q("Qu’est-ce qui change VRAIMENT la donne avec Héra, pour vous ?", radio("reco", "game_changer", [
+    "Pouvoir choisir les meubles que je garde",
+    "Avoir la liste de courses déjà faite",
+    "Pouvoir me projeter beaucoup plus facilement",
+    "Voir de vrais produits achetables dans le rendu",
+    "Le temps (et l’argent) que ça m’économise face à un décorateur",
+    "Rien : ça ne change pas la donne pour moi",
+  ]), "Une seule réponse : celle sans laquelle Héra ne vous servirait à rien.")}
 
   ${q("Recommanderiez-vous Héra ?", scale("reco", "nps", 10, "Jamais", "Les yeux fermés"))}
   ${q("À qui, concrètement ? Écrivez un prénom.", txt("reco", "prenom_reco", "Le prénom de la personne à qui vous pensez"),
@@ -526,17 +551,23 @@ const SECTIONS = [
   ${q("À quel moment, en usage réel, auriez-vous abandonné ?", txt("reco", "abandon", "L’écran, le moment, le pourquoi… ou « je serais allé au bout »", true),
     "La réponse la plus précieuse du test. Personne ne sera vexé.")}
 
-  ${q("On peut vous recontacter ?", checks("reco", "optins", [
-    "Dans 1 mois, pour savoir si vous avez vraiment acheté (zéro jugement)",
-    "Pour un échange de 15 min en visio, un de ces jours",
-  ]), "Aucune obligation : si vous ne cochez rien, on ne vous demande rien.")}
+  <div class="card">
+    <b>On aimerait continuer avec vous 🤝</b>
+    <p style="margin-top:8px">Ce test est une photo à un instant T. Ce qui nous intéresse vraiment, c’est de vous recontacter <b>après coup</b> : ce que vous avez pensé en y repensant, ce que vous avez fini par acheter (ou pas), ce qui vous manque encore. C’est comme ça qu’on construit Héra <b>avec vous</b>, pas juste pour vous.</p>
+    <p style="margin-bottom:0">En échange, on vous offre une <b>rallonge d’utilisation gratuite de Héra</b> — rendus illimités le temps qu’on travaille ensemble.</p>
+  </div>
 
-  ${optins.length ? q("Alors il nous faut un e-mail 📮",
+  ${q("On vous recontacte ?", radio("reco", "recontact", [
+    "Oui, avec plaisir",
+    "Non merci",
+  ], { row: true }))}
+
+  ${get("reco", "recontact") === "Oui, avec plaisir" ? q("Votre e-mail 📮",
     `<input type="email" data-field data-sec="reco" data-k="email" placeholder="camille@exemple.fr" value="${esc(get("reco", "email") || "")}">`,
-    "Uniquement pour ce que vous venez de cocher. Zéro newsletter, zéro liste.") : ""}
+    "Uniquement pour ça. Zéro newsletter, zéro liste, zéro revente.") : ""}
 
-  ${nav(6, 8)}`;
-}},
+  ${nav(6, 8)}`
+},
 
 /* 8 */ { id: "profil", bar: "Qui êtes-vous ?", render: () => `
   <div class="section-eyebrow">Étape 8 / 8 · ~2 min</div>
