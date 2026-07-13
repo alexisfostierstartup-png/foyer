@@ -104,7 +104,7 @@ export function RenderScreen({ projectId, beforeUrl, afterUrl, roomLabel }: Prop
           </div>
 
           <p className="mt-4 text-center text-[14px] text-foyer-muted">
-            Pas tout à fait ça&nbsp;? Affinez.
+            Pas tout à fait ça&nbsp;? Modifiez-le.
           </p>
         </main>
 
@@ -142,7 +142,7 @@ export function RenderScreen({ projectId, beforeUrl, afterUrl, roomLabel }: Prop
               {navigating === "iterate" ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
-                "Affiner le rendu"
+                "Modifier"
               )}
             </button>
           </div>
