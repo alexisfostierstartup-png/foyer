@@ -395,7 +395,10 @@ export async function buildFixedFeaturesSummary(profiles: ElementProfile[]): Pro
   );
   // Fixtures FIXES à reproduire à l'identique (jamais déplacer/supprimer/ajouter/recolorer).
   // ⚠️ inclut le CHAUFFE-EAU/ballon (était absent → la génération le supprimait), et le poêle.
-  const KW = /escalier|staircase|stair|chemin|fireplace|po[êe]le|radiat|chauffe[- ]?eau|water[- ]?heater|ballon|cumulus|poutre|beam|colonne|column|pilier|pillar/i;
+  // ÉLECTROMÉNAGER ajouté (2026-07-13) : dans un studio, le frigo est devenu un buffet en
+  // cannage (projet 3nh0_lxN). Un appareil est branché, alimenté, parfois évacué : il se
+  // reproduit à l'identique, comme un radiateur — jamais « restylé » en meuble.
+  const KW = /escalier|staircase|stair|chemin|fireplace|po[êe]le|radiat|chauffe[- ]?eau|water[- ]?heater|ballon|cumulus|poutre|beam|colonne|column|pilier|pillar|frigo|r[ée]frig[ée]rateur|fridge|refrigerator|cong[ée]lateur|freezer|four\b|oven|lave[- ]?vaisselle|dishwasher|lave[- ]?linge|washing machine|hotte|extractor|plaque de cuisson|hob|cookto/i;
   const fixtures = profiles
     .filter((p) => !["window", "french_door", "door", "wall_opening"].includes(p.category) && KW.test(`${p.element} ${p.description}`))
     .map((p) => (p.element || p.category).trim().toLowerCase());
