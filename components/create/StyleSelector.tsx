@@ -55,7 +55,7 @@ export function StyleSelector({
   const beta = styles.filter((s) => !s.stable);
 
   const grille = (liste: typeof styles) => (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       {liste.map((style) => (
         <StyleCard
           key={style.id}
@@ -71,7 +71,7 @@ export function StyleSelector({
     <div className="flex flex-1 flex-col">
       <ProgressBar currentStep={2} labels={STEPS} />
 
-      <main className="mx-auto w-full max-w-[480px] flex-1 px-5 pb-28 pt-6">
+      <main className="mx-auto w-full max-w-[480px] lg:max-w-[960px] flex-1 px-5 pb-28 pt-6">
         <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-foyer-sage">
           Style
         </p>

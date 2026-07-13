@@ -125,7 +125,7 @@ export function IterateScreen({ projectId, currentRenderUrl, target = null }: Pr
     <div className="flex flex-1 flex-col">
       <ProgressBar currentStep={4} labels={STEPS} />
 
-      <main className="mx-auto w-full max-w-[480px] flex-1 px-5 pb-28 pt-6">
+      <main className="mx-auto w-full max-w-[480px] lg:max-w-[960px] flex-1 px-5 pb-28 pt-6">
         <h1 className="font-serif text-[26px] font-medium leading-tight tracking-[-0.02em] text-foyer-ink">
           Qu&apos;aimeriez-vous changer&nbsp;?
         </h1>

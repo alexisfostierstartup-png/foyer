@@ -576,7 +576,7 @@ export function FinalScreen({
       <div className="flex flex-1 flex-col">
         <ProgressBar currentStep={5} labels={STEPS} />
 
-        <main className={cn("mx-auto w-full flex-1 px-5 pt-6", debug ? "max-w-[820px]" : "max-w-[480px]", (expertMode || orderUrls.length > 0) ? "pb-36" : "pb-24")}>
+        <main className={cn("mx-auto w-full flex-1 px-5 pt-6", debug ? "max-w-[820px]" : "max-w-[480px] lg:max-w-[960px]", (expertMode || orderUrls.length > 0) ? "pb-36" : "pb-24")}>
           {/* Before / After slider (expert : bouton bas-droit pour basculer
               rendu réel ↔ rendu IA d'origine, comme l'ancien écran expert) */}
           <div className="relative">

@@ -59,6 +59,7 @@ function mapAmbianceRow(a: { id: string; slug: string; data: unknown }): Style {
     materials: string[];
     mood: string;
     moodboardUrl?: string;
+    images?: string[];
     stable?: boolean;
   };
   return {
@@ -70,6 +71,9 @@ function mapAmbianceRow(a: { id: string; slug: string; data: unknown }): Style {
     materials: d.materials,
     mood: d.mood,
     moodboardUrl: d.moodboardUrl ?? `/moodboards/${a.slug}.svg`,
+    // Repli sur l'image unique : un style sans liste reste affichable (une seule photo,
+    // pas de flèches) plutôt que de casser la carte.
+    images: d.images?.length ? d.images : [d.moodboardUrl ?? `/moodboards/${a.slug}.svg`],
     stable: d.stable === true,
   };
 }

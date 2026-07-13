@@ -14,6 +14,9 @@ export type Style = {
   materials: string[];
   mood: string;
   moodboardUrl: string;
+  // Les photos du style (2 à 6) : la carte les fait défiler à la flèche, au lieu
+  // d'afficher un pavé de texte au survol — qui ne dit rien qu'une image ne montre.
+  images: string[];
   // Catalogue jugé complet pour ce style → il remonte en tête du sélecteur. Les autres
   // sont regroupés sous « Beta ». Piloté EN BASE (assets.ambiance.data.stable) : promouvoir
   // un style au fil du remplissage du catalogue ne doit pas demander un déploiement.

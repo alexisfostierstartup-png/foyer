@@ -69,7 +69,7 @@ export function RenderScreen({ projectId, beforeUrl, afterUrl, roomLabel }: Prop
       <div className="flex flex-1 flex-col">
         <ProgressBar currentStep={4} labels={STEPS} />
 
-        <main className="mx-auto w-full max-w-[480px] flex-1 px-5 pb-28 pt-6">
+        <main className="mx-auto w-full max-w-[480px] lg:max-w-[960px] flex-1 px-5 pb-28 pt-6">
           <div className="flex items-start justify-between">
             <h1 className="font-serif text-[28px] font-medium leading-tight text-foyer-ink">
               Voilà votre {roomLabel}.

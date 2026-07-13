@@ -64,6 +64,10 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
   // par catégorie, pré-injecté dès l'upload (utilisé au rendu à la place du matching).
   const [customProducts, setCustomProducts] = useState<Record<string, CustomProduct>>({});
   const [selCat, setSelCat] = useState<string>("sofa");
+  // Glisser-déposer : on ne peut pas se contenter de onDrop. Le navigateur OUVRE le
+  // fichier dans l'onglet dès qu'on le lâche sur la page — il faut donc annuler le
+  // comportement par défaut sur dragOver ET sur drop.
+  const [surZone, setSurZone] = useState(false);
 
   async function handleFileSelect(file: File | undefined) {
     if (!file) return;
@@ -136,7 +140,7 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
     <div className="flex flex-1 flex-col pb-24">
       <ProgressBar currentStep={1} labels={STEPS} />
 
-      <main className="mx-auto w-full max-w-[480px] flex-1 px-5 py-6">
+      <main className="mx-auto w-full max-w-[480px] lg:max-w-[960px] flex-1 px-5 py-6">
         <h1 className="font-serif text-[30px] font-medium leading-tight tracking-[-0.02em] text-foyer-ink">
           Votre pièce, transformée. Réellement.
         </h1>
@@ -183,20 +187,49 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
                 aria-hidden
               />
 
-              {previewUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={previewUrl}
-                  alt="Aperçu de votre photo"
-                  className="aspect-[4/3] w-full rounded-xl object-cover"
-                />
-              ) : (
-                <div className="flex aspect-[4/3] w-full items-center justify-center rounded-xl border border-foyer-border bg-[#F0EBE2]">
-                  <span className="flex size-16 items-center justify-center rounded-full border-2 border-foyer-muted">
-                    <span className="size-6 rounded-full border-2 border-foyer-muted" />
-                  </span>
-                </div>
-              )}
+              <div
+                onDragOver={(e) => { e.preventDefault(); if (!projectId) setSurZone(true); }}
+                onDragLeave={() => setSurZone(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setSurZone(false);
+                  if (projectId) return;
+                  handleFileSelect(e.dataTransfer.files?.[0]);
+                }}
+              >
+                {previewUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={previewUrl}
+                    alt="Aperçu de votre photo"
+                    className="aspect-[4/3] w-full rounded-xl object-cover"
+                  />
+                ) : (
+                  <label
+                    className={cn(
+                      "flex aspect-[4/3] w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed bg-[#F0EBE2] px-4 text-center transition-colors",
+                      surZone
+                        ? "border-foyer-sage bg-foyer-sage/10"
+                        : "border-foyer-border hover:border-foyer-sage/60",
+                    )}
+                  >
+                    <ImagePlus className="size-8 text-foyer-muted" aria-hidden />
+                    <span className="text-sm font-medium text-foyer-ink">
+                      Glissez votre photo ici
+                    </span>
+                    <span className="text-[13px] text-foyer-muted">ou cliquez pour la choisir</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="sr-only"
+                      onChange={(e) => {
+                        handleFileSelect(e.target.files?.[0]);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                )}
+              </div>
 
               <div className="mt-4 flex flex-col gap-3">
                 {uploading ? (
