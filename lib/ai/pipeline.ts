@@ -1205,9 +1205,15 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
 // jumeaux + la recolorisation forcée du mobilier. Le style et les meubles (identité +
 // couleur vraie) restent constants ; c'est le mur/la déco/le layout qui varient.
 const DISPOSITION_BRIEFS = [
-  "Variation A — centré & signature: gather the movable furniture into a close functional grouping around the room's focal point, clear circulation around it. Walls in the DEEPEST / signature colour of the style palette; restrained, tonal decor.",
-  "Variation B — le long des murs, clair & naturel: place the largest piece against the longest solid wall, keep a wide clear central walkway. Paint the walls in a LIGHT airy neutral FROM THE STYLE PALETTE (off-white, greige, sand — different from variation A); layer warm natural textures and a little more decor (a plant, a throw, art).",
-  "Variation C — espacé, chaleureux/accent: spread the furniture along the walls leaving the centre free, generous circulation. Give the walls a WARMER mid-tone or a subtle TWO-TONE / single-accent-wall treatment taken from the style palette (distinct from A and B); add one statement decor piece.",
+  // L'AGENCEMENT d'abord, la couleur ensuite. Les briefs précédents mêlaient les deux, et
+  // le modèle ne retenait que la couleur du mur — facile — en laissant les meubles où ils
+  // étaient (constat Alexis 2026-07-13 : « la disposition ne change pas vraiment »).
+  // Chaque brief décrit maintenant une GÉOMÉTRIE vérifiable : où est le canapé, ce qu'il
+  // regarde, ce qu'il y a au centre. La couleur reste, mais en second, et clairement
+  // annoncée comme secondaire.
+  "Variation A — ÎLOT CENTRAL. GEOMETRY FIRST: pull the seating OFF the walls and float it in the middle of the room. The sofa sits with its BACK TO THE ROOM's open side, facing the focal point (fireplace, TV or window); the armchairs close the circle opposite it; the rug and coffee table anchor the island; you can walk BEHIND the sofa. Nothing of the seating group touches a wall. Secondary: walls in the DEEPEST / signature colour of the style palette, restrained tonal decor.",
+  "Variation B — TOUT LE LONG DU MUR. GEOMETRY FIRST: push every large piece FLAT against the walls, backs to the wall — the sofa along the LONGEST solid wall, the storage on the opposite wall, the armchairs in the corners, angled inward. The entire CENTRE of the room stays open floor, crossed by a wide clear walkway. Secondary: walls in a LIGHT airy neutral FROM THE STYLE PALETTE (off-white, greige, sand), warm natural textures, a plant, a throw, art.",
+  "Variation C — EN DIAGONALE, DEUX ZONES. GEOMETRY FIRST: turn the seating group on a DIAGONAL to the walls (never parallel to them), and carve out a SECOND zone in the remaining corner — a reading nook (armchair + floor lamp + side table) or a console with a mirror. The two zones read as distinct and both are reachable. Secondary: a WARMER mid-tone on the walls, or one accent wall clearly taken from the style palette; one statement decor piece.",
 ];
 
 /**
@@ -1278,7 +1284,9 @@ async function runDispositionsPipelineInner(projectId: string): Promise<string[]
     fixedFeatures: await buildFixedFeaturesSummary(profiles),
     removeList: buildRemoveList(profiles, removeCategories),
     userInstructions,
-    designPlan: `${designPlan || "None — restyle freely to fit the style."}\n${await buildLightingPlanLine(profiles, styleName)}`,
+    // Mêmes lignes de plan que le rendu unique : la taille de pièce et la variation de
+    // mobilier leur manquaient, d'où des dispositions vides et un mobilier « par défaut ».
+    designPlan: `${designPlan || "None — restyle freely to fit the style."}\n${await buildLightingPlanLine(profiles, styleName)}${buildRoomScaleLine(project.roomScale)}${buildVariationLine(project.id)}`,
   };
 
   // Flux DIY beta : variante sous slug dédié (cf. runGenerationPipeline).
