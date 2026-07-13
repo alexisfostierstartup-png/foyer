@@ -262,6 +262,27 @@ function replaceTargetLabel(
  * surfaces murales) — la règle d'ancrage seule du prompt de génération ne
  * suffit pas à les protéger (bench 2026-07-10). Retourne "" si rien à dire.
  */
+/**
+ * Consigne de repli quand le verdict dit « cette surface doit changer » mais qu'AUCUNE
+ * action ne lui est attachée (action_label absent — cas courant hors flux DIY).
+ *
+ * Le repli précédent était « personnaliser la finition pour s'accorder au style » : vague,
+ * sans verbe, et en FRANÇAIS au milieu d'un prompt anglais. Le modèle image ne faisait
+ * donc rien — d'où des murs jamais repeints alors que le plan demandait bien de les
+ * changer (projet t-0D-MCYt, 2026-07-13 : « aucune personnalisation, la couleur ne va pas
+ * du tout avec le style »). Un mur qui doit changer doit s'entendre dire REPEINDRE, et
+ * dans quelle palette.
+ */
+function restyleParDefaut(category: string): string {
+  if (category === "wall")
+    return "repaint it in a colour taken from the style palette — pick the one that most clearly strengthens the style, and never leave it in its current colour";
+  if (category === "ceiling")
+    return "repaint it in a colour taken from the style palette";
+  if (category === "floor")
+    return "refinish it so it clearly matches the style";
+  return "restyle its finish so that it unmistakably matches the style";
+}
+
 export function formatDesignPlan(
   decisions: Array<{
     description?: string;
@@ -374,7 +395,7 @@ export function formatDesignPlan(
       const qty = d.qty && d.qty_unit ? ` (≈ ${d.qty} ${d.qty_unit})` : "";
       // Beta : le label ANGLAIS du verdict prime pour le prompt image (banc :
       // « Teinter le bois en espresso » 0/4 vs « Stain the wood dark espresso » 2/2).
-      const label = (beta ? d.action_label_en : null) ?? d.action_label ?? "personnaliser la finition pour s'accorder au style";
+      const label = (beta ? d.action_label_en : null) ?? d.action_label ?? restyleParDefaut(d.category);
       // « must be clearly visible » : banc nuit 2026-07-10 — les restyles de
       // finition (teinte bois, abat-jour, moulures) étaient souvent ignorés,
       // l'objet restant à l'identique dans le rendu.
