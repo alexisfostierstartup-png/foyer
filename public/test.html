@@ -137,7 +137,8 @@ try {
 if (!S.session_id) S.session_id = "ut_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
 const eur = (n) => n.toFixed(2).replace(".", ",") + " €";
-const LIBELLE_PAY = { pack: "prendre le pack", expert: "passer Expert", stop: "je m’arrête là" };
+const PAY_OUI = "Oui, je prends le pack";
+const PAY_NON = "Non, je m’arrête là";
 
 /* ─────────── état & sauvegarde ─────────── */
 const setSave = (t) => { document.getElementById("save-state").textContent = t; };
@@ -291,11 +292,11 @@ const SECTIONS = [
   <p><b>Revenez ici quand votre salon est fini</b>, c’est à dire quand vous avez vu le rendu et sa liste de courses. Prenez 5 à 10 minutes.</p>
 
   ${q("Qu’avez-vous fait spontanément ?", checks("libre", "actions", [
-    "Ajouté des contraintes avant le 1er rendu",
-    "Lu la description d’un style (au survol)",
-    "Lancé les 3 rendus d’agencement",
-    "Modifié le premier rendu",
-    "Changé un meuble qui ne me convenait pas",
+    "J’ai ajouté des contraintes avant le 1er rendu",
+    "J’ai lu la description d’un style (au survol)",
+    "J’ai lancé les 3 rendus d’agencement",
+    "J’ai modifié le premier rendu",
+    "J’ai changé un meuble qui ne me convenait pas",
   ]), "Cochez tout ce qui est vrai, zéro jugement. Ne rien cocher est une réponse : ça veut dire que vous êtes allé(e) au plus court.")}
 
   ${q("Première impression, à chaud", scale("libre", "impression", 5, "Bof", "Waouh"))}
@@ -365,21 +366,23 @@ const SECTIONS = [
 
     <p style="margin-top:16px"><b>C’est exactement là que ça deviendrait payant.</b> En usage réel, une fois vos rendus gratuits épuisés, cet écran apparaît. Répondez comme si c’était votre vrai argent (on sait, c’est plus dur).</p>
 
+    <!-- La carte n'est PLUS cliquable : avec ses boutons, on la prenait pour une vraie
+         page de paiement (ou pour une capture d'écran figée) et on ne comprenait pas
+         qu'il fallait répondre. Elle devient une simple MAQUETTE de l'offre, annoncée
+         comme telle ; la décision se prend juste en dessous, avec les mêmes cases que
+         partout ailleurs dans le questionnaire. -->
     <div class="checkout">
-      <div class="kicker">Continuer</div>
+      <div class="kicker">L’écran que vous verriez</div>
       <div class="prix">${eur(PRIX_PACK)}</div>
-      <div class="desc">Un pack de crédits : de quoi peaufiner encore, ou lancer d’autres pièces. Sans abonnement.<br>
-        Ou <b>Expert, 15 €/mois</b> : rendus illimités, sauvegarde, édition live, vrais produits dans le rendu.</div>
-      <div class="cta">
-        <button class="btn" data-pick="radio" data-sec="guide" data-k="paywall" data-v="pack">Prendre le pack ${eur(PRIX_PACK)}</button>
-        <button class="btn" data-pick="radio" data-sec="guide" data-k="paywall" data-v="expert">Passer Expert, 15 €/mois</button>
-        <button class="btn ghost" data-pick="radio" data-sec="guide" data-k="paywall" data-v="stop">Je m’arrête là</button>
-      </div>
+      <div class="desc">Un pack de crédits : de quoi peaufiner encore, ou lancer d’autres pièces. Sans abonnement.</div>
     </div>
 
-    ${pay ? `<div class="reveal">✓ Noté : <b>${LIBELLE_PAY[pay]}</b>. Aucun paiement réel, évidemment, mais votre clic compte double dans notre cœur.</div>` : ""}
+    ${q("Auriez-vous payé ?", radio("guide", "paywall", [PAY_OUI, PAY_NON]),
+      "Il n’y a rien à cliquer dans l’encadré ci-dessus : c’est une maquette. Répondez ici.")}
 
-    ${pay === "stop" ? q("Qu’est-ce qui vous arrête ?", radio("guide", "stop_raison", [
+    ${pay ? `<div class="reveal">✓ Noté : <b>${esc(pay)}</b>. Aucun paiement réel, évidemment, mais votre réponse compte double dans notre cœur.</div>` : ""}
+
+    ${pay === PAY_NON ? q("Qu’est-ce qui vous arrête ?", radio("guide", "stop_raison", [
       "Trop cher pour ce que c’est",
       "Le rendu que j’ai déjà me suffit",
       "Je préfère payer à l’usage, pas un pack",
