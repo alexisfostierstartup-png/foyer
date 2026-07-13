@@ -460,17 +460,33 @@ const SECTIONS = [
       "C’est plus compliqué, sans être meilleur",
     ]))}
 
-    <p style="margin-top:16px"><b>Et si vous deviez le payer ?</b> Deux portes à 15 €, même prix, pas la même logique.</p>
-    ${q("Vous prenez laquelle ?", radio("expert", "paywall", [
-      "L’abonnement 15 €/mois : 20 € de crédits inclus chaque mois, résiliable",
-      "Le pack ponctuel à 15 € : 15 € de crédits, zéro engagement",
-      "Ni l’un ni l’autre, le mode gratuit me suffit",
-    ]), "L’abonnement donne plus de crédits, le pack ne vous engage à rien.")}
 
     ${q("Un commentaire sur l’Expert ?", txt("expert", "verbatim", "Ce qui vous a marqué, en bien ou en mal…", true))}
   ` : ""}
 
   ${fait && fait !== "Oui" ? q("Dites-nous en deux mots ce qui a bloqué", txt("expert", "blocage", "Je n’ai pas compris quoi faire, ça a planté…", true)) : ""}
+
+  <div class="card">
+    <b>Ce que l’Expert débloque, en résumé 💎</b>
+    <p style="font-size:13.5px;color:var(--muet);margin:4px 0 10px">Tout ce qui suit est réservé aux membres Expert.</p>
+    <div class="notes" style="margin:0">
+      <li><b>Le rendu au réel</b> — de vrais produits du catalogue intégrés dans l’image, au lieu de meubles inventés.</li>
+      <li><b>Modifier un meuble précis</b> — vous choisissez le produit, il apparaît dans le rendu.</li>
+      <li><b>La retouche ciblée</b> — ne relancer qu’une zone, au lieu de tout regénérer.</li>
+      <li><b>Garder l’historique de vos projets</b> — vos rendus sont sauvegardés, vous les retrouvez.</li>
+      <li><b>Des rendus illimités</b> — plus de crédits à compter.</li>
+    </div>
+  </div>
+
+  ${q("Sachant tout ça, seriez-vous prêt(e) à payer ?", radio("expert", "paywall", [
+    "Oui — l’abonnement à 15 €/mois (20 € de crédits inclus, résiliable)",
+    "Oui — le pack ponctuel à 15 € (15 € de crédits, sans engagement)",
+    "Non — le mode gratuit me suffit",
+  ]), "Répondez même si vous n’avez pas réussi à aller au bout du mode Expert : c’est l’offre qu’on vous demande de juger, pas votre parcours.")}
+
+  ${get("expert", "paywall") === "Non — le mode gratuit me suffit"
+    ? q("Qu’est-ce qui vous ferait changer d’avis ?", txt("expert", "declencheur", "Un prix plus bas, une fonction qui manque, une garantie…", true))
+    : ""}
 
   ${nav(3, 5)}`;
 }},
