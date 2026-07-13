@@ -381,7 +381,7 @@ async function Gallery() {
               key={p.name}
               delay={i * 90}
               from="translateY(30px)"
-              className="group relative rounded-2xl overflow-hidden ring-1 ring-line bg-card shadow-card cursor-pointer"
+              className="group relative rounded-2xl overflow-hidden ring-1 ring-line bg-card shadow-card"
             >
               <div className="relative aspect-[4/5] overflow-hidden">
                 {p.before ? (
@@ -391,25 +391,34 @@ async function Gallery() {
                   <img src={p.img} alt={p.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                 )}
                 <span className="absolute top-3 left-3 z-10 bg-cream/90 backdrop-blur px-2.5 py-1 rounded-full text-[10px] uppercase tracking-[0.18em]">{p.tag}</span>
-                {!p.before && (
-                  <span className="absolute top-3 right-3 grid place-items-center h-8 w-8 rounded-full bg-clay text-cream opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition">
-                    <ArrowUpRight className="h-4 w-4" aria-hidden />
-                  </span>
+
+                {/* Le lien couvrait TOUTE la carte (inset-0, z-20) : il passait donc PAR-DESSUS
+                    le comparateur avant/après, dont la poignée devenait inatteignable — on ne
+                    pouvait plus faire glisser le curseur sur le projet haussmannien.
+                    L'image est rendue au comparateur. Pour ouvrir le projet, un CTA explicite,
+                    posé au-dessus (z-30) mais sur une petite surface qui ne gêne pas le glissé. */}
+                {p.slug && (
+                  <Link
+                    href={`/projets/${p.slug}`}
+                    aria-label={`Voir le projet ${p.name}`}
+                    className="absolute top-3 right-3 z-30 flex items-center gap-1 rounded-full border border-cream/60 bg-cream/90 px-3 py-1.5 text-[11px] font-medium text-ink shadow-sm backdrop-blur transition-colors hover:bg-ink hover:text-cream"
+                  >
+                    Voir
+                    <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
+                  </Link>
                 )}
               </div>
-              {/* Le clic était MORT : la carte avait cursor-pointer mais aucun lien.
-                  Le lien couvre la carte entière (inset-0), au-dessus des images mais
-                  SOUS le comparateur avant/après, dont la poignée reste manipulable. */}
-              {p.slug && (
-                <Link
-                  href={`/projets/${p.slug}`}
-                  aria-label={`Voir le projet ${p.name}`}
-                  className="absolute inset-0 z-20"
-                />
-              )}
+
+              {/* Le bas de carte reste cliquable : c'est la zone où l'on ne glisse rien. */}
               <div className="p-4 flex items-center justify-between">
                 <div>
-                  <h3 className="font-display text-lg">{p.name}</h3>
+                  {p.slug ? (
+                    <Link href={`/projets/${p.slug}`} className="hover:underline underline-offset-4">
+                      <h3 className="font-display text-lg">{p.name}</h3>
+                    </Link>
+                  ) : (
+                    <h3 className="font-display text-lg">{p.name}</h3>
+                  )}
                   <p className="text-[11px] text-muted-foreground uppercase tracking-wider">{p.surface}</p>
                 </div>
                 <div className="text-right">
