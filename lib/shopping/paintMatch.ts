@@ -217,9 +217,27 @@ export async function getChangedWallColors(composite: ImageInput): Promise<WallC
   }
 }
 
+/** Lab → teinte (angle, en degrés) et chroma (saturation perceptuelle). */
+function teinteEtChroma(lab: number[]): { teinte: number; chroma: number } {
+  const [, a, b] = lab;
+  let teinte = (Math.atan2(b, a) * 180) / Math.PI;
+  if (teinte < 0) teinte += 360;
+  return { teinte, chroma: Math.hypot(a, b) };
+}
+
+function ecartDeTeinte(t1: number, t2: number): number {
+  const d = Math.abs(t1 - t2);
+  return d > 180 ? 360 - d : d;
+}
+
+// En dessous de ce chroma, la couleur est un vrai neutre (blanc cassé, gris) : son angle
+// de teinte n'est plus qu'un artefact numérique, on ne filtre donc pas dessus.
+const CHROMA_NEUTRE = 5;
+
 export async function matchPaintByColor(targetHex: string, topN = 4): Promise<ProductMatch[]> {
   const targetLab = hexToLab(targetHex);
   if (!targetLab) return [];
+  const cible = teinteEtChroma(targetLab);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = createSupabaseAdmin() as any;
@@ -240,12 +258,48 @@ export async function matchPaintByColor(targetHex: string, topN = 4): Promise<Pr
   // ΔE 20.6) tout en rejetant les vraies autres couleurs (ΔE ~30+).
   const MAX_DELTA_E = 24;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const scored = (data ?? [])
+  const candidats = (data ?? [])
     .map((r: any) => {
       const lab = hexToLab(r.metadata?.color_hex);
-      return { r, dE: lab ? deltaE(targetLab, lab) : Infinity };
+      if (!lab) return { r, dE: Infinity, ecart: 999, chroma: 0 };
+      const { teinte, chroma } = teinteEtChroma(lab);
+      return { r, dE: deltaE(targetLab, lab), ecart: ecartDeTeinte(cible.teinte, teinte), chroma };
     })
-    .filter((x: { dE: number }) => x.dE <= MAX_DELTA_E)
+    .filter((x: { dE: number }) => x.dE <= MAX_DELTA_E);
+
+  // LA TEINTE PRIME — sur un mur, c'est elle qu'on voit.
+  //
+  // Le ΔE (CIE76 comme CIEDE2000) met clarté, chroma et teinte sur le MÊME plan. Pour un
+  // mur vert-olive (#7d7e6c : teinte 111°, chroma 10), il élisait donc une peinture TAUPE
+  // (#8B8272, teinte 87° — jaune-chaud) à ΔE 5,0, simplement parce qu'elle tombait à la
+  // même clarté : « le mur est vert, la peinture proposée est grise » (QA Alexis
+  // 2026-07-13, projet zvU9qetu). Les vraies peintures vertes du catalogue, elles,
+  // étaient reléguées à ΔE 10 pour être un peu plus foncées. ΔE2000 ne corrige rien
+  // (taupe 6,2 contre kaki 8,9 — vérifié).
+  //
+  // On filtre donc AVANT de classer : même famille de teinte, et pas de peinture délavée
+  // là où le mur est coloré (un gris pour un mur vert reste un gris). Le ΔE ne sert plus
+  // qu'à départager les candidats DÉJÀ dans la bonne teinte.
+  const filtreTeinte = (max: number, planch: number) =>
+    candidats.filter(
+      (x: { ecart: number; chroma: number }) =>
+        x.ecart <= max && x.chroma >= cible.chroma * planch,
+    );
+
+  let retenus = candidats;
+  if (cible.chroma >= CHROMA_NEUTRE) {
+    // Strict, puis desserré : mieux vaut un vert imparfait qu'un taupe parfait.
+    retenus = filtreTeinte(20, 0.6);
+    if (retenus.length === 0) retenus = filtreTeinte(35, 0.45);
+    if (retenus.length === 0) retenus = candidats; // catalogue muet sur cette teinte
+  } else {
+    // Mur NEUTRE (blanc cassé, gris) : la symétrie compte — ne pas lui proposer une
+    // peinture franchement colorée sous prétexte qu'elle est à la bonne clarté.
+    const sobres = candidats.filter((x: { chroma: number }) => x.chroma <= cible.chroma + 8);
+    if (sobres.length > 0) retenus = sobres;
+  }
+
+  const scored = retenus
     .sort((a: { dE: number }, b: { dE: number }) => a.dE - b.dE)
     .slice(0, topN);
 

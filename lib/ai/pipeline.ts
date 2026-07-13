@@ -2223,16 +2223,20 @@ async function buildMatchesAndScore(
       }
       for (const w of wallColors) {
         const key = `paint-${w.hex.replace("#", "")}`;
-        // Un pin par PAN peint de cette même couleur (clés posées par analyzeRender).
+        // UN SEUL PIN PAR POT. On en posait un par PAN peint de cette couleur : trois pans
+        // du même vert donnaient trois pins identiques sur le rendu, pour une seule ligne
+        // de courses (QA Alexis 2026-07-13, projet zvU9qetu). Les elementIds multiples ont
+        // un sens quand ils désignent des EXEMPLAIRES à acheter (2 lampadaires = 2 pins) —
+        // ici c'est le même pot appliqué à plusieurs murs.
         const pinKeys = [key, `${key}-2`, `${key}-3`, `${key}-4`].filter((k) => bboxById.has(k));
         shoppingList.push({
           ...template,
           id: key,
-          // catégorie "paint" (pas "wall") + elementId(s) = clés des bbox murs
-          // → pins sur les murs (wall/floor/ceiling restent sans hotspot).
+          // catégorie "paint" (pas "wall") + elementId = clé de la bbox du mur
+          // → pin sur le mur (wall/floor/ceiling restent sans hotspot).
           category: "paint",
           elementId: pinKeys[0],
-          elementIds: pinKeys.length ? pinKeys : undefined,
+          elementIds: undefined,
           name: wallColors.length > 1 ? `Peinture — ${w.label}` : "Peinture",
           targetHex: w.hex,
           matches: await matchPaintByColor(w.hex),
