@@ -372,16 +372,66 @@ export async function detectProductBbox(imageBytes: Buffer): Promise<Bbox | null
 export async function buildFixedFeaturesSummary(profiles: ElementProfile[]): Promise<string> {
   const count = (cat: string) => profiles.filter((p) => p.category === cat).length;
   const parts: string[] = [];
-  const w = count("window"); if (w) parts.push(`${w} fenêtre(s)`);
-  const fd = count("french_door"); if (fd) parts.push(`${fd} porte(s)-fenêtre(s)`);
-  const d = count("door"); if (d) parts.push(`${d} porte(s)`);
-  const wo = count("wall_opening"); if (wo) parts.push(`${wo} ouverture(s)/passage(s) vers une autre pièce`);
-  // 0 est aussi une information (même leçon que les lightpoints ci-dessous) :
-  // sans compte explicite, le modèle invente une fenêtre pour y accrocher les
-  // rideaux du style (dispo 3 TvrnYMMyaELuMIc5pMRmL 2026-07-10). Le cas d'une
-  // ouverture RATÉE par la détection reste couvert par « THE PHOTO IS THE
-  // TRUTH » du SHELL_LOCK (préserver ce qui est visible gagne toujours).
-  if (w + fd === 0) parts.push(`NO window or french door visible (0) — NEVER add one, and NO curtains anywhere`);
+
+  // OUVERTURES — compte explicite ET interdiction explicite, dans les DEUX cas.
+  //
+  // On ne disait « NEVER add one » que lorsque le compte était ZÉRO. Dès qu'il y avait au
+  // moins une ouverture, la ligne se réduisait à un décompte (« 1 fenêtre(s) ») : le
+  // modèle satisfaisait « il y a 1 fenêtre » en en DESSINANT une là où ça l'arrangeait,
+  // le mur du fond devenant une porte-fenêtre à balcon (dispo 3 de O0DNBvO, 2026-07-13).
+  // Les points lumineux, eux, tiennent depuis qu'ils annoncent « EXACTLY n — never add
+  // one » : c'est ce patron qu'on applique ici. Et surtout, on dit ce qui n'était nulle
+  // part : TOUT MUR NON LISTÉ EST PLEIN — le fait devient explicite au lieu d'être une
+  // déduction laissée au modèle.
+  const OUVERTURES: Record<string, string> = {
+    window: "window",
+    french_door: "french door",
+    door: "door",
+    wall_opening: "open passage to another room",
+  };
+  // Le mur, déduit du centre horizontal de la boîte (normalisée 0-1). Sans boîte, on ne
+  // prétend pas savoir : le compte reste, la position est simplement tue.
+  const murDe = (p: ElementProfile): string | null => {
+    const b = p.bbox;
+    if (!b) return null;
+    const cx = b.x + b.w / 2;
+    return cx < 0.34 ? "LEFT" : cx > 0.66 ? "RIGHT" : "BACK";
+  };
+
+  const ouvertures = profiles.filter((p) => OUVERTURES[p.category]);
+  if (ouvertures.length === 0) {
+    parts.push(
+      "NO opening of any kind (0 window, 0 french door, 0 door, 0 passage) — every wall is SOLID. NEVER add one, and NO curtains anywhere",
+    );
+  } else {
+    // Le VERROU EST POSITIONNEL, pas seulement numérique. Il ne l'était pas : le prompt
+    // n'annonçait qu'un compte (« 1 porte-fenêtre »), que le modèle satisfaisait en la
+    // DÉPLAÇANT sur le mur libéré par la nouvelle disposition (dispo 3 de O0DNBvO :
+    // porte-fenêtre passée de gauche à droite, compte inchangé). On nomme donc le mur de
+    // chacune, et surtout on déclare PLEINS les murs qui n'en portent aucune — le fait
+    // devient explicite au lieu d'être une déduction laissée au modèle.
+    const parMur = new Map<string, string[]>();
+    const liste = ouvertures.map((p) => {
+      const mur = murDe(p);
+      if (mur) parMur.set(mur, [...(parMur.get(mur) ?? []), OUVERTURES[p.category]]);
+      return mur
+        ? `1 ${OUVERTURES[p.category]} on the ${mur} wall`
+        : `1 ${OUVERTURES[p.category]}`;
+    });
+    const pleins = ["LEFT", "BACK", "RIGHT"].filter((m) => !parMur.has(m));
+    const w = count("window");
+    const fd = count("french_door");
+
+    parts.push(
+      `EXACTLY ${ouvertures.length} opening(s), and here is WHERE: ${liste.join("; ")}. ` +
+        `This is the COMPLETE set. Reproduce each one on ITS OWN wall, same size, same place — never move one to another wall, never add one, never remove one.` +
+        (pleins.length
+          ? ` The ${pleins.join(" and ")} wall${pleins.length > 1 ? "s are" : " is"} SOLID: no window, no french door, no passage there, EVER — ` +
+            `even if the new layout leaves ${pleins.length > 1 ? "them" : "it"} bare, even if an opening there would look better. A bare wall takes furniture, art, or nothing at all — never a hole.`
+          : "") +
+        (w + fd === 0 ? " NO curtains anywhere (no window to hang them on)." : ""),
+    );
+  }
   // Points lumineux FIXES (plafonnier/applique) — data-driven via le flag
   // fixed_lightpoint de la taxonomie. Le NOMBRE exact injecté verrouille le
   // compte : le swap en place reste permis, l'AJOUT de luminaires (lustre,
@@ -488,9 +538,19 @@ export async function detectElementProfiles(
   const ROOM_SCALE_SUFFIX =
     `\nROOM SCALE: wrap the output as {"room_scale": "small|medium|large", "elementProfiles": [...]} — ` +
     `room_scale = overall floor area of the room judged from the photo (small <15m², medium 15-25m², large >25m²).`;
+  // Boîte des SEULES ouvertures, sur la détection SOURCE. Sans elle, le prompt de
+  // génération ne connaissait que le NOMBRE d'ouvertures : le modèle satisfaisait
+  // « exactement 1 porte-fenêtre » en la DÉPLAÇANT sur le mur que sa disposition libérait
+  // (dispo 3 de O0DNBvO : porte-fenêtre passée du mur gauche au mur droit, compte
+  // inchangé — un verrou par comptage y est aveugle). On demande donc la position, dans
+  // l'appel qui tourne déjà : aucun appel de plus, quelques dizaines de tokens en sortie.
+  const OPENINGS_BOX_SUFFIX =
+    "\n\nEN PLUS : pour les SEULS éléments dont la catégorie est window, french_door, door ou wall_opening, " +
+    'ajoute "box_2d": [ymin, xmin, ymax, xmax] — boîte englobante SERRÉE, en ENTIERS de 0 à 1000 ' +
+    "(origine en haut à gauche). Aucun autre élément n'a besoin de box_2d.";
   const template = opts?.withBbox
     ? detPrompt.resolvedTemplate + NO_REFLECTION_SUFFIX + BBOX_SUFFIX + buildAttrsInstruction() + LEAN_INVENTORY_SUFFIX
-    : detPrompt.resolvedTemplate + NO_REFLECTION_SUFFIX + ROOM_SCALE_SUFFIX;
+    : detPrompt.resolvedTemplate + NO_REFLECTION_SUFFIX + ROOM_SCALE_SUFFIX + OPENINGS_BOX_SUFFIX;
   const detResult = await withTracking(
     {
       step: "vision_detection",
@@ -550,12 +610,13 @@ export async function detectElementProfiles(
       condition: p.condition ?? "good",
       movable: p.movable ?? true,
       dims: p.dims ?? {},
-      // box_2d (convention native) d'abord ; repli sur l'ancien champ bbox.
-      bbox: opts?.withBbox
-        ? (parseBox2d((p as { box_2d?: unknown }).box_2d) ??
-           parseBbox((p as { bbox?: unknown }).bbox) ??
-           undefined)
-        : undefined,
+      // box_2d (convention native) d'abord ; repli sur l'ancien champ bbox. Toujours
+      // parsée : la détection source ne la renvoie que pour les ouvertures (cf.
+      // OPENINGS_BOX_SUFFIX), et c'est elle qui permet de dire SUR QUEL MUR elles sont.
+      bbox:
+        parseBox2d((p as { box_2d?: unknown }).box_2d) ??
+        parseBbox((p as { bbox?: unknown }).bbox) ??
+        undefined,
       color_hex: opts?.withBbox ? parseHex((p as { color_hex?: unknown }).color_hex) : undefined,
       attrs: opts?.withBbox && p.attrs && typeof p.attrs === "object" && !Array.isArray(p.attrs)
         ? (p.attrs as Record<string, unknown>)
