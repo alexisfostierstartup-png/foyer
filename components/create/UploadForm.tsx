@@ -198,6 +198,9 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
                 }}
               >
                 {previewUrl ? (
+                  // Le cadre 4/3 n'apparaît QU'UNE FOIS la photo choisie. Vide, il occupait
+                  // 640px de haut sur un écran large : un grand rectangle beige pour ne rien
+                  // montrer.
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={previewUrl}
@@ -205,19 +208,24 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
                     className="aspect-[4/3] w-full rounded-xl object-cover"
                   />
                 ) : (
+                  // La zone de dépôt EST le bouton d'import : un clic ouvre directement le
+                  // sélecteur de photos. Le bouton « Importer depuis la galerie » qui vivait
+                  // en dessous faisait doublon — deux chemins pour le même geste.
                   <label
                     className={cn(
-                      "flex aspect-[4/3] w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed bg-[#F0EBE2] px-4 text-center transition-colors",
+                      "flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-4 py-10 text-center transition-colors",
                       surZone
                         ? "border-foyer-sage bg-foyer-sage/10"
-                        : "border-foyer-border hover:border-foyer-sage/60",
+                        : "border-foyer-border bg-[#F0EBE2] hover:border-foyer-sage/60 hover:bg-foyer-sage/5",
                     )}
                   >
-                    <ImagePlus className="size-8 text-foyer-muted" aria-hidden />
-                    <span className="text-sm font-medium text-foyer-ink">
+                    <ImagePlus className="size-7 text-foyer-sage" aria-hidden />
+                    <span className="text-[15px] font-medium text-foyer-ink">
                       Glissez votre photo ici
                     </span>
-                    <span className="text-[13px] text-foyer-muted">ou cliquez pour la choisir</span>
+                    <span className="text-[13px] text-foyer-muted">
+                      ou cliquez pour la choisir dans vos photos
+                    </span>
                     <input
                       type="file"
                       accept="image/*"
@@ -238,35 +246,25 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
                     On téléverse votre photo…
                   </p>
                 ) : !projectId ? (
-                  <>
-                    <label className="flex h-[52px] w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-foyer-sage font-medium text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:-translate-y-0.5 hover:bg-foyer-sage/90 hover:shadow-[0_4px_14px_rgba(107,142,111,0.45)]">
-                      <Camera className="size-5" aria-hidden />
-                      Prendre une photo
-                      <input
-                        type="file"
-                        accept="image/*"
-                        capture="environment"
-                        className="sr-only"
-                        onChange={(e) => {
-                          handleFileSelect(e.target.files?.[0]);
-                          e.target.value = "";
-                        }}
-                      />
-                    </label>
-                    <label className="flex h-[52px] w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-foyer-border font-medium text-foyer-ink hover:bg-foyer-cream">
-                      <ImagePlus className="size-5" aria-hidden />
-                      Importer depuis la galerie
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="sr-only"
-                        onChange={(e) => {
-                          handleFileSelect(e.target.files?.[0]);
-                          e.target.value = "";
-                        }}
-                      />
-                    </label>
-                  </>
+                  // « Importer depuis la galerie » est SUPPRIMÉ : la zone de dépôt fait déjà
+                  // exactement ça, en un clic. Deux chemins pour le même geste, c'était la
+                  // « boîte à options » qui obligeait à choisir avant de faire.
+                  // Reste l'appareil photo, qui lui est un geste DIFFÉRENT (et n'a de sens
+                  // qu'avec un capteur : masqué sur les écrans sans écran tactile).
+                  <label className="flex h-[52px] w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-foyer-border font-medium text-foyer-ink hover:bg-foyer-cream lg:hidden">
+                    <Camera className="size-5" aria-hidden />
+                    Prendre une photo maintenant
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      className="sr-only"
+                      onChange={(e) => {
+                        handleFileSelect(e.target.files?.[0]);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
                 ) : (
                   /* Photo uploaded — allow changing it */
                   <label className="flex h-[52px] w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-foyer-border font-medium text-foyer-ink hover:bg-foyer-cream">
