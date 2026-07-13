@@ -99,7 +99,7 @@ async function main() {
 
     // Détection UNE fois par photo : les deux versions reçoivent EXACTEMENT le même
     // contexte. Seule la longueur du prompt varie.
-    const profiles = await detectElementProfiles(projectId, buf, `bench:${f}`, roomType);
+    const profiles = await detectElementProfiles(projectId, buf, `bench:${f}`);
     const ctx = {
       styleName,
       styleMood,

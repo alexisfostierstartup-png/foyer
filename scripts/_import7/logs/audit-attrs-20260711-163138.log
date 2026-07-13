@@ -1,0 +1,172 @@
+◇ injected env (18) from .env.local // tip: ◈ encrypted .env [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+[audit-attrs] démarrage 2026-07-11T14:31:39.876Z — marchands=maisons_du_monde,cyrillus modèle=gemini-flash-lite-latest catégories=31 style=on
+✓ maisons_du_monde sofa            0 extraits · 778 déjà faits · 0 échecs
+  maisons_du_monde/armchair: 50/600 (total global: 50)
+  maisons_du_monde/armchair: 100/600 (total global: 100)
+  maisons_du_monde/armchair: 150/600 (total global: 150)
+  maisons_du_monde/armchair: 200/600 (total global: 200)
+  maisons_du_monde/armchair: 250/600 (total global: 250)
+✓ maisons_du_monde armchair        276 extraits · 324 déjà faits · 0 échecs
+  maisons_du_monde/chair: 50/600 (total global: 326)
+  maisons_du_monde/chair: 100/600 (total global: 376)
+  maisons_du_monde/chair: 150/600 (total global: 426)
+  maisons_du_monde/chair: 200/600 (total global: 476)
+  maisons_du_monde/chair: 250/600 (total global: 526)
+  maisons_du_monde/chair: 300/600 (total global: 576)
+✓ maisons_du_monde chair           321 extraits · 279 déjà faits · 0 échecs
+  maisons_du_monde/coffee_table: 50/412 (total global: 647)
+  maisons_du_monde/coffee_table: 100/412 (total global: 697)
+  maisons_du_monde/coffee_table: 150/412 (total global: 747)
+  maisons_du_monde/coffee_table: 200/412 (total global: 797)
+✓ maisons_du_monde coffee_table    209 extraits · 203 déjà faits · 0 échecs
+  maisons_du_monde/dining_table: 50/600 (total global: 856)
+  maisons_du_monde/dining_table: 100/600 (total global: 906)
+  maisons_du_monde/dining_table: 150/600 (total global: 956)
+  ✗ PERSISTANCE ÉCHOUÉE — maisons_du_monde/dining_table — 853a51b2-0652-4fcb-b0c2-86e25e444d9a — TypeError: fetch failed
+  maisons_du_monde/dining_table: 200/600 (total global: 1006)
+  maisons_du_monde/dining_table: 250/600 (total global: 1056)
+✓ maisons_du_monde dining_table    291 extraits · 308 déjà faits · 1 échecs
+  maisons_du_monde/side_table: 50/188 (total global: 1147)
+  maisons_du_monde/side_table: 100/188 (total global: 1197)
+✓ maisons_du_monde side_table      113 extraits · 75 déjà faits · 0 échecs
+  maisons_du_monde/sideboard: 50/600 (total global: 1260)
+  maisons_du_monde/sideboard: 100/600 (total global: 1310)
+  maisons_du_monde/sideboard: 150/600 (total global: 1360)
+  maisons_du_monde/sideboard: 200/600 (total global: 1410)
+  maisons_du_monde/sideboard: 250/600 (total global: 1460)
+  maisons_du_monde/sideboard: 300/600 (total global: 1510)
+✓ maisons_du_monde sideboard       300 extraits · 300 déjà faits · 0 échecs
+  maisons_du_monde/dresser: 50/600 (total global: 1560)
+[ai:retry] vision gemini-flash-lite-latest erreur transitoire (tentative 1/4), retry dans 559ms — fetch failed
+  maisons_du_monde/dresser: 100/600 (total global: 1610)
+[ai:retry] vision gemini-flash-lite-latest erreur transitoire (tentative 1/4), retry dans 662ms — fetch failed
+  maisons_du_monde/dresser: 150/600 (total global: 1660)
+  maisons_du_monde/dresser: 200/600 (total global: 1710)
+  maisons_du_monde/dresser: 250/600 (total global: 1760)
+  ✗ PERSISTANCE ÉCHOUÉE — maisons_du_monde/dresser — f57db4fe-5220-4a90-8c5e-a2b678b17308 — TypeError: fetch failed
+✓ maisons_du_monde dresser         299 extraits · 300 déjà faits · 1 échecs
+  maisons_du_monde/bookshelf: 50/600 (total global: 1859)
+  maisons_du_monde/bookshelf: 100/600 (total global: 1909)
+  maisons_du_monde/bookshelf: 150/600 (total global: 1959)
+  maisons_du_monde/bookshelf: 200/600 (total global: 2009)
+  maisons_du_monde/bookshelf: 250/600 (total global: 2059)
+  maisons_du_monde/bookshelf: 300/600 (total global: 2109)
+✓ maisons_du_monde bookshelf       300 extraits · 300 déjà faits · 0 échecs
+  maisons_du_monde/stool: 50/600 (total global: 2159)
+  maisons_du_monde/stool: 100/600 (total global: 2209)
+  maisons_du_monde/stool: 150/600 (total global: 2259)
+  maisons_du_monde/stool: 200/600 (total global: 2309)
+  maisons_du_monde/stool: 250/600 (total global: 2359)
+[ai:retry] vision gemini-flash-lite-latest erreur transitoire (tentative 1/4), retry dans 910ms — fetch failed
+  maisons_du_monde/stool: 300/600 (total global: 2409)
+✓ maisons_du_monde stool           301 extraits · 299 déjà faits · 0 échecs
+  maisons_du_monde/desk: 50/600 (total global: 2460)
+  maisons_du_monde/desk: 100/600 (total global: 2510)
+  maisons_du_monde/desk: 150/600 (total global: 2560)
+  maisons_du_monde/desk: 200/600 (total global: 2610)
+  maisons_du_monde/desk: 250/600 (total global: 2660)
+  maisons_du_monde/desk: 300/600 (total global: 2710)
+  maisons_du_monde/desk: 350/600 (total global: 2760)
+✓ maisons_du_monde desk            383 extraits · 217 déjà faits · 0 échecs
+  maisons_du_monde/bed: 50/600 (total global: 2843)
+  maisons_du_monde/bed: 100/600 (total global: 2893)
+  maisons_du_monde/bed: 150/600 (total global: 2943)
+  maisons_du_monde/bed: 200/600 (total global: 2993)
+  maisons_du_monde/bed: 250/600 (total global: 3043)
+  maisons_du_monde/bed: 300/600 (total global: 3093)
+  maisons_du_monde/bed: 350/600 (total global: 3143)
+  maisons_du_monde/bed: 400/600 (total global: 3193)
+  maisons_du_monde/bed: 450/600 (total global: 3243)
+  maisons_du_monde/bed: 500/600 (total global: 3293)
+  maisons_du_monde/bed: 550/600 (total global: 3343)
+  maisons_du_monde/bed: 600/600 (total global: 3393)
+✓ maisons_du_monde bed             600 extraits · 0 déjà faits · 0 échecs
+✓ cyrillus         bed             0 extraits · 6 déjà faits · 0 échecs
+  maisons_du_monde/dressing_table: 50/600 (total global: 3443)
+  maisons_du_monde/dressing_table: 100/600 (total global: 3493)
+  maisons_du_monde/dressing_table: 150/600 (total global: 3543)
+  maisons_du_monde/dressing_table: 200/600 (total global: 3593)
+  maisons_du_monde/dressing_table: 250/600 (total global: 3643)
+  maisons_du_monde/dressing_table: 300/600 (total global: 3693)
+  maisons_du_monde/dressing_table: 350/600 (total global: 3743)
+[ai:retry] vision gemini-flash-lite-latest erreur transitoire (tentative 1/4), retry dans 741ms — fetch failed
+[ai:retry] vision gemini-flash-lite-latest erreur transitoire (tentative 1/4), retry dans 770ms — fetch failed
+  maisons_du_monde/dressing_table: 400/600 (total global: 3793)
+[ai:retry] vision gemini-flash-lite-latest erreur transitoire (tentative 1/4), retry dans 825ms — fetch failed
+[ai:retry] vision gemini-flash-lite-latest erreur transitoire (tentative 2/4), retry dans 1338ms — fetch failed
+[ai:retry] vision gemini-flash-lite-latest erreur transitoire (tentative 1/4), retry dans 603ms — fetch failed
+[ai:retry] vision gemini-flash-lite-latest erreur transitoire (tentative 1/4), retry dans 545ms — fetch failed
+  maisons_du_monde/dressing_table: 450/600 (total global: 3843)
+[ai:retry] vision gemini-flash-lite-latest erreur transitoire (tentative 1/4), retry dans 678ms — fetch failed
+  maisons_du_monde/dressing_table: 500/600 (total global: 3893)
+  maisons_du_monde/dressing_table: 550/600 (total global: 3943)
+  maisons_du_monde/dressing_table: 600/600 (total global: 3993)
+✓ maisons_du_monde dressing_table  600 extraits · 0 déjà faits · 0 échecs
+  ✗ PERSISTANCE ÉCHOUÉE — maisons_du_monde/nightstand — 01ae4aed-dcac-4cea-b841-5fea0e470211 — TypeError: fetch failed
+  maisons_du_monde/nightstand: 50/600 (total global: 4043)
+  maisons_du_monde/nightstand: 100/600 (total global: 4093)
+  maisons_du_monde/nightstand: 150/600 (total global: 4143)
+  maisons_du_monde/nightstand: 200/600 (total global: 4193)
+  maisons_du_monde/nightstand: 250/600 (total global: 4243)
+  maisons_du_monde/nightstand: 300/600 (total global: 4293)
+  maisons_du_monde/nightstand: 350/600 (total global: 4343)
+  maisons_du_monde/nightstand: 400/600 (total global: 4393)
+  maisons_du_monde/nightstand: 450/600 (total global: 4443)
+  maisons_du_monde/nightstand: 500/600 (total global: 4493)
+  maisons_du_monde/nightstand: 550/600 (total global: 4543)
+✓ maisons_du_monde nightstand      599 extraits · 0 déjà faits · 1 échecs
+✓ cyrillus         nightstand      0 extraits · 1 déjà faits · 0 échecs
+  maisons_du_monde/bench: 50/600 (total global: 4642)
+  maisons_du_monde/bench: 100/600 (total global: 4692)
+  maisons_du_monde/bench: 150/600 (total global: 4742)
+  maisons_du_monde/bench: 200/600 (total global: 4792)
+  maisons_du_monde/bench: 250/600 (total global: 4842)
+  maisons_du_monde/bench: 300/600 (total global: 4892)
+  maisons_du_monde/bench: 350/600 (total global: 4942)
+  maisons_du_monde/bench: 400/600 (total global: 4992)
+  maisons_du_monde/bench: 450/600 (total global: 5042)
+  ✗ PERSISTANCE ÉCHOUÉE — maisons_du_monde/bench — d61ae0f7-4deb-4587-afad-0f28a07c7c7d — TypeError: fetch failed
+  maisons_du_monde/bench: 500/600 (total global: 5092)
+  maisons_du_monde/bench: 550/600 (total global: 5142)
+✓ maisons_du_monde bench           599 extraits · 0 déjà faits · 1 échecs
+✓ cyrillus         bench           0 extraits · 2 déjà faits · 0 échecs
+  maisons_du_monde/pouf: 50/599 (total global: 5241)
+  maisons_du_monde/pouf: 100/599 (total global: 5291)
+  maisons_du_monde/pouf: 150/599 (total global: 5341)
+  ✗ PERSISTANCE ÉCHOUÉE — maisons_du_monde/pouf — 40958563-478e-4cce-831d-f50a09b5874e — TypeError: fetch failed
+  maisons_du_monde/pouf: 200/599 (total global: 5391)
+  maisons_du_monde/pouf: 250/599 (total global: 5441)
+  maisons_du_monde/pouf: 300/599 (total global: 5491)
+  maisons_du_monde/pouf: 350/599 (total global: 5541)
+  maisons_du_monde/pouf: 400/599 (total global: 5591)
+  maisons_du_monde/pouf: 450/599 (total global: 5641)
+  maisons_du_monde/pouf: 500/599 (total global: 5691)
+  maisons_du_monde/pouf: 550/599 (total global: 5741)
+✓ maisons_du_monde pouf            598 extraits · 0 déjà faits · 1 échecs
+  maisons_du_monde/headboard: 50/599 (total global: 5839)
+  maisons_du_monde/headboard: 100/599 (total global: 5889)
+  maisons_du_monde/headboard: 150/599 (total global: 5939)
+  maisons_du_monde/headboard: 200/599 (total global: 5989)
+  maisons_du_monde/headboard: 250/599 (total global: 6039)
+  maisons_du_monde/headboard: 300/599 (total global: 6089)
+  maisons_du_monde/headboard: 350/599 (total global: 6139)
+  maisons_du_monde/headboard: 400/599 (total global: 6189)
+  maisons_du_monde/headboard: 450/599 (total global: 6239)
+  maisons_du_monde/headboard: 500/599 (total global: 6289)
+  maisons_du_monde/headboard: 550/599 (total global: 6339)
+✓ maisons_du_monde headboard       599 extraits · 0 déjà faits · 0 échecs
+  maisons_du_monde/display_cabinet: 50/140 (total global: 6438)
+  maisons_du_monde/display_cabinet: 100/140 (total global: 6488)
+✓ maisons_du_monde display_cabinet 140 extraits · 0 déjà faits · 0 échecs
+  maisons_du_monde/tv_stand: 50/600 (total global: 6578)
+
+🛑 UNKNOWN — 6604 déjà persistés au total (76 sur maisons_du_monde/tv_stand)
+   Marchand/Cat : maisons_du_monde / tv_stand
+   Produit      : Meuble tv mural 1 porte 120 cm stratifiés noir mat
+   Image        : https://medias.maisonsdumonde.com/images/w_1000/mkp/M24154083_1/meuble-tv-mural-1-porte-120-cm-stratifies-noir-mat.jpg
+   URL          : https://www.maisonsdumonde.com/FR/fr/p/meuble-tv-mural-1-porte-120-cm-stratifies-noir-mat-bali-M24154083.htm
+   Attrs        : {"shape":"wall_mounted","color":"#262626","material":"black","storage":"unknown","legs":"wall_mounted"}
+   ⚠️  unknown sur : storage
+   (n/a cumulés sur cette catégorie : {})
+   → enrichir attributeSchemaV3.ts (vocab manquant) puis RELANCER la même commande (reprend sans perte).

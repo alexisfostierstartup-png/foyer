@@ -11,7 +11,7 @@
  * dès le parsing, mémoïsé, pour éviter de re-scanner le fichier à chaque catégorie.
  */
 import { createReadStream } from "fs";
-import { resolveEffinityCategory, resolveCyrillusKidsCategory, CYRILLUS_AMBIGUOUS_BUCKETS } from "../effinity-category-map";
+import { resolveEffinityCategory, resolveCyrillusKidsCategory, CYRILLUS_AMBIGUOUS_BUCKETS, isKidsTitle } from "../effinity-category-map";
 import type { ProductSource, PartnerProductInput } from "../types";
 
 const WANTED_COLUMNS = [
@@ -173,6 +173,14 @@ export class EffinityCsvSource implements ProductSource {
       // scopé à ce marchand + ces rayons précis uniquement.
       if (!category && this.merchant === "cyrillus" && CYRILLUS_AMBIGUOUS_BUCKETS.has(row.category.trim().toLowerCase())) {
         category = resolveCyrillusKidsCategory(row.title);
+      } else if (category && isKidsTitle(row.title)) {
+        // Garde-fou général (2026-07-12) : un produit enfant peut atterrir dans une
+        // catégorie adulte correctement mappée par le CHEMIN (ex. MdM "Literie > Lits" →
+        // bed) alors que seul le TITRE trahit "enfant" ("Lit princesse enfant LED").
+        // Exclu du pool adulte pour ne pas polluer le matching salon/chambre — pas
+        // supprimé pour autant, juste non importé ici (candidat pour un futur mapping
+        // chambre_enfant dédié, cf. resolveCyrillusKidsCategory).
+        category = null;
       }
       if (!category) return;
       const input = this.toInput(row, category);

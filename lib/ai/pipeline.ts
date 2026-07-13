@@ -469,15 +469,17 @@ export async function detectElementProfiles(
   projectId: string,
   sourceImage: ImageInput,
   label: string,
-  roomType?: string,
   opts?: { withBbox?: boolean },
   // Sortie annexe optionnelle (non cassante) : room_scale estimé par la même
   // détection — petit/moyen/grand salon ne se meublent pas pareil.
   out?: { roomScale?: "small" | "medium" | "large" },
 ): Promise<ElementProfile[]> {
   const tDet = Date.now();
-  // Taxonomie DB-driven : la liste des catégories autorisées est injectée depuis
-  // la table assets (element_category), filtrée par type de pièce.
+  // Taxonomie DB-driven, COMPLÈTE : on nomme tout ce qu'on voit, quelle que soit la pièce
+  // annoncée. Le type de pièce ne passe PLUS ici — il décide en aval de ce qu'on fait de
+  // chaque élément (room_defaults.removeCategories), pas de ce qu'on a le droit de voir.
+  // Le filtrer ici rendait un canapé invisible dans une chambre (il tombait en `other`),
+  // donc impossible à retirer, à acheter ou à compter.
   const categories = await getElementCategoryEnum();
   const detPrompt = await resolvePrompt("vision_detect_extended", { categories }, { strict: false });
   // withBbox = inventaire du rendu : on émet AUSSI les attrs V3 (tous les meubles du rendu
@@ -699,7 +701,7 @@ async function detectSourceProfilesCached(
   const run = (async () => {
     const sourceImage = await loadImage(photoUrl);
     const out: { roomScale?: "small" | "medium" | "large" } = {};
-    const profiles = await detectElementProfiles(projectId, sourceImage, label, project.roomType, undefined, out);
+    const profiles = await detectElementProfiles(projectId, sourceImage, label, undefined, out);
     if (profiles.length > 0) {
       await updateProject(projectId, { visionOutput: profiles, visionDetectionPhotoUrl: photoUrl, ...(out.roomScale ? { roomScale: out.roomScale } : {}) });
     }
@@ -1271,7 +1273,7 @@ async function runDispositionsPipelineInner(projectId: string): Promise<string[]
 
   let profiles = Array.isArray(project.visionOutput) ? (project.visionOutput as ElementProfile[]) : [];
   if (profiles.length === 0) {
-    profiles = await detectElementProfiles(projectId, sourceImage, "dispositions", project.roomType);
+    profiles = await detectElementProfiles(projectId, sourceImage, "dispositions");
     await updateProject(projectId, { visionOutput: profiles });
   }
 
@@ -1699,7 +1701,7 @@ export async function computeRenderInventory(
   taxonomy: Map<string, string | null>,
 ): Promise<{ adds: Alteration[]; profiles: ElementProfile[] }> {
   const renderImg = await loadImage(renderUrl);
-  const renderProfiles = await detectElementProfiles(projectId, renderImg, "render_inventory", roomType, { withBbox: true });
+  const renderProfiles = await detectElementProfiles(projectId, renderImg, "render_inventory", { withBbox: true });
   const categories = await getElementCategories().catch(() => [] as ElementCategory[]);
   const fixedShoppable = new Set(
     categories.filter((c) => c.fixed_lightpoint && c.catalog_category).map((c) => c.slug),

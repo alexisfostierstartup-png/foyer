@@ -1,0 +1,34 @@
+◇ injected env (18) from .env.local // tip: ◈ secrets for agents [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+[audit-attrs] démarrage 2026-07-11T09:03:05.725Z — marchands=maisons_du_monde,cyrillus modèle=gemini-flash-lite-latest catégories=31
+  maisons_du_monde/sofa: 50/524 (total global: 50)
+  maisons_du_monde/sofa: 100/524 (total global: 100)
+  maisons_du_monde/sofa: 150/524 (total global: 150)
+[ai:retry] vision gemini-flash-lite-latest erreur transitoire (tentative 1/4), retry dans 544ms — fetch failed
+  maisons_du_monde/sofa: 200/524 (total global: 200)
+✓ maisons_du_monde sofa            224 extraits · 300 déjà faits · 0 échecs
+  maisons_du_monde/armchair: 50/600 (total global: 274)
+  maisons_du_monde/armchair: 100/600 (total global: 324)
+  maisons_du_monde/armchair: 150/600 (total global: 374)
+  maisons_du_monde/armchair: 200/600 (total global: 424)
+  maisons_du_monde/armchair: 250/600 (total global: 474)
+  maisons_du_monde/armchair: 300/600 (total global: 524)
+✓ maisons_du_monde armchair        300 extraits · 300 déjà faits · 0 échecs
+  maisons_du_monde/chair: 50/600 (total global: 574)
+  maisons_du_monde/chair: 100/600 (total global: 624)
+  maisons_du_monde/chair: 150/600 (total global: 674)
+  maisons_du_monde/chair: 200/600 (total global: 724)
+  maisons_du_monde/chair: 250/600 (total global: 774)
+  maisons_du_monde/chair: 300/600 (total global: 824)
+✓ maisons_du_monde chair           321 extraits · 279 déjà faits · 0 échecs
+  maisons_du_monde/coffee_table: 50/600 (total global: 895)
+  maisons_du_monde/coffee_table: 100/600 (total global: 945)
+  maisons_du_monde/coffee_table: 150/600 (total global: 995)
+  maisons_du_monde/coffee_table: 200/600 (total global: 1045)
+  maisons_du_monde/coffee_table: 250/600 (total global: 1095)
+  maisons_du_monde/coffee_table: 300/600 (total global: 1145)
+✓ maisons_du_monde coffee_table    300 extraits · 300 déjà faits · 0 échecs
+  maisons_du_monde/dining_table: 50/600 (total global: 1195)
+  maisons_du_monde/dining_table: 100/600 (total global: 1245)
+  maisons_du_monde/dining_table: 150/600 (total global: 1295)
+  maisons_du_monde/dining_table: 200/600 (total global: 1345)

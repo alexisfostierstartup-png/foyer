@@ -1,0 +1,13 @@
+◇ injected env (18) from .env.local // tip: ⌘ enable debugging { debug: true }
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+[audit-attrs] démarrage 2026-07-11T11:39:19.225Z — marchands=maisons_du_monde,cyrillus modèle=gemini-flash-lite-latest catégories=31 style=on
+  maisons_du_monde/sofa: 50/778 (total global: 50)
+  maisons_du_monde/sofa: 100/778 (total global: 100)
+  maisons_du_monde/sofa: 150/778 (total global: 150)
+  maisons_du_monde/sofa: 200/778 (total global: 200)
+  maisons_du_monde/sofa: 250/778 (total global: 250)
+  maisons_du_monde/sofa: 300/778 (total global: 300)
+  maisons_du_monde/sofa: 350/778 (total global: 350)
+  maisons_du_monde/sofa: 400/778 (total global: 400)
+  maisons_du_monde/sofa: 450/778 (total global: 450)
+✓ maisons_du_monde sofa            481 extraits · 297 déjà faits · 0 échecs

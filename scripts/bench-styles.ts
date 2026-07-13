@@ -122,7 +122,7 @@ async function main() {
   for (const f of files) {
     const buf = await readFile(path.join(imagesDir, f));
     console.log(`[detect] ${f}…`);
-    const profiles = await detectElementProfiles(projectId, buf, `bench:${f}`, roomType);
+    const profiles = await detectElementProfiles(projectId, buf, `bench:${f}`);
     detectionByFile.set(f, profiles);
     console.log(`[detect] ${f}: ${profiles.length} éléments`);
   }

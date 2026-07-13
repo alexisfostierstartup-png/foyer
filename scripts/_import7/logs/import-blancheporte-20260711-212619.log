@@ -1,0 +1,212 @@
+◇ injected env (18) from .env.local // tip: ⌘ suppress logs { quiet: true }
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+[import7] démarrage 2026-07-11T19:26:20.897Z — 110 étapes (merchant×catégorie)
+[effinity:blancheporte] 69597 lignes lues, 2009 mappées sur 13 catégories
+[effinity:blancheporte] sofa: 0/0 produits (limit=600)
+[ingest:blancheporte] sofa: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 0
+[import7] sofa / blancheporte: 0 insérés
+[effinity:blancheporte] armchair: 0/0 produits (limit=600)
+[ingest:blancheporte] armchair: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 0
+[import7] armchair / blancheporte: 0 insérés
+[effinity:blancheporte] chair: 0/0 produits (limit=600)
+[ingest:blancheporte] chair: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 0
+[import7] chair / blancheporte: 0 insérés
+[effinity:blancheporte] coffee_table: 8/8 produits (limit=600)
+[ingest:blancheporte] coffee_table: 8 fetched / 8 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 8
+[import7] coffee_table / blancheporte: 8 insérés
+[effinity:blancheporte] dining_table: 0/0 produits (limit=600)
+[ingest:blancheporte] dining_table: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 0
+[import7] dining_table / blancheporte: 0 insérés
+[effinity:blancheporte] side_table: 18/18 produits (limit=600)
+[ingest:blancheporte] side_table: 18 fetched / 18 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 18
+[import7] side_table / blancheporte: 18 insérés
+[effinity:blancheporte] sideboard: 0/0 produits (limit=600)
+[ingest:blancheporte] sideboard: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 0
+[import7] sideboard / blancheporte: 0 insérés
+[effinity:blancheporte] dresser: 0/0 produits (limit=600)
+[ingest:blancheporte] dresser: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 0
+[import7] dresser / blancheporte: 0 insérés
+[effinity:blancheporte] bookshelf: 16/16 produits (limit=600)
+[ingest:blancheporte] bookshelf: 16 fetched / 0 insérés / 16 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 0
+[import7] bookshelf / blancheporte: 0 insérés
+[effinity:blancheporte] stool: 12/12 produits (limit=600)
+[ingest:blancheporte] stool: 12 fetched / 12 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 12
+[import7] stool / blancheporte: 12 insérés
+[effinity:blancheporte] desk: 0/0 produits (limit=600)
+[ingest:blancheporte] desk: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 0
+[import7] desk / blancheporte: 0 insérés
+[effinity:blancheporte] bed: 0/0 produits (limit=600)
+[ingest:blancheporte] bed: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 0
+[import7] bed / blancheporte: 0 insérés
+[effinity:blancheporte] dressing_table: 2/2 produits (limit=600)
+[ingest:blancheporte] dressing_table: 2 fetched / 2 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 2
+[import7] dressing_table / blancheporte: 2 insérés
+[effinity:blancheporte] nightstand: 18/18 produits (limit=600)
+[ingest:blancheporte] nightstand: 18 fetched / 18 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 18
+[import7] nightstand / blancheporte: 18 insérés
+[effinity:blancheporte] bench: 10/10 produits (limit=600)
+[ingest:blancheporte] bench: 10 fetched / 10 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 10
+[import7] bench / blancheporte: 10 insérés
+[effinity:blancheporte] pouf: 14/14 produits (limit=600)
+[ingest:blancheporte] pouf: 14 fetched / 14 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 14
+[import7] pouf / blancheporte: 14 insérés
+[effinity:blancheporte] headboard: 0/0 produits (limit=600)
+[ingest:blancheporte] headboard: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 0
+[import7] headboard / blancheporte: 0 insérés
+[effinity:blancheporte] display_cabinet: 0/0 produits (limit=600)
+[ingest:blancheporte] display_cabinet: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 0
+[import7] display_cabinet / blancheporte: 0 insérés
+[effinity:blancheporte] tv_stand: 0/0 produits (limit=600)
+[ingest:blancheporte] tv_stand: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 0
+[import7] tv_stand / blancheporte: 0 insérés
+[effinity:blancheporte] bar_cabinet: 0/0 produits (limit=600)
+[ingest:blancheporte] bar_cabinet: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 0
+[import7] bar_cabinet / blancheporte: 0 insérés
+[effinity:blancheporte] room_divider: 0/0 produits (limit=600)
+[ingest:blancheporte] room_divider: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 0
+[import7] room_divider / blancheporte: 0 insérés
+[effinity:blancheporte] rug: 536/536 produits (limit=600)
+[ingest:blancheporte] rug: 536 fetched / 536 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 536
+[import7] rug / blancheporte: 536 insérés
+[effinity:blancheporte] curtains: 600/1084 produits (limit=600)
+[ingest:blancheporte] curtains: 600 fetched / 600 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 600
+[import7] curtains / blancheporte: 600 insérés
+[effinity:blancheporte] pendant_lamp: 0/0 produits (limit=600)
+[ingest:blancheporte] pendant_lamp: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 0
+[import7] pendant_lamp / blancheporte: 0 insérés
+[effinity:blancheporte] table_lamp: 0/0 produits (limit=600)
+[ingest:blancheporte] table_lamp: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 0
+[import7] table_lamp / blancheporte: 0 insérés
+[effinity:blancheporte] wall_sconce: 0/0 produits (limit=600)
+[ingest:blancheporte] wall_sconce: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 0
+[import7] wall_sconce / blancheporte: 0 insérés
+[effinity:blancheporte] floor_lamp: 0/0 produits (limit=600)
+[ingest:blancheporte] floor_lamp: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 0
+[import7] floor_lamp / blancheporte: 0 insérés
+[effinity:blancheporte] mirror: 24/24 produits (limit=300)
+[ingest:blancheporte] mirror: 24 fetched / 24 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 24
+[import7] mirror / blancheporte: 24 insérés
+[effinity:blancheporte] cushion: 209/209 produits (limit=300)
+[ingest:blancheporte] cushion: 209 fetched / 209 insérés / 0 skippés / 0 échecs
+[ingest:blancheporte] TOTAL insérés: 209
+[import7] cushion / blancheporte: 209 insérés
+
+[import7] TERMINÉ 2026-07-11T20:15:01.973Z (démarré 2026-07-11T19:26:20.897Z)
+=== RÉCAP FINAL (insérés par catégorie × marchand) ===
+{
+  "sofa": {
+    "blancheporte": 0
+  },
+  "armchair": {
+    "blancheporte": 0
+  },
+  "chair": {
+    "blancheporte": 0
+  },
+  "coffee_table": {
+    "blancheporte": 8
+  },
+  "dining_table": {
+    "blancheporte": 0
+  },
+  "side_table": {
+    "blancheporte": 18
+  },
+  "sideboard": {
+    "blancheporte": 0
+  },
+  "dresser": {
+    "blancheporte": 0
+  },
+  "bookshelf": {
+    "blancheporte": 0
+  },
+  "stool": {
+    "blancheporte": 12
+  },
+  "desk": {
+    "blancheporte": 0
+  },
+  "bed": {
+    "blancheporte": 0
+  },
+  "dressing_table": {
+    "blancheporte": 2
+  },
+  "nightstand": {
+    "blancheporte": 18
+  },
+  "bench": {
+    "blancheporte": 10
+  },
+  "pouf": {
+    "blancheporte": 14
+  },
+  "headboard": {
+    "blancheporte": 0
+  },
+  "display_cabinet": {
+    "blancheporte": 0
+  },
+  "tv_stand": {
+    "blancheporte": 0
+  },
+  "bar_cabinet": {
+    "blancheporte": 0
+  },
+  "room_divider": {
+    "blancheporte": 0
+  },
+  "rug": {
+    "blancheporte": 536
+  },
+  "curtains": {
+    "blancheporte": 600
+  },
+  "pendant_lamp": {
+    "blancheporte": 0
+  },
+  "table_lamp": {
+    "blancheporte": 0
+  },
+  "wall_sconce": {
+    "blancheporte": 0
+  },
+  "floor_lamp": {
+    "blancheporte": 0
+  },
+  "mirror": {
+    "blancheporte": 24
+  },
+  "cushion": {
+    "blancheporte": 209
+  }
+}

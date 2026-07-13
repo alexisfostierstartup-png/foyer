@@ -179,6 +179,17 @@ export const CYRILLUS_AMBIGUOUS_BUCKETS = new Set(["meuble de chambre", "assise"
 
 const KIDS_SIGNAL = /enfant|b[ée]b[ée]|[ée]colier|maternelle|berceau/;
 
+// Garde-fou GÉNÉRAL (tous marchands) : EXCLUDE_PATTERNS ne teste que le CHEMIN de
+// catégorie CSV, pas le titre produit. Chez MdM le chemin est propre et route
+// correctement ("Literie > Lits" → bed), mais un "Lit princesse enfant avec LED" y
+// atterrit quand même — le mot "enfant" n'existe que dans le titre. Découvert 2026-07-12
+// (19 produits enfant mélangés aux catégories adultes : bed/sofa/rug/chair/pouf/
+// nightstand/bookshelf/desk/headboard). Utilisé en aval de resolveEffinityCategory,
+// PAS dedans (le chemin lui-même reste correctement mappé, seul le titre trahit l'enfant).
+export function isKidsTitle(title: string): boolean {
+  return KIDS_SIGNAL.test(norm(title));
+}
+
 // Ordonné : premier match gagne. Volontairement restreint aux types avec un schéma Foyer
 // existant et un signal titre net — table à langer/socle à langer/berceau(meuble)/matelas/
 // tête de lit exclus en V1 (volumes trop faibles pour justifier une nouvelle catégorie).

@@ -1,0 +1,4 @@
+◇ injected env (18) from .env.local // tip: ◈ secrets for agents [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+[audit-attrs] démarrage 2026-07-11T11:49:13.922Z — marchands=cdiscount,ikea,leroy_merlin modèle=gemini-flash-lite-latest catégories=1 style=on
+  cdiscount/floor_lamp: 50/176 (total global: 50)

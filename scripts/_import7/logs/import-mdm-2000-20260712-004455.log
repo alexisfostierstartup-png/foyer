@@ -1,0 +1,318 @@
+◇ injected env (18) from .env.local // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+[import7] démarrage 2026-07-11T22:44:57.046Z — 110 étapes (merchant×catégorie)
+[effinity:maisons_du_monde] 113368 lignes lues, 47583 mappées sur 29 catégories
+[effinity:maisons_du_monde] sofa: 2000/5772 produits (limit=2000)
+[ingest:maisons_du_monde] sofa: 2000 fetched / 803 insérés / 1197 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 803
+[import7] sofa / maisons_du_monde: 803 insérés
+[effinity:maisons_du_monde] armchair: 1228/1228 produits (limit=2000)
+[ingest:maisons_du_monde] armchair: 1228 fetched / 628 insérés / 600 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 628
+[import7] armchair / maisons_du_monde: 628 insérés
+[ingest:maisons_du_monde] M22179986 échec: fetch failed
+[ingest:maisons_du_monde] M23000657 échec: fetch failed
+[ingest:maisons_du_monde] M23003386 échec: fetch failed
+[ingest:maisons_du_monde] M23004637 échec: fetch failed
+[ingest:maisons_du_monde] M23005250 échec: fetch failed
+[ingest:maisons_du_monde] M23033628 échec: fetch failed
+[ingest:maisons_du_monde] M23055994 échec: fetch failed
+[ingest:maisons_du_monde] M23056021 échec: fetch failed
+[effinity:maisons_du_monde] chair: 2000/2496 produits (limit=2000)
+[ingest:maisons_du_monde] chair: 2000 fetched / 1392 insérés / 600 skippés / 8 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 1392
+[import7] chair / maisons_du_monde: 1392 insérés
+[effinity:maisons_du_monde] coffee_table: 2000/2122 produits (limit=2000)
+[ingest:maisons_du_monde] coffee_table: 2000 fetched / 1400 insérés / 600 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 1400
+[import7] coffee_table / maisons_du_monde: 1400 insérés
+[effinity:maisons_du_monde] dining_table: 1558/1558 produits (limit=2000)
+[ingest:maisons_du_monde] dining_table: 1558 fetched / 958 insérés / 600 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 958
+[import7] dining_table / maisons_du_monde: 958 insérés
+[effinity:maisons_du_monde] side_table: 0/0 produits (limit=2000)
+[ingest:maisons_du_monde] side_table: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] side_table / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] sideboard: 1415/1415 produits (limit=2000)
+[ingest:maisons_du_monde] sideboard: 1415 fetched / 815 insérés / 600 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 815
+[import7] sideboard / maisons_du_monde: 815 insérés
+[effinity:maisons_du_monde] dresser: 1323/1323 produits (limit=2000)
+[ingest:maisons_du_monde] dresser: 1323 fetched / 723 insérés / 600 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 723
+[import7] dresser / maisons_du_monde: 723 insérés
+[effinity:maisons_du_monde] bookshelf: 1512/1512 produits (limit=2000)
+[ingest:maisons_du_monde] bookshelf: 1512 fetched / 912 insérés / 600 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 912
+[import7] bookshelf / maisons_du_monde: 912 insérés
+[effinity:maisons_du_monde] stool: 1177/1177 produits (limit=2000)
+[ingest:maisons_du_monde] stool: 1177 fetched / 577 insérés / 600 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 577
+[import7] stool / maisons_du_monde: 577 insérés
+[effinity:maisons_du_monde] desk: 693/693 produits (limit=2000)
+[ingest:maisons_du_monde] desk: 693 fetched / 93 insérés / 600 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 93
+[import7] desk / maisons_du_monde: 93 insérés
+[effinity:maisons_du_monde] bed: 2000/2632 produits (limit=2000)
+[ingest:maisons_du_monde] bed: 2000 fetched / 1400 insérés / 600 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 1400
+[import7] bed / maisons_du_monde: 1400 insérés
+[effinity:maisons_du_monde] dressing_table: 1075/1075 produits (limit=2000)
+[ingest:maisons_du_monde] dressing_table: 1075 fetched / 475 insérés / 600 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 475
+[import7] dressing_table / maisons_du_monde: 475 insérés
+[effinity:maisons_du_monde] nightstand: 951/951 produits (limit=2000)
+[ingest:maisons_du_monde] nightstand: 951 fetched / 351 insérés / 600 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 351
+[import7] nightstand / maisons_du_monde: 351 insérés
+[effinity:maisons_du_monde] bench: 688/688 produits (limit=2000)
+[ingest:maisons_du_monde] bench: 688 fetched / 88 insérés / 600 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 88
+[import7] bench / maisons_du_monde: 88 insérés
+[effinity:maisons_du_monde] pouf: 1078/1078 produits (limit=2000)
+[ingest:maisons_du_monde] pouf: 1078 fetched / 478 insérés / 600 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 478
+[import7] pouf / maisons_du_monde: 478 insérés
+[effinity:maisons_du_monde] headboard: 1196/1196 produits (limit=2000)
+[ingest:maisons_du_monde] headboard: 1196 fetched / 596 insérés / 600 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 596
+[import7] headboard / maisons_du_monde: 596 insérés
+[effinity:maisons_du_monde] display_cabinet: 140/140 produits (limit=2000)
+[ingest:maisons_du_monde] display_cabinet: 140 fetched / 0 insérés / 140 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] display_cabinet / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] tv_stand: 1026/1026 produits (limit=2000)
+[ingest:maisons_du_monde] tv_stand: 1026 fetched / 426 insérés / 600 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 426
+[import7] tv_stand / maisons_du_monde: 426 insérés
+[effinity:maisons_du_monde] bar_cabinet: 0/0 produits (limit=2000)
+[ingest:maisons_du_monde] bar_cabinet: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] bar_cabinet / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] room_divider: 9/9 produits (limit=2000)
+[ingest:maisons_du_monde] room_divider: 9 fetched / 0 insérés / 9 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] room_divider / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] rug: 2000/8573 produits (limit=2000)
+[ingest:maisons_du_monde] rug: 2000 fetched / 1400 insérés / 600 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 1400
+[import7] rug / maisons_du_monde: 1400 insérés
+[ingest:maisons_du_monde] M24113029 échec: fetch failed
+[effinity:maisons_du_monde] curtains: 1459/1459 produits (limit=2000)
+[ingest:maisons_du_monde] curtains: 1459 fetched / 858 insérés / 600 skippés / 1 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 858
+[import7] curtains / maisons_du_monde: 858 insérés
+[ingest:maisons_du_monde] sofa: déjà 2087 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] sofa / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] armchair: 1228/1228 produits (limit=2000)
+[ingest:maisons_du_monde] armchair: 1228 fetched / 0 insérés / 1228 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] armchair / maisons_du_monde: 0 insérés
+[ingest:maisons_du_monde] chair: déjà 1990 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] chair / maisons_du_monde: 0 insérés
+[ingest:maisons_du_monde] coffee_table: déjà 1812 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] coffee_table / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] dining_table: 1558/1558 produits (limit=2000)
+[ingest:maisons_du_monde] dining_table: 1558 fetched / 0 insérés / 1558 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] dining_table / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] side_table: 0/0 produits (limit=2000)
+[ingest:maisons_du_monde] side_table: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] side_table / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] sideboard: 1415/1415 produits (limit=2000)
+[ingest:maisons_du_monde] sideboard: 1415 fetched / 0 insérés / 1415 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] sideboard / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] dresser: 1323/1323 produits (limit=2000)
+[ingest:maisons_du_monde] dresser: 1323 fetched / 0 insérés / 1323 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] dresser / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] bookshelf: 1512/1512 produits (limit=2000)
+[ingest:maisons_du_monde] bookshelf: 1512 fetched / 0 insérés / 1512 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] bookshelf / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] stool: 1177/1177 produits (limit=2000)
+[ingest:maisons_du_monde] stool: 1177 fetched / 0 insérés / 1177 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] stool / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] desk: 693/693 produits (limit=2000)
+[ingest:maisons_du_monde] desk: 693 fetched / 0 insérés / 693 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] desk / maisons_du_monde: 0 insérés
+[ingest:maisons_du_monde] bed: déjà 1996 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] bed / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] dressing_table: 1075/1075 produits (limit=2000)
+[ingest:maisons_du_monde] dressing_table: 1075 fetched / 0 insérés / 1075 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] dressing_table / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] nightstand: 951/951 produits (limit=2000)
+[ingest:maisons_du_monde] nightstand: 951 fetched / 0 insérés / 951 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] nightstand / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] bench: 688/688 produits (limit=2000)
+[ingest:maisons_du_monde] bench: 688 fetched / 0 insérés / 688 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] bench / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] pouf: 1078/1078 produits (limit=2000)
+[ingest:maisons_du_monde] pouf: 1078 fetched / 0 insérés / 1078 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] pouf / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] headboard: 1196/1196 produits (limit=2000)
+[ingest:maisons_du_monde] headboard: 1196 fetched / 0 insérés / 1196 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] headboard / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] display_cabinet: 140/140 produits (limit=2000)
+[ingest:maisons_du_monde] display_cabinet: 140 fetched / 0 insérés / 140 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] display_cabinet / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] tv_stand: 1026/1026 produits (limit=2000)
+[ingest:maisons_du_monde] tv_stand: 1026 fetched / 0 insérés / 1026 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] tv_stand / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] bar_cabinet: 0/0 produits (limit=2000)
+[ingest:maisons_du_monde] bar_cabinet: 0 fetched / 0 insérés / 0 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] bar_cabinet / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] room_divider: 9/9 produits (limit=2000)
+[ingest:maisons_du_monde] room_divider: 9 fetched / 0 insérés / 9 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] room_divider / maisons_du_monde: 0 insérés
+[ingest:maisons_du_monde] rug: déjà 1995 en base → skip (reprise).
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] rug / maisons_du_monde: 0 insérés
+[effinity:maisons_du_monde] curtains: 1459/1459 produits (limit=2000)
+[ingest:maisons_du_monde] curtains: 1459 fetched / 1 insérés / 1458 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 1
+[import7] curtains / maisons_du_monde: 1 insérés
+[ingest:maisons_du_monde] M22082000 échec: fetch failed
+[ingest:maisons_du_monde] M22082009 échec: fetch failed
+[ingest:maisons_du_monde] M22082021 échec: fetch failed
+[ingest:maisons_du_monde] M22114441 échec: fetch failed
+[ingest:maisons_du_monde] M22134198 échec: TypeError: fetch failed
+[ingest:maisons_du_monde] M22134217 échec: fetch failed
+[ingest:maisons_du_monde] M22134938 échec: fetch failed
+[ingest:maisons_du_monde] M22136118 échec: fetch failed
+[ingest:maisons_du_monde] M22136337 échec: fetch failed
+[ingest:maisons_du_monde] M22158827 échec: fetch failed
+[effinity:maisons_du_monde] pendant_lamp: 2000/3180 produits (limit=2000)
+[ingest:maisons_du_monde] pendant_lamp: 2000 fetched / 1390 insérés / 600 skippés / 10 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 1390
+[import7] pendant_lamp / maisons_du_monde: 1390 insérés
+[effinity:maisons_du_monde] table_lamp: 1274/1274 produits (limit=2000)
+[ingest:maisons_du_monde] table_lamp: 1274 fetched / 674 insérés / 600 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 674
+[import7] table_lamp / maisons_du_monde: 674 insérés
+[effinity:maisons_du_monde] wall_sconce: 1366/1366 produits (limit=2000)
+[ingest:maisons_du_monde] wall_sconce: 1366 fetched / 766 insérés / 600 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 766
+[import7] wall_sconce / maisons_du_monde: 766 insérés
+[effinity:maisons_du_monde] floor_lamp: 785/785 produits (limit=2000)
+[ingest:maisons_du_monde] floor_lamp: 785 fetched / 185 insérés / 600 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 185
+[import7] floor_lamp / maisons_du_monde: 185 insérés
+[effinity:maisons_du_monde] mirror: 1122/1122 produits (limit=2000)
+[ingest:maisons_du_monde] mirror: 1122 fetched / 822 insérés / 300 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 822
+[import7] mirror / maisons_du_monde: 822 insérés
+[effinity:maisons_du_monde] cushion: 96/96 produits (limit=2000)
+[ingest:maisons_du_monde] cushion: 96 fetched / 0 insérés / 96 skippés / 0 échecs
+[ingest:maisons_du_monde] TOTAL insérés: 0
+[import7] cushion / maisons_du_monde: 0 insérés
+
+[import7] TERMINÉ 2026-07-13T09:17:10.019Z (démarré 2026-07-11T22:44:57.046Z)
+=== RÉCAP FINAL (insérés par catégorie × marchand) ===
+{
+  "sofa": {
+    "maisons_du_monde": 0
+  },
+  "armchair": {
+    "maisons_du_monde": 0
+  },
+  "chair": {
+    "maisons_du_monde": 0
+  },
+  "coffee_table": {
+    "maisons_du_monde": 0
+  },
+  "dining_table": {
+    "maisons_du_monde": 0
+  },
+  "side_table": {
+    "maisons_du_monde": 0
+  },
+  "sideboard": {
+    "maisons_du_monde": 0
+  },
+  "dresser": {
+    "maisons_du_monde": 0
+  },
+  "bookshelf": {
+    "maisons_du_monde": 0
+  },
+  "stool": {
+    "maisons_du_monde": 0
+  },
+  "desk": {
+    "maisons_du_monde": 0
+  },
+  "bed": {
+    "maisons_du_monde": 0
+  },
+  "dressing_table": {
+    "maisons_du_monde": 0
+  },
+  "nightstand": {
+    "maisons_du_monde": 0
+  },
+  "bench": {
+    "maisons_du_monde": 0
+  },
+  "pouf": {
+    "maisons_du_monde": 0
+  },
+  "headboard": {
+    "maisons_du_monde": 0
+  },
+  "display_cabinet": {
+    "maisons_du_monde": 0
+  },
+  "tv_stand": {
+    "maisons_du_monde": 0
+  },
+  "bar_cabinet": {
+    "maisons_du_monde": 0
+  },
+  "room_divider": {
+    "maisons_du_monde": 0
+  },
+  "rug": {
+    "maisons_du_monde": 0
+  },
+  "curtains": {
+    "maisons_du_monde": 1
+  },
+  "pendant_lamp": {
+    "maisons_du_monde": 1390
+  },
+  "table_lamp": {
+    "maisons_du_monde": 674
+  },
+  "wall_sconce": {
+    "maisons_du_monde": 766
+  },
+  "floor_lamp": {
+    "maisons_du_monde": 185
+  },
+  "mirror": {
+    "maisons_du_monde": 822
+  },
+  "cushion": {
+    "maisons_du_monde": 0
+  }
+}

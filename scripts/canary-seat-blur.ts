@@ -51,7 +51,7 @@ async function main() {
   for (const image of files) {
     const buf = await readFile(path.join(imagesDir, image));
     const label = path.parse(image).name;
-    const profiles = await detectElementProfiles(`canary-blur-${label}`, buf as never, `canary:${image}`, "salon");
+    const profiles = await detectElementProfiles(`canary-blur-${label}`, buf as never, `canary:${image}`);
     // KEEP table basse (simule une action DIY « conserver ») : valide que le
     // masque de pixelisation ne mange pas un meuble à garder qui chevauche la
     // bbox du canapé, et que le rendu la préserve vraiment.
