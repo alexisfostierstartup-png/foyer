@@ -138,7 +138,11 @@ async function lightpointProfiles(profiles: ElementProfile[]): Promise<ElementPr
 // meublent pas pareil). Détectée par la vision (room_scale), persistée projet.
 export function buildRoomScaleLine(roomScale?: "small" | "medium" | "large"): string {
   if (roomScale === "large") {
-    return `\n- ROOM SIZE — LARGE: furnish it to its full potential. If generous floor area remains empty, add a complementary style-matching zone or pieces (e.g. a dining corner, a reading nook with armchair + floor lamp, a larger sofa, plants and decor) — the room must feel complete and lived-in, never sparse. Keep circulation clear and respect every rule above.`;
+    // Consigne rendue COMPTABLE : « meublez à son plein potentiel » restait un vœu, et le
+    // modèle laissait la moitié de la pièce nue (projet ZczF0oeRR : un canapé, une table
+    // basse et un fauteuil dans un grand salon). On énumère un minimum vérifiable, en
+    // restant dans les catégories que le catalogue sait vendre.
+    return `\n- ROOM SIZE — LARGE: this room is BIG. A single seating group leaves it looking half-empty — that is a failed render. The main zone carries AT LEAST: a large sofa (or corner sofa), a coffee table, TWO armchairs, a rug that reaches under the front legs of every seat, a floor lamp, a sideboard or bookcase against a free wall, plus plants, cushions and wall art. If floor area STILL remains bare, add a SECOND zone that matches the style — a reading nook (armchair + floor lamp + side table), a console with a mirror, or a pair of poufs. Every added piece stands FREE on the floor, never built into a wall. Circulation stays clear, and every rule above still holds.`;
   }
   if (roomScale === "small") {
     return `\n- ROOM SIZE — SMALL: keep to the essentials, correctly scaled (no oversized furniture); prioritize breathing room and circulation over adding pieces.`;
@@ -147,6 +151,49 @@ export function buildRoomScaleLine(roomScale?: "small" | "medium" | "large"): st
     return `\n- ROOM SIZE — MEDIUM: comfortably furnished — the main zone complete (seating, tables, lighting, textiles, wall decor), no large bare stretch of floor or wall; still airy, never crowded.`;
   }
   return "";
+}
+
+// ── DIVERSITÉ DU MOBILIER ───────────────────────────────────────────────────
+// Le modèle a un canapé et une table basse « par défaut » : d'un projet à l'autre, il
+// repose souvent les mêmes (constat Alexis 2026-07-13). On lui impose donc une VARIANTE.
+//
+// Deux garde-fous :
+//  1. on ne varie que la SILHOUETTE et la MATIÈRE — jamais la catégorie : varier au-delà
+//     produirait des meubles qu'on ne sait pas vendre (le catalogue a des canapés et des
+//     tables basses, pas des banquettes de piano) ;
+//  2. le tirage est DÉTERMINISTE (dérivé de l'id du projet), pas aléatoire : deux projets
+//     différents tombent sur des meubles différents, mais un même projet regénéré reste
+//     stable — sinon chaque clic serait une loterie, et l'utilisateur ne pourrait plus
+//     retrouver le rendu qu'il aimait.
+const SILHOUETTES_CANAPE = [
+  "a straight 3-seater with visible tapered wooden legs",
+  "a deep modular sofa, low back, no visible legs",
+  "a curved sofa with rounded arms",
+  "an L-shaped corner sofa",
+  "a channel-tufted sofa on slim metal legs",
+  "a compact 2-seater paired with a second armchair",
+];
+const SILHOUETTES_TABLE_BASSE = [
+  "round, in solid wood",
+  "rectangular, wooden top on a black metal frame",
+  "a pair of nesting tables of different heights",
+  "oval, with a stone-look top",
+  "a low square wooden block",
+  "round, in metal and glass",
+];
+
+/** Somme des codes de caractères : stable, suffisante pour répartir sur 6 variantes. */
+function graine(projectId: string): number {
+  let n = 0;
+  for (const c of projectId) n = (n + c.charCodeAt(0)) % 100000;
+  return n;
+}
+
+export function buildVariationLine(projectId: string): string {
+  const g = graine(projectId);
+  const canape = SILHOUETTES_CANAPE[g % SILHOUETTES_CANAPE.length];
+  const table = SILHOUETTES_TABLE_BASSE[(g >> 2) % SILHOUETTES_TABLE_BASSE.length];
+  return `\n- VARIATION (do not fall back on your default furniture): if the room gets a sofa, make it ${canape}. If it gets a coffee table, make it ${table}. Keep both fully within the style — this fixes the SHAPE and the MATERIAL, never the category.`;
 }
 
 export async function buildLightingPlanLine(profiles: ElementProfile[], styleName: string): Promise<string> {
@@ -1028,7 +1075,7 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
     // Éléments détectés à retirer pour ce type de pièce (asset ∩ détection).
     removeList: buildRemoveList(profiles, removeCategories),
     userInstructions,
-    designPlan: `${designPlan || "None — restyle freely to fit the style."}\n${await buildLightingPlanLine(profiles, styleName)}${buildRoomScaleLine(project.roomScale)}${canaryPlanNote}`,
+    designPlan: `${designPlan || "None — restyle freely to fit the style."}\n${await buildLightingPlanLine(profiles, styleName)}${buildRoomScaleLine(project.roomScale)}${buildVariationLine(project.id)}${canaryPlanNote}`,
   };
 
   // Flux DIY beta : variante de prompt sous slug dédié (RESTYLE meuble en
