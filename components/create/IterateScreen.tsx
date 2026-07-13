@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Sparkles, ChevronDown, Loader2 } from "lucide-react";
+import { Sparkles, ChevronDown, Loader2, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProgressBar } from "@/components/create/ProgressBar";
 
@@ -129,6 +129,22 @@ export function IterateScreen({ projectId, currentRenderUrl, target = null }: Pr
         <h1 className="font-serif text-[26px] font-medium leading-tight tracking-[-0.02em] text-foyer-ink">
           Qu&apos;aimeriez-vous changer&nbsp;?
         </h1>
+
+        {/* Après CETTE demande, on part directement sur /final : la liste de courses se
+            calcule dans la foulée et on ne repasse pas par l'écran du rendu. L'utilisateur
+            croyait pouvoir enchaîner les retouches (QA Alexis 2026-07-13). L'avertissement
+            vit ICI, au moment où il formule sa demande — c'est là qu'il peut encore la
+            compléter. Sur l'écran précédent, il arrivait trop tôt : rien n'était engagé. */}
+        <div className="mt-4 flex items-start gap-3 rounded-2xl border border-foyer-ochre/40 bg-foyer-ochre/10 px-4 py-3">
+          <Info className="mt-0.5 size-4 shrink-0 text-foyer-ochre" aria-hidden />
+          <p className="text-[13px] leading-relaxed text-foyer-ink">
+            {/* {" "} explicite : JSX avale l'espace entre </b> et le texte qui suit. */}
+            <b>Vous n&apos;avez qu&apos;une seule demande</b>{" "}
+            avec l&apos;offre gratuite. Juste après, on passe à votre rendu final et à sa
+            liste de courses — vous ne reviendrez pas ici.{" "}
+            <b>Demandez tout d&apos;un coup.</b>
+          </p>
+        </div>
 
         <div className="mt-5 overflow-hidden rounded-2xl">
           {/* eslint-disable-next-line @next/next/no-img-element */}
