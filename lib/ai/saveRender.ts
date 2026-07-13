@@ -7,6 +7,19 @@ function stepToCode(step: string): string {
   return step;
 }
 
+/**
+ * RENDUS VERSIONNÉS — un chemin NEUF à chaque génération, jamais d'écrasement.
+ *
+ * Avant, le nom était déterministe (`IN_1.png`, `disposition_2.png`…) et l'upload se
+ * faisait en `upsert` : toute régénération DÉTRUISAIT le rendu précédent, sans
+ * historique et sans retour possible. Un double-run accidentel a ainsi effacé les 3
+ * dispositions que l'utilisateur regardait (2026-07-13), et un rendu aimé avait déjà été
+ * perdu de la même façon. Le projet ne garde que l'URL du dernier rendu ; les
+ * précédents restent en stockage, récupérables.
+ *
+ * Le suffixe horodaté rend aussi le cache-buster `?v=` inutile : l'URL est neuve par
+ * construction.
+ */
 export async function saveRender(
   imageBuffer: Buffer,
   storageFolder: string,
@@ -14,20 +27,19 @@ export async function saveRender(
   step = "first-render",
 ): Promise<string> {
   const ext = mimeType.split("/")[1]?.split("+")[0] ?? "jpg";
-  const filename = `${storageFolder}/${stepToCode(step)}.${ext}`;
+  const filename = `${storageFolder}/${stepToCode(step)}_${Date.now()}.${ext}`;
 
   const supabase = createSupabaseAdmin();
   const { error } = await supabase.storage
     .from("renders")
+    // upsert reste à true par sécurité (collision de timestamp au sein d'une même
+    // milliseconde), mais le chemin est unique : rien n'est écrasé en pratique.
     .upload(filename, imageBuffer, { contentType: mimeType, upsert: true });
 
   if (error) throw error;
 
   const { data } = supabase.storage.from("renders").getPublicUrl(filename);
-  // Cache-buster : le nom de fichier est déterministe (upsert) → sans param, une
-  // régénération réécrit le même chemin et le navigateur/CDN sert l'ancienne image
-  // (même URL). Le suffixe ?v=<ts> garantit une URL neuve à chaque rendu.
-  return `${data.publicUrl}?v=${Date.now()}`;
+  return data.publicUrl;
 }
 
 export async function saveSourceImage(
