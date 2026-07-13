@@ -510,11 +510,16 @@ const SECTIONS = [
     "Moins de 100 €", "100 à 300 €", "300 à 600 €", "600 à 1 000 €", "1 000 à 2 000 €", "Plus de 2 000 €",
   ], { row: true })) : ""}
 
+  <!-- CASES À COCHER dans les deux cas : plusieurs raisons coexistent presque toujours
+       (des articles ne plaisaient pas ET c'était trop cher) — un choix unique en
+       écraserait la moitié. Clé "freins" (tableau).
+       (Pas de backtick dans ce commentaire : il vit DANS un template literal, un backtick
+       le refermerait — ce qui a cassé la page une fois.) -->
   ${a && a !== "Tout ou presque" ? q(
-    a === "Une partie" ? "Pourquoi pas le reste ?" : "La raison principale du « non » ?",
-    radio("achat", "frein", [
-      // Cette raison n’a de sens que pour un panier partiel : le rendu plaisait,
-      // mais pas tous les articles. Sur un « Rien », elle serait absurde.
+    a === "Une partie" ? "Pourquoi pas le reste ?" : "Pourquoi ce « non » ?",
+    checks("achat", "freins", [
+      // Cette raison n'a de sens que pour un panier partiel : le rendu plaisait, mais
+      // pas tous les articles. Sur un « Rien », elle serait absurde.
       ...(a === "Une partie" ? ["Seulement une partie des articles me plaisaient"] : []),
       "Les produits ne ressemblaient pas assez au rendu",
       "Trop cher",
@@ -522,7 +527,8 @@ const SECTIONS = [
       "Pas de vrai projet en ce moment",
       "Je ne fais pas confiance aux liens d’achat",
       "Autre",
-    ])) : ""}
+    ]),
+    "Cochez tout ce qui a joué.") : ""}
 
   ${q("LA question qui nous obsède : si le catalogue avait proposé un produit PLUS PROCHE de celui du rendu, auriez-vous acheté ?",
     radio("achat", "attribution", [
@@ -534,7 +540,7 @@ const SECTIONS = [
     "C’est maintenant", "Dans les 3 mois", "Cette année", "Pas prévu",
   ], { row: true }))}
 
-  ${q("Combien de pièces chez vous mériteraient un coup de Héra ?", radio("achat", "nb_pieces", [
+  ${q("Chez vous, combien de pièces auriez-vous envie de redécorer avec Héra ?", radio("achat", "nb_pieces", [
     "0", "1", "2-3", "4 et plus",
   ], { row: true }))}
 
