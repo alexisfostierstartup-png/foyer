@@ -1207,7 +1207,7 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
 // direction HORS-mobilier (couleur murale dans la palette + déco), pour éviter les
 // jumeaux + la recolorisation forcée du mobilier. Le style et les meubles (identité +
 // couleur vraie) restent constants ; c'est le mur/la déco/le layout qui varient.
-const DISPOSITION_BRIEFS = [
+export const DISPOSITION_BRIEFS = [
   // L'AGENCEMENT d'abord, la couleur ensuite. Les briefs précédents mêlaient les deux, et
   // le modèle ne retenait que la couleur du mur — facile — en laissant les meubles où ils
   // étaient (constat Alexis 2026-07-13 : « la disposition ne change pas vraiment »).
