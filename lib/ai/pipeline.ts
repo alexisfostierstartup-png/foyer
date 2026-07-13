@@ -2223,18 +2223,30 @@ async function buildMatchesAndScore(
   }
 
   // Score recalculé sur la liste finale, en UNITÉS (quantité incluse).
+  //
+  // LE BUDGET SE LIT SUR LE PRODUIT RÉELLEMENT MATCHÉ. priceMin/priceMax viennent du
+  // catalogue MOCK, vide depuis le retrait du Wizard-of-Oz : ils valent 0 sur TOUTES les
+  // lignes. Le Score Foyer annonçait donc « ~0 € » au-dessus d'une liste pleine de meubles
+  // chiffrés (QA Alexis 2026-07-13). Même cause pour « neuf éco » : le test portait sur
+  // `merchants`, vide lui aussi — le compte tombait à zéro.
+  const prixLigne = (i: ShoppingItem) => {
+    const p = i.matches?.[0]?.price;
+    return typeof p === "number" ? p : (i.priceMin + i.priceMax) / 2;
+  };
+  const achetable = (i: ShoppingItem) => (i.matches?.length ?? 0) > 0 || i.merchants.length > 0;
+
   const unitsWhere = (pred: (i: ShoppingItem) => boolean) =>
     shoppingList.filter(pred).reduce((s, i) => s + (i.quantity ?? 1), 0);
-  const shUnits = unitsWhere((i) => i.source === "secondhand");
-  const ecoNewUnits = unitsWhere((i) => i.source !== "secondhand" && i.merchants.length > 0);
+  const shUnits = unitsWhere((i) => i.source === "secondhand" && achetable(i));
+  const ecoNewUnits = unitsWhere((i) => i.source !== "secondhand" && achetable(i));
   const scoreFoyer: ScoreFoyer = {
     kept: built.score.kept,
+    keptLabels: built.score.keptLabels,
     secondhand: shUnits,
     ecoNew: ecoNewUnits,
     co2SavedKg: built.score.kept * 30 + shUnits * 20 + ecoNewUnits * 5,
-    totalEstimated: shoppingList.reduce(
-      (s, i) => s + ((i.priceMin + i.priceMax) / 2) * (i.quantity ?? 1),
-      0,
+    totalEstimated: Math.round(
+      shoppingList.reduce((s, i) => s + prixLigne(i) * (i.quantity ?? 1), 0),
     ),
   };
 

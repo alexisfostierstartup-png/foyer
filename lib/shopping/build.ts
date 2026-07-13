@@ -127,12 +127,23 @@ export function buildShoppingList(
     secondhand.reduce((s, e) => s + e.price, 0) +
     ecoNew.reduce((s, e) => s + e.price, 0);
 
+  // CONSERVÉ = un MEUBLE qu'on aurait pu remplacer et qu'on garde. Un mur, un sol, un
+  // radiateur ou un chauffe-eau n'est pas « conservé » : il ne peut pas bouger, et le
+  // compter gonflait le score d'une pièce VIDE jusqu'à « 4 conservés · 100 % » (QA Alexis
+  // 2026-07-13). Le filtre est la taxonomie elle-même : est conservable ce qui est
+  // achetable, donc ce qui a une catégorie catalogue.
+  const meublesConserves = plan.kept.filter((d) => resolveCatalogCategory(d.category, taxonomy));
+  const keptLabels = meublesConserves.map((d) =>
+    (d.description ?? d.category).trim().replace(/\s+/g, " "),
+  );
+
   const score: ScoreFoyer = {
-    kept: plan.kept.length,
+    kept: meublesConserves.length,
     secondhand: secondhand.length,
     ecoNew: ecoNew.length,
-    co2SavedKg: plan.kept.length * 30 + secondhand.length * 20 + ecoNew.length * 5,
+    co2SavedKg: meublesConserves.length * 30 + secondhand.length * 20 + ecoNew.length * 5,
     totalEstimated,
+    keptLabels,
   };
 
   return {

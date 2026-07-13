@@ -102,11 +102,24 @@ function ScoreFoyerTab({
   const kept = score?.kept ?? 0;
   const secondhand = score?.secondhand ?? 0;
   const ecoNew = score?.ecoNew ?? 0;
-  const total = kept + secondhand + ecoNew || 1;
+  const keptLabels = score?.keptLabels ?? [];
+  // `|| 1` évitait une division par zéro, mais faisait afficher « 100 % conservé » sur une
+  // pièce VIDE : 0/1 → 0 %, sauf que le premier segment ramassait tout le cercle. On ne
+  // dessine plus de jauge quand il n'y a rien à répartir (QA Alexis 2026-07-13).
+  const total = kept + secondhand + ecoNew;
   const co2 = score?.co2SavedKg ?? kept * 30 + secondhand * 20 + ecoNew * 5;
-  const budget = score?.totalEstimated ?? shoppingList.reduce((s, i) => s + ((i.priceMin + i.priceMax) / 2) * (i.quantity ?? 1), 0);
+  // Le budget vient des produits RÉELLEMENT matchés : priceMin/priceMax sont ceux du
+  // catalogue mock, vide — ils valent 0 partout.
+  const budgetListe = shoppingList.reduce((s, i) => {
+    const p = i.matches?.[0]?.price;
+    return s + (typeof p === "number" ? p : (i.priceMin + i.priceMax) / 2) * (i.quantity ?? 1);
+  }, 0);
+  // `?? ` ne suffit pas : les projets DÉJÀ calculés portent un totalEstimated à 0 (le bug),
+  // et 0 n'est pas nullish — ils resteraient à « ~0 € » jusqu'à un recalcul. Un total nul
+  // au-dessus d'une liste chiffrée est forcément faux : on recalcule sur la liste affichée.
+  const budget = score?.totalEstimated && score.totalEstimated > 0 ? score.totalEstimated : budgetListe;
 
-  const segments = [
+  const segments = total === 0 ? [] : [
     { value: Math.round((kept / total) * 100), label: "conservé", color: "#6B8E6F", dot: "bg-foyer-sage" },
     { value: Math.round((secondhand / total) * 100), label: "occasion", color: "#A5B8A0", dot: "bg-foyer-water" },
     { value: Math.round((ecoNew / total) * 100), label: "neuf durable", color: "#C89B6A", dot: "bg-foyer-ochre" },
@@ -180,7 +193,7 @@ function ScoreFoyerTab({
         <div className="grid grid-cols-3 gap-3 text-center">
           <div>
             <p className="font-serif text-2xl text-foyer-ink">{kept}</p>
-            <p className="text-[12px] text-foyer-muted">conservés</p>
+            <p className="text-[12px] text-foyer-muted">meuble{kept > 1 ? "s" : ""} conservé{kept > 1 ? "s" : ""}</p>
           </div>
           <div>
             <p className="font-serif text-2xl text-foyer-ink">{secondhand}</p>
@@ -191,6 +204,24 @@ function ScoreFoyerTab({
             <p className="text-[12px] text-foyer-muted">neuf éco</p>
           </div>
         </div>
+
+        {/* « 4 conservés » sans dire QUOI n'informe personne. On les nomme. */}
+        {keptLabels.length > 0 && (
+          <ul className="mt-4 border-t border-foyer-border pt-3 text-[13px] text-foyer-muted">
+            {keptLabels.map((l) => (
+              <li key={l} className="flex items-start gap-2 py-0.5">
+                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-foyer-sage" aria-hidden />
+                <span className="text-foyer-ink">{l}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {kept === 0 && (
+          <p className="mt-4 border-t border-foyer-border pt-3 text-[13px] leading-relaxed text-foyer-muted">
+            Aucun meuble à conserver : votre pièce était vide. Les murs, le sol et les
+            équipements fixes ne comptent pas — ils restent en place quoi qu’il arrive.
+          </p>
+        )}
       </div>
 
       <p className="text-center text-[11px] leading-relaxed text-foyer-muted">

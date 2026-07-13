@@ -177,6 +177,10 @@ export type ScoreFoyer = {
   ecoNew: number;
   co2SavedKg: number;
   totalEstimated: number;
+  // CE QU'ON CONSERVE, nommé. « 4 conservés » sans dire quoi n'informe personne — et
+  // comptait jusqu'ici les murs, le sol et le chauffe-eau, qu'on ne « conserve » pas :
+  // ils ne peuvent simplement pas bouger (projet vide affiché « 100 % conservé »).
+  keptLabels?: string[];
 };
 
 export type Project = {
