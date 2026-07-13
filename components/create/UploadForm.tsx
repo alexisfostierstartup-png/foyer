@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Camera, ImagePlus, Frame, Sun, UserRoundX, Loader2 } from "lucide-react";
@@ -64,6 +64,12 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
   // par catégorie, pré-injecté dès l'upload (utilisé au rendu à la place du matching).
   const [customProducts, setCustomProducts] = useState<Record<string, CustomProduct>>({});
   const [selCat, setSelCat] = useState<string>("sofa");
+  // Ancre du bloc photo. Une fois la photo importée, l'aperçu et le bloc « contraintes »
+  // se déploient VERS LE BAS : le sélecteur de pièce continue d'occuper le haut de l'écran
+  // et on rate purement et simplement les contraintes (QA Alexis 2026-07-13). On remonte
+  // donc le bloc photo en tête de vue — le choix de la pièce reste accessible, il suffit
+  // de remonter.
+  const blocPhoto = useRef<HTMLDivElement>(null);
   // Glisser-déposer : on ne peut pas se contenter de onDrop. Le navigateur OUVRE le
   // fichier dans l'onglet dès qu'on le lâche sur la page — il faut donc annuler le
   // comportement par défaut sur dragOver ET sur drop.
@@ -107,6 +113,11 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
       const { projectId: id } = (await res.json()) as { projectId: string };
       setProjectId(id);
       setUploading(false);
+      // Après le rendu de l'aperçu (d'où le requestAnimationFrame : sans lui, on
+      // mesurerait la position d'AVANT le déploiement du bloc).
+      requestAnimationFrame(() => {
+        blocPhoto.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
     } catch {
       toast.error("Erreur lors de l'envoi de la photo");
       setUploading(false);
@@ -160,7 +171,14 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
                 <button
                   key={opt.slug}
                   type="button"
-                  onClick={() => setRoomType(opt.slug)}
+                  onClick={() => {
+                    setRoomType(opt.slug);
+                    // Le bloc photo n'existe pas encore au moment du clic (il n'apparaît
+                    // qu'avec un roomType) : on attend qu'il soit MONTÉ pour l'amener en vue.
+                    requestAnimationFrame(() => {
+                      blocPhoto.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    });
+                  }}
                   className={cn(
                     "h-16 rounded-2xl bg-white font-medium text-foyer-ink transition-all",
                     selected
@@ -177,7 +195,7 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
 
         {/* Upload zone — revealed after room type selected */}
         {roomType && (
-          <div className="mt-6 duration-300 animate-in fade-in">
+          <div ref={blocPhoto} className="mt-6 scroll-mt-4 duration-300 animate-in fade-in">
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-foyer-sage">
               Votre pièce en photo
             </p>
