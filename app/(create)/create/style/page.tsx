@@ -20,8 +20,6 @@ export default async function StylePage({
   return (
     <StyleSelector
       projectId={project.id}
-      roomType={project.roomType}
-      basePhotoUrl={project.basePhotoUrl}
       styles={styles}
       expert={project.mode === "expert"}
     />

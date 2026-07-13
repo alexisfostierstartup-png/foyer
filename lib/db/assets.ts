@@ -59,6 +59,7 @@ function mapAmbianceRow(a: { id: string; slug: string; data: unknown }): Style {
     materials: string[];
     mood: string;
     moodboardUrl?: string;
+    stable?: boolean;
   };
   return {
     id: a.slug,
@@ -69,6 +70,7 @@ function mapAmbianceRow(a: { id: string; slug: string; data: unknown }): Style {
     materials: d.materials,
     mood: d.mood,
     moodboardUrl: d.moodboardUrl ?? `/moodboards/${a.slug}.svg`,
+    stable: d.stable === true,
   };
 }
 

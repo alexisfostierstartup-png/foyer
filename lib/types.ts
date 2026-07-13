@@ -14,6 +14,10 @@ export type Style = {
   materials: string[];
   mood: string;
   moodboardUrl: string;
+  // Catalogue jugé complet pour ce style → il remonte en tête du sélecteur. Les autres
+  // sont regroupés sous « Beta ». Piloté EN BASE (assets.ambiance.data.stable) : promouvoir
+  // un style au fil du remplissage du catalogue ne doit pas demander un déploiement.
+  stable?: boolean;
 };
 
 export type DetectedFurniture = {

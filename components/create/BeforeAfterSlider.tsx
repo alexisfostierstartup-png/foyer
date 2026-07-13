@@ -18,7 +18,9 @@ export function BeforeAfterSlider({
   after,
   alt = "Avant / Après",
   className = "",
-  initialPos = 52,
+  // Ouvert LARGEMENT sur l'après : c'est le rendu qu'on vient voir. La photo d'origine ne
+  // sert qu'à donner la mesure du chemin parcouru — à 52 %, elle en mangeait la moitié.
+  initialPos = 20,
   onPosChange,
 }: Props) {
   const [pos, setPos] = useState(initialPos);
