@@ -137,24 +137,15 @@ export async function getElementCategories(): Promise<ElementCategory[]> {
 /**
  * Table de remap déterministe pour les fixtures techniques que la détection
  * range parfois dans "other" (radiateur, chauffe-eau, escalier…). Renvoie les
- * catégories qui portent des `keywords`, filtrées par type de pièce. La détection
- * réassigne tout profil "other" dont l'élément/description matche un mot-clé.
+ * catégories qui portent des `keywords`. La détection réassigne tout profil "other"
+ * dont l'élément/description matche un mot-clé.
  */
-// chambre_parentale et chambre_enfant partagent la taxonomie de la chambre (mêmes
-// catégories d'éléments détectables) plutôt que de dupliquer les room_types de chaque
-// asset element_category.
-function bedroomAlias(roomType?: string): string | undefined {
-  return roomType === "chambre_parentale" || roomType === "chambre_enfant" ? "chambre" : roomType;
-}
-
-export async function getCategoryKeywordRemap(
-  roomType?: string,
-): Promise<Array<{ slug: string; keywords: string[] }>> {
+export async function getCategoryKeywordRemap(): Promise<Array<{ slug: string; keywords: string[] }>> {
   const cats = await getElementCategories().catch(() => [] as ElementCategory[]);
-  const rt = bedroomAlias(roomType);
+  // Plus de filtre par pièce : un canapé remonté en "other" doit être remappé en `sofa`
+  // même dans une chambre — voir getElementCategoryEnum.
   return cats
     .filter((c) => Array.isArray(c.keywords) && c.keywords.length > 0)
-    .filter((c) => !rt || !c.room_types?.length || c.room_types.includes(rt))
     .map((c) => ({ slug: c.slug, keywords: c.keywords! }));
 }
 
@@ -166,21 +157,27 @@ export async function getAllowedActionsByCategory(): Promise<Map<string, Decisio
 }
 
 /**
- * Construit le bloc {{categories}} injecté dans vision_detect_extended : familles
- * → types précis, filtré par type de pièce. Repli sur l'ancien enum si vide.
+ * Construit le bloc {{categories}} injecté dans vision_detect_extended.
+ *
+ * TAXONOMIE COMPLÈTE, sans filtre par pièce. On filtrait avant sur `room_types`, si bien
+ * qu'en « chambre » les catégories `sofa`, `coffee_table` et `tv_stand` n'existaient tout
+ * simplement pas dans le vocabulaire du modèle : un salon déclaré par erreur en chambre
+ * voyait son canapé rangé dans le fourre-tout `other`. Conséquences en cascade — on ne
+ * pouvait ni le RETIRER (la liste « à retirer » compare des catégories), ni l'ACHETER
+ * (pas de catégorie catalogue), ni le compter ; et le plan le clouait en « conservé »,
+ * d'où un salon rendu pour une chambre demandée (incident 2026-07-13).
+ *
+ * On NOMME donc toujours ce qu'on voit. Le type de pièce sert ensuite à décider quoi en
+ * faire (cf. room_defaults.removeCategories), jamais à décider si on a le droit de le voir.
  */
-export async function getElementCategoryEnum(roomType?: string): Promise<string> {
+export async function getElementCategoryEnum(): Promise<string> {
   const cats = await getElementCategories().catch(() => [] as ElementCategory[]);
-  const rt = bedroomAlias(roomType);
-  const filtered = cats.filter(
-    (c) => !rt || !c.room_types?.length || c.room_types.includes(rt),
-  );
-  if (filtered.length === 0) return FALLBACK_CATEGORY_ENUM;
+  if (cats.length === 0) return FALLBACK_CATEGORY_ENUM;
 
   // Liste PLATE `slug = libellé` : le slug (gauche du =) est la valeur de
   // `category`. On n'injecte PAS la famille ici (elle ne sert qu'au regroupement
   // UI) pour éviter que le modèle renvoie un nom de famille comme catégorie.
-  return filtered.map((c) => `- ${c.slug} = ${c.label_fr}`).join("\n");
+  return cats.map((c) => `- ${c.slug} = ${c.label_fr}`).join("\n");
 }
 
 export async function getAmbianceById(slugOrId: string): Promise<Style | null> {

@@ -478,7 +478,7 @@ export async function detectElementProfiles(
   const tDet = Date.now();
   // Taxonomie DB-driven : la liste des catégories autorisées est injectée depuis
   // la table assets (element_category), filtrée par type de pièce.
-  const categories = await getElementCategoryEnum(roomType);
+  const categories = await getElementCategoryEnum();
   const detPrompt = await resolvePrompt("vision_detect_extended", { categories }, { strict: false });
   // withBbox = inventaire du rendu : on émet AUSSI les attrs V3 (tous les meubles du rendu
   // sont des achats potentiels) → score structuré pour les AJOUTS (pièces vides), et on
@@ -521,7 +521,7 @@ export async function detectElementProfiles(
   // reclasse vers leur vraie catégorie via les mots-clés DB, pour que la review
   // applique les bonnes actions (ex. chauffe-eau = garder seul). Data-driven :
   // ajouter une fixture = ajouter une catégorie + keywords, zéro code ici.
-  const remap = await getCategoryKeywordRemap(roomType);
+  const remap = await getCategoryKeywordRemap();
   const remapCategory = (category: string, element: string, description: string): string => {
     const hay = `${element} ${description}`.toLowerCase();
     // Signal FORT : la description COMMENCE par un mot-clé d'une autre catégorie
@@ -963,8 +963,22 @@ export async function runAnalysisPipeline(
     });
   })();
 
-  await updateProject(projectId, { element_decisions: decisionsWithFloor, visionOutput: profiles, ...CLEAR_FINALIZE });
-  console.log(`[pipeline:analyze] saved ${decisionsWithFloor.length} decisions (2 calls: detection + verdict)`);
+  // ── 9. LA PIÈCE DEMANDÉE FAIT LOI ──────────────────────────────────────────
+  // Un meuble étranger à la pièce (un canapé dans une chambre) est RETIRÉ, pas décidé :
+  // il ne peut être ni conservé, ni personnalisé, ni remplacé — sinon le plan le CLOUE
+  // en place (« garder ce canapé exactement ») et le rendu, qui suit le plan ligne à
+  // ligne, produit un salon là où on demandait une chambre (incident 2026-07-13).
+  // Il ne disparaît pas pour autant du prompt : {{removeList}}, construit à partir des
+  // profils détectés, dit explicitement au modèle de le retirer et de libérer sa place.
+  const aRetirer = new Set(await loadRoomRemoveCategories(project.roomType));
+  const decisionsPropres = decisionsWithFloor.filter((d) => !aRetirer.has(d.category));
+  const retires = decisionsWithFloor.length - decisionsPropres.length;
+  if (retires > 0) {
+    console.log(`[pipeline:analyze] ${retires} élément(s) étranger(s) à « ${project.roomType} » → à retirer, hors plan`);
+  }
+
+  await updateProject(projectId, { element_decisions: decisionsPropres, visionOutput: profiles, ...CLEAR_FINALIZE });
+  console.log(`[pipeline:analyze] saved ${decisionsPropres.length} decisions (2 calls: detection + verdict)`);
 }
 
 // Nombre de générations "premier rendu" déjà effectuées pour ce projet
@@ -1691,7 +1705,12 @@ export async function computeRenderInventory(
     categories.filter((c) => c.fixed_lightpoint && c.catalog_category).map((c) => c.slug),
   );
   const replaceOnly = new Set(categories.filter((c) => c.replace_only).map((c) => c.slug));
-  const adds = reconcileRenderAdditions(renderProfiles, candidates, taxonomy, fixedShoppable, replaceOnly);
+  // Un meuble étranger à la pièce ne devient JAMAIS une ligne d'achat. Si le modèle a
+  // laissé traîner le canapé qu'il devait retirer d'une chambre, l'inventaire le voit
+  // comme une « addition » et proposerait de l'ACHETER. On ne vend pas un canapé pour
+  // une chambre — le défaut reste le rendu, pas la liste.
+  const etrangers = new Set(roomType ? await loadRoomRemoveCategories(roomType) : []);
+  const adds = reconcileRenderAdditions(renderProfiles, candidates, taxonomy, fixedShoppable, new Set([...replaceOnly, ...etrangers]));
   console.log(`[pipeline:final] inventaire rendu: ${renderProfiles.length} éléments détectés → ${adds.length} additions`);
   return { adds, profiles: renderProfiles };
 }
@@ -1797,7 +1816,7 @@ async function analyzeRender(projectId: string, project: Project): Promise<Rende
   const renderUrl = project.generatedRenderUrl as string;
   // Remap catégorie par mot-clé de tête sur la description APRÈS (même table que la
   // détection) : ce que le rendu contient prime sur la catégorie d'origine.
-  const remapTable = await getCategoryKeywordRemap(project.roomType);
+  const remapTable = await getCategoryKeywordRemap();
   const afterCategoryRemap = (afterDesc: string): string | null => {
     const hay = afterDesc.toLowerCase();
     return remapTable.find((r) => r.keywords.some((k) => hay.startsWith(k.toLowerCase())))?.slug ?? null;
