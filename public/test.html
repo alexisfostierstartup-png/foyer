@@ -485,6 +485,11 @@ const SECTIONS = [
     "Tout ou presque", "Une partie", "Rien",
   ], { row: true }))}
 
+  ${a && a !== "Rien" ? q("Grâce à quel rendu ?", radio("achat", "rendu_declencheur", [
+    "Gratuit", "Expert",
+  ], { row: true }),
+    "Le rendu gratuit du départ, ou celui du mode Expert (avec les vrais produits intégrés à l’image) ?") : ""}
+
   ${a && a !== "Rien" ? q("Pour environ quel montant ?", radio("achat", "montant", [
     "Moins de 100 €", "100 à 300 €", "300 à 600 €", "600 à 1 000 €", "1 000 à 2 000 €", "Plus de 2 000 €",
   ], { row: true })) : ""}
