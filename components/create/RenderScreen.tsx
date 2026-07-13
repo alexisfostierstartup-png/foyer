@@ -123,7 +123,12 @@ export function RenderScreen({
             </div>
           </div>
 
-          <div className="mt-5">
+          {/* Sur ordinateur, le rendu suivait la largeur (960px) → 720px de haut, et la
+              barre d'actions flottante en mangeait le bas. On borne donc sa LARGEUR par
+              la hauteur disponible : le comparateur est en 4/3, largeur = hauteur × 4/3.
+              Les ~19rem retranchés couvrent la barre de progression, le titre, la légende
+              et la barre d'actions. Sur mobile, rien ne change (l'écran défile). */}
+          <div className="mt-5 lg:mx-auto lg:max-w-[calc((100vh-19rem)*4/3)]">
             <BeforeAfterSlider before={beforeUrl} after={afterUrl} />
           </div>
 
@@ -135,7 +140,9 @@ export function RenderScreen({
         </main>
 
         <div className="fixed bottom-0 inset-x-0 border-t border-foyer-border bg-foyer-cream/95 px-5 py-3 backdrop-blur">
-          <div className="mx-auto flex max-w-[480px] flex-col gap-2.5">
+          {/* Sur ordinateur, les deux actions tiennent sur une ligne (valider à gauche,
+              modifier à droite) : empilées, la barre mangeait le bas du rendu. */}
+          <div className="mx-auto flex max-w-[480px] flex-col gap-2.5 lg:max-w-[640px] lg:flex-row">
             <button
               type="button"
               disabled={navigating !== null}

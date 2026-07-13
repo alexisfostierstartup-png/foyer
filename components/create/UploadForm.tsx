@@ -144,6 +144,11 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          // Le type de pièce n'était posté QU'À l'upload. Changer la pièce APRÈS avoir
+          // importé la photo ne mettait donc rien à jour : l'écran affichait « Salon »
+          // pendant que le projet restait une « Chambre » — et la détection, indexée sur
+          // les catégories de la pièce, ne cherchait ni canapé ni meuble TV.
+          roomType,
           furniture: choices.furniture,
           floor: choices.floor,
           walls: choices.walls,
