@@ -1310,9 +1310,17 @@ export const DISPOSITION_BRIEFS = [
   // Chaque brief décrit maintenant une GÉOMÉTRIE vérifiable : où est le canapé, ce qu'il
   // regarde, ce qu'il y a au centre. La couleur reste, mais en second, et clairement
   // annoncée comme secondaire.
-  "Variation A — ÎLOT CENTRAL. GEOMETRY FIRST: pull the seating OFF the walls and float it in the middle of the room. The sofa sits with its BACK TO THE ROOM's open side, facing the focal point (fireplace, TV or window); the armchairs close the circle opposite it; the rug and coffee table anchor the island; you can walk BEHIND the sofa. Nothing of the seating group touches a wall. Secondary: walls in the DEEPEST / signature colour of the style palette, restrained tonal decor.",
-  "Variation B — TOUT LE LONG DU MUR. GEOMETRY FIRST: push every large piece FLAT against the walls, backs to the wall — the sofa along the LONGEST solid wall, the storage on the opposite wall, the armchairs in the corners, angled inward. The entire CENTRE of the room stays open floor, crossed by a wide clear walkway. Secondary: walls in a LIGHT airy neutral FROM THE STYLE PALETTE (off-white, greige, sand), warm natural textures, a plant, a throw, art.",
-  "Variation C — EN DIAGONALE, DEUX ZONES. GEOMETRY FIRST: turn the seating group on a DIAGONAL to the walls (never parallel to them), and carve out a SECOND zone in the remaining corner — a reading nook (armchair + floor lamp + side table) or a console with a mirror. The two zones read as distinct and both are reachable. Secondary: a WARMER mid-tone on the walls, or one accent wall clearly taken from the style palette; one statement decor piece.",
+  // ⚠️ AUCUN NOM D'ARCHITECTURE ICI. Le commentaire ci-dessus disait déjà la règle, et le
+  // code faisait l'inverse : la variation A demandait au canapé de « faire face au point
+  // focal (CHEMINÉE, TV ou FENÊTRE) » et la C de « CREUSER (carve out) une seconde zone ».
+  // Une pièce sans cheminée ni fenêtre sur ce mur ? Le modèle en fabriquait une pour obéir.
+  // La cheminée en marbre, le balcon et les arches venaient de LÀ (constat Alexis
+  // 2026-07-14 : « un modèle n'inventerait pas une ouverture si rien ne la lui demandait »).
+  // Les briefs ne parlent plus que de MEUBLES : où ils sont, ce qu'ils regardent, ce qui est
+  // au centre. Le décor et l'architecture ne sont jamais nommés.
+  "Variation A — ÎLOT CENTRAL. GEOMETRY FIRST: pull the seating OFF the walls and float it in the middle of the room. The sofa stands free, its back to the room's open side; the armchairs close the circle opposite it, all seats turned toward each other; the rug and coffee table anchor the island; you can walk BEHIND the sofa. Nothing of the seating group touches a wall. Secondary: the DEEPEST / signature colour of the style palette on the wall surfaces the plan allows you to repaint, restrained tonal decor.",
+  "Variation B — TOUT LE LONG DES MURS. GEOMETRY FIRST: push every large piece FLAT back, the sofa along the longest run of free wall, the storage facing it, the armchairs in the corners, angled inward. The entire CENTRE of the room stays open floor, crossed by a wide clear walkway. Secondary: a LIGHT airy neutral FROM THE STYLE PALETTE (off-white, greige, sand) on the surfaces the plan allows you to repaint, warm natural textures, a plant, a throw, art.",
+  "Variation C — EN DIAGONALE, DEUX ZONES. GEOMETRY FIRST: turn the seating group on a DIAGONAL (never parallel to the walls), and set up a SECOND, distinct zone in the remaining floor space — a reading corner (armchair + floor lamp + side table), or a console with a mirror above it. Both zones read as separate and both stay reachable. Everything you add STANDS ON THE FLOOR, freely: nothing is ever built into, recessed into or cut out of a wall. Secondary: a WARMER mid-tone on the surfaces the plan allows you to repaint; one statement decor piece.",
 ];
 
 /**

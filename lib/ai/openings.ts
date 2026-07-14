@@ -75,10 +75,19 @@ export function ouverturesParMurSource(profiles: ElementProfile[]): Map<Mur, num
   return compte;
 }
 
-const PROMPT_AUDIT = `Décris l'ARCHITECTURE de cette photo d'intérieur — pas sa décoration.
-1) Les OUVERTURES et le mur de chacune. Une ouverture = fenêtre, porte-fenêtre, porte, ou passage ouvert vers une autre pièce. Un miroir, un cadre, un tableau, une niche ou une étagère ne sont PAS des ouvertures.
-2) La pièce a-t-elle une CHEMINÉE (foyer, manteau de cheminée, insert) ?
-Le mur GAUCHE est celui qui part du bord gauche de l'image ; le mur DROITE part du bord droit ; le mur FOND est celui qu'on regarde en face.
+// L'audit tournait en résolution MOYENNE et décrivait « l'architecture » : sur la photo
+// d'origine d'Alexis, il répondait « AUCUNE ouverture » alors qu'une porte-fenêtre est là,
+// derrière un rideau. Un auditeur aveugle ne signale rien — d'où les 0 corrections sur un
+// rendu qui avait pourtant percé un mur (2026-07-14). On lui demande maintenant UNE chose,
+// en haute résolution, avec le critère qui tranche : une ouverture TRAVERSE le mur.
+const PROMPT_AUDIT = `Inventaire des OUVERTURES de cette photo d'intérieur.
+
+Une OUVERTURE TRAVERSE le mur : fenêtre, porte-fenêtre, porte, ou passage vers une autre pièce. Elle laisse voir autre chose que le mur — le dehors, la lumière du jour, un balcon, une autre pièce. Compte-la même si un rideau, un meuble ou une plante la cache en partie.
+N'est PAS une ouverture : un RENFONCEMENT ou une niche creusée dans le mur (avec des étagères, des objets, une télé — le fond du renfoncement est un mur), un miroir, un cadre, un tableau, une bibliothèque.
+
+Le mur GAUCHE part du bord gauche de l'image ; le mur DROITE part du bord droit ; le mur FOND est celui qu'on regarde en face.
+Dis aussi si la pièce a une CHEMINÉE (foyer, manteau, insert).
+
 JSON STRICT : {"ouvertures":[{"type":"fenetre|porte_fenetre|porte|passage","mur":"gauche|fond|droite"}],"cheminee":true|false}`;
 
 const VERS_MUR: Record<string, Mur> = { gauche: "LEFT", fond: "BACK", droite: "RIGHT" };
@@ -92,7 +101,7 @@ async function architectureRendu(image: Buffer): Promise<Architecture | null> {
   const res = await getVisionProvider("gemini_vision").analyze(
     PROMPT_AUDIT,
     [image as unknown as ImageInput],
-    { model: "gemini-2.5-flash", mediaResolution: "medium" },
+    { model: "gemini-2.5-flash", mediaResolution: "high" },
   );
   const brut = res.parsed as {
     ouvertures?: Array<{ mur?: string }>;
