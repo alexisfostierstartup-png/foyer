@@ -1008,9 +1008,22 @@ export async function runAnalysisPipeline(
   // pas seulement le verdict de style. Règle produit : on garde le sol existant
   // SAUF contre-indication user. floor.change=false → Garder ; floor.change=true →
   // Remplacer par le revêtement choisi (preset + note), visible dans la description.
+  //
+  // SANS directive, on GARDE — la règle produit était écrite ici, mais elle ne s'appliquait
+  // QUE si l'utilisateur avait rempli l'écran des contraintes. Sans elle, le verdict de
+  // style faisait loi : il a décidé d'arracher un parquet chevrons haussmannien pour cause
+  // de « style moderne » (projet 4oxGnkEm, QA Alexis 2026-07-14). Refaire un sol est le
+  // poste le plus lourd d'un projet — en argent, en travaux et en CO₂ : on ne le propose
+  // JAMAIS de sa propre initiative.
   const floorChoice = project.userConstraints?.floor;
   const decisionsWithFloor = await (async () => {
-    if (!floorChoice) return finalDecisions;
+    if (!floorChoice) {
+      return finalDecisions.map((d) =>
+        d.category === "floor"
+          ? { ...d, mismatch_type: "none" as const, action_slug: null, action_label: null, supply_items: null, qty: null }
+          : d,
+      );
+    }
     const presetLabel = floorChoice.preset
       ? (await getFloorPresets()).find((p) => p.slug === floorChoice.preset)?.label ?? null
       : null;
