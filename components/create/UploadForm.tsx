@@ -287,12 +287,10 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
               </div>
 
               <div className="mt-4 flex flex-col gap-3">
-                {uploading ? (
-                  <p className="flex items-center justify-center gap-2 py-3 text-sm text-foyer-muted">
-                    <Loader2 className="size-4 animate-spin" aria-hidden />
-                    On téléverse votre photo…
-                  </p>
-                ) : !projectId ? (
+                {/* Plus de « On téléverse votre photo… » sous le cadre : le loader vit
+                    DANS l'encart, à la place de l'aperçu. Deux indicateurs pour la même
+                    attente, l'un sous l'autre, ne disaient rien de plus. */}
+                {uploading ? null : !projectId ? (
                   // « Importer depuis la galerie » est SUPPRIMÉ : la zone de dépôt fait déjà
                   // exactement ça, en un clic. Deux chemins pour le même geste, c'était la
                   // « boîte à options » qui obligeait à choisir avant de faire.
