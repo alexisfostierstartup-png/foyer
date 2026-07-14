@@ -16,11 +16,13 @@ export class NanoBananaProvider implements ImageProvider {
     refImages?: ImageInput[],
   ): Promise<GenerationResult> {
     const start = Date.now();
-    // temperature 0 → suivi le plus littéral possible du plan (REPLACE, positions
-    // luminaires…) et dispersion minimale entre deux générations.
+    // temperature 0 (défaut) → suivi le plus littéral du plan et dispersion
+    // minimale. GEN_TEMPERATURE permet de tester une exécution plus engagée
+    // (hypothèse « rendu timide/pastellisé » 2026-07-14) sans redéployer.
+    const temperature = Number.parseFloat(process.env.GEN_TEMPERATURE ?? "0") || 0;
     const model = getGeminiClient().getGenerativeModel({
       model: MODEL,
-      generationConfig: { temperature: 0 },
+      generationConfig: { temperature },
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -40,13 +40,19 @@ export async function loadStyleContext(
   // style DÉSIRABLE + les pièges qui l'enlaidissent. Contrepoids des règles
   // restrictives : on dit enfin au modèle à quoi ressemble un rendu réussi.
   const beauty = d.beauty ? `. craft — what makes this style gorgeous: ${d.beauty}` : "";
+  // Script déco concret (distillé des images de référence d'Alexis) : QUOI
+  // accrocher/poser/draper, pas juste une ambiance — la mise en scène devient
+  // exécutable (demande Alexis 2026-07-14 : « mieux décorer »).
+  const decor = (d as { decor?: string[] }).decor?.length
+    ? `. STAGE THIS DECOR (concrete, from the style's reference shoots — adapt placement to THIS room): ${(d as { decor?: string[] }).decor!.join("; ")}`
+    : "";
   const avoid = d.avoid?.length ? `. NEVER: ${d.avoid.join("; ")}` : "";
 
   const colorway = buildColorwayDirective(d.colorways ?? [], opts);
 
   return {
     styleName: d.name,
-    styleMood: `${d.mood}. palette: ${d.palette.join(", ")}. materials: ${d.materials.join(", ")}${signature}${beauty}${avoid}${colorway.part}`,
+    styleMood: `${d.mood}. palette: ${d.palette.join(", ")}. materials: ${d.materials.join(", ")}${signature}${beauty}${decor}${avoid}${colorway.part}`,
     colorwaySlug: colorway.slug,
   };
 }
@@ -404,8 +410,14 @@ export function formatDesignPlan(
       const paintClause = /paint|peindre|peinture/i.test(`${d.action_slug ?? ""} ${label}`)
         ? " The finish is opaque PAINT in the stated colour — never exposed wood grain, stain or varnish."
         : "";
+      // MUR : l'action couvre TOUS les pans — la détection rend parfois un seul
+      // wall_1 pour 3 murs visibles → sans cette clause, le modèle ne peignait
+      // qu'un pan (moulures gauche/droite dépareillées, b-s02 2026-07-14).
+      const wholeRoomClause = d.category === "wall"
+        ? " Apply it to EVERY wall and EVERY run of wainscot/panelling in the room — left, right, back, around openings — one uniform scheme edge to edge; a single unpainted section is a FAILURE."
+        : "";
       restyleLines.push(
-        `- RESTYLE ${what}${tag}: ${label}${qty}. It stays the SAME object (same shape, size, position, structure) — only this finish changes, and the change must be unmistakably visible, never left looking unchanged.${paintClause}`,
+        `- RESTYLE ${what}${tag}: ${label}${qty}. It stays the SAME object (same shape, size, position, structure) — only this finish changes, and the change must be unmistakably visible, never left looking unchanged.${paintClause}${wholeRoomClause}`,
       );
     } else if (beta) {
       // REPLACE beta : ligne COMPACTE — le boilerplate répété ×N noie le plan
