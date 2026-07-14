@@ -104,10 +104,14 @@ if (cmd === "dump") {
         `# ${s} v${p.version} | ${channelOf(p)} | active:${p.is_active} | ${p.updated_at}\n# notes: ${p.notes ?? ""}\n${p.template}`);
       archived++;
     }
+    // On ne purge QUE les DOUBLONS de versions d'un même slug. Un slug sans
+    // version active (prompt pas encore branché) est conservé intégralement —
+    // règle Alexis 2026-07-14 après restauration de 3 prompts purgés à tort.
     const keep = new Set(list.filter((p) => p.is_active).map((p) => p.id));
     const lastInactiveProd = list.filter((p) => !p.is_active && channelOf(p) === "prod").sort((a, b) => (b.version ?? 0) - (a.version ?? 0))[0];
     if (lastInactiveProd) keep.add(lastInactiveProd.id);
-    const toDelete = list.filter((p) => !keep.has(p.id));
+    const hasActive = list.some((p) => p.is_active);
+    const toDelete = hasActive ? list.filter((p) => !keep.has(p.id)) : [];
     for (const p of toDelete) { await sb.from("prompts").delete().eq("id", p.id); deleted++; }
     if (toDelete.length) console.log(`  ${s}: ${toDelete.length} version(s) purgée(s), gardé actives + v${lastInactiveProd?.version ?? "—"} (rollback)`);
   }
