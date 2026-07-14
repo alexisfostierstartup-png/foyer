@@ -12,6 +12,7 @@ import { saveRender } from "./saveRender";
 import { logPipelineEvent } from "./logger";
 import { withTracking } from "./track";
 import { isTransientAiError } from "./retry";
+import { enforceOpeningWalls, murDepuisBbox } from "./openings";
 import { computeTextEmbedding } from "@/lib/embeddings/jina";
 import { getProject, updateProject } from "@/lib/storage/projects";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
@@ -389,14 +390,10 @@ export async function buildFixedFeaturesSummary(profiles: ElementProfile[]): Pro
     door: "door",
     wall_opening: "open passage to another room",
   };
-  // Le mur, déduit du centre horizontal de la boîte (normalisée 0-1). Sans boîte, on ne
-  // prétend pas savoir : le compte reste, la position est simplement tue.
-  const murDe = (p: ElementProfile): string | null => {
-    const b = p.bbox;
-    if (!b) return null;
-    const cx = b.x + b.w / 2;
-    return cx < 0.34 ? "LEFT" : cx > 0.66 ? "RIGHT" : "BACK";
-  };
+  // Le mur vient de lib/ai/openings.ts : le prompt qui ANNONCE les murs pleins et le
+  // contrôle qui les VÉRIFIE doivent partager la même définition, sinon ils divergeront.
+  // Sans boîte, on ne prétend pas savoir : le compte reste, la position est tue.
+  const murDe = (p: ElementProfile): string | null => murDepuisBbox(p.bbox);
 
   const ouvertures = profiles.filter((p) => OUVERTURES[p.category]);
   if (ouvertures.length === 0) {
@@ -1224,8 +1221,12 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
   const seatFixed = await enforceSeatReplacement(
     projectId, sourceImage, fixedGen, profiles, styleName, genPrompt.prompt.provider,
   );
-  genResult.imageBuffer = seatFixed.imageBuffer;
-  genResult.mimeType = seatFixed.mimeType;
+  // AUDIT→RETOUCHE ouvertures : un mur plein dans la photo ne peut pas être percé.
+  const openFixed = await enforceOpeningWalls(
+    projectId, seatFixed, profiles, genPrompt.prompt.provider, "first-render", project.storageFolder, project.basePhotoUrl,
+  );
+  genResult.imageBuffer = openFixed.imageBuffer;
+  genResult.mimeType = openFixed.mimeType;
 
   // NOTE: audit_quality prompt exists but is intentionally not called here.
   // Audit belongs in a future "finalize" step triggered explicitly by the user,
@@ -1396,7 +1397,12 @@ async function runDispositionsPipelineInner(projectId: string): Promise<string[]
       const seatFixed = await enforceSeatReplacement(
         projectId, sourceImage, fixed, profiles, styleName, genPrompt.prompt.provider,
       );
-      const url = await saveRender(seatFixed.imageBuffer, project.storageFolder, seatFixed.mimeType, `disposition_${i + 1}`);
+      // C'est ICI que le défaut se concentre : une disposition qui vide le mur d'en face
+      // pousse le modèle à y percer une porte-fenêtre à balcon.
+      const openFixed = await enforceOpeningWalls(
+        projectId, seatFixed, profiles, genPrompt.prompt.provider, `disposition_${i + 1}`, project.storageFolder, project.basePhotoUrl,
+      );
+      const url = await saveRender(openFixed.imageBuffer, project.storageFolder, openFixed.mimeType, `disposition_${i + 1}`);
       await logPipelineEvent({
         project_id: projectId, event: "generate", step: `disposition_${i + 1}`,
         provider: result.providerUsed, duration_ms: result.durationMs, render_url: url,
@@ -1448,7 +1454,18 @@ export async function runIterationPipeline(
   console.log(`[pipeline:iterate] generation: ${Date.now() - t1}ms, ${Math.round(result.imageBuffer.length / 1024)}KB`);
 
   const step = `iterate_${iterCount + 1}`;
-  const resultUrl = await saveRender(result.imageBuffer, project.storageFolder, result.mimeType, step);
+  // Une retouche peut aussi percer un mur (« ajoute de la lumière » → le modèle
+  // dessine une fenêtre). Les profils de la photo d'origine font foi.
+  const iterFixed = await enforceOpeningWalls(
+    projectId,
+    { imageBuffer: result.imageBuffer, mimeType: result.mimeType },
+    (project.visionOutput ?? []) as ElementProfile[],
+    iterPrompt.prompt.provider,
+    step,
+    project.storageFolder,
+    project.basePhotoUrl,
+  );
+  const resultUrl = await saveRender(iterFixed.imageBuffer, project.storageFolder, iterFixed.mimeType, step);
   await updateProject(projectId, {
     generatedRenderUrl: resultUrl,
     iterationCount: iterCount + 1,
