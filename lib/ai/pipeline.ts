@@ -1550,16 +1550,26 @@ export function mapCompositeBoxToRender(
   return { x, y, w: Math.min(1 - x, rw), h: Math.min(1 - y, box.h) };
 }
 
-// bbox tolérante : array [x,y,w,h] OU objet {x,y,w,h}, valeurs 0-1.
-function parseBbox(raw: unknown): Bbox | null {
-  let x, y, w, h;
-  if (Array.isArray(raw) && raw.length === 4) [x, y, w, h] = raw;
+// bbox tolérante aux DEUX conventions (prompt v7+ : box_2d natif [ymin,xmin,ymax,xmax]
+// 0-1000 — même échelle que anchor ; legacy : [x,y,w,h] 0-1, qui mélangeait parfois
+// les échelles au sein d'une même boîte → normalisation PAR COMPOSANTE).
+function parseBbox(raw: unknown, opts?: { native?: boolean }): Bbox | null {
+  let vals: unknown[];
+  if (Array.isArray(raw) && raw.length === 4) vals = raw;
   else if (raw && typeof raw === "object") {
     const o = raw as Record<string, unknown>;
-    [x, y, w, h] = [o.x, o.y, o.w, o.h];
+    vals = [o.x, o.y, o.w, o.h];
   } else return null;
-  if ([x, y, w, h].some((v) => typeof v !== "number" || !Number.isFinite(v))) return null;
-  return { x: x as number, y: y as number, w: w as number, h: h as number };
+  const nums = vals.map(Number);
+  if (nums.some((v) => !Number.isFinite(v) || v < 0)) return null;
+  const norm = nums.map((v) => (v > 1.5 ? v / 1000 : v));
+  if (opts?.native) {
+    const [ymin, xmin, ymax, xmax] = norm;
+    if (xmax <= xmin || ymax <= ymin) return null;
+    return { x: xmin, y: ymin, w: xmax - xmin, h: ymax - ymin };
+  }
+  const [x, y, w, h] = norm;
+  return { x, y, w, h };
 }
 
 export async function confirmChanges(
@@ -1584,7 +1594,12 @@ export async function confirmChanges(
   // Instruction d'attrs structurés V3 (par catégorie présente). replacedOnly : on ne demande
   // les attrs QUE pour les éléments remplacés (nouvel objet) — un re-finish garde sa forme.
   const attrsInstruction = buildAttrsInstruction(candidates.map((d) => d.category), { replacedOnly: true });
-  const prompt = await resolvePrompt("confirm_changes", { candidatesJson, attrsInstruction }, { strict: false });
+  // Catégories d'ADDITIONS injectées depuis la taxonomie DB (audit #5) : l'enum
+  // figée du prompt ignorait pouf/pendant_lamp/etc. → additions non shoppables.
+  const additionCategories = (await getElementCategories().catch(() => []))
+    .map((c) => c.slug)
+    .join("|") || "other";
+  const prompt = await resolvePrompt("confirm_changes", { candidatesJson, attrsInstruction, additionCategories }, { strict: false });
   const result = await withTracking(
     {
       step: "audit",
@@ -1645,7 +1660,8 @@ export async function confirmChanges(
     if (r.changed) appliedIds.add(r.element_id); // appliedIds = éléments que le rendu a CHANGÉS
     if (r.changed && r.change_kind === "replaced") replacedIds.add(r.element_id);
     if (r.after && r.after.trim()) afterById.set(r.element_id, r.after.trim());
-    const compBox = parseBbox(r.bbox);
+    const rr = r as { box_2d?: unknown; bbox?: unknown };
+    const compBox = rr.box_2d != null ? parseBbox(rr.box_2d, { native: true }) : parseBbox(rr.bbox);
     if (compBox) {
       const renderBox = mapCompositeBoxToRender(compBox, afterLeftFrac, afterWidthFrac);
       if (renderBox) bboxById.set(r.element_id, renderBox);

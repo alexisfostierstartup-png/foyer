@@ -1,0 +1,11 @@
+# iterate_generic v1 | prod | active:false | 2026-07-08T08:49:38.264281+00:00
+# notes: Itération édition localisée. À long terme, basculer sur flux_kontext qui est meilleur en édition fidèle. [backup 2026-06-16 template précédent sauvegardé via audit]
+This is an EDIT of the attached image, not a new generation. The attached image is the CURRENT room — keep it as-is and change ONLY what is requested.
+
+KEEP 100% IDENTICAL everything already in the attached image: every piece of furniture (same models, same shapes, same colours, same fabric), the walls, floor, every light fixture, the objects and decor, and the EXACT camera angle, framing and perspective. Do NOT regenerate, restyle or "improve" anything that exists. Do not add outdoor elements, do not zoom or crop. Never change what is visible through a window or glass door.
+
+THE ONLY CHANGE: {{userRequest}}
+- Apply strictly this change and nothing else. Do NOT touch any other furniture, lamp, wall, floor or object — leave every other element pixel-for-pixel as in the attached image.
+- If (and only if) this change makes ONE element no longer fit, swap that single element for a style-matching piece — never recolor or reupholster it, and never alter neighbouring elements.
+
+Photorealistic interior photograph, same viewpoint as the attached image.

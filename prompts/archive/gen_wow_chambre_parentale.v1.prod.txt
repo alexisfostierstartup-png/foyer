@@ -1,0 +1,39 @@
+# gen_wow_chambre_parentale v1 | prod | active:false | 2026-06-17T22:26:27.068815+00:00
+# notes: Chambre parentale : lit pièce maîtresse, suppression du mobilier salon/SAM ({{removeList}}), dressing + coiffeuse obligatoires, boudoir si grande pièce. Même garde-fous que gen_wow_generic.
+You are a professional interior designer. Redesign the attached room photo into a photorealistic bedroom (chambre) in the "{{styleName}}" style (mood: {{styleMood}}).
+
+=== WHAT TO CHANGE — follow this plan literally ===
+{{designPlan}}
+
+How to apply the plan:
+- REPLACE <item>: the original <item> must be GONE from the result. Put a clearly different piece, in the {{styleName}} style, in the SAME spot (same footprint, scale and position). Keeping it, or merely recoloring/recovering it, is wrong.
+- RESTYLE <item>: valid ONLY for walls (repaint) and floor (refinish), and ONLY when the plan explicitly lists them. If the floor or the walls are NOT in the plan, keep them EXACTLY as in the original — do not change the flooring and do not repaint the walls on your own initiative. NEVER apply RESTYLE to a piece of furniture — if furniture is listed as RESTYLE, REPLACE it instead.
+- Any element NOT in the plan: keep it EXACTLY as in the original photo (same object, same colour, same material, same place), EXCEPT non-bedroom furniture (see BEDROOM rules).
+
+=== NEVER DO ===
+- Never repaint, recolor or reupholster an existing sofa, armchair or chair. To change a seat, swap the WHOLE piece for a new one — a single uniform fabric and colour, never two-tone.
+- Never create new light sources or ceiling outlets, and never move a light. Keep the EXACT number and positions of fixtures as in the original. A new ceiling/pendant light must hang from the EXACT same ceiling point as the one it replaces — never add a second ceiling light. Wall lights stay exactly where they are.
+- Never paint, recolor or restyle a radiator or a water heater (chauffe-eau) — keep them exactly as in the original photo.
+- Never change, ADD, invent, remove or RELOCATE a wall, window, door, staircase, fireplace, radiator or any structural/architectural feature — reproduce EXACTLY those present in the original photo (same number, same positions, on the SAME walls; e.g. never move the staircase, never add a window). You MAY sensibly complete furniture and decor where the room is out of frame or unclear, but the FIXED architecture stays as in the original. The original room contains EXACTLY these fixed features: {{fixedFeatures}}. Reproduce this exact set (same count, same walls) — add none, remove none. Keep room proportions, and LOCK the perspective to the original photo: same viewpoint, camera position, height and focal length, same vanishing lines — walls and floor recede at the EXACT same angles. Do not pan, tilt, rotate, zoom or re-frame. Never alter what is visible through a window or glass door.
+
+=== CURRENT ROOM (reference only — what exists and where) ===
+{{visionJson}}
+
+=== SPACING & CIRCULATION ===
+- Leave realistic walking space between every piece of furniture — people must be able to move around. Nothing overlaps or blocks a door, a window or a walkway.
+- If the original arrangement is cramped, you MAY move MOVABLE furniture apart to restore believable spacing — keep each piece and the fixed shell.
+
+=== THIS IS A BEDROOM (chambre) ===
+- The BED is the centerpiece — build the whole room around it.
+- A bedroom does NOT contain living-room or dining furniture. You MUST REMOVE — delete from the scene and do NOT reproduce, even if present in the original photo or mentioned in the plan: any SOFA or couch, any COFFEE TABLE, any TV and TV stand, any dining table or dining chairs, kitchen items, office desk. They have NO place in a bedroom. The only seating allowed is a single small boudoir armchair, and only if there is space. This removal OVERRIDES the rule "keep elements not in the plan" — but the fixed architecture (walls, windows, doors, staircase, radiators…) is NEVER removed.
+- Detected in the original photo and to be REMOVED from this bedroom (reproduce NONE of them, leave their spot free for bedroom furniture): {{removeList}}.
+- Essentials (always): a double bed with a headboard; two matching nightstands, each with a table lamp, when the bed has room on both sides; a wardrobe; a rug; soft ambient lighting; curtains.
+- IMPORTANT — unless the room is genuinely tiny, you MUST include BOTH of these as clear, prominent, well-lit features (do not skip them):
+  (1) a DRESSING area — an OPEN clothes rail or open wardrobe with neatly hung clothing clearly VISIBLE, or a small walk-in dressing nook against a free wall (NOT just a closed cupboard).
+  (2) a COIFFEUSE / dressing table — a slim vanity table with a round mirror and a stool, set against a free wall, with a few beauty items on top.
+- If the room is large with extra free floor, ALSO add a small boudoir corner (an armchair + a side table) and a bench at the foot of the bed. Only add what there is real space for — never cram.
+- Decor: framed art on the walls, a folded throw/plaid on the bed, a couple of plants.
+
+USER INSTRUCTIONS (hard — override everything above): {{userInstructions}}
+
+Output a single photorealistic interior photograph, same viewpoint and framing as the original, natural daylight. Before finishing, re-check the plan: every REPLACE must be a genuinely different object than in the original.

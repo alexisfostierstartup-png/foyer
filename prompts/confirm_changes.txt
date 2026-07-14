@@ -1,0 +1,38 @@
+# slug: confirm_changes | v6 | prod | 2026-07-12T13:51:16.210895+00:00
+This SINGLE image contains TWO photos SIDE BY SIDE: the LEFT half = AVANT (original photo), the RIGHT half = APRÈS (final render).
+
+Below is the list of elements detected in the AVANT photo — each has an id, the element description and its category:
+{{candidatesJson}}
+
+For EACH element, compare it on the LEFT (AVANT) vs the RIGHT (APRÈS) and decide whether the render CHANGED it:
+- changed = true  -> in APRÈS it is a clearly DIFFERENT object, OR has a clearly different colour / material / pattern / finish than in AVANT (e.g. a different rug, a repainted or re-textured wall, a new floor, a replaced or restyled table).
+  ⚠️ La FORME compte autant que la couleur : un objet dont la SILHOUETTE, la géométrie, la taille ou le nombre d'éléments a changé est « changed », MÊME si le tissu, la matière et la couleur sont identiques. Exemples : un canapé DROIT devenu canapé d'ANGLE (ou en L, ou modulaire) ; un canapé 3 places devenu 4 places ; une table rectangulaire devenue ronde. Ce sont des objets DIFFÉRENTS (change_kind "replaced"), et les rater fait payer au client un meuble qu'il n'a pas.
+- changed = false -> in APRÈS it is essentially the SAME piece (same object, same colour, same material).
+When changed = true, also return "after": a short description of how that element looks in the APRÈS (RIGHT) image (the new object / colour / material), NOT the AVANT.
+When changed = true, ALSO return "change_kind" — c'est le RENDU qui fait foi, pas ce qui était prévu :
+- "refinished" = c'est le MÊME objet (même forme, même structure, même piètement) avec seulement une nouvelle finition : repeint, reteinté, retapissé. On doit reconnaître le meuble d'origine.
+- "replaced"   = c'est un objet DIFFÉRENT (autre forme/silhouette/structure), même s'il occupe la même place. Une table basse rectangulaire noire devenue une table RONDE en bois = "replaced", jamais "refinished".
+En cas de doute, TRANCHE AVEC L'`intended_action` DE L'ÉLÉMENT (donné dans la liste ci-dessus) :
+- intended_action = "personnaliser cet élément" → réponds "refinished". L'utilisateur voulait GARDER son meuble et seulement le re-finir. Ne réponds "replaced" QUE si la SILHOUETTE a visiblement changé (forme, structure, piètement, nombre d'éléments). Un changement de COULEUR, de teinte, de matière ou de tissu n'est JAMAIS à lui seul un remplacement : c'est exactement ce qu'on avait demandé au rendu de faire. Le déclarer "replaced" ferait acheter un meuble neuf à quelqu'un qui voulait repeindre le sien.
+- intended_action = "remplacer cet élément" → réponds "replaced".
+
+For EACH element that is VISIBLE in the APRÈS (RIGHT) photo, ALSO return "anchor": [x, y] — a SINGLE POINT (integers 0-1000 over the ENTIRE side-by-side image, so x MUST lie in the RIGHT half) placed exactly where YOU would put your fingertip to point at THIS object and no other. It MUST sit ON the object's visible body: never on empty floor, never on a neighbouring object, never in the hollow of an L-shape. For a large or L-shaped piece (a sectional sofa, a corner unit), pick the middle of its most massive, most recognisable part (the seat cushions) — NOT the geometric centre of its bounding box, which often falls off the object entirely. If two similar objects sit side by side, place each anchor so that it is obvious which one it designates.
+
+ALSO return "bbox": its bounding box IN THE APRÈS (RIGHT) image, as [x, y, w, h] with values between 0 and 1 normalized over the ENTIRE side-by-side image (x = left edge of the box, 0 = far left of the whole image, 1 = far right; y = top edge; w, h = width/height as fractions of the whole image). The box MUST lie in the RIGHT half (APRÈS). Make it TIGHT around the object. If the element is not visible in the APRÈS, omit bbox.
+
+{{attrsInstruction}}
+
+Judge each element INDEPENDENTLY on its own visual merits. Do NOT assume the render keeps things: the render frequently restyles, recolours or replaces several elements at once — including some it was not explicitly asked to change. Conversely, do not invent changes. IGNORE pure differences of lighting, warmth, shadow, camera angle, framing or rendering sharpness — those are NOT changes. Base your decision strictly on the actual object, colour, material or pattern.
+
+ALSO detect ADDITIONS: furniture / decor / lighting clearly PRESENT in the RIGHT (APRÈS) but ABSENT in the LEFT (AVANT) — genuinely NEW items the render added (e.g. a TV, a TV stand, a new lamp). Only list an addition if it is unmistakably new (not in AVANT) and not already one of the elements listed above. List EACH distinct article as its OWN separate entry — NEVER combine two distinct pieces into one: a 2-seat sofa and a 1-seat armchair are TWO separate entries, even with the same fabric and colour. Never write "two X", "a pair of X" or similar as one entry — split into one entry per physical piece.
+
+Return STRICT JSON, nothing else:
+{
+  "results": [
+    { "element_id": "...", "changed": true, "change_kind": "refinished|replaced", "after": "description in APRÈS", "anchor": [640, 520], "bbox": [0.55, 0.40, 0.20, 0.30], "attrs": { /* attributs V3 de la catégorie de l'élément */ } }
+  ],
+  "additions": [
+    { "element": "...", "category": "sofa|armchair|coffee_table|side_table|dining_table|chair|rug|floor|wall|floor_lamp|table_lamp|ceiling_light|tv_stand|bookshelf|sideboard|dresser|nightstand|curtains|plant|frame|other", "detail": "color/material/style" }
+  ]
+}
+results = one entry per element above (use its element_id). "after" describes the element in the APRÈS (RIGHT) image; "bbox" is its box in the APRÈS (RIGHT) image normalized over the whole side-by-side image. additions = only genuinely new items, ONE physical article per entry (never combine a sofa and an armchair into one entry).

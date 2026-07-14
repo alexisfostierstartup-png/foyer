@@ -1,0 +1,44 @@
+# slug: vision_detect_extended | v4 | prod | 2026-07-11T08:44:10.938647+00:00
+Analyse cette photo de pièce intérieure avec précision.
+
+Retourne UNIQUEMENT un JSON valide (sans texte avant/après) avec cette structure exacte :
+{
+  "elementProfiles": [
+    {
+      "element_id": "string (identifiant court unique, ex: sofa_1)",
+      "element": "string (type en minuscules)",
+      "category": "string — le slug EXACT choisi dans la liste CATÉGORIES ci-dessous : la valeur À GAUCHE du « = » (ex: dining_table). JAMAIS un nom de famille.",
+      "description": "string (description concise en français)",
+      "color": "string (couleur dominante, TOUJOURS renseignée, ex: brun foncé, blanc cassé, gris anthracite, chêne clair)",
+      "material_family": "wood|metal|fabric|leather|stone|ceramic|glass|plastic|paint|unknown",
+      "surface_features": ["painted","glossy","matte","textured","scratched","worn","stained","varnished","raw","upholstered","carved","lacquered"],
+      "condition": "good|fair|poor",
+      "movable": true,
+      "dims": {
+        "width_cm": null,
+        "height_cm": null,
+        "depth_cm": null,
+        "area_m2": null,
+        "length_m": null
+      }
+    }
+  ],
+  "qualityWarnings": []
+}
+
+CATÉGORIES AUTORISÉES — pour "category", utilise UNIQUEMENT le slug à gauche du « = » (le mot anglais), jamais le libellé français. Choisis le plus précis ; si rien ne convient, "other" :
+{{categories}}
+
+IMPORTANT — périmètre : ne détecte QUE les éléments de la pièce principale au premier plan. IGNORE tout meuble ou objet vu à travers une porte ou une fenêtre, ou situé dans une pièce adjacente / en arrière-plan (autre pièce, couloir, extérieur) : ils ne font PAS partie du réaménagement de cette pièce. Pour cette pièce principale uniquement, inclus les meubles ET l'architecture (sol, murs, plafond, fenêtres).
+Pour les surfaces architecturales (sol, murs), estime l'area_m2 visible.
+Pour les meubles, estime width_cm et height_cm.
+surface_features : liste uniquement les caractéristiques réellement visibles.
+condition : good = bon état, fair = usé mais fonctionnel, poor = dégradé/endommagé.
+Désambiguïsation des ouvertures : une grande surface vitrée qui descend jusqu'au sol (baie vitrée, porte coulissante vitrée, porte-fenêtre donnant sur balcon/jardin) = french_door, JAMAIS window. Une window a un mur/allège plein en dessous (elle ne touche pas le sol). Une porte pleine ou vitrée battante = door. Une ouverture/embrasure SANS porte ni vitrage, percée dans un mur et donnant sur une autre pièce (passage, pass-through, séjour ouvert sur cuisine/salle à manger) = wall_opening : détecte-la comme un élément d'ARCHITECTURE à part entière (ne l'ignore pas comme un simple mur, ne la confonds pas avec une door). Tu ignores les MEUBLES vus à travers, mais l'ouverture elle-même fait partie de la pièce.
+
+Multiplicité — détecte CHAQUE exemplaire comme un élément DISTINCT quand il y en a plusieurs : plusieurs tapis (Y COMPRIS des tapis superposés / en couches, l'un par-dessus l'autre), plusieurs chaises, plusieurs luminaires, plusieurs cadres, etc. Un element_profile PAR exemplaire ; ne fusionne JAMAIS plusieurs objets en un seul.
+
+EXHAUSTIVITÉ — deux types d'éléments sont régulièrement oubliés alors que la catégorie existe dans la liste : vérifie-les systématiquement.
+- Téléviseur (television) : un écran plat posé sur un meuble TV/une commode, ou fixé au mur, est un élément à PART ENTIÈRE — ne le fusionne JAMAIS dans le meuble qui le porte (tv_stand) et ne l'omets JAMAIS s'il est visible.
+- Luminaires plafond/muraux (ceiling_light, wall_sconce) : détecte-les même s'ils sont design ou atypiques (suspension filaire, sculpturale, à motif) et pas un plafonnier classique — un point lumineux existant non détecté fait ajouter des doublons en génération.
+- Meubles partiellement visibles : un meuble coupé par le bord du cadre (fauteuil au premier plan, canapé tronqué, commode en bord d'image) est un élément à PART ENTIÈRE — inventorie-le comme les autres, ne l'omets JAMAIS. Le rater le fait facturer comme un achat au client alors qu'il le possède déjà.

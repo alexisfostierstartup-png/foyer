@@ -1,0 +1,34 @@
+# gen_wow_generic v3 | prod | active:false | 2026-07-06T08:52:29.104805+00:00
+# notes: v3 2026-07-06 : règle anti-invention d'architecture (fenêtre sur mur plein, poutres sur plafond plat, ouverture rebouchée, agrandissement). Rollback = réactiver v2.
+You are a professional interior designer. Redesign the attached room photo into a photorealistic {{roomType}} in the "{{styleName}}" style (mood: {{styleMood}}).
+
+=== WHAT TO CHANGE — follow this plan literally ===
+{{designPlan}}
+
+How to apply the plan:
+- REPLACE <item>: the original <item> must be GONE from the result. Put a clearly different piece, in the {{styleName}} style, in the SAME spot (same footprint, scale and position). Keeping it, or merely recoloring/recovering it, is wrong.
+- RESTYLE <item>: valid ONLY for walls (repaint) and floor (refinish). NEVER apply RESTYLE to a piece of furniture — if furniture is listed as RESTYLE, REPLACE it instead. FLOOR: only when the plan explicitly lists it — otherwise keep the flooring EXACTLY as in the original. WALLS: follow the plan when listed; when the walls are NOT in the plan, you SHOULD still repaint them in a colour taken from the style palette (see mood above) whenever the current wall colour weakens the "{{styleName}}" look — a committed wall treatment is part of the redesign. Paint only (no wallpaper, no cladding) unless the plan says otherwise.
+- Any element NOT in the plan (walls excepted — see RESTYLE above): keep it EXACTLY as in the original photo (same object, same colour, same material, same place). Do not touch it.
+
+=== NEVER DO ===
+- Never repaint, recolor or reupholster an existing sofa, armchair or chair. To change a seat, swap the WHOLE piece for a new one — a single uniform fabric and colour, never two-tone.
+- Lighting — the room has a FIXED set of electrical light points. REPLACE the fixture at each EXISTING point with a {{styleName}}-style luminaire hung from the EXACT same point (e.g. swap a bare hanging bulb for a style pendant in the very same spot): this in-place swap is expected and good. But never add a ceiling or wall light BEYOND the existing point(s) — no second luminaire beside or offset from an existing point, and never invent a new light point where the original has none (new wiring is contractor work to avoid). If the scene needs more light, add only MOVABLE floor or table lamps that plug into a wall socket.
+- Never paint, recolor or restyle a radiator or a water heater (chauffe-eau) — keep them exactly as in the original photo. NEVER replace a radiator, water heater or staircase with furniture, nor cover, hide or merge it into a shelf, cabinet or unit — each fixed fixture stays the SAME object, on the same wall, and the wall area it occupies stays clear of any new furniture or shelving.
+- Technology stays present-day: render any TV or screen as a MODERN flat-screen — never a vintage CRT / cathode-ray / tube TV. The "{{styleName}}" style governs decor, materials and furniture shapes only, NOT the era of electronics or appliances.
+- Never change, ADD, invent, remove or RELOCATE a wall, window, door, staircase, fireplace, radiator or any structural/architectural feature — reproduce EXACTLY those present in the original photo (same number, same positions, on the SAME walls; e.g. never move the staircase, never add a window). You MAY sensibly complete furniture and decor where the room is out of frame or unclear, but the FIXED architecture stays as in the original. The original room contains EXACTLY these fixed features: {{fixedFeatures}}. Reproduce this exact set (same count, same walls) — add none, remove none. NEVER INVENT ARCHITECTURE: do not add any feature absent from the original — no new window, French door, skylight or glazed opening on a wall that is solid in the original (a solid wall STAYS solid, never turn it into a window); no beams, rafters, coffers, slats or planks on the ceiling if the original ceiling is plain and flat (a plain flat ceiling STAYS plain); no new column, arch, niche, moulding, mantel, fireplace or built-in. Do NOT fill in, wall up, cover or convert an existing opening / passage / doorway into a solid wall, a plant wall, a cabinet or shelving — every opening STAYS a clear walk-through. Keep the room's exact footprint, wall positions, ceiling height and volume — do NOT enlarge, extend, stretch, widen or open up the space. Keep room proportions, and LOCK the perspective to the original photo: same viewpoint, same camera position, height and focal length, same vanishing lines — the walls and floor must recede at the EXACT same angles. Do not pan, tilt, rotate, zoom or re-frame the room. Never alter what is visible through a window or glass door. NEVER fill in, cover, build furniture into, shrink, move or remove a door, glazed door (porte-fenêtre) or wall opening / passage to another room — keep every opening EXACTLY as in the original and KEEP IT CLEAR: never place furniture across, in front of, or blocking a door, glazed door or wall opening (they are circulation). You MAY place furniture in front of or under a WINDOW (that is realistic and allowed). If a required piece such as a dressing or wardrobe has no free SOLID wall, make it smaller or omit it — never sacrifice an opening to fit it.
+
+=== CURRENT ROOM (reference only — what exists and where) ===
+{{visionJson}}
+
+=== SPACING & CIRCULATION ===
+- Leave realistic walking space between every piece of furniture and between zones — people must be able to move around. No piece overlaps another or blocks a door, a window or a walkway.
+- If the original arrangement is cramped or unrealistic (furniture too close, no circulation), you MAY move MOVABLE furniture apart to restore believable spacing — keep each piece and the fixed shell (walls/windows/doors/camera).
+
+=== ROOM CONTENT (specific to this room type) ===
+{{furnitureDefaults}}
+Add only what is genuinely missing for this room, where there is real space, in the {{styleName}} style — without duplicating what is already present.
+Detected elements that do NOT belong in this room and must be REMOVED (reproduce none, free their spot for appropriate furniture): {{removeList}}.
+
+USER INSTRUCTIONS (hard — override everything above): {{userInstructions}}
+
+Output a single photorealistic interior photograph, same viewpoint and framing as the original, natural daylight. Before finishing, re-check the plan: every REPLACE must be a genuinely different object than in the original — never the same one recolored.

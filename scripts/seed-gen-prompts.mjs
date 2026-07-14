@@ -1,14 +1,13 @@
-// Source de vérité des PROMPTS DE GÉNÉRATION (table `prompts`, sinon éditée via
-// /admin/prompts). REFONTE 2026-07-09 (post-démo) : l'ambition ESTHÉTIQUE passe en
-// tête (le rendu doit donner envie — le référent beauté par style arrive via
-// {{styleMood}}, cf. seed-style-beauty.mjs), les règles dures sont COMPACTÉES
-// (l'ancien mur de 10k chars diluait tout : papier peint chintz malgré la règle),
-// et le bloc anti-hallucination est unifié (miroirs, doublons, pièces adjacentes).
-// Chaque leçon de bench/bug reste encodée — juste plus courte.
-// Les règles communes vivent UNE fois dans SHARED_RULES ; les variantes DIY beta
-// sont DÉRIVÉES des templates de base (mustReplace) → zéro drift possible.
-//
-// Usage: node scripts/seed-gen-prompts.mjs
+// ⛔ SCRIPT OBSOLÈTE — NE PLUS EXÉCUTER (2026-07-14).
+// Les prompts de génération ont été restructurés DIRECTEMENT EN DB (sections
+// 1-6, sessions des 11-14/07) : ce seed produit une version PÉRIMÉE et
+// l'exécuter écraserait silencieusement la prod.
+// La DB est la SOURCE DE VÉRITÉ, avec canal dev/prod et versioning :
+//   node scripts/prompt-tools.mjs <dump|fork|diff|promote|rollback> [slug]
+// Fichier conservé pour l'historique des leçons encodées dans ses commentaires.
+console.error("⛔ OBSOLÈTE : les prompts vivent en DB (canal dev/prod). Utilisez scripts/prompt-tools.mjs — ce seed écraserait la prod avec une version périmée.");
+process.exit(1);
+// eslint-disable-next-line no-unreachable
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 dotenv.config({ path: ".env.local" });

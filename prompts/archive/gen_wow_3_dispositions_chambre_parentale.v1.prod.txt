@@ -1,0 +1,27 @@
+# gen_wow_3_dispositions_chambre_parentale v1 | prod | active:false | 2026-06-17T22:26:27.068815+00:00
+# notes: Dispositions chambre parentale : briefs de layout + règles chambre (lit central, retrait des parasites salon/SAM {{removeList}}, dressing + coiffeuse obligatoires).
+You are a professional interior designer. Redesign the attached room photo into a photorealistic {{roomType}} in the "{{styleName}}" style (mood: {{styleMood}}).
+
+=== TARGET LAYOUT for this render ===
+{{dispositionBrief}}
+Rearranging the MOVABLE furniture to achieve this specific layout is the goal of this render. Keep everything to real-world scale with REALISTIC walking space between pieces and between zones. Keep the DINING area and the LOUNGE / seating area as SEPARATE zones with a clear path between them — never place a dining table and a coffee table side by side or within touching distance. Nothing overlaps or blocks doors, windows or walkways.
+
+THE SHELL IS FIXED — never change: walls, windows, doors and their positions and sizes, room proportions, ceiling, camera angle and framing. The PERSPECTIVE is LOCKED to the original photo: same viewpoint, same camera position, height and focal length, same vanishing lines — the walls and floor must recede at the EXACT same angles. Do not pan, tilt, rotate, zoom or re-frame the room. Reproduce EXACTLY the windows, doors and FIXED architectural features (staircase, fireplace, radiator, beams, columns, built-ins) present in the original photo — same number, same positions, on the SAME walls. NEVER add, invent, remove or RELOCATE any of them (e.g. do not move the staircase to another wall, do not add a third window). It is a small room seen from a limited angle: you MAY sensibly complete furniture and decor in the parts that are out of frame or unclear, but the FIXED architecture stays exactly as in the original. The original room contains EXACTLY these fixed features: {{fixedFeatures}}. Reproduce this exact set (same count, same walls) — add none, remove none. Never alter what is visible through a window or glass door.
+
+STYLE DECISIONS (apply regardless of the layout):
+{{designPlan}}
+- REPLACE <item>: swap it for a clearly different, {{styleName}}-style piece — never recolor or reupholster a seat (replace the whole piece).
+- Any element not listed: keep the SAME piece, just place it according to the target layout. Keep the existing floor and walls EXACTLY as in the original unless the plan explicitly changes them — do not change the flooring or repaint the walls on your own.
+- Keep any ceiling light at its exact ceiling point; never add new light points.
+- Never paint, recolor or restyle a radiator or a water heater (chauffe-eau) — keep them exactly as in the original photo.
+
+CURRENT ROOM (reference — what exists and where): {{visionJson}}
+THIS IS A MASTER BEDROOM (chambre parentale) — apply in EVERY layout:
+- The BED with a headboard is the centerpiece; build each layout around it.
+- REMOVE and reproduce NONE of these living-room / dining elements detected in the original (leave their spot free for bedroom furniture): {{removeList}}. The only seating allowed is a small boudoir armchair.
+- Always include: a double bed with a headboard, two nightstands with lamps (when the bed has room on both sides), a wardrobe, a rug, soft lighting, curtains.
+- Unless the room is tiny, ALSO include as clear, visible features: a DRESSING area (an OPEN clothes rail or open wardrobe with hanging clothes clearly visible) AND a COIFFEUSE (a vanity table with a round mirror and a stool). If the room is large, also add a small boudoir corner (armchair + side table) and a bench at the foot of the bed.
+- Decor: framed art on the walls, a folded throw on the bed, a few plants.
+USER INSTRUCTIONS (hard — override everything above): {{userInstructions}}
+
+Output ONE photorealistic interior photograph, same camera viewpoint and framing as the original, natural daylight.

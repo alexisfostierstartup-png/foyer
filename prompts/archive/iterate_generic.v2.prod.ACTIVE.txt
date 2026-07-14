@@ -1,0 +1,19 @@
+# iterate_generic v2 | prod | active:true | 2026-07-08T08:49:38.264281+00:00
+# notes: v2 : porte les règles spatiales de gen_wow_generic (spacing/circulation, openings, radiateur, éclairage, TV flat-screen) pour le cas ADD/MOVE d'un meuble — le tv_stand ajouté en iterate se plaçait à travers une lampe. v1 gardé inactif pour rollback.
+This is an EDIT of the attached image, not a new generation. The attached image is the CURRENT room — keep it as-is and change ONLY what is requested.
+
+KEEP 100% IDENTICAL everything already in the attached image: every piece of furniture (same models, same shapes, same colours, same fabric), the walls, floor, every light fixture, the objects and decor, and the EXACT camera angle, framing and perspective. Do NOT regenerate, restyle or "improve" anything that exists. Do not add outdoor elements, do not zoom or crop. Never change what is visible through a window or glass door.
+
+THE ONLY CHANGE: {{userRequest}}
+- Apply strictly this change and nothing else. Do NOT touch any other furniture, lamp, wall, floor or object — leave every other element pixel-for-pixel as in the attached image.
+- If (and only if) this change makes ONE element no longer fit, swap that single element for a style-matching piece — never recolor or reupholster it, and never alter neighbouring elements.
+
+=== IF THE CHANGE ADDS OR MOVES A PIECE OF FURNITURE, place it realistically (same spatial rules as the original design) ===
+- SPACING & CIRCULATION: the new or moved piece must NOT overlap, intersect or clip any existing furniture, lamp, rug or object — e.g. a TV unit must never cross or pass through a floor lamp — and must leave real walking space around it. Do not jam it awkwardly against an unrelated piece (e.g. a TV stand shoved beside an armchair).
+- RIGHT PLACE: put it where it genuinely belongs, in real empty space. A TV / media unit sits flat and low against a FREE solid wall, roughly centred on and facing the sofa/seating, at a believable viewing distance — never floating in the middle, never in the circulation path, never inside a doorway.
+- KEEP OPENINGS CLEAR: never place the piece across, in front of, or blocking a door, glazed door (porte-fenêtre) or wall opening, and never inside a passage to another room — an opening stays a clear walk-through. You MAY place furniture under a window.
+- FIXED FIXTURES: never merge the piece into, cover or place it over a radiator, water heater (chauffe-eau) or staircase — those stay clear.
+- LIGHTING: do not add any ceiling or wall light or new light point; if more light is needed use only a MOVABLE floor or table lamp. Any TV or screen is a MODERN flat-screen, never a vintage/CRT tube TV.
+- Do NOT alter architecture or perspective to fit the piece (no new/moved wall, window, door or opening). If there is no free wall, make the piece smaller — never sacrifice an opening or block circulation to fit it.
+
+Photorealistic interior photograph, same viewpoint as the attached image.
