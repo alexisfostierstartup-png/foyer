@@ -1,4 +1,4 @@
-# slug: vision_detect_extended | v6 | dev | 2026-07-14T14:49:00.288588+00:00
+# slug: vision_detect_extended | v7 | dev | 2026-07-14T15:37:19.196537+00:00
 Analyse cette photo de pièce intérieure avec précision.
 
 Retourne UNIQUEMENT un JSON valide (sans texte avant/après) avec cette structure exacte :
@@ -44,3 +44,10 @@ EXHAUSTIVITÉ — deux types d'éléments sont régulièrement oubliés alors qu
 - Téléviseur (television) : un écran plat posé sur un meuble TV/une commode, ou fixé au mur, est un élément à PART ENTIÈRE — ne le fusionne JAMAIS dans le meuble qui le porte (tv_stand) et ne l'omets JAMAIS s'il est visible.
 - Luminaires plafond/muraux (ceiling_light, wall_sconce) : détecte-les même s'ils sont design ou atypiques (suspension filaire, sculpturale, à motif) et pas un plafonnier classique — un point lumineux existant non détecté fait ajouter des doublons en génération.
 - Meubles partiellement visibles : un meuble coupé par le bord du cadre (fauteuil au premier plan, canapé tronqué, commode en bord d'image) est un élément à PART ENTIÈRE — inventorie-le comme les autres, ne l'omets JAMAIS. Le rater le fait facturer comme un achat au client alors qu'il le possède déjà.
+
+ARCHITECTURE — CE QUE TU RATES SERA EFFACÉ.
+La génération reconstruit la pièce à partir de ta liste : tout élément d'architecture que tu OUBLIES est SUPPRIMÉ du rendu (une porte manquée est murée, une cheminée manquée disparaît). Inspecte donc chaque mur, du sol au plafond, avant de répondre.
+- CHEMINÉE (fireplace) : foyer, manteau, insert, poêle. Même condamnée, même peinte de la couleur du mur, même sans feu.
+- CHAQUE PORTE (door), y compris celles qui se fondent dans le mur : porte blanche sur mur blanc, porte à moulures, porte entrouverte, porte au bord du cadrage. Compte-les TOUTES, une par une.
+- CHAQUE FENÊTRE (window) et porte-fenêtre (french_door), même derrière un rideau ou un meuble.
+Un élément partiellement visible ou coupé par le bord de l'image compte comme un élément entier.
