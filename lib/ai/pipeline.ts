@@ -220,8 +220,13 @@ export function buildInventoryLockLine(profiles: ElementProfile[]): string {
     `Each of these exists in your render exactly that many times — kept (the same object) or replaced (ONE new piece standing in its place). ` +
     `NEVER delete one: a piece the owner already has does not vanish because the new layout is prettier without it. ` +
     `NEVER draw a second one either: one TV unit stays one TV unit, one sofa stays one sofa. ` +
-    `A category ABSENT from this list is genuinely absent from the room — you may add it only if it is a missing essential of this room type, ` +
-    `and then only ONE.`
+    // ⚠️ CE VERROU COMPTE CE QUI EXISTE — IL N'INTERDIT PAS DE MEUBLER. Sans cette phrase,
+    // il se lit comme un plafond : une pièce à moitié vide resterait à moitié vide, et une
+    // pièce nue le resterait (Alexis, 2026-07-14 : « si tu fermes trop, il n'ajoutera plus
+    // de meubles, et j'aurai une pièce vide »). Une pièce VIDE n'a d'ailleurs aucune ligne
+    // de verrou du tout (rien à compter) : elle se meuble librement.
+    `This list counts what EXISTS — it does NOT cap what is MISSING. Anything absent from it is genuinely absent from the room: ` +
+    `if this room type needs it and the room does not have it, ADD it (one of each). A room that ends up bare, or half-furnished, is a FAILED render.`
   );
 }
 
@@ -380,12 +385,14 @@ async function refsAssisesConservees(
     return {
       images: crops,
       note:
-        `\n=== THE KEPT SEATING — LAST ${crops.length} IMAGE(S) ===\n` +
+        `\n=== THE KEPT SEATING — LOOK AT THE LAST ${crops.length} IMAGE(S) BEFORE YOU DRAW ===\n` +
         `The last ${crops.length} attached image(s) are close-ups, cut out of the room photo, of the piece(s) the plan says to KEEP: ` +
         `${libelles.join("; ")}.\n` +
-        `Reproduce each one EXACTLY as it looks there — same model, same silhouette, same proportions, same arms (or same ABSENCE of arms), ` +
-        `same back, same legs (or same absence of legs), same fabric, same colour. Do not restyle it, do not "improve" it, do not add a wooden ` +
-        `frame, arms, buttons or piping it does not have. It is the SAME object, photographed again.\n` +
+        `BEFORE drawing each of them, LOOK at its close-up and answer, silently: does it have ARMS? does it have visible LEGS? how many seats / modules? ` +
+        `Then draw EXACTLY that. An armless sofa comes back ARMLESS. A legless sofa comes back LEGLESS. A 3-module sofa comes back with 3 modules. ` +
+        `Same silhouette, same proportions, same size, same back, same fabric, same colour.\n` +
+        `Adding arms, a wooden frame, a base, piping or a module it does not have is a FAILED render — the owner keeps THIS piece, and would have to ` +
+        `recognise it in your image.\n` +
         `You may MOVE it, turn it and re-group it as the layout requires — keeping a piece means not changing the OBJECT, never freezing it in place.`,
     };
   } catch {
