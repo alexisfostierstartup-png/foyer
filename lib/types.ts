@@ -176,11 +176,16 @@ export type ScoreFoyer = {
   secondhand: number;
   ecoNew: number;
   co2SavedKg: number;
+  /** Ce que la liste va RÉELLEMENT émettre (kg CO₂e). `co2SavedKg` est ce qu'elle évite
+   *  par rapport au scénario « tout racheter neuf ». */
+  co2EmittedKg?: number;
   totalEstimated: number;
   // CE QU'ON CONSERVE, nommé. « 4 conservés » sans dire quoi n'informe personne — et
   // comptait jusqu'ici les murs, le sol et le chauffe-eau, qu'on ne « conserve » pas :
   // ils ne peuvent simplement pas bouger (projet vide affiché « 100 % conservé »).
   keptLabels?: string[];
+  /** Catégories des meubles conservés — nécessaires au bilan carbone (kg par catégorie). */
+  keptCategories?: string[];
 };
 
 export type Project = {

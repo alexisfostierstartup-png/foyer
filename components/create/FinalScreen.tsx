@@ -107,7 +107,9 @@ function ScoreFoyerTab({
   // pièce VIDE : 0/1 → 0 %, sauf que le premier segment ramassait tout le cercle. On ne
   // dessine plus de jauge quand il n'y a rien à répartir (QA Alexis 2026-07-13).
   const total = kept + secondhand + ecoNew;
-  const co2 = score?.co2SavedKg ?? kept * 30 + secondhand * 20 + ecoNew * 5;
+  // Plus de repli sur l'ancienne formule (compte d'objets) : elle était fausse — un projet
+  // tout-neuf y "économisait" du CO₂. Sans bilan calculé, on n'affiche rien plutôt qu'un chiffre inventé.
+  const co2 = score?.co2SavedKg ?? 0;
   // Le budget vient des produits RÉELLEMENT matchés : priceMin/priceMax sont ceux du
   // catalogue mock, vide — ils valent 0 partout.
   const budgetListe = shoppingList.reduce((s, i) => {
@@ -121,7 +123,7 @@ function ScoreFoyerTab({
 
   const segments = total === 0 ? [] : [
     { value: Math.round((kept / total) * 100), label: "conservé", color: "#6B8E6F", dot: "bg-foyer-sage" },
-    { value: Math.round((secondhand / total) * 100), label: "occasion", color: "#A5B8A0", dot: "bg-foyer-water" },
+    { value: Math.round((secondhand / total) * 100), label: "seconde main", color: "#A5B8A0", dot: "bg-foyer-water" },
     { value: Math.round((ecoNew / total) * 100), label: "neuf durable", color: "#C89B6A", dot: "bg-foyer-ochre" },
   ];
 
@@ -171,6 +173,14 @@ function ScoreFoyerTab({
           <p className="mt-0.5 text-[13px] text-foyer-muted">
             évités par rapport à un projet tout-neuf équivalent
           </p>
+          {/* Ce qu'on ÉMET quand même : annoncer les kilos évités sans jamais dire ce que
+              le projet coûte, ce serait du greenwashing. */}
+          {typeof score?.co2EmittedKg === "number" && score.co2EmittedKg > 0 && (
+            <p className="mt-2 text-[12px] text-foyer-muted">
+              Le projet en émet ~{score.co2EmittedKg}&nbsp;kg — un projet tout-neuf en
+              aurait émis ~{co2 + score.co2EmittedKg}&nbsp;kg.
+            </p>
+          )}
         </div>
       </div>
 
@@ -197,7 +207,7 @@ function ScoreFoyerTab({
           </div>
           <div>
             <p className="font-serif text-2xl text-foyer-ink">{secondhand}</p>
-            <p className="text-[12px] text-foyer-muted">occasion</p>
+            <p className="text-[12px] text-foyer-muted">seconde main</p>
           </div>
           <div>
             <p className="font-serif text-2xl text-foyer-ink">{ecoNew}</p>

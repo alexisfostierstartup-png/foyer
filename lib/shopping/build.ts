@@ -3,6 +3,7 @@ import type { CatalogCategory, CatalogProduct } from "./catalog";
 import type { ReconciledPlan, BuiltShoppingList, DiyEntry, CatalogEntry, UnmatchedEntry } from "./types";
 import type { ScoreFoyer, ShoppingItem, ShoppingSource } from "@/lib/types";
 import { resolveCatalogCategory, mergeShoppingItems } from "./categories";
+import { bilanCo2, origineDe } from "@/lib/co2";
 
 const ACTION_META: Record<string, { difficulty: "facile" | "intermédiaire" | "avancé"; time_h: number }> = {
   repaint:             { difficulty: "facile",          time_h: 4  },
@@ -137,13 +138,25 @@ export function buildShoppingList(
     (d.description ?? d.category).trim().replace(/\s+/g, " "),
   );
 
+  // Bilan carbone réel (kg CO₂e ADEME par catégorie), et non plus un compte d'objets
+  // pondéré au doigt mouillé — cf. lib/co2.ts.
+  const bilan = bilanCo2(
+    meublesConserves.map((d) => d.category),
+    [
+      ...secondhand.map((e) => ({ category: e.category, quantity: 1, origine: origineDe("secondhand", e.merchant) })),
+      ...ecoNew.map((e) => ({ category: e.category, quantity: 1, origine: origineDe("new", e.merchant) })),
+    ],
+  );
+
   const score: ScoreFoyer = {
     kept: meublesConserves.length,
     secondhand: secondhand.length,
     ecoNew: ecoNew.length,
-    co2SavedKg: meublesConserves.length * 30 + secondhand.length * 20 + ecoNew.length * 5,
+    co2SavedKg: bilan.eviteKg,
+    co2EmittedKg: bilan.emisKg,
     totalEstimated,
     keptLabels,
+    keptCategories: meublesConserves.map((d) => d.category),
   };
 
   return {

@@ -7,6 +7,7 @@ import { loadStyleContext, loadRoomDefaults, loadRoomRemoveCategories, formatUse
 import { getElementCategoryEnum, getElementCategories, getAllowedActionsByCategory, getCategoryKeywordRemap, getFloorPresets } from "@/lib/db/assets";
 import type { DecisionAction, ElementCategory } from "@/lib/db/assets";
 import { mergeShoppingItems, resolveCatalogCategory } from "@/lib/shopping/categories";
+import { bilanCo2, origineDe, type Origine } from "@/lib/co2";
 import { getImageProvider, getVisionProvider } from "./provider";
 import { saveRender } from "./saveRender";
 import { logPipelineEvent } from "./logger";
@@ -2340,14 +2341,34 @@ async function buildMatchesAndScore(
 
   const unitsWhere = (pred: (i: ShoppingItem) => boolean) =>
     shoppingList.filter(pred).reduce((s, i) => s + (i.quantity ?? 1), 0);
-  const shUnits = unitsWhere((i) => i.source === "secondhand" && achetable(i));
-  const ecoNewUnits = unitsWhere((i) => i.source !== "secondhand" && achetable(i));
+
+  // SECONDE MAIN = occasion (Emmaüs, Selency, Leboncoin…) ET reconditionné (TheBradery) :
+  // deux origines fusionnées à l'affichage, mais PAS au bilan carbone (10 % du neuf contre
+  // 70 %). L'origine se lit sur l'ENSEIGNE du produit matché — le catalogue ne porte qu'un
+  // source_type binaire, qui ne les distingue pas.
+  const origineLigne = (i: ShoppingItem): Origine =>
+    origineDe(i.source, i.matches?.[0]?.merchant ?? i.merchants[0]?.name);
+
+  const shUnits = unitsWhere((i) => achetable(i) && origineLigne(i) !== "neuf");
+  const ecoNewUnits = unitsWhere((i) => achetable(i) && origineLigne(i) === "neuf");
+
+  // Bilan carbone : kg CO₂e réels par catégorie (ADEME), pas un compte d'objets — la
+  // formule précédente (`conservés × 30 + occasion × 20 + neuf × 5`) faisait « économiser »
+  // du CO₂ à chaque achat NEUF, et donnait le même poids à une armoire et à un coussin.
+  const bilan = bilanCo2(
+    built.score.keptCategories ?? [],
+    shoppingList
+      .filter(achetable)
+      .map((i) => ({ category: i.category, quantity: i.quantity ?? 1, origine: origineLigne(i) })),
+  );
+
   const scoreFoyer: ScoreFoyer = {
     kept: built.score.kept,
     keptLabels: built.score.keptLabels,
     secondhand: shUnits,
     ecoNew: ecoNewUnits,
-    co2SavedKg: built.score.kept * 30 + shUnits * 20 + ecoNewUnits * 5,
+    co2SavedKg: bilan.eviteKg,
+    co2EmittedKg: bilan.emisKg,
     totalEstimated: Math.round(
       shoppingList.reduce((s, i) => s + prixLigne(i) * (i.quantity ?? 1), 0),
     ),
