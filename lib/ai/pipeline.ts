@@ -298,6 +298,60 @@ export async function enforceLightpointCount(
 const SEAT_AUTOFIX = process.env.SEAT_AUTOFIX === "1";
 const SEAT_CATS = new Set(["sofa", "armchair", "chair", "dining_chair", "bench"]);
 
+/**
+ * LE MEUBLE CONSERVÉ, MONTRÉ PLUTÔT QU'INTERDIT.
+ *
+ * « Ne redessine pas le canapé » ne suffit pas : le modèle régénère TOUTE l'image, et un
+ * canapé sans accoudoirs revient avec des accoudoirs, un cadre en bois, une autre assise
+ * (QA Alexis 2026-07-14, dispo 1 de Pp3p3JZt — verdict « conserver », canapé déformé).
+ * L'ordre négatif sur une image ne marche pas ; la référence VISUELLE, si — c'est déjà ce
+ * qui a sauvé la réparation d'architecture (montrer la photo d'origine) et c'est le
+ * principe du swap expert.
+ *
+ * On découpe donc chaque assise CONSERVÉE dans la photo et on la joint au prompt. Aucun
+ * appel de plus : juste une image de plus dans le même appel.
+ */
+async function refsAssisesConservees(
+  basePhotoUrl: string,
+  profiles: ElementProfile[],
+  decisions: ElementDecision[] | undefined,
+): Promise<{ images: ImageInput[]; note: string }> {
+  const conservees = new Set(
+    (decisions ?? []).filter((d) => d.mismatch_type === "none").map((d) => d.element_id),
+  );
+  const cibles = profiles.filter(
+    (p) => SEAT_CATS.has(p.category) && conservees.has(p.element_id) && p.bbox,
+  );
+  if (cibles.length === 0) return { images: [], note: "" };
+
+  try {
+    const photo = await fetchImageBytes(basePhotoUrl);
+    const crops: ImageInput[] = [];
+    const libelles: string[] = [];
+    for (const p of cibles.slice(0, 3)) {
+      const crop = await extractCrop(photo, p.bbox);
+      if (!crop) continue;
+      crops.push(crop as unknown as ImageInput);
+      libelles.push(p.description?.trim() || p.category);
+    }
+    if (crops.length === 0) return { images: [], note: "" };
+
+    return {
+      images: crops,
+      note:
+        `\n=== THE KEPT SEATING — LAST ${crops.length} IMAGE(S) ===\n` +
+        `The last ${crops.length} attached image(s) are close-ups, cut out of the room photo, of the piece(s) the plan says to KEEP: ` +
+        `${libelles.join("; ")}.\n` +
+        `Reproduce each one EXACTLY as it looks there — same model, same silhouette, same proportions, same arms (or same ABSENCE of arms), ` +
+        `same back, same legs (or same absence of legs), same fabric, same colour. Do not restyle it, do not "improve" it, do not add a wooden ` +
+        `frame, arms, buttons or piping it does not have. It is the SAME object, photographed again.\n` +
+        `You may MOVE it, turn it and re-group it as the layout requires — keeping a piece means not changing the OBJECT, never freezing it in place.`,
+    };
+  } catch {
+    return { images: [], note: "" }; // la référence est un bonus : jamais bloquante
+  }
+}
+
 export async function enforceSeatReplacement(
   projectId: string,
   sourceImage: ImageInput,
@@ -542,8 +596,12 @@ export async function detectElementProfiles(
   // (dispo 3 de O0DNBvO : porte-fenêtre passée du mur gauche au mur droit, compte
   // inchangé — un verrou par comptage y est aveugle). On demande donc la position, dans
   // l'appel qui tourne déjà : aucun appel de plus, quelques dizaines de tokens en sortie.
+  // Boîtes des OUVERTURES (pour dire au prompt quels murs sont pleins) et des ASSISES
+  // (pour découper le canapé conservé et le MONTRER au modèle en référence : lui dire de
+  // ne pas le redessiner ne suffit pas, il lui ajoute des accoudoirs quand même).
   const OPENINGS_BOX_SUFFIX =
-    "\n\nEN PLUS : pour les SEULS éléments dont la catégorie est window, french_door, door ou wall_opening, " +
+    "\n\nEN PLUS : pour les SEULS éléments dont la catégorie est window, french_door, door, wall_opening, " +
+    "sofa, armchair, chair, dining_chair ou bench, " +
     'ajoute "box_2d": [ymin, xmin, ymax, xmax] — boîte englobante SERRÉE, en ENTIERS de 0 à 1000 ' +
     "(origine en haut à gauche). Aucun autre élément n'a besoin de box_2d.";
   const template = opts?.withBbox
@@ -1217,6 +1275,19 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
     }
   }
 
+  // Les assises CONSERVÉES sont jointes en photo : leur dire de ne pas les redessiner ne
+  // suffit pas, il faut les leur MONTRER (cf. refsAssisesConservees).
+  const assises = await refsAssisesConservees(
+    project.basePhotoUrl,
+    profiles,
+    project.element_decisions as ElementDecision[] | undefined,
+  );
+  if (assises.images.length) {
+    refImages = [...(refImages ?? []), ...assises.images];
+    refNote += assises.note;
+    console.log(`[pipeline:generate] ${assises.images.length} assise(s) conservée(s) jointe(s) en référence`);
+  }
+
   const t1 = Date.now();
   const genPrompt = await resolvePrompt(genSlug, genCtx, { strict: false });
   const genResult = await withTracking(
@@ -1396,6 +1467,17 @@ async function runDispositionsPipelineInner(projectId: string): Promise<string[]
     designPlan: `${designPlan || "None — restyle freely to fit the style."}\n${await buildLightingPlanLine(profiles, styleName)}${buildRoomScaleLine(project.roomScale)}${buildVariationLine(project.id)}`,
   };
 
+  // Les assises conservées, montrées en photo — c'est ICI que le canapé se faisait le plus
+  // redessiner : chaque disposition le replace ailleurs, donc le REDESSINE entièrement.
+  const assises = await refsAssisesConservees(
+    project.basePhotoUrl,
+    profiles,
+    project.element_decisions as ElementDecision[] | undefined,
+  );
+  if (assises.images.length) {
+    console.log(`[pipeline:dispositions] ${assises.images.length} assise(s) conservée(s) jointe(s) en référence`);
+  }
+
   // Flux DIY beta : variante sous slug dédié (cf. runGenerationPipeline).
   const dispoSlug = project.diyMode === "beta" ? "gen_wow_3_dispositions_diy_beta" : "gen_wow_3_dispositions";
 
@@ -1411,7 +1493,12 @@ async function runDispositionsPipelineInner(projectId: string): Promise<string[]
       const result = await withTracking(
         { step: "generation", projectId, provider: genPrompt.prompt.provider,
           requestPayload: { promptName: dispoSlug, disposition: i + 1, prompt: genPrompt.resolvedTemplate.slice(0, 5000) } },
-        () => getImageProvider(genPrompt.prompt.provider).generateFromText(genPrompt.resolvedTemplate, sourceImage),
+        () =>
+          getImageProvider(genPrompt.prompt.provider).generateFromText(
+            genPrompt.resolvedTemplate + assises.note,
+            sourceImage,
+            assises.images.length ? assises.images : undefined,
+          ),
       );
       console.log(`[pipeline:dispositions] #${i + 1} ${Date.now() - t1}ms`);
       const fixed = await enforceLightpointCount(

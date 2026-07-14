@@ -32,11 +32,16 @@ async function octetsImage(url: string): Promise<Buffer> {
 
 export type Mur = "LEFT" | "BACK" | "RIGHT";
 
-// Autofix actif par défaut (autorisation explicite d'Alexis, 2026-07-13 : « construis le
-// contrôle positionnel sur les dispositions et à vrai dire partout », « en prod oui on
-// contrôle »). Il ne se déclenche JAMAIS à vide : sans violation, aucune image n'est
-// regénérée. OPENING_AUTOFIX=0 le coupe.
-const OPENING_AUTOFIX = process.env.OPENING_AUTOFIX !== "0";
+// ÉTEINT PAR DÉFAUT. Un filet ne remplace pas un sol.
+//
+// Il était actif par défaut, et le bilan est mauvais : il coûte une génération à chaque
+// déclenchement (0,04 $), il a rebouché une porte BIEN RÉELLE que la détection avait ratée,
+// et il a créé les arches qu'on lui reprochait. Il traite les cas rares, pas le problème —
+// or le problème (nos briefs qui soufflaient « fenêtre » et « cheminée » au modèle, la
+// liste d'ouvertures incomplète présentée comme complète) se règle À LA SOURCE, gratuitement.
+// « L'audit gère le 0,1 %, pas le 70 % » (Alexis, 2026-07-14). OPENING_AUTOFIX=1 le rallume
+// pour du debug ou une campagne de mesure.
+const OPENING_AUTOFIX = process.env.OPENING_AUTOFIX === "1";
 
 // L'image FAUTIVE est conservée pour debug — en local seulement (elle ne sert qu'à
 // comprendre, et on ne veut pas alourdir le stockage de prod).
@@ -139,44 +144,43 @@ export async function enforceOpeningWalls(
   if (!OPENING_AUTOFIX) return gen;
   try {
     const t0 = Date.now();
-    const attenduParMur = ouverturesParMurSource(profilesSource);
-    const attendus = new Set<Mur>(attenduParMur.keys());
-    // La photo a des ouvertures mais AUCUNE boîte exploitable (vieille analyse, détection
-    // muette) → on ignore quels murs sont pleins. On ne juge alors pas les murs, plutôt que
-    // de reboucher une vraie fenêtre. La cheminée, elle, reste vérifiable.
-    const ouverturesConnues =
-      attendus.size > 0 || !profilesSource.some((p) => CATEGORIES_OUVERTURE[p.category]);
+    const photo = await octetsImage(basePhotoUrl);
 
-    const rendu = await architectureRendu(gen.imageBuffer);
-    if (!rendu) return gen;
-
-    // Violation = un mur porte PLUS d'ouvertures que dans la photo. Comparer des ensembles
-    // de murs (« ce mur en a-t-il ? ») ratait une ouverture AJOUTÉE à côté d'une vraie :
-    // une niche transformée en porte, juste à côté de la fenêtre, passait pour conforme.
-    const perces = ouverturesConnues
-      ? MURS.filter((m) => (rendu.parMur.get(m) ?? 0) > (attenduParMur.get(m) ?? 0))
-      : [];
-    // CHEMINÉE INVENTÉE — même réflexe, autre objet. Une fois la porte-fenêtre interdite,
-    // le modèle a meublé le mur du fond libéré avec un manteau de cheminée en marbre
-    // (dispo 3 de ZIwoYCyd, 2026-07-14). Le prompt l'interdit pourtant explicitement
-    // (« THE FIREPLACE IS SACRED. Never ADD one to a room that has none »). Ce n'est donc
-    // pas une ouverture, mais c'est la même faute : inventer de l'architecture sur un mur
-    // que la disposition vide. On l'audite dans le MÊME appel — coût inchangé.
+    // LA RÉFÉRENCE, C'EST LA PHOTO — PAS LA DÉTECTION.
     //
-    // La cheminée a désormais SA catégorie dans la taxonomie (`fireplace`, ajoutée le
-    // 2026-07-14) : c'est elle qui fait foi. Le repli par mots-clés reste, pour les projets
-    // analysés AVANT — leur détection ne connaissait pas la catégorie et a rangé la
-    // cheminée dans `other`. Sans ce repli, on « réparerait » la cheminée bien réelle des
-    // pièces qui en ont une.
-    const chemineeSource = profilesSource.some(
-      (p) =>
-        p.category === "fireplace" ||
-        /chemin[ée]e|fireplace|manteau de chemin|insert|po[êe]le/i.test(
-          `${p.element ?? ""} ${p.description ?? ""}`,
-        ),
-    );
-    const chemineeInventee = rendu.cheminee && !chemineeSource;
-    if (perces.length === 0 && !chemineeInventee) return gen;
+    // On comparait le rendu à la LISTE des éléments détectés. Or la détection rate des
+    // choses : sur la photo d'Alexis (projet pLDaExeu) elle n'a vu ni la CHEMINÉE ni la
+    // SECONDE PORTE. Le mur qui les portait passait donc pour « plein », et mon audit a
+    // fait ce qu'on lui demandait : il a REBOUCHÉ une porte bien réelle. Un garde-fou qui
+    // détruit ce qu'il est censé protéger, parce qu'il fait confiance à un inventaire
+    // faillible.
+    //
+    // On audite donc la PHOTO avec le MÊME regard et le MÊME prompt que le rendu : mêmes
+    // yeux, mêmes critères, comparaison honnête. La détection ne sert plus de juge. Coût :
+    // un appel vision de plus (~0,0003 $) contre 0,041 $ l'image qu'il protège.
+    const [reference, rendu] = await Promise.all([
+      architectureRendu(photo),
+      architectureRendu(gen.imageBuffer),
+    ]);
+    if (!reference || !rendu) return gen; // l'un des deux est inexploitable → on ne juge pas
+
+    const attenduParMur = reference.parMur;
+    const attendus = new Set<Mur>(attenduParMur.keys());
+
+    // Mur PERCÉ : plus d'ouvertures que sur la photo.
+    const perces = MURS.filter((m) => (rendu.parMur.get(m) ?? 0) > (attenduParMur.get(m) ?? 0));
+    // Mur MURÉ : moins d'ouvertures que sur la photo. On ne regardait QUE les ajouts — et
+    // le modèle a supprimé une porte, élargi le mur entre deux fenêtres, effacé des
+    // moulures (QA Alexis 2026-07-14). Effacer l'architecture de quelqu'un est aussi grave
+    // que lui en inventer.
+    const mures = MURS.filter((m) => (rendu.parMur.get(m) ?? 0) < (attenduParMur.get(m) ?? 0));
+
+    // CHEMINÉE : dans les deux sens aussi. Inventée (le modèle meuble un mur vide avec un
+    // manteau de marbre) ou SUPPRIMÉE (elle disparaît du rendu alors qu'elle existe).
+    const chemineeInventee = rendu.cheminee && !reference.cheminee;
+    const chemineeSupprimee = !rendu.cheminee && reference.cheminee;
+
+    if (!perces.length && !mures.length && !chemineeInventee && !chemineeSupprimee) return gen;
 
     // DEBUG LOCAL : on garde l'image telle que le modèle l'a produite, avant réparation.
     let urlFautive: string | null = null;
@@ -206,7 +210,6 @@ export async function enforceOpeningWalls(
     // D'ORIGINE en seconde image — « voici la vérité, ce mur est plein, reconstruis-le
     // comme ça » — il le rebouche proprement, niches et corniche comprises, sans toucher
     // au mobilier. On ne lui demande plus d'imaginer un mur : on lui montre le vrai.
-    const photo = await octetsImage(basePhotoUrl);
     const fautesEn = [
       perces.length
         ? `it shows an opening (window, french door, balcony or passage) on the ${perces
@@ -259,10 +262,10 @@ export async function enforceOpeningWalls(
     // réparation n'a rien arrangé, on garde l'image de DÉPART : au moins on ne dégrade pas,
     // et on ne relance pas une seconde retouche (jamais de boucle de génération).
     const apres = await architectureRendu(repare.imageBuffer);
-    const percesApres = apres && ouverturesConnues
+    const percesApres = apres
       ? MURS.filter((m) => (apres.parMur.get(m) ?? 0) > (attenduParMur.get(m) ?? 0))
       : [];
-    const chemineeApres = apres ? apres.cheminee && !chemineeSource : false;
+    const chemineeApres = apres ? apres.cheminee && !reference.cheminee : false;
     const reussie = apres != null && percesApres.length === 0 && !chemineeApres;
 
     // DEBUG LOCAL : on garde AUSSI l'image réparée, pour pouvoir comparer avant/après dans
