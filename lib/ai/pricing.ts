@@ -41,6 +41,14 @@ const DEFAULT_PRICING: Record<string, PricingEntry> = {
   "nano_banana/gemini-2.5-flash-image": {
     per_image_out: 0.039, per_1m_input_tokens: 0.30,
   },
+  // Gemini 3 Pro Image (« Nano Banana 2 »), appelé en direct chez Google. Une image
+  // 1K-2K = 1 120 tokens de sortie facturés 120 $/M, soit 0,134 $ ; le prompt (~7 000
+  // tokens à 2 $/M) ajoute ~0,014 $. Total ~0,148 $ l'image, contre 0,041 $ pour NB1 —
+  // et c'est ce qui achète une architecture qui ne bouge pas. Sans cette ligne, le suivi
+  // comptait NB2 à ZÉRO : on aurait basculé le modèle sans jamais voir la facture monter.
+  "nano_banana_2/gemini-3-pro-image-preview": {
+    per_image_out: 0.134, per_1m_input_tokens: 2.0,
+  },
   "flux_kontext/flux-kontext-pro": { per_image_out: 0.055 },
   "jina/jina-embeddings-v3": { per_1k_embeddings: 0.00002 },
   "piloterr/scraper": { per_request: 0.001 },

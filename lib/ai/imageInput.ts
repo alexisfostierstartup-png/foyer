@@ -19,7 +19,7 @@ export type InlineOptions = {
   maxDim?: number;
 };
 
-async function resolveBytes(
+export async function resolveBytes(
   input: ImageInput,
 ): Promise<{ buffer: Buffer; mimeType: string }> {
   if (Buffer.isBuffer(input)) {
