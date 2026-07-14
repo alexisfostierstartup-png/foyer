@@ -495,6 +495,31 @@ export async function buildFixedFeaturesSummary(profiles: ElementProfile[]): Pro
       ? `EXACTLY ${lp} fixed ceiling/wall light point(s) — swap fixtures in place, never add one`
       : `NO ceiling or wall light point (0) — never add a ceiling or wall light`,
   );
+  // CHEMINÉE — on n'en parle QUE s'il y en a une.
+  //
+  // La règle vivait dans le gabarit, donc le mot « fireplace » partait dans TOUS les prompts,
+  // y compris pour des pièces qui n'en ont pas — et le modèle finissait par en dessiner une
+  // (manteau de marbre inventé, 2026-07-14). C'est la même faute que les briefs qui
+  // nommaient « fireplace, TV or window » : on plante la graine. Elle la présentait en plus
+  // comme « le POINT FOCAL », ce qui invitait à orienter le canapé dessus — alors qu'Alexis
+  // demande l'inverse : « ne dis pas de mettre le canapé face à la cheminée, dis que s'il y
+  // en a une, on ne met pas de meuble juste devant ».
+  //
+  // La consigne est donc INJECTÉE PAR LA DONNÉE : pas de cheminée détectée, pas un mot.
+  const cheminees = profiles.filter(
+    (p) =>
+      p.category === "fireplace" ||
+      /chemin[ée]e|fireplace|manteau de chemin|insert|po[êe]le/i.test(`${p.element ?? ""} ${p.description ?? ""}`),
+  );
+  if (cheminees.length > 0) {
+    const mur = murDepuisBbox(cheminees[0].bbox);
+    parts.push(
+      `a FIREPLACE${mur ? ` on the ${mur} wall` : ""} — reproduce it EXACTLY as the photo shows it, same place, same mantel, same surround. ` +
+        `Keep it FULLY VISIBLE and keep the floor in front of it CLEAR: never place a sofa, an armchair, a sideboard or any other furniture ` +
+        `right in front of it, against it, or across its opening. Never cover it, box it in or wall it up`,
+    );
+  }
+
   // Fixtures FIXES à reproduire à l'identique (jamais déplacer/supprimer/ajouter/recolorer).
   // ⚠️ inclut le CHAUFFE-EAU/ballon (était absent → la génération le supprimait), et le poêle.
   // ÉLECTROMÉNAGER ajouté (2026-07-13) : dans un studio, le frigo est devenu un buffet en
