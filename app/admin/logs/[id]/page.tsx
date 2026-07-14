@@ -159,6 +159,47 @@ export default async function LogDetailPage({
             </Field>
           )}
 
+          {/* CORRECTION D'ARCHITECTURE — on montre ce que le correctif a CHANGÉ. Un
+              correctif automatique qui travaille dans le dos finit par empirer les choses
+              sans témoin : le nôtre a rebouché une porte en creusant des arches, et
+              personne ne l'a vu jusqu'à ce qu'un rendu parte à l'utilisateur. Les deux
+              images ne sont sauvegardées qu'en local (cf. lib/ai/openings.ts). */}
+          {typeof metadata?.image_avant_reparation === "string" && (
+            <Field label="Correction d'architecture">
+              <div className="space-y-2">
+                <p className="text-xs text-foyer-muted">
+                  {metadata.reparation_reussie === false
+                    ? "Réparation ÉCHOUÉE → l'image d'origine a été conservée."
+                    : "Réparation appliquée."}
+                </p>
+                <div className="flex flex-wrap gap-4">
+                  {[
+                    ["Avant (brut du modèle)", metadata.image_avant_reparation],
+                    ["Après (réparé)", metadata.image_apres_reparation],
+                  ]
+                    .filter(([, url]) => typeof url === "string")
+                    .map(([libelle, url]) => (
+                      <a
+                        key={String(libelle)}
+                        href={String(url)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="space-y-1"
+                      >
+                        <span className="block text-xs text-foyer-muted">{String(libelle)}</span>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={String(url)}
+                          alt={String(libelle)}
+                          className="h-48 rounded-lg border border-foyer-border object-contain"
+                        />
+                      </a>
+                    ))}
+                </div>
+              </div>
+            </Field>
+          )}
+
           {auditScores && (
             <Field label="Scores audit">
               <pre className="text-xs bg-foyer-border/30 rounded-lg px-4 py-3 overflow-x-auto">

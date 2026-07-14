@@ -56,15 +56,23 @@ export function murDepuisBbox(bbox?: { x: number; w: number }): Mur | null {
   return cx < 0.34 ? "LEFT" : cx > 0.66 ? "RIGHT" : "BACK";
 }
 
-/** Murs de la photo d'origine qui PORTENT une ouverture. Les autres sont pleins. */
-export function mursOuvertsSource(profiles: ElementProfile[]): Set<Mur> {
-  const murs = new Set<Mur>();
+/**
+ * COMBIEN d'ouvertures par mur, et non plus « ce mur en a-t-il ? ».
+ *
+ * Le critère était binaire : un mur ouvert restait ouvert, un mur plein devait le rester.
+ * Il ne voyait donc PAS une ouverture AJOUTÉE sur un mur qui en portait déjà une — le
+ * modèle a transformé une niche à étagères en PORTE, à côté de la fenêtre existante, et
+ * l'audit a répondu « rien à signaler » (dispo 2 de IXbr_ElP, QA Alexis 2026-07-14).
+ * On compte.
+ */
+export function ouverturesParMurSource(profiles: ElementProfile[]): Map<Mur, number> {
+  const compte = new Map<Mur, number>();
   for (const p of profiles) {
     if (!CATEGORIES_OUVERTURE[p.category]) continue;
     const mur = murDepuisBbox(p.bbox);
-    if (mur) murs.add(mur);
+    if (mur) compte.set(mur, (compte.get(mur) ?? 0) + 1);
   }
-  return murs;
+  return compte;
 }
 
 const PROMPT_AUDIT = `Décris l'ARCHITECTURE de cette photo d'intérieur — pas sa décoration.
@@ -75,9 +83,11 @@ JSON STRICT : {"ouvertures":[{"type":"fenetre|porte_fenetre|porte|passage","mur"
 
 const VERS_MUR: Record<string, Mur> = { gauche: "LEFT", fond: "BACK", droite: "RIGHT" };
 
-type Architecture = { murs: Set<Mur>; cheminee: boolean };
+export const MURS: Mur[] = ["LEFT", "BACK", "RIGHT"];
 
-/** Architecture vue dans une image générée : murs percés + cheminée. */
+type Architecture = { parMur: Map<Mur, number>; murs: Set<Mur>; cheminee: boolean };
+
+/** Architecture vue dans une image générée : ouvertures COMPTÉES par mur + cheminée. */
 async function architectureRendu(image: Buffer): Promise<Architecture | null> {
   const res = await getVisionProvider("gemini_vision").analyze(
     PROMPT_AUDIT,
@@ -89,12 +99,12 @@ async function architectureRendu(image: Buffer): Promise<Architecture | null> {
     cheminee?: boolean;
   } | null;
   if (!brut || !Array.isArray(brut.ouvertures)) return null; // inexploitable → on ne juge pas
-  const murs = new Set<Mur>();
+  const parMur = new Map<Mur, number>();
   for (const o of brut.ouvertures) {
     const m = VERS_MUR[String(o?.mur ?? "").toLowerCase()];
-    if (m) murs.add(m);
+    if (m) parMur.set(m, (parMur.get(m) ?? 0) + 1);
   }
-  return { murs, cheminee: brut.cheminee === true };
+  return { parMur, murs: new Set(parMur.keys()), cheminee: brut.cheminee === true };
 }
 
 const LIBELLE_FR: Record<Mur, string> = { LEFT: "gauche", BACK: "du fond", RIGHT: "de droite" };
@@ -120,7 +130,8 @@ export async function enforceOpeningWalls(
   if (!OPENING_AUTOFIX) return gen;
   try {
     const t0 = Date.now();
-    const attendus = mursOuvertsSource(profilesSource);
+    const attenduParMur = ouverturesParMurSource(profilesSource);
+    const attendus = new Set<Mur>(attenduParMur.keys());
     // La photo a des ouvertures mais AUCUNE boîte exploitable (vieille analyse, détection
     // muette) → on ignore quels murs sont pleins. On ne juge alors pas les murs, plutôt que
     // de reboucher une vraie fenêtre. La cheminée, elle, reste vérifiable.
@@ -130,8 +141,11 @@ export async function enforceOpeningWalls(
     const rendu = await architectureRendu(gen.imageBuffer);
     if (!rendu) return gen;
 
+    // Violation = un mur porte PLUS d'ouvertures que dans la photo. Comparer des ensembles
+    // de murs (« ce mur en a-t-il ? ») ratait une ouverture AJOUTÉE à côté d'une vraie :
+    // une niche transformée en porte, juste à côté de la fenêtre, passait pour conforme.
     const perces = ouverturesConnues
-      ? [...rendu.murs].filter((m) => !attendus.has(m))
+      ? MURS.filter((m) => (rendu.parMur.get(m) ?? 0) > (attenduParMur.get(m) ?? 0))
       : [];
     // CHEMINÉE INVENTÉE — même réflexe, autre objet. Une fois la porte-fenêtre interdite,
     // le modèle a meublé le mur du fond libéré avec un manteau de cheminée en marbre
@@ -195,14 +209,23 @@ export async function enforceOpeningWalls(
         : null,
     ].filter(Boolean);
 
+    // NE JAMAIS SOUFFLER CE QU'ON NE VEUT PAS VOIR.
+    //
+    // La version précédente disait « rebuild that wall — plain wall, same alcoves, niches,
+    // shelving… ». En listant « niches / alcôves » pour qu'il les préserve, je les lui ai
+    // SOUFFLÉES : le modèle a rebouché la porte en creusant DEUX NICHES EN ARCHE dans le mur
+    // (dispo 3 de IXbr_ElP — les arches vues par Alexis venaient de ma propre réparation).
+    // Une consigne de retouche ne nomme QUE ce qu'on veut : ici, un mur plat, plein, nu.
     const editPrompt =
       `IMAGE 1 is a redecorated render of a room. IMAGE 2 is the ORIGINAL PHOTOGRAPH of that same room, same camera angle — ` +
       `IMAGE 2 is the TRUTH about the architecture.\n` +
       `IMAGE 1 is WRONG: ${fautesEn.join("; and ")}.\n` +
-      `Fix IMAGE 1: rebuild that part of the room exactly as IMAGE 2 shows it — plain wall, same alcoves, niches, shelving, skirting board ` +
-      `and cornice, no opening, no daylight, no balcony railing, no curtain or curtain rod, no fireplace, no mantel, no hearth.\n` +
+      `Fix IMAGE 1: make that wall exactly what IMAGE 2 shows there. If IMAGE 2 shows a bare wall, the result is a bare wall: FLAT, SOLID, ` +
+      `smooth painted plaster, in the same colour and finish as the rest of that wall, with its skirting board and cornice running straight across. ` +
+      `Carve NOTHING into it: no opening, no window, no door, no passage, no arch, no niche, no alcove, no recess, no built-in shelving. ` +
+      `Remove any daylight, balcony railing, curtain or curtain rod that belonged to what you are removing.\n` +
       `Keep EVERYTHING ELSE of IMAGE 1 strictly identical: furniture, layout, rug, decor, wall colour and finish, floor, ceiling, ` +
-      `the REAL openings on the other walls, lighting mood and camera framing. Photorealistic.`;
+      `the REAL openings and the REAL alcoves on the other walls, lighting mood and camera framing. Photorealistic.`;
 
     const repare = await withTracking(
       {
@@ -219,20 +242,59 @@ export async function enforceOpeningWalls(
         ),
     );
 
+    // ON VÉRIFIE QUE LA RÉPARATION A RÉPARÉ.
+    //
+    // Elle ne le faisait pas : on payait une génération, on livrait le résultat les yeux
+    // fermés — et il pouvait être PIRE que l'original (porte rebouchée… par des arches).
+    // Le re-audit coûte 0,0003 $, contre 0,041 $ la génération qu'il valide. Si la
+    // réparation n'a rien arrangé, on garde l'image de DÉPART : au moins on ne dégrade pas,
+    // et on ne relance pas une seconde retouche (jamais de boucle de génération).
+    const apres = await architectureRendu(repare.imageBuffer);
+    const percesApres = apres && ouverturesConnues
+      ? MURS.filter((m) => (apres.parMur.get(m) ?? 0) > (attenduParMur.get(m) ?? 0))
+      : [];
+    const chemineeApres = apres ? apres.cheminee && !chemineeSource : false;
+    const reussie = apres != null && percesApres.length === 0 && !chemineeApres;
+
+    // DEBUG LOCAL : on garde AUSSI l'image réparée, pour pouvoir comparer avant/après dans
+    // /admin/logs. Sans ça, le correctif travaillait dans le dos — c'est comme ça que ma
+    // réparation a pu inventer des arches sans que personne ne le voie.
+    let urlReparee: string | null = null;
+    if (GARDER_LA_FAUTIVE) {
+      try {
+        urlReparee = await saveRender(repare.imageBuffer, storageFolder, repare.mimeType, `${step}_repare`);
+      } catch {
+        /* le debug ne doit jamais casser la génération */
+      }
+    }
+
     await logPipelineEvent({
       project_id: projectId,
       event: "generate",
       step: "architecture-autofix",
       provider: providerName,
       duration_ms: Date.now() - t0,
+      render_url: urlReparee ?? undefined,
       metadata: {
         step,
         murs_perces: perces,
         cheminee_inventee: chemineeInventee,
         murs_ouverts_photo: [...attendus],
         image_avant_reparation: urlFautive,
+        image_apres_reparation: urlReparee,
+        reparation_reussie: reussie,
+        murs_perces_apres: percesApres,
       },
     });
+
+    if (!reussie) {
+      console.warn(
+        `[architecture] ${projectId} · ${step} — la RÉPARATION A ÉCHOUÉ` +
+          `${percesApres.length ? ` (mur toujours percé : ${percesApres.map((m) => LIBELLE_FR[m]).join(", ")})` : ""}` +
+          `${chemineeApres ? " (cheminée toujours là)" : ""} → on garde l'image d'origine.`,
+      );
+      return gen;
+    }
 
     return { imageBuffer: repare.imageBuffer, mimeType: repare.mimeType };
   } catch (e) {
