@@ -818,8 +818,12 @@ export async function runAnalysisPipeline(
   const profiles = await detectSourceProfilesCached(projectId, project, "analyze");
 
   if (profiles.length === 0) {
-    await updateProject(projectId, { element_decisions: [], visionOutput: profiles, ...CLEAR_FINALIZE });
-    return;
+    // ÉCHEC BRUYANT, pas de review vide silencieuse : une pièce meublée qui
+    // détecte 0 élément = détection cassée (parse, bundle HMR périmé…), pas une
+    // pièce vide. On ne persiste RIEN (l'ancien état reste réutilisable) et on
+    // remonte l'erreur à la route → l'UI peut proposer de réessayer.
+    // (Incident 2026-07-14 : review vide après refactor à chaud de la détection.)
+    throw new Error("Détection vide (0 élément) — analyse abandonnée, réessayez (serveur peut-être à redémarrer)");
   }
 
   // ── 3. FILTRE DÉTERMINISTE — actions candidates par élément ────────────────
