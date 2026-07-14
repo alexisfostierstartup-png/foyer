@@ -28,6 +28,8 @@ export const metadata: Metadata = {
 };
 
 const CTA = "/create";
+// Parcours EXPERT : rendu meublé avec les VRAIS produits du catalogue (/expert-create).
+const CTA_EXPERT = "/expert-create";
 
 const IMG = {
   before: "/landing/v2/before-living.jpg",
@@ -99,12 +101,23 @@ function Header() {
             </a>
           ))}
         </nav>
-        <Link
-          href={CTA}
-          className="rounded-full bg-ink text-cream px-4 py-2 text-[13px] font-medium hover:opacity-90 transition flex items-center gap-1.5"
-        >
-          Commencer <span aria-hidden>→</span>
-        </Link>
+        <div className="flex items-center gap-2">
+          {/* Accès au parcours EXPERT (rendu meublé avec les vrais produits du catalogue).
+              En secondaire : « Commencer » reste l'action principale — l'expert s'adresse à
+              ceux qui savent déjà ce qu'ils veulent. */}
+          <Link
+            href={CTA_EXPERT}
+            className="rounded-full border border-ink/20 px-4 py-2 text-[13px] font-medium text-ink transition hover:border-ink/50 hover:bg-ink/5"
+          >
+            Expert
+          </Link>
+          <Link
+            href={CTA}
+            className="rounded-full bg-ink text-cream px-4 py-2 text-[13px] font-medium hover:opacity-90 transition flex items-center gap-1.5"
+          >
+            Commencer <span aria-hidden>→</span>
+          </Link>
+        </div>
       </div>
     </header>
   );

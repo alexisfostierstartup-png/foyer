@@ -184,6 +184,47 @@ const SILHOUETTES_TABLE_BASSE = [
   "round, in metal and glass",
 ];
 
+// Catégories NON-mobilières : elles n'entrent pas dans le compte des meubles.
+const NON_MOBILIER = new Set([
+  "floor", "wall", "ceiling", "window", "french_door", "door", "wall_opening",
+  "radiator", "water_heater", "staircase", "fireplace", "ceiling_light", "wall_sconce",
+  "curtains", "frame", "plant", "cushion", "decor_object", "other",
+]);
+
+/**
+ * VERROU D'INVENTAIRE — le NOMBRE de meubles est celui de la photo.
+ *
+ * Rien ne le disait, et le modèle faisait n'importe quoi avec : il a SUPPRIMÉ un meuble TV
+ * existant, en a dessiné DEUX (avec deux télés) sur une autre variation, et a RALLONGÉ le
+ * canapé d'un module — un canapé qu'on ne pourra jamais racheter si le modèle est ancien
+ * (QA Alexis 2026-07-14, projet yfZl5BqH). La liste des meubles « par défaut du salon »
+ * (« sofa, coffee table, TV stand with TV… ») l'encourageait même à en ajouter un second.
+ *
+ * On lui donne donc le compte exact, catégorie par catégorie. Même patron que les points
+ * lumineux, seul verrou qui ait jamais tenu : un NOMBRE explicite, pas une consigne molle.
+ */
+export function buildInventoryLockLine(profiles: ElementProfile[]): string {
+  const compte = new Map<string, number>();
+  for (const p of profiles) {
+    if (NON_MOBILIER.has(p.category)) continue;
+    compte.set(p.category, (compte.get(p.category) ?? 0) + 1);
+  }
+  if (compte.size === 0) return "";
+
+  const liste = [...compte.entries()]
+    .map(([cat, n]) => `${n} ${cat.replace(/_/g, " ")}${n > 1 ? "s" : ""}`)
+    .join(", ");
+
+  return (
+    `\n- THE ROOM'S FURNITURE, COUNTED: the photo contains EXACTLY ${liste}. ` +
+    `Each of these exists in your render exactly that many times — kept (the same object) or replaced (ONE new piece standing in its place). ` +
+    `NEVER delete one: a piece the owner already has does not vanish because the new layout is prettier without it. ` +
+    `NEVER draw a second one either: one TV unit stays one TV unit, one sofa stays one sofa. ` +
+    `A category ABSENT from this list is genuinely absent from the room — you may add it only if it is a missing essential of this room type, ` +
+    `and then only ONE.`
+  );
+}
+
 /** Somme des codes de caractères : stable, suffisante pour répartir sur 6 variantes. */
 function graine(projectId: string): number {
   let n = 0;
@@ -1253,7 +1294,7 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
     // Éléments détectés à retirer pour ce type de pièce (asset ∩ détection).
     removeList: buildRemoveList(profiles, removeCategories),
     userInstructions,
-    designPlan: `${designPlan || "None — restyle freely to fit the style."}\n${await buildLightingPlanLine(profiles, styleName)}${buildRoomScaleLine(project.roomScale)}${buildVariationLine(project.id)}${canaryPlanNote}`,
+    designPlan: `${designPlan || "None — restyle freely to fit the style."}\n${await buildLightingPlanLine(profiles, styleName)}${buildRoomScaleLine(project.roomScale)}${buildVariationLine(project.id)}${buildInventoryLockLine(profiles)}${canaryPlanNote}`,
   };
 
   // Flux DIY beta : variante de prompt sous slug dédié (RESTYLE meuble en
@@ -1494,7 +1535,7 @@ async function runDispositionsPipelineInner(projectId: string): Promise<string[]
     userInstructions,
     // Mêmes lignes de plan que le rendu unique : la taille de pièce et la variation de
     // mobilier leur manquaient, d'où des dispositions vides et un mobilier « par défaut ».
-    designPlan: `${designPlan || "None — restyle freely to fit the style."}\n${await buildLightingPlanLine(profiles, styleName)}${buildRoomScaleLine(project.roomScale)}${buildVariationLine(project.id)}`,
+    designPlan: `${designPlan || "None — restyle freely to fit the style."}\n${await buildLightingPlanLine(profiles, styleName)}${buildRoomScaleLine(project.roomScale)}${buildVariationLine(project.id)}${buildInventoryLockLine(profiles)}`,
   };
 
   // Les assises conservées, montrées en photo — c'est ICI que le canapé se faisait le plus
