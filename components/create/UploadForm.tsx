@@ -86,7 +86,13 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
       return;
     }
 
-    const localPreview = URL.createObjectURL(file);
+    // Un HEIC (photo iPhone) ne s'affiche PAS hors Safari : l'aperçu local montrait alors
+    // l'icône « image cassée » le temps de la conversion serveur. On ne pose donc pas
+    // d'aperçu pour ces fichiers — la zone affiche un loader, et bascule sur la photo
+    // convertie (JPEG) renvoyée par le serveur.
+    const estHeic =
+      /heic|heif/i.test(file.type) || /\.(heic|heif)$/i.test(file.name);
+    const localPreview = estHeic ? null : URL.createObjectURL(file);
     setPreviewUrl(localPreview);
     setUploading(true);
 
@@ -105,7 +111,7 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
           | null;
         toast.error(data?.error ?? "Erreur lors de l'envoi de la photo");
         setUploading(false);
-        URL.revokeObjectURL(localPreview);
+        if (localPreview) URL.revokeObjectURL(localPreview);
         setPreviewUrl(null);
         return;
       }
@@ -120,7 +126,7 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
       // l'aperçu local restait une vignette cassée alors que l'upload avait réussi.
       if (basePhotoUrl) {
         setPreviewUrl(basePhotoUrl);
-        URL.revokeObjectURL(localPreview);
+        if (localPreview) URL.revokeObjectURL(localPreview);
       }
       setUploading(false);
       // Après le rendu de l'aperçu (d'où le requestAnimationFrame : sans lui, on
@@ -131,7 +137,7 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
     } catch {
       toast.error("Erreur lors de l'envoi de la photo");
       setUploading(false);
-      URL.revokeObjectURL(localPreview);
+      if (localPreview) URL.revokeObjectURL(localPreview);
       setPreviewUrl(null);
     }
   }
@@ -227,7 +233,15 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
                   handleFileSelect(e.dataTransfer.files?.[0]);
                 }}
               >
-                {previewUrl ? (
+                {uploading && !previewUrl ? (
+                  // Photo non affichable par le navigateur (HEIC d'iPhone) : on ne montre
+                  // PAS l'icône « image cassée » le temps que le serveur la convertisse. Un
+                  // loader occupe le cadre, et la photo convertie prendra sa place.
+                  <div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-3 rounded-xl border border-foyer-border bg-foyer-cream">
+                    <Loader2 className="size-6 animate-spin text-foyer-sage" aria-hidden />
+                    <p className="text-[13px] text-foyer-muted">Préparation de votre photo…</p>
+                  </div>
+                ) : previewUrl ? (
                   // Le cadre 4/3 n'apparaît QU'UNE FOIS la photo choisie. Vide, il occupait
                   // 640px de haut sur un écran large : un grand rectangle beige pour ne rien
                   // montrer.
@@ -236,6 +250,9 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
                     src={previewUrl}
                     alt="Aperçu de votre photo"
                     className="aspect-[4/3] w-full rounded-xl object-cover"
+                    // Filet : tout format que ce navigateur ne sait pas décoder retombe sur
+                    // le loader plutôt que sur la vignette cassée.
+                    onError={() => setPreviewUrl(null)}
                   />
                 ) : (
                   // La zone de dépôt EST le bouton d'import : un clic ouvre directement le
