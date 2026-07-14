@@ -139,7 +139,7 @@ export function RenderScreen({
           </p>
         </main>
 
-        <div className="fixed bottom-0 inset-x-0 border-t border-foyer-border bg-foyer-cream/95 px-5 py-3 backdrop-blur">
+        <div className="fixed bottom-0 inset-x-0 z-40 border-t border-foyer-border bg-foyer-cream/95 px-5 py-3 backdrop-blur">
           {/* Sur ordinateur, les deux actions tiennent sur une ligne (valider à gauche,
               modifier à droite) : empilées, la barre mangeait le bas du rendu. */}
           <div className="mx-auto flex max-w-[480px] flex-col gap-2.5 lg:max-w-[640px] lg:flex-row">

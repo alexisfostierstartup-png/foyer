@@ -275,7 +275,7 @@ export function ReviewScreen({ projectId, initialDecisions, allowedByCategory, f
       </div>
 
       {/* Sticky CTA — un seul bouton : il applique toujours les modifs en attente */}
-      <div className="fixed bottom-0 inset-x-0 bg-foyer-cream/95 backdrop-blur-sm border-t border-foyer-border px-4 py-4">
+      <div className="fixed bottom-0 inset-x-0 z-40 bg-foyer-cream/95 backdrop-blur-sm border-t border-foyer-border px-4 py-4">
         <div className="max-w-2xl mx-auto flex flex-col gap-2.5">
           <button
             onClick={handleGenerate}

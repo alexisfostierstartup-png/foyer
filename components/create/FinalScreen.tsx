@@ -679,20 +679,25 @@ export function FinalScreen({
             )}
           </div>
 
-          {/* Live edit button */}
-          <button
-            type="button"
-            onClick={handleLiveEdit}
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-foyer-border bg-white px-4 py-3 text-[14px] font-medium text-foyer-ink transition-all hover:border-foyer-sage/50 hover:bg-foyer-sage/5"
-          >
-            <Pencil className="size-4 text-foyer-sage" />
-            Édition live — changer un meuble
-            {!isExpert && (
-              <span className="ml-auto rounded-full bg-foyer-sage/15 px-2 py-0.5 text-[11px] font-semibold text-foyer-sage">
-                Expert
-              </span>
-            )}
-          </button>
+          {/* ÉDITION LIVE — vitrine du flux GRATUIT seulement. C'est un add-on qu'on VEND
+              (badge « Expert ») : le proposer dans le rendu expert, c'est vendre à quelqu'un
+              ce qu'il a déjà — et, en mode expert, changer un meuble se fait de toute façon
+              par les pins du rendu puis « Modifier ». */}
+          {!expertMode && (
+            <button
+              type="button"
+              onClick={handleLiveEdit}
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-foyer-border bg-white px-4 py-3 text-[14px] font-medium text-foyer-ink transition-all hover:border-foyer-sage/50 hover:bg-foyer-sage/5"
+            >
+              <Pencil className="size-4 text-foyer-sage" />
+              Édition live — changer un meuble
+              {!isExpert && (
+                <span className="ml-auto rounded-full bg-foyer-sage/15 px-2 py-0.5 text-[11px] font-semibold text-foyer-sage">
+                  Expert
+                </span>
+              )}
+            </button>
+          )}
 
           {liveEditBanner && (
             <div className="mt-2 rounded-xl bg-foyer-sage/10 px-4 py-2.5 text-[12px] leading-relaxed text-foyer-sage">
@@ -875,7 +880,10 @@ export function FinalScreen({
           chose à commander. Le rendu alternatif est SECONDAIRE : c'est l'achat qui est
           l'action principale, pas la régénération. */}
       {!listPending && (orderUrls.length > 0 || expertMode) && (
-        <div className="fixed inset-x-0 bottom-0 border-t border-foyer-border bg-foyer-cream/95 px-5 py-3 backdrop-blur">
+        // z-40 : sans z-index, la barre restait DERRIÈRE les onglets « Liste shopping /
+        // Score Foyer », dont les boutons portent `relative z-10` — leur texte traversait
+        // le bouton « Commander » (QA Alexis 2026-07-14). Sous les modales, qui sont en z-50.
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-foyer-border bg-foyer-cream/95 px-5 py-3 backdrop-blur">
           <div className="mx-auto flex max-w-[480px] flex-col gap-1.5">
             <div className="flex items-center gap-2.5">
               {orderUrls.length > 0 && (
@@ -904,8 +912,11 @@ export function FinalScreen({
                     <><Loader2 className="size-4 animate-spin" aria-hidden /> Rendu en cours…</>
                   ) : (
                     <>
-                      <RefreshCw className="size-4" aria-hidden />
-                      Nouveau rendu
+                      {/* « Nouveau rendu » disait au user qu'il repartait de zéro, alors que
+                          ce bouton MODIFIE son rendu (produits échangés + demande libre).
+                          Le geste, et donc le mot, c'est « Modifier ». */}
+                      <Pencil className="size-4" aria-hidden />
+                      Modifier
                       {changedCount >= 1 && (
                         <span className="rounded-full bg-foyer-ink/10 px-1.5 text-[12px] font-semibold">
                           {changedCount}
@@ -933,7 +944,7 @@ export function FinalScreen({
             className="w-full max-w-[440px] rounded-3xl bg-white p-6 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="font-serif text-xl text-foyer-ink">Nouveau rendu</h3>
+            <h3 className="font-serif text-xl text-foyer-ink">Modifier le rendu</h3>
 
             {changedCount >= 1 && (
               <p className="mt-2 rounded-xl bg-foyer-sage/10 px-3 py-2 text-[13px] text-foyer-sage">

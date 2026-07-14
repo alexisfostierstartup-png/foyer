@@ -284,7 +284,7 @@ export function IterateScreen({
         )}
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 border-t border-foyer-border bg-foyer-cream/95 px-5 py-3 backdrop-blur">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-foyer-border bg-foyer-cream/95 px-5 py-3 backdrop-blur">
         <div className="mx-auto max-w-[480px]">
           <button
             type="button"

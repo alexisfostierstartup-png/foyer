@@ -140,13 +140,17 @@ export async function enforceOpeningWalls(
     // pas une ouverture, mais c'est la même faute : inventer de l'architecture sur un mur
     // que la disposition vide. On l'audite dans le MÊME appel — coût inchangé.
     //
-    // ⚠️ La taxonomie n'a AUCUNE catégorie « cheminée » : une cheminée réelle tombe dans
-    // `other`, et se repère au MOT-CLÉ dans sa description — exactement comme le fait déjà
-    // buildFixedFeaturesSummary pour les fixtures. On se cale sur cette même source de
-    // vérité : chercher une catégorie `fireplace` renverrait toujours « absente », et on
-    // rebroussurerait la cheminée des pièces qui en ont une pour de bon.
-    const chemineeSource = profilesSource.some((p) =>
-      /chemin[ée]e|fireplace|manteau|insert|po[êe]le/i.test(`${p.element ?? ""} ${p.description ?? ""}`),
+    // La cheminée a désormais SA catégorie dans la taxonomie (`fireplace`, ajoutée le
+    // 2026-07-14) : c'est elle qui fait foi. Le repli par mots-clés reste, pour les projets
+    // analysés AVANT — leur détection ne connaissait pas la catégorie et a rangé la
+    // cheminée dans `other`. Sans ce repli, on « réparerait » la cheminée bien réelle des
+    // pièces qui en ont une.
+    const chemineeSource = profilesSource.some(
+      (p) =>
+        p.category === "fireplace" ||
+        /chemin[ée]e|fireplace|manteau de chemin|insert|po[êe]le/i.test(
+          `${p.element ?? ""} ${p.description ?? ""}`,
+        ),
     );
     const chemineeInventee = rendu.cheminee && !chemineeSource;
     if (perces.length === 0 && !chemineeInventee) return gen;

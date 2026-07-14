@@ -536,7 +536,7 @@ function Shoppable() {
 
 /* ------------------------------- PARTNERS ------------------------------- */
 
-const PARTNERS = ["Selency", "Emmaüs", "Maisons du Monde", "La Redoute Intérieurs", "Tikamoon", "AM.PM", "Made.com", "Bobochic"];
+const PARTNERS = ["Selency", "Emmaüs", "Maisons du Monde", "BlanchePorte", "Cyrillus", "Muji", "Thecoolrepublic.com", "TheBradery"];
 
 function Partners() {
   return (
