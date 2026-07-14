@@ -1,4 +1,4 @@
-# slug: vision_detect_extended | v5 | prod | 2026-07-14T14:49:00.288588+00:00
+# slug: vision_detect_extended | v6 | dev | 2026-07-14T14:49:00.288588+00:00
 Analyse cette photo de pièce intérieure avec précision.
 
 Retourne UNIQUEMENT un JSON valide (sans texte avant/après) avec cette structure exacte :
@@ -37,6 +37,8 @@ condition : good = bon état, fair = usé mais fonctionnel, poor = dégradé/end
 Désambiguïsation des ouvertures : une grande surface vitrée qui descend jusqu'au sol (baie vitrée, porte coulissante vitrée, porte-fenêtre donnant sur balcon/jardin) = french_door, JAMAIS window. Une window a un mur/allège plein en dessous (elle ne touche pas le sol). Une porte pleine ou vitrée battante = door. Une ouverture/embrasure SANS porte ni vitrage, percée dans un mur et donnant sur une autre pièce (passage, pass-through, séjour ouvert sur cuisine/salle à manger) = wall_opening : détecte-la comme un élément d'ARCHITECTURE à part entière (ne l'ignore pas comme un simple mur, ne la confonds pas avec une door). Tu ignores les MEUBLES vus à travers, mais l'ouverture elle-même fait partie de la pièce.
 
 Multiplicité — détecte CHAQUE exemplaire comme un élément DISTINCT quand il y en a plusieurs : plusieurs tapis (Y COMPRIS des tapis superposés / en couches, l'un par-dessus l'autre), plusieurs chaises, plusieurs luminaires, plusieurs cadres, etc. Un element_profile PAR exemplaire ; ne fusionne JAMAIS plusieurs objets en un seul.
+
+SURFACES ARCHITECTURALES OBLIGATOIRES : chaque inventaire contient TOUJOURS le sol (floor, 1 élément) et CHAQUE mur visible (wall, un élément PAR mur distinct — y compris un mur nu sans rien dessus, et y compris ses moulures/soubassement décrits dans description). Un inventaire sans floor ni wall est INVALIDE : la rénovation repose dessus (repeindre, refaire le sol).
 
 EXHAUSTIVITÉ — deux types d'éléments sont régulièrement oubliés alors que la catégorie existe dans la liste : vérifie-les systématiquement.
 - Téléviseur (television) : un écran plat posé sur un meuble TV/une commode, ou fixé au mur, est un élément à PART ENTIÈRE — ne le fusionne JAMAIS dans le meuble qui le porte (tv_stand) et ne l'omets JAMAIS s'il est visible.
