@@ -99,10 +99,11 @@ export async function resolvePrompt(
 ): Promise<ResolvedPrompt> {
   const strict = opts.strict ?? true;
 
-  // Canal de prompts (dev/prod) : une ligne avec conditions {channel:'dev'}
-  // n'est servie que si PROMPTS_CHANNEL=dev (local) — et gagne alors par
-  // spécificité sur la ligne prod. En prod (var absente) elle est ignorée.
-  const channel = process.env.PROMPTS_CHANNEL === "dev" ? "dev" : "prod";
+  // Canal de prompts : une ligne avec conditions {channel:'X'} n'est servie que
+  // si PROMPTS_CHANNEL=X — et gagne alors par spécificité sur la ligne prod.
+  // Var absente = 'prod' (les lignes à canal explicite sont ignorées). Canaux
+  // libres (dev, min…) pour tester des variantes sans toucher la prod.
+  const channel = process.env.PROMPTS_CHANNEL || "prod";
   const prompt = await selectPrompt(slug, { ...ctx, channel });
   const { resolved, missing, used } = substitute(prompt.template, { ...ctx, channel });
 

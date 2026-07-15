@@ -3,7 +3,9 @@ import { toInlineData } from "../imageInput";
 import { withRetry } from "../retry";
 import type { ImageProvider, ImageInput, GenerationResult } from "../types";
 
-const MODEL = "gemini-2.5-flash-image";
+// IMAGE_MODEL : override du modèle de génération (A/B Nano Banana Pro
+// 2026-07-14 — ex. "gemini-3-pro-image"). Défaut : Nano Banana standard.
+const MODEL = process.env.IMAGE_MODEL || "gemini-2.5-flash-image";
 
 export class NanoBananaProvider implements ImageProvider {
   readonly name = "nano_banana";
