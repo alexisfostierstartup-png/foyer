@@ -2,6 +2,12 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* bench/ = photos de test (~550 fichiers), aucune classe Tailwind à y trouver. L'auto-
+   détection de Tailwind v4 le scannait quand même et Turbopack plantait en tentant de LIRE
+   un sous-dossier comme un fichier (« bench/base-ab — Is a directory », panic 2026-07-15).
+   On l'exclut de la source : ni utile, ni lisible. */
+@source not "../bench";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
