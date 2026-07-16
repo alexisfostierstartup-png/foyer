@@ -45,8 +45,6 @@ const IMG = {
   salonParisien: "/landing/test4_apres.png",
   japandiBefore: "/landing/test9.png",
   japandi: "/landing/test9_apres.png",
-  parisVictorBefore: "/landing/Paris_victor.jpg",
-  saillyFinal: "/landing/Sailly_final.png",
 };
 
 const NAV = [
@@ -142,8 +140,8 @@ function Hero() {
           <RevealV2 instant delay={80}>
             <p className="mt-8 max-w-md text-[15px] leading-relaxed text-muted-foreground">
               Héra est un studio de design d&apos;intérieur augmenté par l&apos;IA. On part de votre pièce, telle
-              qu&apos;elle est. On garde, on chine, on sélectionne le neuf qui dure — puis on prépare les commandes
-              chez les bonnes maisons.
+              qu&apos;elle est. On garde ce qui a sa place, on chine ce qui mérite une seconde vie, on choisit le
+              neuf qui dure, puis on consolide le tout en une liste prête à commander chez les bonnes maisons.
             </p>
           </RevealV2>
           <RevealV2 instant delay={160}>
@@ -319,21 +317,26 @@ function Process() {
 /* -------------------------------- GALLERY -------------------------------- */
 
 // slug renseigné = la carte devient CLIQUABLE vers /projets/<slug> (le clic était mort).
-const PROJECTS: { img: string; before?: string; tag: string; name: string; surface: string; conserve: string; cout?: string; slug?: string }[] = [
+const PROJECTS: { img: string; before?: string; tag: string; name: string; surface: string; conserve?: string; cout?: string; slug?: string }[] = [
   // « cout » vient de la MÊME source que la page vitrine (data/projets/*.json) : deux
   // chiffres codés en dur finiraient par se contredire en public.
-  { img: IMG.salonParisien, before: IMG.salonParisienBefore, tag: "Haussmann", name: "Salon Parisien", surface: "32 m²", conserve: "68%", slug: "appartement-parisien" },
-  { img: IMG.japandi, before: IMG.japandiBefore, tag: "Studio", name: "Chambre Japandi", surface: "14 m²", conserve: "55%" },
-  { img: IMG.saillyFinal, before: IMG.parisVictorBefore, tag: "Maison", name: "Salle à manger", surface: "22 m²", conserve: "72%" },
+  { img: IMG.salonParisien, before: IMG.salonParisienBefore, tag: "Bohème", name: "Salon Parisien", surface: "32 m²", conserve: "40%", slug: "appartement-parisien" },
+  // Pièce vide au départ : « conservé » n'a pas de sens ici, tout est neuf.
+  { img: IMG.japandi, before: IMG.japandiBefore, tag: "Studio", name: "Chambre Japandi", surface: "14 m²" },
+  { img: "/vitrine/salon-industriel/after.png", before: "/vitrine/salon-industriel/before.jpeg", tag: "Industriel", name: "Salon industriel", surface: "24 m²", conserve: "22%", slug: "salon-industriel" },
 ];
 
 async function Gallery() {
-  // Coût réel du projet, lu dans les données figées — jamais recopié à la main.
+  // Coût réel + score RSE (CO₂ évité) du projet, lus dans les données figées — jamais
+  // recopiés à la main, sinon les deux chiffres finissent par se contredire en public.
   const couts = new Map<string, string>();
+  const co2 = new Map<string, string>();
   for (const p of PROJECTS) {
     if (!p.slug) continue;
     const d = await getProjet(p.slug);
-    if (d) couts.set(p.slug, `${Math.round(d.totalEstimated).toLocaleString("fr-FR")} €`);
+    if (!d) continue;
+    couts.set(p.slug, `${Math.round(d.totalEstimated).toLocaleString("fr-FR")} €`);
+    if (d.score?.co2SavedKg) co2.set(p.slug, `−${Math.round(d.score.co2SavedKg)} kg CO₂`);
   }
   return (
     <section id="gallery" className="relative pt-8 pb-16 sm:pt-10 sm:pb-24 px-5 grain">
@@ -361,7 +364,7 @@ async function Gallery() {
           </div>
           <div className="p-6 sm:p-8 flex flex-wrap items-end justify-between gap-6 bg-bone">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Projet 07 · Haussmann</p>
+              <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Projet 07 · Bohème</p>
               <h3 className="mt-2 font-display text-3xl sm:text-4xl">Salon parisien, conservé à 68 %</h3>
             </div>
             <div className="flex flex-wrap items-end gap-8 sm:gap-10">
@@ -437,7 +440,12 @@ async function Gallery() {
                   <p className="text-[11px] text-muted-foreground uppercase tracking-wider">{p.surface}</p>
                 </div>
                 <div className="text-right">
-                  <span className="block text-[11px] text-clay font-medium">Conservé {p.conserve}</span>
+                  {p.conserve && (
+                    <span className="block text-[11px] text-clay font-medium">Conservé {p.conserve}</span>
+                  )}
+                  {p.slug && co2.get(p.slug) && (
+                    <span className="mt-0.5 block text-[11px] text-forest">{co2.get(p.slug!)}</span>
+                  )}
                   {p.slug && couts.get(p.slug) && (
                     <span className="mt-0.5 block text-[11px] text-muted-foreground">
                       Coût du projet&nbsp;: <span className="font-display text-[13px] text-ink">{couts.get(p.slug!)}</span>
@@ -465,7 +473,7 @@ const HOTSPOTS: { x: string; y: string; name: string; source: string; price: str
   { x: "13%", y: "36%", name: "Bibliothèque vintage", source: "Conservée, repeinte sage", price: "existant", dot: "bg-clay", dir: "right" },
   { x: "38%", y: "60%", name: "Canapé en lin écru", source: "Selency · seconde main", price: "320 €", dot: "bg-ocre", dir: "right" },
   { x: "50%", y: "74%", name: "Table basse verre & laiton", source: "Leboncoin · seconde main", price: "75 €", dot: "bg-ocre", dir: "right" },
-  { x: "58%", y: "34%", name: "Olivier d'intérieur", source: "Pépinière locale · neuf", price: "59 €", dot: "bg-forest", dir: "left" },
+  { x: "58%", y: "34%", name: "Plante d'intérieur", source: "Pépinière locale · neuf", price: "59 €", dot: "bg-forest", dir: "left" },
   { x: "88%", y: "50%", name: "Lampe céramique", source: "Maisons du Monde · neuf éco", price: "69 €", dot: "bg-forest", dir: "left" },
 ];
 
@@ -536,14 +544,6 @@ function Shoppable() {
             </div>
           </div>
         </RevealV2>
-
-        <div className="mt-8 flex items-center gap-3">
-          <span className="h-px flex-1 bg-line" />
-          <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground shrink-0">
-            Selency · Emmaüs · Leboncoin Pro · Maisons du Monde · La Redoute Intérieurs
-          </p>
-          <span className="h-px flex-1 bg-line" />
-        </div>
       </div>
     </section>
   );
@@ -566,8 +566,8 @@ function Partners() {
               Une sélection <em className="italic font-light text-clay">curatée.</em>
             </h2>
             <p className="mt-4 text-[14px] text-muted-foreground max-w-sm">
-              Brocantes en ligne, ateliers d&apos;artisans, marques de mobilier durable. Nous commandons pour vous, vous
-              recevez tout en une fois.
+              Plateformes de reconditionné ou seconde main, marques de mobilier durable, enseignes de bricolage.
+              Nous commandons pour vous, il ne vous reste plus qu&apos;à attendre vos commandes.
             </p>
           </div>
           <div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-3">

@@ -64,7 +64,7 @@ export const PRODUCTS: ShopProduct[] = [
   },
   {
     id: "olivier",
-    name: "Olivier d'intérieur",
+    name: "Plante d'intérieur",
     detail: "Pot terre cuite, 120 cm",
     merchant: "Pépinière locale",
     condition: "neuf",

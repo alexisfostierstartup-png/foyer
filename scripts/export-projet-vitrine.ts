@@ -12,7 +12,20 @@ import { config } from "dotenv";
 config({ path: ".env.local" });
 config();
 import { writeFileSync, mkdirSync } from "node:fs";
-import { dirname } from "node:path";
+import { dirname, extname } from "node:path";
+
+// Copie une image distante (storage, réécrit à chaque nouveau rendu) vers un fichier
+// STABLE sous public/ — la vitrine ne doit jamais dépendre d'un chemin de storage qui
+// peut changer de contenu sous elle.
+async function downloadTo(url: string, destWithoutExt: string): Promise<string> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Téléchargement échoué (${res.status}): ${url}`);
+  const ext = extname(new URL(url).pathname) || ".jpg";
+  const dest = `${destWithoutExt}${ext}`;
+  mkdirSync(dirname(dest), { recursive: true });
+  writeFileSync(dest, Buffer.from(await res.arrayBuffer()));
+  return dest;
+}
 
 async function main() {
   const [projectId, slug] = process.argv.slice(2);
@@ -24,6 +37,7 @@ async function main() {
   const { getProject } = await import("@/lib/storage/projects");
   const p = await getProject(projectId);
   if (!p) throw new Error("projet introuvable");
+  if (!p.generatedRenderUrl) throw new Error("projet sans rendu généré");
 
   const list = p.shoppingList ?? [];
   const picks = (p.productPicks ?? {}) as Record<string, string>;
@@ -54,13 +68,18 @@ async function main() {
     0,
   );
 
+  const publicDir = `public/vitrine/${slug}`;
+  const beforePath = await downloadTo(p.basePhotoUrl, `${publicDir}/before`);
+  const afterPath = await downloadTo(p.generatedRenderUrl, `${publicDir}/after`);
+
   const out = {
     slug,
     projectId,
     // Images SERVIES DEPUIS public/ : les rendus en storage sont écrasés à chaque
-    // nouveau swap (même chemin) — une vitrine ne peut pas dépendre de ça.
-    beforeUrl: "/landing/test4.jpeg",
-    afterUrl: "/landing/test4_apres.png",
+    // nouveau swap (même chemin) — une vitrine ne peut pas dépendre de ça. On en
+    // fige donc une copie ici, une fois pour toutes.
+    beforeUrl: `/${beforePath.replace(/^public\//, "")}`,
+    afterUrl: `/${afterPath.replace(/^public\//, "")}`,
     items,
     totalEstimated: Math.round(total),
     score: p.scoreFoyer ?? null,
