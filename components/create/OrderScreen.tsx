@@ -154,7 +154,9 @@ export function OrderScreen({ projectId, items }: { projectId: string; items: Or
         </div>
       )}
 
-      {/* BARRE FLOTTANTE — total + ouverture des pages produit du panier. */}
+      {/* BARRE FLOTTANTE — total + commande groupée. Désactivée en beta (demande
+          Alexis 2026-07-17) : la commande pour le compte du user n'est pas encore
+          câblée, mieux vaut l'annoncer que laisser un bouton mort. */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-foyer-border bg-foyer-cream/95 px-5 py-3 backdrop-blur">
         <div className="mx-auto flex max-w-[560px] items-center justify-between gap-3">
           <div>
@@ -163,15 +165,17 @@ export function OrderScreen({ projectId, items }: { projectId: string; items: Or
               {total.toLocaleString("fr-FR")} €{sansPrix > 0 ? ` + ${sansPrix} à sourcer` : ""}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              for (const it of kept) if (it.url) window.open(it.url, "_blank");
-            }}
-            className="flex h-11 items-center justify-center gap-2 rounded-full bg-foyer-sage px-6 font-medium text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:-translate-y-0.5"
-          >
-            <ShoppingBag className="size-4" aria-hidden /> Ouvrir les pages produit
-          </button>
+          <div className="text-right">
+            <button
+              type="button"
+              disabled
+              aria-disabled="true"
+              className="flex h-11 cursor-not-allowed items-center justify-center gap-2 rounded-full bg-foyer-sage/50 px-6 font-medium text-white"
+            >
+              <ShoppingBag className="size-4" aria-hidden /> Placer mes commandes
+            </button>
+            <p className="mt-1 text-[11px] text-foyer-muted">Fonction désactivée en beta</p>
+          </div>
         </div>
       </div>
     </div>

@@ -351,49 +351,7 @@ async function Gallery() {
           </p>
         </div>
 
-        <RevealV2 from="translateY(40px)" className="relative rounded-3xl overflow-hidden ring-1 ring-line shadow-card-lg bg-card">
-          <div className="grid sm:grid-cols-2 gap-0 relative">
-            <div className="relative aspect-[4/5] sm:aspect-auto">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={IMG.before} alt="Salon avant transformation" className="absolute inset-0 w-full h-full object-cover" />
-            </div>
-            <div className="relative aspect-[4/5] sm:aspect-auto">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={IMG.after} alt="Salon après transformation" className="absolute inset-0 w-full h-full object-cover" />
-            </div>
-          </div>
-          <div className="p-6 sm:p-8 flex flex-wrap items-end justify-between gap-6 bg-bone">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Projet 07 · Bohème</p>
-              <h3 className="mt-2 font-display text-3xl sm:text-4xl">Salon parisien, conservé à 68 %</h3>
-            </div>
-            <div className="flex flex-wrap items-end gap-8 sm:gap-10">
-              <div className="flex items-center gap-8 text-[12px]">
-                <div>
-                  <p className="text-muted-foreground uppercase tracking-wider">Surface</p>
-                  <p className="font-display text-2xl mt-1">32 m²</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground uppercase tracking-wider">CO₂ évité</p>
-                  <p className="font-display text-2xl mt-1 text-clay">−380 kg</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground uppercase tracking-wider">Budget</p>
-                  <p className="font-display text-2xl mt-1">1 240 €</p>
-                </div>
-              </div>
-              <Link
-                href={CTA}
-                className="group inline-flex items-center gap-2 rounded-full bg-ink text-cream px-5 py-2.5 text-[13px] font-medium hover:opacity-90 transition"
-              >
-                Découvrir
-                <ArrowUpRight className="h-4 w-4 transition-transform group-hover:rotate-45" aria-hidden />
-              </Link>
-            </div>
-          </div>
-        </RevealV2>
-
-        <div className="mt-8 grid sm:grid-cols-3 gap-5">
+        <div className="grid sm:grid-cols-3 gap-5">
           {PROJECTS.map((p, i) => (
             <RevealV2
               key={p.name}
@@ -522,24 +480,23 @@ function Shoppable() {
             })}
           </div>
 
-          <div className="absolute inset-x-4 bottom-4 md:inset-x-auto md:bottom-6 md:right-6 md:w-72">
-            <div className="rounded-2xl bg-cream/95 ring-1 ring-line shadow-card backdrop-blur p-4">
+          {/* Réduite (demande Alexis 2026-07-17) : en pleine largeur sur mobile
+              (inset-x-4), elle recouvrait presque tout le rendu en dessous. */}
+          <div className="absolute bottom-3 right-3 w-48 md:bottom-6 md:right-6 md:w-60">
+            <div className="rounded-xl bg-cream/95 ring-1 ring-line shadow-card backdrop-blur p-3">
               <div className="flex items-baseline justify-between">
-                <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">Total du projet</p>
-                <p className="font-display text-3xl leading-none">~620 €</p>
+                <p className="text-[9px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Total</p>
+                <p className="font-display text-lg leading-none">~620 €</p>
               </div>
-              <div className="mt-3 flex items-center gap-2.5 border-t border-line pt-3">
-                <span className="grid place-items-center h-9 w-9 shrink-0 rounded-full bg-clay/12 text-clay font-display text-[13px]">A+</span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-forest">Score Héra</p>
-                  <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">62% conservé · 22% occasion · 16% neuf</p>
-                </div>
+              <div className="mt-2 flex items-center gap-2 border-t border-line pt-2">
+                <span className="grid place-items-center h-6 w-6 shrink-0 rounded-full bg-clay/12 text-clay font-display text-[10px]">A+</span>
+                <p className="min-w-0 flex-1 text-[10px] leading-snug text-muted-foreground">62% conservé</p>
               </div>
               <Link
                 href={CTA}
-                className="mt-3 flex items-center justify-center gap-1.5 w-full rounded-full bg-ink py-2.5 text-[13px] font-medium text-cream hover:opacity-90 transition"
+                className="mt-2 flex items-center justify-center gap-1 w-full rounded-full bg-ink py-1.5 text-[11px] font-medium text-cream hover:opacity-90 transition"
               >
-                Essayer sur ma pièce <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
+                Essayer <ArrowUpRight className="h-3 w-3" aria-hidden />
               </Link>
             </div>
           </div>
