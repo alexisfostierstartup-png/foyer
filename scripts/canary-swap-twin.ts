@@ -37,6 +37,7 @@ async function main() {
   );
   if (!item?.elementId) throw new Error(`pas de ligne ${category} avec matches`);
   const match = item.matches![0];
+  if (!match.primary_image_url) throw new Error("produit sans image");
   const b = bboxById[item.elementId];
   const jumeaux = (project.element_decisions ?? [])
     .filter((d) => d.category === category && d.element_id !== item.elementId && (d.mismatch_type === "none" || d.mismatch_type === "surface"))
@@ -48,7 +49,7 @@ async function main() {
   const piece = {
     category,
     noun: category.replace(/_/g, " "),
-    imageUrl: match.primary_image_url,
+    imageUrl: match.primary_image_url!,
     name: match.name,
     elementId: item.elementId,
     match,
