@@ -4,6 +4,9 @@ import { getProject, updateProject } from "@/lib/storage/projects";
 import { ensureFinalAssets } from "@/lib/ai/pipeline";
 import { PAYWALL_DISABLED } from "@/lib/constants";
 
+// Plafond Fluid Compute — recalcul complet liste+pins possible ici (>90 s en prod).
+export const maxDuration = 300;
+
 export async function POST(
   req: Request,
   ctx: { params: Promise<{ id: string }> },

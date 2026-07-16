@@ -6,7 +6,7 @@ import { FinalScreen } from "@/components/create/FinalScreen";
 import { precomputeFinalAssets } from "@/lib/ai/pipeline";
 import { resolveHotspots } from "@/lib/shopping/hotspots";
 
-export const maxDuration = 90;
+export const maxDuration = 300; // plafond Fluid Compute — à 90 s, le calcul liste+pins en prod (vision + Jina froid + matching, parfois >90 s) était tué en plein vol et bouclait (QA Alexis 2026-07-17)
 
 export default async function FinalPage({
   params,

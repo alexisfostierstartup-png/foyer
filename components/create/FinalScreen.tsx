@@ -352,8 +352,13 @@ export function FinalScreen({
   // Mode « préparation » : la liste se calcule en fond (déclenchée par la page) —
   // on polle le statut jusqu'à son arrivée. Le statut relance lui-même un calcul
   // si le précédent est mort (bail expiré) → auto-réparant. Timeout ~2 min.
+  // Le poll tourne AUSSI quand la liste est là mais que les PINS manquent (analyse
+  // morte avec la lambda post-swap) : /shopping-status relance alors le recalcul
+  // (status-heal) et on s'arrête à l'arrivée de l'analyse — sans ça, les pins ne
+  // revenaient JAMAIS sans reload manuel (qepJGfvc, QA Alexis 2026-07-17).
+  const pinsManquants = !bboxById || Object.keys(bboxById).length === 0;
   useEffect(() => {
-    if (!listPending) return;
+    if (!listPending && !pinsManquants) return;
     let stopped = false;
     let polls = 0;
     const interval = setInterval(async () => {
@@ -378,11 +383,15 @@ export function FinalScreen({
           if (data.analysis.items?.length) setSkeletonItems(data.analysis.items);
         }
         if (data.ready && data.shoppingList) {
-          stopped = true;
-          clearInterval(interval);
           setShoppingList(data.shoppingList);
           if (data.scoreFoyer) setScoreFoyer(data.scoreFoyer);
           setListPending(false);
+          // On ne s'arrête que quand l'ANALYSE est là aussi : liste sans pins =
+          // guérison encore en cours, on continue à poller (borne polls intacte).
+          if (data.analysis) {
+            stopped = true;
+            clearInterval(interval);
+          }
           return;
         }
       } catch {
@@ -392,7 +401,9 @@ export function FinalScreen({
         stopped = true;
         clearInterval(interval);
         setListPending(false);
-        toast.error("La liste met plus de temps que prévu — utilisez « Rafraichir la liste ».");
+        if (listPending) {
+          toast.error("La liste met plus de temps que prévu — utilisez « Rafraichir la liste ».");
+        }
       }
     }, 2500);
     return () => {

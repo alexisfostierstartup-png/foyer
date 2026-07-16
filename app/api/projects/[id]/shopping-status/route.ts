@@ -4,8 +4,11 @@ import { precomputeFinalAssets } from "@/lib/ai/pipeline";
 import { resolveHotspots } from "@/lib/shopping/hotspots";
 
 // Le GET est instantané, mais la relance éventuelle du calcul via after()
-// tourne dans le budget de la route.
-export const maxDuration = 90;
+// tourne dans le budget de la route. 300 s (plafond Fluid Compute) : à 90 s, le
+// calcul complet en prod (vision + Jina froid + matching) était TUÉ en plein vol
+// puis relancé par le poll suivant, indéfiniment — « la liste met 2 minutes puis
+// rien », pins jamais réparés (qepJGfvc, QA Alexis 2026-07-17).
+export const maxDuration = 300;
 
 /**
  * Statut de la liste de courses, pollé par la page /final en mode « préparation ».
@@ -28,6 +31,12 @@ export async function GET(
   const analysis = hotspots.bboxById ? hotspots : null;
 
   if (project.shoppingList) {
+    // AUTO-GUÉRISON DES PINS : liste présente mais analyse absente/périmée pour le
+    // rendu affiché (recalcul post-swap mort avec la lambda). ensureFinalAssets
+    // sait la refaire depuis le 3c737d9 — mais AUCUN déclencheur ne l'appelait
+    // quand la liste existait : ready=true court-circuitait tout, pins morts pour
+    // toujours (qepJGfvc, QA Alexis 2026-07-17). Le poll répare désormais ici.
+    if (!analysis) after(() => precomputeFinalAssets(id, "status-heal"));
     return NextResponse.json({
       ready: true,
       shoppingList: project.shoppingList,
