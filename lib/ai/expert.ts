@@ -1,6 +1,7 @@
 import { getProject, updateProject } from "@/lib/storage/projects";
 import { fetchImageBytes, computeRenderAdditions, buildBeforeAfterComposite, confirmChanges, mapCompositeBoxToRender, CLEAR_FINALIZE } from "@/lib/ai/pipeline";
 import { saveRender } from "@/lib/ai/saveRender";
+import { withTracking } from "@/lib/ai/track";
 import { enforceExpertIntegratedPieces } from "@/lib/shopping/integratedPieces";
 import { matchAlterationsToCatalog } from "@/lib/shopping/matcher";
 import { matchPartnerProductsBlendBatch, matchFloorProductsBlend } from "@/lib/shopping/partnerMatch";
@@ -342,6 +343,10 @@ export async function swapOnFake(
   fakeUrl: string,
   pieces: Piece[],
   roomType: RoomType,
+  // Traçabilité ai_calls (demande Alexis 2026-07-16 : « je veux voir les logs du
+  // swap ») — le swap NB2 était le seul appel image INVISIBLE en base : impossible
+  // de savoir quel prompt/mapping et combien de références un rendu expert a reçus.
+  projectId?: string,
   // Paramétrable pour le bench : le plafond de 3 vient d'un bench du 2026-07-09 et
   // n'a jamais été revérifié depuis, alors qu'il coûte 3 passes (3 × 0,08 $) et
   // 3 générations de dégradation pour 8 meubles. cf. scripts/bench-swap-chunk.ts
@@ -391,7 +396,20 @@ async function swapChunk(
     .map((v, i) => `every ${v.p.noun}${v.p.sourceDesc ? ` (currently: "${v.p.sourceDesc.slice(0, 110)}")` : ""} → image ${i + 2}`)
     .join(", ");
   const prompt = await promptExpert("expert_swap", { room, mapping }, EXPERT_SWAP_TEMPLATE);
-  return callNb2(prompt, [baseUri, ...validated.map((v) => v.uri)], aspectRatio);
+  return withTracking(
+    {
+      step: "expert_swap",
+      projectId: projectId ?? "unknown",
+      provider: "nano_banana_2",
+      requestPayload: {
+        promptName: "expert_swap",
+        pieces: validated.map((v) => `${v.p.category}: ${v.p.name}`),
+        imagesIn: 1 + validated.length,
+        prompt,
+      },
+    },
+    () => callNb2(prompt, [baseUri, ...validated.map((v) => v.uri)], aspectRatio),
+  );
 }
 
 /**
@@ -537,7 +555,7 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
       `${pieces.length}/${allPieces.length} meubles (${pieces.map((p) => p.category).join(", ")}) ` +
       `→ ${Math.ceil(pieces.length / SWAP_CHUNK_SIZE)} génération(s)`,
   );
-  const result = await swapOnFake(base, pieces, project.roomType);
+  const result = await swapOnFake(base, pieces, project.roomType, projectId);
   if (!result) {
     // Aucune image produit valide → on NE génère PAS (anti-hallucination) : on garde la base.
     console.warn(`[expert] ${projectId} : aucune image produit valide → rendu réel = base`);
@@ -622,7 +640,7 @@ export async function integratePieceOnRender(
   });
   if (pieces.length === 0) throw new Error("Image produit indisponible pour ce meuble.");
 
-  const swap = await swapOnFake(project.generatedRenderUrl, pieces, project.roomType);
+  const swap = await swapOnFake(project.generatedRenderUrl, pieces, project.roomType, projectId);
   if (!swap) throw new Error("L'intégration a échoué (image produit injoignable).");
 
   const url = await saveRender(swap.buffer, project.storageFolder, swap.mimeType, "integrate");
@@ -777,7 +795,7 @@ export async function reintegrateExpertAdditions(projectId: string): Promise<{ a
     return { added: newItems.length };
   }
 
-  const result = await swapOnFake(project.expertRenderUrl, pieces, project.roomType);
+  const result = await swapOnFake(project.expertRenderUrl, pieces, project.roomType, projectId);
   if (!result) {
     // Aucune image produit valide → on NE régénère PAS (anti-hallucination) :
     // le rendu itéré reste tel quel, mais les meubles entrent dans la liste.

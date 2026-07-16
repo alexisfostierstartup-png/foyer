@@ -621,7 +621,7 @@ export function FinalScreen({
       <div className="flex flex-1 flex-col">
         <ProgressBar currentStep={5} labels={STEPS} />
 
-        <main className={cn("mx-auto w-full flex-1 px-5 pt-6", debug ? "max-w-[820px]" : "max-w-[480px] lg:max-w-[960px]", (expertMode || orderUrls.length > 0) ? "pb-36" : "pb-24")}>
+        <main className={cn("mx-auto w-full flex-1 px-5 pt-6", debug ? "max-w-[820px]" : "max-w-[480px] lg:max-w-[960px]", (expertMode || orderUrls.length > 0) ? "pb-28" : "pb-24")}>
           {/* Before / After slider (expert : bouton bas-droit pour basculer
               rendu réel ↔ rendu IA d'origine, comme l'ancien écran expert) */}
           <div className="relative">
@@ -902,14 +902,14 @@ export function FinalScreen({
         // z-40 : sans z-index, la barre restait DERRIÈRE les onglets « Liste shopping /
         // Score Foyer », dont les boutons portent `relative z-10` — leur texte traversait
         // le bouton « Commander » (QA Alexis 2026-07-14). Sous les modales, qui sont en z-50.
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-foyer-border bg-foyer-cream/95 px-5 py-3 backdrop-blur">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-foyer-border bg-foyer-cream/95 px-5 py-2 backdrop-blur">
           <div className="mx-auto flex max-w-[480px] flex-col gap-1.5">
             <div className="flex items-center gap-2.5">
               {orderUrls.length > 0 && (
                 <button
                   type="button"
                   onClick={() => { for (const url of orderUrls) window.open(url, "_blank"); }}
-                  className="flex h-[52px] flex-1 items-center justify-center gap-2 rounded-full bg-foyer-sage font-medium text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:-translate-y-0.5"
+                  className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-foyer-sage font-medium text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:-translate-y-0.5"
                 >
                   <ShoppingBag className="size-4" aria-hidden />
                   Commander
@@ -921,7 +921,7 @@ export function FinalScreen({
                   disabled={rerendering}
                   onClick={() => setNewRenderOpen(true)}
                   className={cn(
-                    "flex h-[52px] flex-1 items-center justify-center gap-2 rounded-full border font-medium transition-all",
+                    "flex h-11 flex-1 items-center justify-center gap-2 rounded-full border font-medium transition-all",
                     rerendering
                       ? "cursor-not-allowed border-foyer-border text-foyer-muted"
                       : "border-foyer-ink text-foyer-ink hover:bg-foyer-ink/5",
