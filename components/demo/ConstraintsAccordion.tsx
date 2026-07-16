@@ -16,6 +16,9 @@ type Props = {
   setChoices: Dispatch<SetStateAction<UserChoices>>;
   floorPresets?: { slug: string; label: string }[];
   furnitureItems?: string[];
+  /** Déplié à l'ouverture (create desktop : le panneau est visible d'emblée). */
+  defaultOpen?: boolean;
+  className?: string;
 };
 
 const DECISIONS: { id: FurnitureDecision; label: string; active: string }[] = [
@@ -79,11 +82,11 @@ function Chip({
   );
 }
 
-export function ConstraintsAccordion({ choices, setChoices, floorPresets = [], furnitureItems = [] }: Props) {
-  const [open, setOpen] = useState(false);
+export function ConstraintsAccordion({ choices, setChoices, floorPresets = [], furnitureItems = [], defaultOpen = false, className }: Props) {
+  const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="rounded-2xl border border-foyer-border bg-white">
+    <div className={cn("flex flex-col rounded-2xl border border-foyer-border bg-white", className)}>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -109,7 +112,7 @@ export function ConstraintsAccordion({ choices, setChoices, floorPresets = [], f
       </button>
 
       {open && (
-        <div className="px-4 pb-2">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-2">
           {/* D.1 — Meubles */}
           <SubSection label="Instructions meubles">
             <ul className="flex flex-col gap-3">

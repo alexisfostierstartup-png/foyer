@@ -218,7 +218,7 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
             mobile, ça reste empilé. Le cadre photo, borné à une colonne, cesse d'être trop
             large et de déborder après import. */}
         {roomType && (
-          <div className="mt-8 lg:grid lg:grid-cols-2 lg:items-start lg:gap-6">
+          <div className="mt-8 lg:grid lg:grid-cols-2 lg:items-stretch lg:gap-6">
           <div ref={blocPhoto} className="scroll-mt-4 duration-300 animate-in fade-in">
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-foyer-sage">
               Votre pièce en photo
@@ -266,7 +266,10 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
                   // en dessous faisait doublon — deux chemins pour le même geste.
                   <label
                     className={cn(
-                      "flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-4 py-10 text-center transition-colors",
+                      // Même hauteur (4/3) que le loader et l'aperçu : sans ça le cadre
+                      // sautait de taille au moment de l'import. Le cadre est donc fixe,
+                      // photo présente ou non.
+                      "flex aspect-[4/3] w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-4 text-center transition-colors",
                       surZone
                         ? "border-foyer-sage bg-foyer-sage/10"
                         : "border-foyer-border bg-[#F0EBE2] hover:border-foyer-sage/60 hover:bg-foyer-sage/5",
@@ -358,8 +361,15 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
           {/* Colonne DROITE — contraintes. Conditionnées au choix de la PIÈCE (et non plus
               à l'import photo) : elles ne dépendent que du roomType, on les montre donc dès
               qu'il est choisi, à côté du visuel, sans attendre l'upload ni scroller. */}
-          <div className="mt-6 duration-300 animate-in fade-in lg:mt-0">
+          <div className="mt-6 flex flex-col duration-300 animate-in fade-in lg:mt-0">
+            {/* Espaceur invisible = le libellé « Votre pièce en photo » de gauche : sans lui,
+                le panneau s'alignait sur le libellé et non sur le cadre. hidden en mobile. */}
+            <p className="hidden text-[11px] font-semibold uppercase tracking-[0.12em] opacity-0 lg:block" aria-hidden>
+              Contraintes
+            </p>
             <ConstraintsAccordion
+              defaultOpen
+              className="lg:mt-2 lg:h-full"
               choices={choices}
               setChoices={setChoices}
               floorPresets={floorPresets}
