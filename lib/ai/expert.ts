@@ -146,6 +146,9 @@ type Piece = {
   // mapping quand deux meubles proches coexistent (la table d'appoint BORGEBY avait
   // remplacé la table basse CENTRALE, projet CVp7yLGh).
   sourceDesc?: string | null;
+  // Jumeau GARDÉ de la même catégorie (2 tapis : un gardé, un remplacé — zwtgBd) :
+  // injecté dans le mapping pour GELER explicitement l'exemplaire de l'utilisateur.
+  freezeNote?: string | null;
 };
 
 /**
@@ -394,8 +397,10 @@ async function swapChunk(
   // Localisateur par pièce (« the sofa — currently: … ») : identifie SANS ambiguïté
   // QUEL meuble remplacer quand plusieurs sont proches ; l'apparence cible vient
   // toujours de l'image de référence, jamais de cette description.
+  // « every » écrase tous les exemplaires d'une catégorie (4 chaises identiques) ;
+  // dès qu'un jumeau est GELÉ (freezeNote), on cible « the » + position — un seul.
   const mapping = validated
-    .map((v, i) => `every ${v.p.noun}${v.p.sourceDesc ? ` (currently: "${v.p.sourceDesc.slice(0, 110)}")` : ""} → image ${i + 2}`)
+    .map((v, i) => `${v.p.freezeNote ? "the" : "every"} ${v.p.noun}${v.p.sourceDesc ? ` (currently: "${v.p.sourceDesc.slice(0, 110)}")` : ""} → image ${i + 2}${v.p.freezeNote ?? ""}`)
     .join(", ");
   const prompt = await promptExpert("expert_swap", { room, mapping }, EXPERT_SWAP_TEMPLATE);
   const t0 = Date.now();
@@ -499,8 +504,17 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
   // liste dont l'élément avait déjà disparu → le choix partait à la poubelle sans
   // le moindre log (meuble TV du projet 51NekyJs0Qt, QA Alexis 2026-07-11).
   const userPicked = new Set<string>([...Object.keys(overrides), ...Object.keys(customProducts)]);
+  // DÉBLOCAGE POSITIONNEL (décision Alexis 2026-07-16, zwtgBd « 2 tapis ») : la
+  // protection par catégorie visait l'incapacité de NB2 à viser LE bon exemplaire.
+  // Quand la pièce à remplacer a une bbox connue, le localisateur positionnel + le
+  // gel explicite du jumeau (freezeNote, cf. plus bas) rendent le ciblage possible :
+  // le tapis de la liste est posé, celui de l'utilisateur reste. Sans bbox, la
+  // protection intégrale demeure.
   const swappable = shoppingList.filter(
-    (it) => !protectedCats.has(it.category) || (it.elementId != null && userPicked.has(it.elementId)),
+    (it) =>
+      !protectedCats.has(it.category) ||
+      (it.elementId != null &&
+        (userPicked.has(it.elementId) || Boolean(project.renderAnalysis?.bboxById?.[it.elementId]))),
   );
   for (const id of userPicked) replaceIds.add(id);
   const picks = (project.productPicks ?? {}) as Record<string, string>;
@@ -510,12 +524,36 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
     // basse jamais swappée — zt-9pvI, 2026-07-16). Même recette que les ouvertures et
     // l'inventaire : nommer la place. La bbox vient de l'analyse du rendu de base.
     .map((p) => {
+      const zoneDe = (b: { x: number; y: number; w: number; h: number }) => {
+        const cx = b.x + b.w / 2;
+        const zone = cx < 0.34 ? "on the LEFT side" : cx > 0.66 ? "on the RIGHT side" : "in the CENTER";
+        return `${zone}${b.y + b.h > 0.85 ? ", foreground" : ""}`;
+      };
       const b = p.elementId ? project.renderAnalysis?.bboxById?.[p.elementId] : undefined;
       if (!b) return p;
-      const cx = b.x + b.w / 2;
-      const zone = cx < 0.34 ? "on the LEFT side" : cx > 0.66 ? "on the RIGHT side" : "in the CENTER";
-      const avantPlan = b.y + b.h > 0.85 ? ", foreground" : "";
-      return { ...p, sourceDesc: `${zone}${avantPlan}: ${p.sourceDesc ?? p.category}` };
+      let out = { ...p, sourceDesc: `${zoneDe(b)}: ${p.sourceDesc ?? p.category}` };
+      // GEL DU JUMEAU : catégorie protégée débloquée par position — chaque exemplaire
+      // GARDÉ de la même catégorie est nommé, avec sa place, comme intouchable.
+      if (protectedCats.has(p.category)) {
+        const jumeaux = (project.element_decisions ?? [])
+          .filter(
+            (d) =>
+              d.category === p.category &&
+              d.element_id !== p.elementId &&
+              (d.mismatch_type === "none" || d.mismatch_type === "surface"),
+          )
+          .map((d) => {
+            const jb = project.renderAnalysis?.bboxById?.[d.element_id];
+            return `the ${p.noun} ${jb ? zoneDe(jb) : `(${(d.description ?? "").slice(0, 50)})`}`;
+          });
+        if (jumeaux.length) {
+          out = {
+            ...out,
+            freezeNote: ` — CAREFUL, the room has ${jumeaux.length + 1} ${p.noun}s and ONLY this one changes: ${jumeaux.join(" and ")} belongs to the owner and stays EXACTLY as it is`,
+          };
+        }
+      }
+      return out;
     });
 
   // BASE DU SWAP. Par défaut le fake : il porte le style validé, et repartir de lui
