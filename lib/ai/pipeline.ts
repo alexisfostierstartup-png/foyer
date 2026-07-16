@@ -401,8 +401,15 @@ export function buildConversionMission(
   const concernes = profiles.filter((p) => aRetirer.has(p.category));
   if (concernes.length === 0) return "";
   const noms = concernes.map((p) => p.description?.trim() || p.element || p.category).join("; ");
-  const pieceMaitresse = roomDefaults.split(",")[0]?.trim() || "its essential furniture";
-  return ` THE ROOM'S FUNCTION CHANGES — this is the ONE big transformation of this edit: the photo still shows the room furnished for ANOTHER use (${noms}). In your render that old set-up has been MOVED OUT: NONE of those pieces appears — not restyled, not repositioned, not even one — their floor space is freed. The room is furnished as a genuine ${roomType} instead: a ${pieceMaitresse} is the new centerpiece, standing where the old set-up stood, completed per ROOM CONTENT. The shell does not move: same walls, same openings, same floor, same viewpoint.`;
+  // Certains room_defaults sont une LISTE (« bed, nightstand… ») dont le 1er item est
+  // la pièce maîtresse ; d'autres de la PROSE (« A DINING ROOM. The dining TABLE… ») —
+  // là, coller le 1er morceau produirait une phrase absurde : on reste générique.
+  const premier = roomDefaults.split(",")[0]?.trim() ?? "";
+  const centre =
+    premier && premier.length <= 30 && !premier.includes(".")
+      ? `a ${premier} is the new centerpiece, standing where the old set-up stood`
+      : `its defining furniture (ROOM CONTENT below) takes over the freed space`;
+  return ` THE ROOM'S FUNCTION CHANGES — this is the ONE big transformation of this edit: the photo still shows the room furnished for ANOTHER use (${noms}). In your render that old set-up has been MOVED OUT: NONE of those pieces appears — not restyled, not repositioned, not even one — their floor space is freed. The room is furnished as a genuine ${roomType} instead: ${centre}, completed per ROOM CONTENT. The shell does not move: same walls, same openings, same floor, same viewpoint.`;
 }
 
 export async function buildLightingPlanLine(
