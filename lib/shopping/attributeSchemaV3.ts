@@ -68,7 +68,10 @@ export const SCHEMA_V3: Record<string, AttrV3[]> = {
     { key: "top_color", type: "hex" },
     { key: "legs_material", type: "enum", conditional: true, vocab: ["wood", "metal", "plastic", "stone", "glass"], hint: "MATIÈRE du pied, et RIEN d'autre (la couleur est captée par legs_color, la finition ne compte pas) : wood (tout bois, clair/foncé/laqué/placage), metal (tout métal, quelle que soit sa couleur ou finition), plastic, stone (marbre, travertin, béton, pierre), glass. Si le pied est dans la MÊME matière que le plateau, indique cette MATIÈRE — jamais une valeur du type « identique au plateau »" },
     { key: "legs_color", type: "hex", conditional: true },
-    { key: "legs_type", type: "enum", vocab: ["four_legs", "central", "tapered", "metal_thin", "sled", "casters"] },
+    // Hint 2026-07-16 (ND5qBys) : une table CUBE (bloc plein, plateau posé sur socle)
+    // était extraite « four_legs » — le modèle répondait la valeur la plus fréquente
+    // faute de critère. On donne le critère discriminant.
+    { key: "legs_type", type: "enum", vocab: ["four_legs", "central", "tapered", "metal_thin", "sled", "casters"], hint: "four_legs UNIQUEMENT si des pieds SÉPARÉS sont visibles ; un cube plein, un bloc, un plateau sur socle plein = central" },
     { key: "storage", type: "enum", vocab: ["none", "lower_shelf", "drawers", "lift_top"] },
   ],
   side_table: [
