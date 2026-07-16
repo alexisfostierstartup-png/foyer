@@ -895,9 +895,12 @@ export function FinalScreen({
           <div className="mx-auto flex max-w-[480px] flex-col gap-1.5">
             <div className="flex items-center gap-2.5">
               {orderUrls.length > 0 && (
+                // Route vers la COMMANDE CONSOLIDÉE (articles par enseigne, poubelle,
+                // total) — l'ouverture en rafale des pages produit vit là-bas. La rafale
+                // directe ici faisait perdre la vue d'ensemble (retour Alexis 2026-07-16).
                 <button
                   type="button"
-                  onClick={() => { for (const url of orderUrls) window.open(url, "_blank"); }}
+                  onClick={() => router.push(`/create/${projectId}/commande`)}
                   className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-foyer-sage font-medium text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:-translate-y-0.5"
                 >
                   <ShoppingBag className="size-4" aria-hidden />
