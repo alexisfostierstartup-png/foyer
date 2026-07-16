@@ -37,15 +37,21 @@ type Verdict = {
   meuble_duplique: boolean;
   objet_hors_piece_restant: boolean;
   piece_a_moitie_vide: boolean;
+  // Conversion de pièce (salon déclaré chambre…) — champs jugés seulement quand
+  // la détection ∩ removeCategories est non vide (sinon ignorés).
+  meuble_ancien_usage_restant: boolean;
+  meuble_usage_cible_present: boolean;
   engagement_style: number;
   beaute: number;
   commentaire: string;
 };
 
-const JUGE = `Tu es un contrôleur qualité impitoyable. IMAGE 1 = la photo ORIGINALE de la pièce. IMAGE 2 = le rendu redécoré.
+const JUGE = (roomType: string) => `Tu es un contrôleur qualité impitoyable. IMAGE 1 = la photo ORIGINALE de la pièce. IMAGE 2 = le rendu redécoré. La pièce CIBLE est déclarée : ${roomType} (le rendu doit être meublé comme un(e) ${roomType}, même si la photo montre un autre usage).
 
 Réponds en JSON STRICT, sans texte autour :
 {
+  "meuble_ancien_usage_restant": <true si un meuble typique d'un AUTRE usage que ${roomType} (ex. canapé, table basse, meuble TV pour une chambre) visible dans la photo est ENCORE présent dans le rendu>,
+  "meuble_usage_cible_present": <true si le rendu contient le mobilier ESSENTIEL d'un(e) ${roomType} (ex. un lit pour une chambre)>,
   "meme_piece": <true si un habitant reconnaîtrait immédiatement SA pièce : mêmes murs, mêmes ouvertures aux mêmes positions, même point de vue>,
   "ouvertures_identiques": <true si CHAQUE fenêtre/porte/baie/passage de la photo est au même endroit, même taille, même menuiserie, et qu'aucune nouvelle n'apparaît>,
   "ouverture_inventee": <true si le rendu montre une ouverture absente de la photo>,
@@ -63,7 +69,8 @@ Réponds en JSON STRICT, sans texte autour :
 async function main() {
   const { detectElementProfiles, buildFixedFeaturesSummary, buildRemoveList,
     buildLightingPlanLine, buildRoomScaleLine, buildVariationLine, buildInventoryLockLine,
-    constraintsToChoices, visionJsonPourPrompt, annoteDefaultsSelonDetection } = await import("../lib/ai/pipeline");
+    constraintsToChoices, visionJsonPourPrompt, annoteDefaultsSelonDetection,
+    buildConversionLine } = await import("../lib/ai/pipeline");
   const { loadStyleContext, loadRoomDefaults, loadRoomRemoveCategories,
     formatUserInstructions, formatDesignPlan } = await import("../lib/prompts/helpers");
   const { resolveRawTemplate } = await import("../lib/prompts/engine");
@@ -127,21 +134,35 @@ async function main() {
     ? formatDesignPlan(projet.element_decisions as never) || "None — restyle freely to fit the style."
     : "None — restyle freely to fit the style.";
   const furnitureDefaults = annoteDefaultsSelonDetection(furnitureDefaultsBruts, profiles as never);
-  const ctx = {
+  // Deux assemblages : « legacy » réplique la prod actuelle (canapé encore décrit
+  // dans le JSON + variation, pas de ligne conversion), « new » = code purgé
+  // (visionJson/variation sans removeCategories + THIS ROOM CHANGES FUNCTION).
+  // Le bras prod tourne sur legacy, le bras dev sur new → l'A/B mesure le FIX
+  // complet code+template (conversion salon→chambre, O_nmJO 2026-07-16).
+  const communs = {
     styleName,
     styleMood,
     roomType: roomTypeEff,
     furnitureDefaults,
-    visionJson: visionJsonPourPrompt(profiles),
     fixedFeatures: await buildFixedFeaturesSummary(profiles),
     removeList: buildRemoveList(profiles, removeCategories),
     userInstructions: projet ? await formatUserInstructions(choices as never) : "None — use your judgment within the guidance.",
-    designPlan: `${designPlanCore}\n${await buildLightingPlanLine(profiles, styleName)}${buildRoomScaleLine(projet?.roomScale ?? "large")}${buildVariationLine(projet?.id ?? projectId)}${buildInventoryLockLine(profiles, removeCategories)}`,
+  };
+  const finPlan = `\n${await buildLightingPlanLine(profiles, styleName)}${buildRoomScaleLine(projet?.roomScale ?? "large")}`;
+  const ctxLegacy = {
+    ...communs,
+    visionJson: visionJsonPourPrompt(profiles),
+    designPlan: `${designPlanCore}${finPlan}${buildVariationLine(projet?.id ?? projectId)}${buildInventoryLockLine(profiles, removeCategories)}`,
+  };
+  const ctxNew = {
+    ...communs,
+    visionJson: visionJsonPourPrompt(profiles, removeCategories),
+    designPlan: `${designPlanCore}${buildConversionLine(profiles as never, removeCategories, roomTypeEff)}${finPlan}${buildVariationLine(projet?.id ?? projectId, removeCategories)}${buildInventoryLockLine(profiles, removeCategories)}`,
   };
 
   const ARMS = [
-    { cle: "prod17k", template: prodT.template as string },
-    { cle: "dev-min", template: devT.template as string },
+    { cle: "prod17k", template: prodT.template as string, ctx: ctxLegacy },
+    { cle: "dev-min", template: devT.template as string, ctx: ctxNew },
   ];
   // --arm=prod17k (ou dev-min) : ne lancer que ce bras.
   const armFilter = arg("arm")?.split(",");
@@ -152,7 +173,7 @@ async function main() {
   const lignes: Array<Record<string, unknown>> = [];
   for (const armDef of arms) {
     for (let r = 1; r <= rounds; r++) {
-      const prompt = resolveRawTemplate(armDef.template, ctx as never).resolved;
+      const prompt = resolveRawTemplate(armDef.template, armDef.ctx as never).resolved;
       const t0 = Date.now();
       let res;
       try {
@@ -172,19 +193,22 @@ async function main() {
       let verdict: Verdict | null = null;
       try {
         const jugeRes = await getVisionProvider("gemini_vision").analyze(
-          JUGE, [buf, res.imageBuffer], { model: "gemini-2.5-flash" },
+          JUGE(roomTypeEff), [buf, res.imageBuffer], { model: "gemini-2.5-flash" },
         );
         verdict = jugeRes.parsed as Verdict | null;
       } catch (e) {
         console.warn(`  ⚠ juge illisible: ${e instanceof Error ? e.message : e}`);
       }
       if (verdict) {
+        const conversionEnJeu = profiles.some((p) => removeCategories.includes(p.category));
         const fautes =
           (verdict.meme_piece ? 0 : 1) + (verdict.ouvertures_identiques ? 0 : 1) +
           (verdict.ouverture_inventee ? 1 : 0) + (verdict.ouverture_supprimee ? 1 : 0) +
           (verdict.boiserie_moulure_ajoutee ? 1 : 0) + (verdict.cadrage_identique ? 0 : 1) +
           (verdict.meuble_duplique ? 1 : 0) + (verdict.objet_hors_piece_restant ? 1 : 0) +
-          (verdict.piece_a_moitie_vide ? 1 : 0);
+          (verdict.piece_a_moitie_vide ? 1 : 0) +
+          (conversionEnJeu && verdict.meuble_ancien_usage_restant ? 1 : 0) +
+          (conversionEnJeu && !verdict.meuble_usage_cible_present ? 1 : 0);
         lignes.push({ bras: armDef.cle, round: r, promptLen: prompt.length, fautes, largeur: dims?.w, hauteur: dims?.h, ...verdict });
         console.log(`  → ${fautes} faute(s) · style ${verdict.engagement_style}/5 · beauté ${verdict.beaute}/5 · ${verdict.commentaire}`);
       }
