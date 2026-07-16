@@ -114,6 +114,23 @@ function ScoreBreakdown({ m }: { m: ProductMatch }) {
 // score de TOUS les produits de cet item.
 function ItemScoringHeader({ item }: { item: ShoppingItem }) {
   const wr = item.weightRule;
+  // PEINTURE : le seul « attribut » qui compte est la COULEUR CIBLE — la grille
+  // d'attrs générique est du bruit ici (demande Alexis 2026-07-16). Hex cible en
+  // clair + swatch ; le ΔE par pot est déjà dans le ScoreBreakdown de chaque match.
+  if (item.category === "paint" || (item.targetHex && !wr)) {
+    if (!item.targetHex) return null;
+    return (
+      <div className="mt-2 flex items-center gap-2 rounded-lg border border-dashed border-foyer-border bg-foyer-cream/40 px-3 py-2 font-mono text-[11px] text-foyer-muted">
+        <span className="font-semibold text-foyer-ink">Hex cible (mesuré sur le rendu, hors ombres)</span>
+        <span
+          className="inline-block size-4 rounded border border-foyer-border"
+          style={{ backgroundColor: item.targetHex }}
+          aria-hidden
+        />
+        <span className="text-foyer-ink">{item.targetHex}</span>
+      </div>
+    );
+  }
   if (!wr) return null;
   const ea = (item.elementAttrs ?? {}) as Record<string, unknown>;
   return (

@@ -224,13 +224,13 @@ export const SCHEMA_V3: Record<string, AttrV3[]> = {
   ],
   vase: [
     { key: "shape", type: "enum", vocab: ["bottle", "sphere", "cylinder", "amphora", "organic", "pitcher"] },
-    { key: "material", type: "enum", vocab: ["ceramic", "glass", "terracotta", "metal", "stone"] },
+    { key: "material", type: "enum", vocab: ["ceramic", "glass", "terracotta", "metal", "stone", "wood", "rattan_cane", "resin", "concrete"], hint: "rattan_cane = tressé (rotin, osier, bambou, ET corde/papier tressé — même texture tressée)" },
     { key: "color", type: "hex" },
     { key: "size", type: "enum", vocab: ["small", "medium", "large"] },
   ],
   decorative_object: [
     { key: "type", type: "enum", vocab: ["sculpture", "candle_holder", "bowl_tray", "bookend", "box", "clock", "candle"] },
-    { key: "material", type: "enum", vocab: ["ceramic", "metal_brass", "wood", "glass", "stone_marble", "resin"] },
+    { key: "material", type: "enum", vocab: ["ceramic", "metal_brass", "wood", "glass", "stone_marble", "resin", "terracotta", "plastic", "rattan_cane", "fabric"], hint: "fabric = matière souple non rigide (textile, plumes...) ; rattan_cane = tressé (rotin, osier, bambou)" },
     { key: "color", type: "hex" },
     { key: "size", type: "enum", vocab: ["small", "medium", "large"] },
   ],
@@ -253,10 +253,19 @@ export function getSchemaV3(schema: string): AttrV3[] {
   return SCHEMA_V3[schema] ?? SCHEMA_V3.default;
 }
 
+/** Catégories dont le nom diffère de leur schéma V3 — partagé avec l'instruction
+ * d'extraction : le MODÈLE matche par nom de catégorie (`floor`), pas par nom de
+ * schéma (`floor_material`) ; sans alias affiché il n'émettait JAMAIS d'attrs pour
+ * le sol (matcher sol privé d'attrs — QA Alexis 2026-07-16, ND5qBys). */
+export const CATEGORY_SCHEMA_ALIASES: Record<string, string> = {
+  floor: "floor_material",
+  lamp: "pendant_lamp",
+  footstool: "pouf",
+};
+
 /** Mappe une catégorie catalogue vers un schéma V3 (certaines diffèrent). */
 export function schemaForCategory(category: string): string {
-  const map: Record<string, string> = { floor: "floor_material", lamp: "pendant_lamp", footstool: "pouf" };
-  return map[category] ?? (SCHEMA_V3[category] ? category : "default");
+  return CATEGORY_SCHEMA_ALIASES[category] ?? (SCHEMA_V3[category] ? category : "default");
 }
 
 /**

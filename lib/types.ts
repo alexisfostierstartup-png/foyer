@@ -270,6 +270,12 @@ export type Project = {
   // montrées au user — un recalcul reprend ces matches par item, sauf pour les
   // catégories visées par les demandes d'itération en attente (listLock.ts).
   lockedShoppingList?: ShoppingItem[] | null;
+  // Rendu sur lequel le verrou a été construit : il ne s'applique QUE si le rendu
+  // analysé est le même. Une liste verrouillée sur un rendu antérieur décrivait des
+  // objets qui n'existent plus (« table basse ronde » alors que le rendu courant la
+  // montre carrée — QA Alexis 2026-07-16, ND5qBys) : la liste se reconstruit sur le
+  // DERNIER rendu, les choix produits explicites survivant via productPicks.
+  lockedShoppingListRenderUrl?: string | null;
   pendingReleaseRequests?: string[] | null;
   // Produit SUR-MESURE fourni par l'user (URL collée → image extraite, ou JPEG
   // importé). Clé = elementId (choix à la liste shopping) OU catégorie (choix dès

@@ -1745,6 +1745,11 @@ export async function runIterationPipeline(
     // demande, le reste est repris tel quel (listLock.ts). Cible désignée au
     // doigt → libération par element_id, pas de parsing mots-clés.
     lockedShoppingList: project.shoppingList?.length ? project.shoppingList : project.lockedShoppingList ?? null,
+    // Le verrou vaut pour le rendu COURANT (pré-itération) : si le recalcul
+    // post-itération analyse un autre rendu, il reconstruira à neuf.
+    lockedShoppingListRenderUrl: project.shoppingList?.length
+      ? project.generatedRenderUrl
+      : project.lockedShoppingListRenderUrl ?? null,
     ...(opts?.targetElementIds?.length
       ? { pendingReleaseElementIds: [...(project.pendingReleaseElementIds ?? []), ...opts.targetElementIds] }
       : { pendingReleaseRequests: [...(project.pendingReleaseRequests ?? []), userRequest] }),
@@ -2439,9 +2444,23 @@ async function buildMatchesAndScore(
   // RIEN changer, pour sortir de l'aléa vision) : les lignes verrouillées sont
   // reprises telles quelles ; la nouvelle analyse n'apporte que les catégories
   // relâchées par une itération et les catégories absentes du verrou.
+  //
+  // MAIS le verrou ne vaut QUE pour le rendu qui l'a produit (directive Alexis
+  // 2026-07-16, réaffirmée : « la liste se construit sur la DERNIÈRE version du
+  // rendu ») : une liste verrouillée sur un rendu antérieur décrit des objets qui
+  // n'existent plus (« table basse ronde » vs rendu carré, pins joints aux mauvaises
+  // bboxes — ND5qBys). Rendu différent → verrou ignoré, reconstruction complète sur
+  // l'analyse fraîche ; les choix produits explicites survivent via productPicks.
+  // Le verrou garde tout son rôle anti-loterie sur les recalculs du MÊME rendu.
+  const lockValide =
+    Boolean(project.lockedShoppingList?.length) &&
+    project.lockedShoppingListRenderUrl === analysis.renderUrl;
+  if (project.lockedShoppingList?.length && !lockValide) {
+    console.log("[pipeline:final] verrou de liste construit sur un autre rendu → ignoré, liste reconstruite");
+  }
   const releasedCategories = await mapRequestsToCategories(project.pendingReleaseRequests ?? []);
   const releasedElementIds = new Set(project.pendingReleaseElementIds ?? []);
-  const { items: shoppingList, toMatchIdx } = carryOverLockedMatches(newItems, project.lockedShoppingList, releasedCategories, releasedElementIds);
+  const { items: shoppingList, toMatchIdx } = carryOverLockedMatches(newItems, lockValide ? project.lockedShoppingList : null, releasedCategories, releasedElementIds);
 
   // CROP du rendu par item : on découpe la zone de l'élément (bbox de l'audit) dans le
   // RENDU → embedding IMAGE (cible image↔image, bien plus discriminant que texte→image).
@@ -2671,7 +2690,8 @@ async function buildMatchesAndScore(
     // en attente sont consommées (les catégories relâchées viennent d'être rejouées).
     await updateProject(projectId, {
       shoppingList: finalList, scoreFoyer, builtShoppingList: built,
-      lockedShoppingList: finalList, pendingReleaseRequests: [], pendingReleaseElementIds: [],
+      lockedShoppingList: finalList, lockedShoppingListRenderUrl: analysis.renderUrl,
+      pendingReleaseRequests: [], pendingReleaseElementIds: [],
     });
   } else {
     console.log("[pipeline:final] rendu changé pendant le matching → liste non persistée (stale)");

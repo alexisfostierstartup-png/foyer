@@ -8,7 +8,7 @@
  * vs le 7-places visuellement proche (struct 0.16) que l'image seule classait 1er.
  */
 import { hexToLab, deltaE } from "@/lib/color";
-import { SCHEMA_V3, schemaForCategory, type AttrV3 } from "./attributeSchemaV3";
+import { SCHEMA_V3, schemaForCategory, CATEGORY_SCHEMA_ALIASES, type AttrV3 } from "./attributeSchemaV3";
 
 // ΔE au-delà duquel un attribut couleur ne rapporte plus rien (latitude perceptuelle).
 const COLOR_THRESHOLD = 28;
@@ -206,9 +206,14 @@ export function buildAttrsInstruction(categories?: string[], opts?: { replacedOn
   const schemas = categories && categories.length
     ? [...new Set(categories.map(schemaForCategory))]
     : Object.keys(SCHEMA_V3).filter((c) => c !== "default");
+  // Chaque ligne affiche AUSSI les catégories-alias (floor → floor_material…) : le
+  // modèle matche par nom de CATÉGORIE d'élément — sans l'alias, le sol ne trouvait
+  // pas son schéma et n'émettait jamais d'attrs (matcher sol aveugle, ND5qBys).
+  const aliasesDe = (s: string) =>
+    Object.entries(CATEGORY_SCHEMA_ALIASES).filter(([, sch]) => sch === s).map(([cat]) => cat);
   const lines = schemas
     .filter((s) => SCHEMA_V3[s])
-    .map((s) => `- ${s}: { ${SCHEMA_V3[s].map(fmtAttr).join(", ")} }`);
+    .map((s) => `- ${[...aliasesDe(s), s].join(" / ")}: { ${SCHEMA_V3[s].map(fmtAttr).join(", ")} }`);
   // confirm_changes : seuls les éléments REMPLACÉS (nouvel objet) ont besoin des attrs.
   // Un simple re-finish/repeint = même objet, même forme → la couleur suffit, on n'alourdit pas.
   const scope = opts?.replacedOnly
