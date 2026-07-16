@@ -1,6 +1,7 @@
 import { getProject, updateProject } from "@/lib/storage/projects";
 import { fetchImageBytes, computeRenderAdditions, buildBeforeAfterComposite, confirmChanges, mapCompositeBoxToRender, CLEAR_FINALIZE, ensureFinalAssets } from "@/lib/ai/pipeline";
 import { saveRender } from "@/lib/ai/saveRender";
+import { logPipelineEvent } from "@/lib/ai/logger";
 import { withTracking } from "@/lib/ai/track";
 import { enforceExpertIntegratedPieces } from "@/lib/shopping/integratedPieces";
 import { matchAlterationsToCatalog } from "@/lib/shopping/matcher";
@@ -556,7 +557,22 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
   if (pieces.length === 0) {
     // Soit rien à remplacer, soit — sur un rendu itéré — rien qui ait changé : dans les
     // deux cas, régénérer ne ferait que dégrader l'image pour un résultat identique.
+    // Tracé en pipeline_logs : un « rendu expert = fake » silencieux est indiscernable
+    // d'un swap raté depuis l'admin (O_nmJO, QA Alexis 2026-07-16) — la RAISON doit
+    // être visible là où on cherche.
     console.log(`[expert] ${projectId} : rien de nouveau à swapper → rendu inchangé (0 génération)`);
+    await logPipelineEvent({
+      project_id: projectId,
+      event: "generate",
+      step: "expert_swap_skip",
+      metadata: {
+        raison: surRenduItere ? "rendu itéré : aucun produit changé" : "aucune pièce swappable dans la liste",
+        lignesListe: shoppingList.length,
+        lignesSwappables: swappable.length,
+        piecesCandidates: allPieces.length,
+        categoriesProtegees: [...protectedCats],
+      },
+    });
     await updateProject(projectId, { expertRenderUrl: base });
     return base;
   }
@@ -566,6 +582,7 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
       `${pieces.length}/${allPieces.length} meubles (${pieces.map((p) => p.category).join(", ")}) ` +
       `→ ${Math.ceil(pieces.length / SWAP_CHUNK_SIZE)} génération(s)`,
   );
+  const tSwap = Date.now();
   const result = await swapOnFake(base, pieces, project.roomType, projectId);
   if (!result) {
     // Aucune image produit valide → on NE génère PAS (anti-hallucination) : on garde la base.
@@ -576,6 +593,19 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
   const { buffer, mimeType, integrated } = result;
 
   const url = await saveRender(buffer, project.storageFolder, mimeType, "expert");
+  await logPipelineEvent({
+    project_id: projectId,
+    event: "generate",
+    step: "expert_swap",
+    provider: "nano_banana_2",
+    duration_ms: Date.now() - tSwap,
+    render_url: url,
+    metadata: {
+      base: surRenduItere ? "rendu itéré" : "fake",
+      pieces: pieces.map((p) => `${p.category}: ${p.name}`),
+      generations: Math.ceil(pieces.length / SWAP_CHUNK_SIZE),
+    },
+  });
   // Source de vérité de la liste de courses pour les meubles intégrés : ce qui est
   // DANS le rendu fait foi. Persisté ici, ré-injecté dans toute liste recalculée
   // (enforceExpertIntegratedPieces) — un meuble visible dans le rendu ne peut plus
@@ -1020,12 +1050,37 @@ export async function runExpertIteration(
 
   const prompt = await promptExpert("expert_iterate", { userRequest, cible }, EXPERT_ITERATE_TEMPLATE);
 
-  const { buffer, mimeType } = await callNb2(prompt, [await toDataUri(parentUrl)]);
+  // Même traçabilité que le swap (ai_calls + pipeline_logs) : l'itération expert
+  // était le dernier appel image invisible en base (constat Alexis 2026-07-16,
+  // projet -3TxWNN : « IT_1 apparu, aucune génération dans les logs »).
+  const t0 = Date.now();
+  const res = await withTracking(
+    {
+      step: "generation",
+      projectId,
+      provider: "nano_banana_2",
+      requestPayload: { promptName: "expert_iterate", userRequest, target: target?.targetLabel ?? null, prompt },
+    },
+    async () => {
+      const r = await callNb2(prompt, [await toDataUri(parentUrl)]);
+      return { ...r, durationMs: Date.now() - t0, modelUsed: "nano-banana-2", usage: { imagesIn: 1, imagesOut: 1 } };
+    },
+  );
+  const { buffer, mimeType } = res;
   const n = (project.iterationCount ?? 0) + 1;
   const url = await saveRender(buffer, project.storageFolder, mimeType, `iterate_${n}`);
   // expertIterated : à partir d'ici, le rendu expert peut contenir des meubles que
   // le fake n'a jamais eus → le fake n'est plus une base de swap valide.
   await updateProject(projectId, { expertRenderUrl: url, iterationCount: n, expertIterated: true });
+  await logPipelineEvent({
+    project_id: projectId,
+    event: "iterate",
+    step: "expert_iterate",
+    provider: "nano_banana_2",
+    duration_ms: Date.now() - t0,
+    render_url: url,
+    metadata: { userRequest: userRequest.slice(0, 200), target: target?.targetLabel ?? null, iteration: n },
+  });
   console.log(`[expert] ${projectId} : itération expert #${n} sauvegardée`);
   return url;
 }

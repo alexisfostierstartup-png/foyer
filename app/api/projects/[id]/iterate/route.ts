@@ -1,5 +1,5 @@
 import { NextResponse, after } from "next/server";
-import { precomputeFinalAssets, runIterationPipeline } from "@/lib/ai/pipeline";
+import { precomputeFinalAssets, ensureFinalAssets, runIterationPipeline } from "@/lib/ai/pipeline";
 import { runExpertIteration, reintegrateExpertAdditions, reintegrateExpertSurfaces } from "@/lib/ai/expert";
 import { getProject } from "@/lib/storage/projects";
 import { logPipelineError } from "@/lib/ai/logger";
@@ -53,6 +53,13 @@ export async function POST(
         // ACHETABLE : sans ça, « change le sol » donnait une image superbe et un sol
         // invendable. Aucune image régénérée ici, seulement deux appels vision.
         await reintegrateExpertSurfaces(id).catch((e) => logPipelineError(id, "expert-surfaces", e));
+        // RECALCUL FORCÉ, même recette que le swap : le rendu affiché a changé
+        // (IT_N) mais ensureFinalAssets sans force voyait « une liste existe » et
+        // s'arrêtait là — analyse/pins restaient estampillés sur l'ANCIEN rendu
+        // expert, plus aucun pin à l'écran (-3TxWNN, QA Alexis 2026-07-16). Après
+        // les réintégrations (qui peuvent régénérer le rendu), on réaligne tout
+        // sur renduAffiche ; les produits intégrés survivent (épinglage).
+        await ensureFinalAssets(id, { force: true }).catch((e) => logPipelineError(id, "expert-iterate-recompute", e));
       });
       return NextResponse.json({ ok: true, projectId: id });
     }

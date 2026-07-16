@@ -137,9 +137,20 @@ async function lightpointProfiles(profiles: ElementProfile[]): Promise<ElementPr
 // milliers de caractères. On élague à l'ASSEMBLAGE uniquement : la détection
 // complète reste en DB pour le matching, le DIY et les audits. `movable` RESTE
 // (demande explicite d'Alexis : c'est lui qui distingue ce qui peut bouger).
-export function visionJsonPourPrompt(profiles: ElementProfile[]): string {
+export function visionJsonPourPrompt(
+  profiles: ElementProfile[],
+  // Conversion de pièce (salon déclaré « chambre ») : les éléments à RETIRER
+  // sortent aussi du JSON. Les y laisser, c'est décrire au modèle un canapé
+  // (plan, matière, position) qu'une seule ligne en fin de prompt lui demande de
+  // supprimer — il perdait l'arbitrage et restylait le salon (O_nmJO, 2026-07-16).
+  // Leur seule mention doit être la removeList.
+  removeCategories: string[] = [],
+): string {
+  const aRetirer = new Set(removeCategories);
   return JSON.stringify(
-    profiles.map(({ dims: _d, condition: _c, surface_features: _s, ...garde }) => garde),
+    profiles
+      .filter((p) => !aRetirer.has(p.category))
+      .map(({ dims: _d, condition: _c, surface_features: _s, ...garde }) => garde),
     null,
     2,
   );
@@ -330,11 +341,75 @@ function graine(projectId: string): number {
   return n;
 }
 
-export function buildVariationLine(projectId: string): string {
+export function buildVariationLine(
+  projectId: string,
+  // Une catégorie à RETIRER de la pièce ne reçoit JAMAIS de variante : dire « if the
+  // room gets a sofa, make it curved » dans une chambre est une invitation à garder
+  // le canapé — et le fake d'O_nmJO a précisément rendu ce canapé courbe (2026-07-16).
+  removeCategories: string[] = [],
+): string {
   const g = graine(projectId);
-  const canape = SILHOUETTES_CANAPE[g % SILHOUETTES_CANAPE.length];
-  const table = SILHOUETTES_TABLE_BASSE[(g >> 2) % SILHOUETTES_TABLE_BASSE.length];
-  return `\n- VARIATION (do not fall back on your default furniture): if the room gets a sofa, make it ${canape}. If it gets a coffee table, make it ${table}. Keep both fully within the style — this fixes the SHAPE and the MATERIAL, never the category.`;
+  const aRetirer = new Set(removeCategories);
+  const clauses: string[] = [];
+  if (!aRetirer.has("sofa")) {
+    clauses.push(`if the room gets a sofa, make it ${SILHOUETTES_CANAPE[g % SILHOUETTES_CANAPE.length]}`);
+  }
+  if (!aRetirer.has("coffee_table")) {
+    clauses.push(`if it gets a coffee table, make it ${SILHOUETTES_TABLE_BASSE[(g >> 2) % SILHOUETTES_TABLE_BASSE.length]}`);
+  }
+  if (clauses.length === 0) return "";
+  return `\n- VARIATION (do not fall back on your default furniture): ${clauses.join(". ").replace(/^if it/, "if the room")}. This fixes the SHAPE and the MATERIAL, never the category — stay fully within the style.`;
+}
+
+/**
+ * CONVERSION DE PIÈCE — la photo montre des meubles d'un AUTRE usage (salon déclaré
+ * « chambre »). Le template générique est écrit pour restyler une pièce qui garde sa
+ * fonction : ses règles dures (« keep each furniture in its original zone ») et le
+ * style (« low-slung sofas ») poussent à garder le salon, contre la seule removeList
+ * en fin de prompt. Quand une conversion est en jeu, on l'annonce EN TÊTE DU PLAN —
+ * la section la mieux suivie — pour que le retrait gagne l'arbitrage (O_nmJO, 2026-07-16).
+ */
+export function buildConversionLine(
+  profiles: ElementProfile[],
+  removeCategories: string[],
+  roomType: string,
+): string {
+  const aRetirer = new Set(removeCategories);
+  const concernes = profiles.filter((p) => aRetirer.has(p.category));
+  if (concernes.length === 0) return "";
+  const noms = concernes.map((p) => p.description?.trim() || p.element || p.category).join("; ");
+  return `\n- THIS ROOM CHANGES FUNCTION: the photo still shows furniture from a previous use (${noms}). These pieces are GONE — reproduce NONE of them, do not restyle them, do not keep even one: their floor space is FREED. Furnish the room as a true ${roomType} instead (ROOM CONTENT below). Removing them changes NOTHING about the shell: same walls, same openings, same floor, same viewpoint.`;
+}
+
+/**
+ * MISSION DE CONVERSION — injectée dans la PREMIÈRE PHRASE du template ({{conversionMission}}).
+ * Le banc du 2026-07-16 (replay O_nmJO, 3+3 rendus) a prouvé que la purge du JSON/variation
+ * + une ligne dans le plan ne suffisent PAS : sur une tâche d'ÉDITION, la photo du salon
+ * gagne contre toute consigne enterrée — 6/6 rendus « salon sans lit ». La conversion doit
+ * définir la MISSION elle-même, pas être une règle parmi trente. Vide hors conversion
+ * (le placeholder doit TOUJOURS être fourni : resolvePrompt strict throw sinon).
+ */
+export function buildConversionMission(
+  profiles: ElementProfile[],
+  removeCategories: string[],
+  roomType: string,
+  // Défauts BRUTS du room type (avant annotation) : le premier item est la pièce
+  // maîtresse attendue (« bed » pour une chambre) — data-driven, rien de codé en dur.
+  roomDefaults: string,
+): string {
+  const aRetirer = new Set(removeCategories);
+  const concernes = profiles.filter((p) => aRetirer.has(p.category));
+  if (concernes.length === 0) return "";
+  const noms = concernes.map((p) => p.description?.trim() || p.element || p.category).join("; ");
+  // Certains room_defaults sont une LISTE (« bed, nightstand… ») dont le 1er item est
+  // la pièce maîtresse ; d'autres de la PROSE (« A DINING ROOM. The dining TABLE… ») —
+  // là, coller le 1er morceau produirait une phrase absurde : on reste générique.
+  const premier = roomDefaults.split(",")[0]?.trim() ?? "";
+  const centre =
+    premier && premier.length <= 30 && !premier.includes(".")
+      ? `a ${premier} is the new centerpiece, standing where the old set-up stood`
+      : `its defining furniture (ROOM CONTENT below) takes over the freed space`;
+  return ` THE ROOM'S FUNCTION CHANGES — this is the ONE big transformation of this edit: the photo still shows the room furnished for ANOTHER use (${noms}). In your render that old set-up has been MOVED OUT: NONE of those pieces appears — not restyled, not repositioned, not even one — their floor space is freed. The room is furnished as a genuine ${roomType} instead: ${centre}, completed per ROOM CONTENT. The shell does not move: same walls, same openings, same floor, same viewpoint.`;
 }
 
 export async function buildLightingPlanLine(
@@ -1441,7 +1516,8 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
     lockWalls: Boolean(choices.walls?.repaint),
   });
   if (colorwaySlug) console.log(`[pipeline:generate] déclinaison couleur: ${colorwaySlug} (gen #${colorwayIndex + 1})`);
-  const furnitureDefaults = annoteDefaultsSelonDetection(await loadRoomDefaults(project.roomType), profiles);
+  const roomDefaultsBruts = await loadRoomDefaults(project.roomType);
+  const furnitureDefaults = annoteDefaultsSelonDetection(roomDefaultsBruts, profiles);
   const userInstructions = await formatUserInstructions(choices);
 
   // 3. Generation
@@ -1461,12 +1537,13 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
     styleMood,
     roomType: project.roomType,
     furnitureDefaults,
-    visionJson: visionJsonPourPrompt(profiles),
+    visionJson: visionJsonPourPrompt(profiles, removeCategories),
+    conversionMission: buildConversionMission(profiles, removeCategories, project.roomType, roomDefaultsBruts),
     fixedFeatures: await buildFixedFeaturesSummary(profiles),
     // Éléments détectés à retirer pour ce type de pièce (asset ∩ détection).
     removeList: buildRemoveList(profiles, removeCategories),
     userInstructions,
-    designPlan: `${designPlan || "None — restyle freely to fit the style."}\n${await buildLightingPlanLine(profiles, styleName, project.element_decisions as ElementDecision[] | undefined)}${buildRoomScaleLine(project.roomScale)}${buildVariationLine(project.id)}${buildInventoryLockLine(profiles, removeCategories)}${canaryPlanNote}`,
+    designPlan: `${designPlan || "None — restyle freely to fit the style."}${buildConversionLine(profiles, removeCategories, project.roomType)}\n${await buildLightingPlanLine(profiles, styleName, project.element_decisions as ElementDecision[] | undefined)}${buildRoomScaleLine(project.roomScale)}${buildVariationLine(project.id, removeCategories)}${buildInventoryLockLine(profiles, removeCategories)}${canaryPlanNote}`,
   };
 
   // Flux DIY beta : variante de prompt sous slug dédié (RESTYLE meuble en
@@ -1684,7 +1761,8 @@ async function runDispositionsPipelineInner(projectId: string): Promise<string[]
     colorwayIndex: Math.max(0, (await countGenerationRenders(projectId)) - 1),
     lockWalls: Boolean(choices.walls?.repaint),
   });
-  const furnitureDefaults = annoteDefaultsSelonDetection(await loadRoomDefaults(project.roomType), profiles);
+  const roomDefaultsBruts = await loadRoomDefaults(project.roomType);
+  const furnitureDefaults = annoteDefaultsSelonDetection(roomDefaultsBruts, profiles);
   const userInstructions = await formatUserInstructions(choices);
   const designPlan = formatDesignPlan(
     project.element_decisions,
@@ -1698,13 +1776,14 @@ async function runDispositionsPipelineInner(projectId: string): Promise<string[]
     styleMood,
     roomType: project.roomType,
     furnitureDefaults,
-    visionJson: visionJsonPourPrompt(profiles),
+    visionJson: visionJsonPourPrompt(profiles, removeCategories),
+    conversionMission: buildConversionMission(profiles, removeCategories, project.roomType, roomDefaultsBruts),
     fixedFeatures: await buildFixedFeaturesSummary(profiles),
     removeList: buildRemoveList(profiles, removeCategories),
     userInstructions,
     // Mêmes lignes de plan que le rendu unique : la taille de pièce et la variation de
     // mobilier leur manquaient, d'où des dispositions vides et un mobilier « par défaut ».
-    designPlan: `${designPlan || "None — restyle freely to fit the style."}\n${await buildLightingPlanLine(profiles, styleName, project.element_decisions as ElementDecision[] | undefined)}${buildRoomScaleLine(project.roomScale)}${buildVariationLine(project.id)}${buildInventoryLockLine(profiles, removeCategories)}`,
+    designPlan: `${designPlan || "None — restyle freely to fit the style."}${buildConversionLine(profiles, removeCategories, project.roomType)}\n${await buildLightingPlanLine(profiles, styleName, project.element_decisions as ElementDecision[] | undefined)}${buildRoomScaleLine(project.roomScale)}${buildVariationLine(project.id, removeCategories)}${buildInventoryLockLine(profiles, removeCategories)}`,
   };
 
   // Les assises conservées, montrées en photo — c'est ICI que le canapé se faisait le plus
@@ -2408,6 +2487,15 @@ async function analyzeRender(projectId: string, project: Project): Promise<Rende
     }
 
     if (judged && changed) {
+      // PROMOTION D'UN GARDÉ (« Conserver » changé malgré tout) : seulement si le rendu
+      // montre un AUTRE OBJET à sa place (change_kind=replaced — le canapé d'EJFyzwWG :
+      // « jamais celui du fake, un de la liste ou l'original »). Un gardé simplement
+      // RE-FINI (étagères repeintes en beige, 7woTi 2026-07-16) reste le meuble de
+      // l'utilisateur : rien à acheter — « l'original est acceptable », la ligne
+      // « à sourcer » ne faisait que du bruit.
+      if (!wasCandidate && !replacedIds.has(d.element_id)) {
+        return after ? { ...d, description: after } : d;
+      }
       let base: ElementDecision = wasCandidate
         ? d
         : { ...d, mismatch_type: "structural", action_slug: null, supply_items: null, qty: null };
