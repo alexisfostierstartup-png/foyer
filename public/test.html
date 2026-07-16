@@ -420,7 +420,7 @@ const SECTIONS = [
     </div>
 
     ${q("Sachant ce que l’Expert débloque, seriez-vous prêt(e) à payer ?", radio("valider", "expert_payer", [
-      "Oui — abonnement 15 €/mois (20 € de crédits inclus, résiliable)",
+      "Oui — abonnement 15 €/mois (25 € de crédits inclus, résiliable)",
       "Oui — pack ponctuel 15 € (15 € de crédits, sans engagement)",
       "Non — le mode gratuit me suffit",
     ]), "Répondez même si vous n’avez pas réussi à aller au bout : c’est l’offre qu’on vous demande de juger, pas votre parcours.")}
@@ -431,6 +431,7 @@ const SECTIONS = [
 
 /* 4 */ { id: "achat", bar: "Le panier & le marché", render: () => {
   const a = get("achat", "achat");
+  const iaDeja = get("achat", "ia_deja_utilise");
   return `
   <div class="section-eyebrow">Étape 4 / 8 · ~3 min</div>
   <h2>Le panier, honnêtement</h2>
@@ -461,6 +462,13 @@ const SECTIONS = [
   ${q("Chez vous, combien de pièces aimeriez-vous redécorer avec Héra ?", radio("achat", "nb_pieces", [
     "0", "1", "2–3", "4 et plus",
   ], { row: true }))}
+
+  <h3 style="margin-top:28px">Face aux autres IA</h3>
+
+  ${q("Avez-vous déjà utilisé un service d’IA (ChatGPT, Gemini, etc.) pour redécorer votre intérieur ?",
+    radio("achat", "ia_deja_utilise", ["Oui", "Non"], { row: true }))}
+
+  ${iaDeja === "Oui" ? q("Avez-vous trouvé cela suffisant ?", radio("achat", "ia_suffisant", ["Oui", "Non"], { row: true })) : ""}
 
   ${nav(3, 5)}`;
 }},
