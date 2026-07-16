@@ -1,0 +1,125 @@
+{
+  "slug": "salon-industriel",
+  "projectId": "dCpIA2uSmbKA4F9HCKVMG",
+  "beforeUrl": "/vitrine/salon-industriel/before.jpeg",
+  "afterUrl": "/vitrine/salon-industriel/after.png",
+  "items": [
+    {
+      "category": "sofa",
+      "detected": "Canapé droit 3 places en cuir cognac",
+      "quantity": 1,
+      "source": "new",
+      "product": {
+        "name": "Canapé 3 places en cuir vieilli ALEGAN - Marron",
+        "price": 1245.99,
+        "merchant": "leroy_merlin",
+        "imageUrl": "https://media.adeo.com/mkp/0da53675a72f503af92d1ddc89d836ad/media.jpg?width=800",
+        "url": "https://www.leroymerlin.fr/produits/canape-3-places-en-cuir-vieilli-alegan-marron-84779569.html"
+      }
+    },
+    {
+      "category": "coffee_table",
+      "detected": "Deux tables basses cubiques en bois foncé",
+      "quantity": 1,
+      "source": "new",
+      "product": {
+        "name": "Table basse carrée en bois de sapin marron foncé 80x33,22cm",
+        "price": 289.99,
+        "merchant": "maisons_du_monde",
+        "imageUrl": "https://medias.maisonsdumonde.com/images/w_1000/mkp/M24086511_1/table-basse-carree-en-bois-de-sapin-marron-fonce-80x33-22cm.jpg",
+        "url": "https://www.maisonsdumonde.com/FR/fr/p/table-basse-carree-en-bois-de-sapin-marron-fonce-80x33-22cm-tena-M24086511.htm"
+      }
+    },
+    {
+      "category": "armchair",
+      "detected": "Fauteuil moderne en cuir cognac",
+      "quantity": 1,
+      "source": "new",
+      "product": {
+        "name": "Fauteuil en cuir pu marron h87",
+        "price": 392.69,
+        "merchant": "maisons_du_monde",
+        "imageUrl": "https://medias.maisonsdumonde.com/images/w_1000/mkp/M21026652_1/fauteuil-en-cuir-pu-marron-h87.jpg",
+        "url": "https://www.maisonsdumonde.com/FR/fr/p/fauteuil-en-cuir-pu-marron-h87-savalen-M21026652.htm"
+      }
+    },
+    {
+      "category": "ceiling_light",
+      "detected": "Suspension industrielle à plusieurs ampoules suspendues",
+      "quantity": 1,
+      "source": "new",
+      "product": {
+        "name": "Lustre métal noir  abatjour ampoule",
+        "price": 264,
+        "merchant": "maisons_du_monde",
+        "imageUrl": "https://medias.maisonsdumonde.com/images/w_1000/mkp/M23023847_1/lustre-metal-noir-abatjour-ampoule.jpg",
+        "url": "https://www.maisonsdumonde.com/FR/fr/p/lustre-metal-noir-abatjour-ampoule-krake-M23023847.htm"
+      }
+    },
+    {
+      "category": "coffee_table",
+      "detected": "Table basse bloc en bois massif",
+      "quantity": 1,
+      "source": "new",
+      "product": {
+        "name": "Table basse carrée en bois de sapin marron foncé 80x33,22cm",
+        "price": 289.99,
+        "merchant": "maisons_du_monde",
+        "imageUrl": "https://medias.maisonsdumonde.com/images/w_1000/mkp/M24086511_1/table-basse-carree-en-bois-de-sapin-marron-fonce-80x33-22cm.jpg",
+        "url": "https://www.maisonsdumonde.com/FR/fr/p/table-basse-carree-en-bois-de-sapin-marron-fonce-80x33-22cm-tena-M24086511.htm"
+      }
+    },
+    {
+      "category": "floor_lamp",
+      "detected": "Lampadaire liseuse noir",
+      "quantity": 1,
+      "source": "new",
+      "product": {
+        "name": "Lampadaire led en métal  h 186 cm noir",
+        "price": 208.25,
+        "merchant": "maisons_du_monde",
+        "imageUrl": "https://medias.maisonsdumonde.com/images/w_1000/mkp/M24078434_1/lampadaire-led-en-metal-h-186-cm-noir.jpg",
+        "url": "https://www.maisonsdumonde.com/FR/fr/p/lampadaire-led-en-metal-h-186-cm-noir-M24078434.htm"
+      }
+    },
+    {
+      "category": "rug",
+      "detected": "Grand tapis en fibres naturelles tressées",
+      "quantity": 1,
+      "source": "new",
+      "product": {
+        "name": "Tapis en jute artisanal à franges beige naturel 120x160 - style bohème",
+        "price": 59.99,
+        "merchant": "cdiscount",
+        "imageUrl": "https://www.cdiscount.com/pdt2/0/9/1/1/700x700/aacqi61091/rw/tapis-salon-en-jute-naturel.jpg",
+        "url": "https://www.cdiscount.com/maison/tapis/tapis-salon-en-jute-naturel/f-11725-aacqi61091.html#mpos=35|mp"
+      }
+    },
+    {
+      "category": "paint",
+      "detected": "Peinture",
+      "quantity": 1,
+      "source": "diy",
+      "product": {
+        "name": "Peinture mur, boiserie, radiateur paris 1 satin LUXENS , 2.5L",
+        "price": 36.9,
+        "merchant": "leroy_merlin",
+        "imageUrl": "https://media.adeo.com/media/3512436/media.png?width=800",
+        "url": "https://www.leroymerlin.fr/produits/peinture-mur-boiserie-radiateur-paris-1-satin-luxens-2-5l-84874989.html"
+      }
+    }
+  ],
+  "totalEstimated": 2788,
+  "score": {
+    "kept": 2,
+    "ecoNew": 7,
+    "co2SavedKg": 450,
+    "keptLabels": [
+      "Parquet en chêne clair posé en chevrons",
+      "Meuble TV bas en bois"
+    ],
+    "secondhand": 0,
+    "co2EmittedKg": 380,
+    "totalEstimated": 2728
+  }
+}

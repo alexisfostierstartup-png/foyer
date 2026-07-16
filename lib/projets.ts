@@ -18,6 +18,14 @@ export type ProjetVitrine = {
   beforeUrl: string;
   afterUrl: string;
   totalEstimated: number;
+  score?: {
+    kept: number;
+    ecoNew: number;
+    secondhand: number;
+    co2SavedKg: number;
+    co2EmittedKg?: number;
+    totalEstimated: number;
+  } | null;
   items: {
     category: string;
     detected: string;
@@ -48,12 +56,22 @@ export const PROJETS: ProjetMeta[] = [
   {
     slug: "appartement-parisien",
     nom: "Salon parisien",
-    titre: "Un salon terracotta, conservé à 68 %",
-    tag: "Haussmann",
+    titre: "Un salon terracotta, conservé à 40 %",
+    tag: "Bohème",
     surface: "32 m²",
-    conserve: "68 %",
+    conserve: "40 %",
     resume:
       "Les murs repeints, le mobilier renouvelé, mais la pièce reste la sienne : mêmes volumes, même lumière, même parquet. Ce qui pouvait rester est resté.",
+  },
+  {
+    slug: "salon-industriel",
+    nom: "Salon industriel",
+    titre: "Un salon viré industriel, cuir et métal noir",
+    tag: "Industriel",
+    surface: "24 m²",
+    conserve: "22 %",
+    resume:
+      "Le parquet en chevrons et le meuble TV bas sont restés : c'est tout le reste, canapé en cuir, table basse, lustre en métal noir, qui bascule la pièce dans l'ambiance industrielle choisie.",
   },
 ];
 

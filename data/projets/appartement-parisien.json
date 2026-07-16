@@ -124,10 +124,11 @@
   ],
   "totalEstimated": 4094,
   "score": {
-    "kept": 7,
-    "ecoNew": 0,
-    "co2SavedKg": 210,
+    "kept": 6,
+    "ecoNew": 10,
+    "co2SavedKg": 557,
+    "co2EmittedKg": 558,
     "secondhand": 0,
-    "totalEstimated": 1768
+    "totalEstimated": 4094
   }
 }
