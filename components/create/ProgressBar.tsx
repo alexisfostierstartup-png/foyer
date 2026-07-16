@@ -11,11 +11,13 @@ export function ProgressBar({ currentStep, labels }: ProgressBarProps) {
     // z-40 : passe AU-DESSUS de la couche des pins du rendu (z-30, RenderHotspots) —
     // sinon la box « Notre sélection » d'un pin proche du haut de l'image déborde
     // sur ce header sticky au lieu de rester dessous (bug QA 2026-07-16).
+    // Tout sur UNE ligne (logo · segments · étape) : la version empilée doublait la
+    // hauteur du header sticky et mangeait l'écran du parcours (retour Alexis 2026-07-16).
     <header className="sticky top-0 z-40 border-b border-foyer-border bg-foyer-cream/95 backdrop-blur">
-      <div className="flex items-center justify-between px-5 py-3">
+      <div className="flex items-center gap-4 px-5 py-2.5">
         {/* Même logo que la landing : le parcours affichait encore « Foyer » en toutes
             lettres, alors que la marque est Héra. */}
-        <Link href="/" className="flex items-center gap-2" aria-label="Héra">
+        <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="Héra">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/landing/v2/brand/hera-logo-mark-bold.png" alt="" className="h-6 w-auto" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -25,9 +27,7 @@ export function ProgressBar({ currentStep, labels }: ProgressBarProps) {
             className="h-5 w-auto"
           />
         </Link>
-      </div>
-      <div className="px-5 pb-3">
-        <div className="flex items-center gap-1.5">
+        <div className="flex flex-1 items-center gap-1.5">
           {labels.map((label, i) => {
             const step = i + 1;
             const state =
@@ -50,8 +50,9 @@ export function ProgressBar({ currentStep, labels }: ProgressBarProps) {
             );
           })}
         </div>
-        <p className="mt-1.5 text-[12px] text-foyer-muted">
-          Étape {currentStep} sur {labels.length} — {labels[currentStep - 1]}
+        <p className="shrink-0 whitespace-nowrap text-[12px] text-foyer-muted">
+          <span className="hidden sm:inline">Étape {currentStep} sur {labels.length} — </span>
+          {labels[currentStep - 1]}
         </p>
       </div>
     </header>
