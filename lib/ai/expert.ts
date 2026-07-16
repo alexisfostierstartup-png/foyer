@@ -7,6 +7,8 @@ import { matchPartnerProductsBlendBatch, matchFloorProductsBlend } from "@/lib/s
 import { getChangedWallColors, matchPaintByColor, type WallColor } from "@/lib/shopping/paintMatch";
 import { extractCrop } from "@/lib/shopping/crop";
 import { getElementCategories } from "@/lib/db/assets";
+import { resolvePrompt, resolveRawTemplate } from "@/lib/prompts/engine";
+import { EXPERT_SWAP_TEMPLATE, EXPERT_ITERATE_TEMPLATE, RENDER_HD_TEMPLATE } from "@/lib/prompts/expertTemplates";
 import type { RoomType, ShoppingItem, CustomProduct, ExpertIntegratedPiece, ProductMatch } from "@/lib/types";
 
 // ── Gros meubles à intégrer au rendu expert ─────────────────────────────────
@@ -118,6 +120,17 @@ const ROOM_LABEL: Record<string, string> = {
 
 // On plafonne le nombre de références envoyées à NB2 (au-delà, il peut saturer).
 const MAX_PIECES = 8;
+
+// Prompts expert : DB d'abord (éditables/versionnés dans l'admin, slugs expert_swap /
+// expert_iterate / render_hd), repli sur la constante seedée si la ligne manque —
+// le flux expert ne casse jamais pour une DB incomplète.
+async function promptExpert(slug: string, ctx: Record<string, string>, fallback: string): Promise<string> {
+  try {
+    return (await resolvePrompt(slug, ctx, { strict: false })).resolvedTemplate;
+  } catch {
+    return resolveRawTemplate(fallback, ctx).resolved;
+  }
+}
 
 type Piece = {
   category: string;
@@ -377,44 +390,7 @@ async function swapChunk(
   const mapping = validated
     .map((v, i) => `every ${v.p.noun}${v.p.sourceDesc ? ` (currently: "${v.p.sourceDesc.slice(0, 110)}")` : ""} → image ${i + 2}`)
     .join(", ");
-  const prompt =
-    `This is a beautifully styled photo of a ${room}. YOUR TASK — MANDATORY: replace EACH listed ` +
-    `piece of furniture with its real catalog product — but ONLY pieces actually VISIBLE in this ` +
-    `photo: if a listed piece does not exist in the photo, SKIP it and add NOTHING for it (never ` +
-    `insert a product into an empty spot). A listed piece VISIBLE but left UNCHANGED is a FAILURE; ` +
-    `a listed piece replaced by a LOOKALIKE instead of the product's EXACT appearance (shape, ` +
-    `colour, materials, details) from its reference image is a FAILURE. IGNORE the reference ` +
-    `backgrounds. Place each product at the SAME position and orientation as the piece it ` +
-    `replaces, at its REAL-WORLD size — respect the product's true nature and scale (a side ` +
-    `table stays a small side table ~40-50 cm, never enlarged into a coffee or dining table; ` +
-    `a pouf stays pouf-sized) — and ALWAYS at the product's TRUE proportions and shape from ` +
-    `its reference image: NEVER stretch, widen, squash, enlarge or distort a product to ` +
-    `fill the old piece's footprint (if the old piece was bigger, leave breathing room instead). ` +
-    `When several identical pieces of the same type exist ` +
-    `(e.g. dining chairs or bar stools), replace EVERY ONE of them with that same product, keep ` +
-    `the same count AND the same natural arrangement: chairs stay tucked at their table, seats ` +
-    `FACING the table — never scattered or turned away from it; remove the old pieces: ${mapping}. Keep EVERYTHING ELSE strictly identical to ` +
-    `this photo — do NOT change, re-tint, restyle, move OR REMOVE anything other than the furniture ` +
-    `listed above. In particular, KEEP every other furniture piece exactly where it is AND exactly ` +
-    `as it looks — a repainted or customized piece keeps its EXACT paint colour and finish from this ` +
-    `photo, pixel-faithful — even next ` +
-    `to a replaced one (e.g. if you replace the bar stools, KEEP the bar/high table they surround; ` +
-    `if you replace dining chairs, KEEP the dining table). Also keep unchanged — EXCEPT any piece ` +
-    `explicitly listed above, which MUST be replaced: all wall art and ` +
-    `frames, mirrors, lamps and light fixtures, plants, vases, cushions, books, tableware and small ` +
-    `decor, the curtains, the wall colors and finishes, the ceiling, the window, the floor, and the ` +
-    `entire styling, lighting and camera framing. Preserve the exact exposure and white balance. ` +
-    `STRICT RULES — violating any of these ruins the result: add NOTHING that is not in this photo ` +
-    `or in the product list above (no extra furniture, lamp, plant or decor); NEVER add, duplicate ` +
-    `or move a ceiling or wall light fixture — the ONE allowed change is swapping a LISTED pendant or ` +
-    `wall sconce for its product AT THE SAME electrical point (same count of fixtures, same ceiling/wall ` +
-    `point, never a second one, never relocated). A LISTED floor or table lamp is swapped in place, ` +
-    `standing exactly where the old one stood, at its real-world height; ` +
-    `every MIRROR shows a plausible reflection of THIS very ` +
-    `room only — never an object that does not exist in the room, never a duplicated fixture in the ` +
-    `reflection; rooms and spaces visible through open doors or wall openings stay EXACTLY as in this ` +
-    `photo (do not furnish or restyle them); each replaced piece touches the floor with natural ` +
-    `contact shadows — no floating objects, no object intersecting another. Photorealistic.`;
+  const prompt = await promptExpert("expert_swap", { room, mapping }, EXPERT_SWAP_TEMPLATE);
   return callNb2(prompt, [baseUri, ...validated.map((v) => v.uri)], aspectRatio);
 }
 
@@ -949,15 +925,7 @@ export async function renderHd(projectId: string): Promise<string> {
       : project.generatedRenderUrl;
   if (!source) throw new Error("Pas de rendu à exporter.");
 
-  const prompt =
-    `Upscale this interior photo to a high-resolution, print-quality image. ` +
-    `Change NOTHING about its content: the exact same furniture, the exact same objects, ` +
-    `at the exact same positions and orientations, the same colours, the same wall and floor ` +
-    `finishes, the same lighting and shadows, the same camera angle, perspective and framing. ` +
-    `Add nothing, remove nothing, move nothing, restyle nothing. ` +
-    `Your ONLY job is to restore detail and sharpness: recover fine texture (fabric weave, ` +
-    `wood grain, rattan, plant leaves, wall paint), crisp edges and clean lines, as if the photo ` +
-    `had been shot at high resolution from the start. Keep it photorealistic and natural.`;
+  const prompt = await promptExpert("render_hd", {}, RENDER_HD_TEMPLATE);
 
   const { buffer, mimeType } = await callNb2(prompt, [await toDataUri(source)], undefined, "4K");
   // Nom DISTINCT : n'écrase pas expert.png / IN_1.png.
@@ -986,20 +954,7 @@ export async function runExpertIteration(
     ? `The change concerns ONE object and one only: the ${target.targetLabel.trim()}. Everything else in the room is FROZEN. `
     : "";
 
-  const prompt =
-    `Apply ONLY the following change to this room photo: ${userRequest}. ` +
-    cible +
-    `Keep EVERYTHING ELSE exactly as it is — all furniture and its exact positions, all decor, ` +
-    `the layout, the windows, doors, ceiling, lighting, and the SAME camera angle and framing. ` +
-    `Only change what the request explicitly asks (e.g. the floor or the wall paint). Preserve the ` +
-    `exact perspective and a photorealistic look with natural lighting and contact shadows. ` +
-    `Preserve the input image's sharpness, texture and grain: do NOT smooth, repaint or re-render ` +
-    `areas you were not asked to change — copy them through untouched. ` +
-    `STRICT RULES: add NOTHING new to the scene — no extra chair, table, seat or any other object, ` +
-    `even if the room looks like it could use one; never duplicate an existing piece of furniture; ` +
-    `never add, duplicate or move a light fixture; ` +
-    `mirrors reflect THIS room only (never an object absent from the room); spaces seen through ` +
-    `doors or openings stay exactly as they are.`;
+  const prompt = await promptExpert("expert_iterate", { userRequest, cible }, EXPERT_ITERATE_TEMPLATE);
 
   const { buffer, mimeType } = await callNb2(prompt, [await toDataUri(parentUrl)]);
   const n = (project.iterationCount ?? 0) + 1;
