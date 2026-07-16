@@ -43,8 +43,16 @@ export async function loadStyleContext(
   // Script déco concret (distillé des images de référence d'Alexis) : QUOI
   // accrocher/poser/draper, pas juste une ambiance — la mise en scène devient
   // exécutable (demande Alexis 2026-07-14 : « mieux décorer »).
+  // Garde-fou (2026-07-16) : les items decor viennent de shootings de référence
+  // GÉNÉRIQUES et citent des surfaces/meubles qu'une pièce donnée n'a pas —
+  // « suspended from a wooden ceiling beam », « at the foot of a bed », « on a light
+  // wood floor ». Sans borne, NB1 les prend au pied de la lettre et FABRIQUE la poutre
+  // / change le sol (drift d'archi aléatoire observé en dispositions, poutre apparue
+  // sur d3 de UOY4t99). Même logique que le garde-fou `signature` au-dessus : ce sont
+  // des IDÉES à adapter, jamais un prétexte à toucher l'architecture ou à importer un
+  // meuble d'une autre pièce.
   const decor = (d as { decor?: string[] }).decor?.length
-    ? `. STAGE THIS DECOR (concrete, from the style's reference shoots — adapt placement to THIS room): ${(d as { decor?: string[] }).decor!.join("; ")}`
+    ? `. STAGE THIS DECOR — staging IDEAS distilled from the style's GENERIC reference shoots, NOT a literal checklist. Adapt each to what THIS room actually has; several name a surface or piece of furniture this room may lack (a ceiling beam, a bed, a specific floor). When the room lacks it, place the item somewhere that already exists or simply skip it — NEVER add or alter any architecture (no beams, no panelling, no new floor) and NEVER introduce furniture that belongs to another kind of room to accommodate a suggestion: ${(d as { decor?: string[] }).decor!.join("; ")}`
     : "";
   const avoid = d.avoid?.length ? `. NEVER: ${d.avoid.join("; ")}` : "";
 

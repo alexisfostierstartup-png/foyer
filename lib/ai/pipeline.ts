@@ -357,11 +357,24 @@ const SEAT_CATS = new Set(["sofa", "armchair", "chair", "dining_chair", "bench"]
  * On découpe donc chaque assise CONSERVÉE dans la photo et on la joint au prompt. Aucun
  * appel de plus : juste une image de plus dans le même appel.
  */
-async function refsAssisesConservees(
+// ⚠️ DÉSACTIVÉ PAR DÉFAUT (2026-07-16) — CE MÉCANISME RÉINVENTAIT LA PIÈCE.
+// Banc A/B contrôlé (bench-dispositions --ctxFrom=Q8zUH, tout identique sauf les crops) :
+// avec crops = 14 fautes d'architecture, 3/5 pièces méconnaissables, ratio de sortie
+// décroché de la photo (1472x704 sur photo 4:3 — signature d'une COMPOSITION, plus une
+// édition) ; sans crops = 0 faute, 5/5 fidèles. Joindre des gros plans en refImages fait
+// basculer gemini-2.5-flash-image d'édition en composition : il assemble une scène neuve
+// autour des meubles montrés. C'était LA cause des dispositions « réinventées » des
+// 15-16/07 (mêmes prompts DB, ancien code Vercel sans crops = OK). SEAT_REF_CROPS=1
+// pour ré-expérimenter ; le problème d'origine (canapé conservé redessiné avec
+// accoudoirs) doit se traiter DANS le prompt ou par un autre canal, pas par des images.
+const SEAT_REF_CROPS = process.env.SEAT_REF_CROPS === "1";
+
+export async function refsAssisesConservees(
   basePhotoUrl: string,
   profiles: ElementProfile[],
   decisions: ElementDecision[] | undefined,
 ): Promise<{ images: ImageInput[]; note: string }> {
+  if (!SEAT_REF_CROPS) return { images: [], note: "" };
   const conservees = new Set(
     (decisions ?? []).filter((d) => d.mismatch_type === "none").map((d) => d.element_id),
   );
@@ -511,12 +524,18 @@ export async function buildFixedFeaturesSummary(profiles: ElementProfile[]): Pro
     // chacune, et surtout on déclare PLEINS les murs qui n'en portent aucune — le fait
     // devient explicite au lieu d'être une déduction laissée au modèle.
     const parMur = new Map<string, string[]>();
+    // La catégorie seule TRAHISSAIT la photo : la taxonomie range une baie vitrée
+    // coulissante de 3,5 m sous `french_door`, et le prompt annonçait « 1 french door »
+    // — le modèle, sommé de reproduire « the COMPLETE set », EXÉCUTAIT le texte : il
+    // remplaçait la baie par une vraie petite porte-fenêtre et rebâtissait le mur
+    // autour (D1 de UJAH8T sur test1, 2026-07-16 : pièce entière réinventée). On
+    // réinjecte donc la description et la largeur DÉTECTÉES : le verrou redevient
+    // une description de la photo, pas une réécriture appauvrie.
     const liste = ouvertures.map((p) => {
       const mur = murDe(p);
       if (mur) parMur.set(mur, [...(parMur.get(mur) ?? []), OUVERTURES[p.category]]);
-      return mur
-        ? `1 ${OUVERTURES[p.category]} on the ${mur} wall`
-        : `1 ${OUVERTURES[p.category]}`;
+      const desc = p.description ? ` (in the photo: "${p.description}"${p.dims?.width_cm ? `, ~${p.dims.width_cm} cm wide` : ""})` : "";
+      return `1 ${OUVERTURES[p.category]}${mur ? ` on the ${mur} wall` : ""}${desc}`;
     });
     const pleins = ["LEFT", "BACK", "RIGHT"].filter((m) => !parMur.has(m));
     const w = count("window");
@@ -524,7 +543,12 @@ export async function buildFixedFeaturesSummary(profiles: ElementProfile[]): Pro
 
     parts.push(
       `EXACTLY ${ouvertures.length} opening(s), and here is WHERE: ${liste.join("; ")}. ` +
-        `This is the COMPLETE set. Reproduce each one on ITS OWN wall, same size, same place — never move one to another wall, never add one, never remove one.` +
+        `This is the COMPLETE set. Reproduce each one on ITS OWN wall, same size, same place — never move one to another wall, never add one, never remove one. ` +
+        // Primauté de la photo : la clause « PRESERVE it anyway » du template a sauté
+        // dans une refonte (v38 ne l'a plus) — on la porte ICI, côté code, pour qu'elle
+        // survive aux réécritures de template. Sans elle, une détection appauvrie fait
+        // loi et le rendu suit le TEXTE contre la PHOTO.
+        `Each opening keeps its PHOTOGRAPHED size, span and frame: a wide glazed bay stays a wide glazed bay — NEVER shrunk into a smaller door or window, never simplified. If the photo shows an opening that this list missed or under-describes, the PHOTO wins: reproduce exactly what is photographed.` +
         (pleins.length
           ? ` The ${pleins.join(" and ")} wall${pleins.length > 1 ? "s are" : " is"} SOLID: no window, no french door, no passage there, EVER — ` +
             `even if the new layout leaves ${pleins.length > 1 ? "them" : "it"} bare, even if an opening there would look better. A bare wall takes furniture, art, or nothing at all — never a hole.`
@@ -1365,7 +1389,7 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
   const genPrompt = await resolvePrompt(genSlug, genCtx, { strict: false });
   const genResult = await withTracking(
     { step: "generation", projectId, provider: genPrompt.prompt.provider,
-      requestPayload: { promptName: genSlug, prompt: genPrompt.resolvedTemplate.slice(0, 5000) } },
+      requestPayload: { promptName: genSlug, prompt: genPrompt.resolvedTemplate } },
     () => getImageProvider(genPrompt.prompt.provider).generateFromText(genPrompt.resolvedTemplate + refNote, sourceImage, refImages),
   );
   console.log(`[pipeline:generate] generation: ${Date.now() - t1}ms, ${Math.round(genResult.imageBuffer.length / 1024)}KB`);
@@ -1460,7 +1484,13 @@ export const DISPOSITION_BRIEFS = [
   // modèle à en fabriquer (cheminée de marbre, balcon inventés).
   "Variation 1 — DOUCE ET LUMINEUSE. Keep the room's layout exactly as the photo (nothing moves). Dress it in the LIGHTEST, airiest reading of the {{styleName}} palette: pale, warm neutrals on the surfaces the plan allows you to repaint, natural textures, restrained decor — a large soft rug, a few cushions, one throw, greenery, calm wall art. Bright and serene. Magazine-quality, unmistakably {{styleName}}.",
   "Variation 2 — CHALEUREUSE ET HABITÉE. Same layout, nothing moves. Now the deepest, most saturated version of the {{styleName}} palette on the surfaces the plan allows you to repaint, and a richly layered, collected look: more textiles, more plants, a bold rug, generously dressed surfaces, a statement piece of wall art. Warm and enveloping. Clearly a different mood from the other two.",
-  "Variation 3 — GRAPHIQUE ET CONTRASTÉE. Same layout, nothing moves. A more graphic take on {{styleName}}: one confident accent colour from the palette on the surfaces the plan allows you to repaint, cleaner and more contrasted styling — fewer but stronger decor objects, bolder patterns on the rug and textiles, striking wall art. Distinctly the most design-forward of the three, while staying, wall for wall AND piece for piece, the SAME room as the photo.",
+  // ⚠️ d3 ne dit PLUS « the most design-forward / graphic / boldest ». Ce registre donnait
+  // à NB1 la licence de RÉINTERPRÉTER la pièce — il ajoutait des boiseries, rétrécissait la
+  // baie, resserrait le cadrage (QA Alexis 2026-07-16, d3 de CKSoR12). d1 et d2 restent
+  // fidèles parce qu'ils sont sages. d3 est donc audacieux SUR LA DÉCO uniquement (couleur
+  // d'accent, textiles à motifs, art fort), jamais « design-forward » au sens qui touche la
+  // pièce. Comme les deux autres : même layout, mêmes murs, même cadrage.
+  "Variation 3 — L'ACCENT COLORÉ. Same layout, nothing moves — exactly the same room, walls, openings and framing as the photo. It is ONLY the decoration that is bolder here: pick ONE confident accent colour from the {{styleName}} palette for the wall surfaces the plan allows you to repaint, then dress the room with patterned textiles (a graphic rug, printed cushions, a throw), a couple of strong decorative objects and one large piece of wall art. Contrasted and characterful in its DECOR — never in its architecture. Magazine-quality, unmistakably {{styleName}}.",
 ];
 
 /**
@@ -1561,7 +1591,7 @@ async function runDispositionsPipelineInner(projectId: string): Promise<string[]
       );
       const result = await withTracking(
         { step: "generation", projectId, provider: genPrompt.prompt.provider,
-          requestPayload: { promptName: dispoSlug, disposition: i + 1, prompt: genPrompt.resolvedTemplate.slice(0, 5000) } },
+          requestPayload: { promptName: dispoSlug, disposition: i + 1, prompt: genPrompt.resolvedTemplate } },
         () =>
           getImageProvider(genPrompt.prompt.provider).generateFromText(
             genPrompt.resolvedTemplate + assises.note,
@@ -1630,7 +1660,7 @@ export async function runIterationPipeline(
   );
   const result = await withTracking(
     { step: "iteration", projectId, provider: iterPrompt.prompt.provider,
-      requestPayload: { promptName: "iterate_generic", userRequest, prompt: iterPrompt.resolvedTemplate.slice(0, 5000) } },
+      requestPayload: { promptName: "iterate_generic", userRequest, prompt: iterPrompt.resolvedTemplate } },
     () => getImageProvider(iterPrompt.prompt.provider).editImage(iterPrompt.resolvedTemplate, parentImage),
   );
   console.log(`[pipeline:iterate] generation: ${Date.now() - t1}ms, ${Math.round(result.imageBuffer.length / 1024)}KB`);
