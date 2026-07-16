@@ -70,7 +70,7 @@ async function main() {
   const { detectElementProfiles, buildFixedFeaturesSummary, buildRemoveList,
     buildLightingPlanLine, buildRoomScaleLine, buildVariationLine, buildInventoryLockLine,
     constraintsToChoices, visionJsonPourPrompt, annoteDefaultsSelonDetection,
-    buildConversionLine } = await import("../lib/ai/pipeline");
+    buildConversionLine, buildConversionMission } = await import("../lib/ai/pipeline");
   const { loadStyleContext, loadRoomDefaults, loadRoomRemoveCategories,
     formatUserInstructions, formatDesignPlan } = await import("../lib/prompts/helpers");
   const { resolveRawTemplate } = await import("../lib/prompts/engine");
@@ -157,6 +157,7 @@ async function main() {
   const ctxNew = {
     ...communs,
     visionJson: visionJsonPourPrompt(profiles, removeCategories),
+    conversionMission: buildConversionMission(profiles as never, removeCategories, roomTypeEff, furnitureDefaultsBruts),
     designPlan: `${designPlanCore}${buildConversionLine(profiles as never, removeCategories, roomTypeEff)}${finPlan}${buildVariationLine(projet?.id ?? projectId, removeCategories)}${buildInventoryLockLine(profiles, removeCategories)}`,
   };
 

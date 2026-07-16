@@ -381,6 +381,30 @@ export function buildConversionLine(
   return `\n- THIS ROOM CHANGES FUNCTION: the photo still shows furniture from a previous use (${noms}). These pieces are GONE — reproduce NONE of them, do not restyle them, do not keep even one: their floor space is FREED. Furnish the room as a true ${roomType} instead (ROOM CONTENT below). Removing them changes NOTHING about the shell: same walls, same openings, same floor, same viewpoint.`;
 }
 
+/**
+ * MISSION DE CONVERSION — injectée dans la PREMIÈRE PHRASE du template ({{conversionMission}}).
+ * Le banc du 2026-07-16 (replay O_nmJO, 3+3 rendus) a prouvé que la purge du JSON/variation
+ * + une ligne dans le plan ne suffisent PAS : sur une tâche d'ÉDITION, la photo du salon
+ * gagne contre toute consigne enterrée — 6/6 rendus « salon sans lit ». La conversion doit
+ * définir la MISSION elle-même, pas être une règle parmi trente. Vide hors conversion
+ * (le placeholder doit TOUJOURS être fourni : resolvePrompt strict throw sinon).
+ */
+export function buildConversionMission(
+  profiles: ElementProfile[],
+  removeCategories: string[],
+  roomType: string,
+  // Défauts BRUTS du room type (avant annotation) : le premier item est la pièce
+  // maîtresse attendue (« bed » pour une chambre) — data-driven, rien de codé en dur.
+  roomDefaults: string,
+): string {
+  const aRetirer = new Set(removeCategories);
+  const concernes = profiles.filter((p) => aRetirer.has(p.category));
+  if (concernes.length === 0) return "";
+  const noms = concernes.map((p) => p.description?.trim() || p.element || p.category).join("; ");
+  const pieceMaitresse = roomDefaults.split(",")[0]?.trim() || "its essential furniture";
+  return ` THE ROOM'S FUNCTION CHANGES — this is the ONE big transformation of this edit: the photo still shows the room furnished for ANOTHER use (${noms}). In your render that old set-up has been MOVED OUT: NONE of those pieces appears — not restyled, not repositioned, not even one — their floor space is freed. The room is furnished as a genuine ${roomType} instead: a ${pieceMaitresse} is the new centerpiece, standing where the old set-up stood, completed per ROOM CONTENT. The shell does not move: same walls, same openings, same floor, same viewpoint.`;
+}
+
 export async function buildLightingPlanLine(
   profiles: ElementProfile[],
   styleName: string,
@@ -1485,7 +1509,8 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
     lockWalls: Boolean(choices.walls?.repaint),
   });
   if (colorwaySlug) console.log(`[pipeline:generate] déclinaison couleur: ${colorwaySlug} (gen #${colorwayIndex + 1})`);
-  const furnitureDefaults = annoteDefaultsSelonDetection(await loadRoomDefaults(project.roomType), profiles);
+  const roomDefaultsBruts = await loadRoomDefaults(project.roomType);
+  const furnitureDefaults = annoteDefaultsSelonDetection(roomDefaultsBruts, profiles);
   const userInstructions = await formatUserInstructions(choices);
 
   // 3. Generation
@@ -1506,6 +1531,7 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
     roomType: project.roomType,
     furnitureDefaults,
     visionJson: visionJsonPourPrompt(profiles, removeCategories),
+    conversionMission: buildConversionMission(profiles, removeCategories, project.roomType, roomDefaultsBruts),
     fixedFeatures: await buildFixedFeaturesSummary(profiles),
     // Éléments détectés à retirer pour ce type de pièce (asset ∩ détection).
     removeList: buildRemoveList(profiles, removeCategories),
@@ -1728,7 +1754,8 @@ async function runDispositionsPipelineInner(projectId: string): Promise<string[]
     colorwayIndex: Math.max(0, (await countGenerationRenders(projectId)) - 1),
     lockWalls: Boolean(choices.walls?.repaint),
   });
-  const furnitureDefaults = annoteDefaultsSelonDetection(await loadRoomDefaults(project.roomType), profiles);
+  const roomDefaultsBruts = await loadRoomDefaults(project.roomType);
+  const furnitureDefaults = annoteDefaultsSelonDetection(roomDefaultsBruts, profiles);
   const userInstructions = await formatUserInstructions(choices);
   const designPlan = formatDesignPlan(
     project.element_decisions,
@@ -1743,6 +1770,7 @@ async function runDispositionsPipelineInner(projectId: string): Promise<string[]
     roomType: project.roomType,
     furnitureDefaults,
     visionJson: visionJsonPourPrompt(profiles, removeCategories),
+    conversionMission: buildConversionMission(profiles, removeCategories, project.roomType, roomDefaultsBruts),
     fixedFeatures: await buildFixedFeaturesSummary(profiles),
     removeList: buildRemoveList(profiles, removeCategories),
     userInstructions,
