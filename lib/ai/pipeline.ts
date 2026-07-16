@@ -291,10 +291,23 @@ export function buildVariationLine(projectId: string): string {
   return `\n- VARIATION (do not fall back on your default furniture): if the room gets a sofa, make it ${canape}. If it gets a coffee table, make it ${table}. Keep both fully within the style — this fixes the SHAPE and the MATERIAL, never the category.`;
 }
 
-export async function buildLightingPlanLine(profiles: ElementProfile[], styleName: string): Promise<string> {
+export async function buildLightingPlanLine(
+  profiles: ElementProfile[],
+  styleName: string,
+  // Décisions du verdict : un luminaire en « none » est GARDÉ tel quel. Sans ça, la
+  // ligne disait « swap each fixture » sans consulter le plan — la suspension design
+  // que le verdict conservait était remplacée par une coupole générique, puis LISTÉE
+  // À L'ACHAT par la réconciliation (n-ALUOR, QA Alexis 2026-07-16). Le template gen
+  // présente le swap de luminaire comme « expected and good » : seul le PLAN peut
+  // l'en dispenser, donc c'est ici que le keep doit se dire.
+  decisions?: ElementDecision[] | null,
+): Promise<string> {
   const lights = await lightpointProfiles(profiles);
   const cats = await getElementCategories().catch(() => [] as ElementCategory[]);
   const replaceOnly = new Set(cats.filter((c) => c.replace_only).map((c) => c.slug));
+  const gardes = new Set(
+    (decisions ?? []).filter((d) => d.mismatch_type === "none").map((d) => d.element_id),
+  );
 
   // Les APPLIQUES comptent à part. Fondues dans le total (« exactement 3 points
   // lumineux »), le modèle ne savait pas combien étaient MURALES — et en peignait une de
@@ -313,8 +326,21 @@ export async function buildLightingPlanLine(profiles: ElementProfile[], styleNam
   } else {
     // « pendant over the dining table » : biais récurrent du modèle — il en ajoute
     // une même quand aucun point électrique n'existe là (banc out-lightblur s02).
+    const aGarder = plafond.filter((l) => gardes.has(l.element_id));
+    const aSwapper = plafond.filter((l) => !gardes.has(l.element_id));
+    const parts: string[] = [];
+    if (aGarder.length) {
+      parts.push(
+        `KEEP ${aGarder.length === plafond.length ? "each one" : `${aGarder.length} of them`} EXACTLY as photographed — same fixture, same model, the owner keeps it: ${aGarder.map(repere).join(" · ")}`,
+      );
+    }
+    if (aSwapper.length) {
+      parts.push(
+        `swap ${aGarder.length ? `the other ${aSwapper.length}` : "each existing fixture"} — ${aSwapper.map(repere).join(" · ")} — for a ${styleName} fixture AT ITS EXACT SAME ceiling point`,
+      );
+    }
     lignes.push(
-      `- CEILING LIGHTS (exactly ${plafond.length}): swap each existing fixture — ${plafond.map(repere).join(" · ")} — for a ${styleName} fixture AT ITS EXACT SAME ceiling point. The result contains EXACTLY ${plafond.length}: not one more, none added elsewhere, none duplicated. A dining table does NOT automatically get a pendant above it — only if one of the existing points is already there.`,
+      `- CEILING LIGHTS (exactly ${plafond.length}): ${parts.join("; ")}. The result contains EXACTLY ${plafond.length}: not one more, none added elsewhere, none duplicated. A dining table does NOT automatically get a pendant above it — only if one of the existing points is already there.`,
     );
   }
 
@@ -323,8 +349,14 @@ export async function buildLightingPlanLine(profiles: ElementProfile[], styleNam
       `- WALL SCONCES: this room has ZERO (0). Paint NOT A SINGLE ONE. A sconce is fed by a cable buried in the wall — inventing one promises rewiring we cannot deliver. The output must contain 0 wall sconces.`,
     );
   } else {
+    const muralesGardees = murales.filter((l) => gardes.has(l.element_id));
+    const consigneMurales = muralesGardees.length === murales.length
+      ? `KEEP each one EXACTLY as photographed (same sconce, same model — the owner keeps them).`
+      : muralesGardees.length
+        ? `KEEP ${muralesGardees.map(repere).join(" · ")} exactly as photographed; swap the others for a ${styleName} sconce AT THEIR EXACT SAME wall point.`
+        : `Swap each for a ${styleName} sconce AT ITS EXACT SAME wall point.`;
     lignes.push(
-      `- WALL SCONCES (exactly ${murales.length}): ${murales.map(repere).join(" · ")}. Swap each for a ${styleName} sconce AT ITS EXACT SAME wall point. The output must contain EXACTLY ${murales.length} — count them before you finish. Do NOT add a ${murales.length + 1}th anywhere, do NOT repeat them along the wall as a decorative motif, and NEVER mount one on a door, a cupboard front, a wardrobe, panelling or any joinery: no cable runs there.`,
+      `- WALL SCONCES (exactly ${murales.length}): ${murales.map(repere).join(" · ")}. ${consigneMurales} The output must contain EXACTLY ${murales.length} — count them before you finish. Do NOT add a ${murales.length + 1}th anywhere, do NOT repeat them along the wall as a decorative motif, and NEVER mount one on a door, a cupboard front, a wardrobe, panelling or any joinery: no cable runs there.`,
     );
   }
 
@@ -709,7 +741,14 @@ const NO_REFLECTION_SUFFIX =
   "\n\nIMPORTANT — OUVERTURES : inventorie TOUTES les ouvertures, même partiellement visibles ou " +
   "en bord de cadre. Une porte majoritairement VITRÉE (petits carreaux, style atelier/verrière, " +
   "porte-fenêtre) = french_door, même intérieure et même OUVERTE — jamais une simple door, jamais " +
-  "ignorée. Rater une ouverture fait construire un mur à sa place en génération (grave).";
+  "ignorée. Rater une ouverture fait construire un mur à sa place en génération (grave)." +
+  // Rideaux moutarde au bord gauche du cadre non détectés (n-ALUOR, 2026-07-16) : le rendu
+  // les gardait, la réconciliation les croyait NOUVEAUX → facturés au client alors qu'il
+  // les possède. Même famille de ratés que les meubles coupés par le cadre.
+  "\n\nIMPORTANT — BORDS DU CADRE : inventorie aussi les éléments PARTIELLEMENT COUPÉS par le " +
+  "bord de la photo — rideaux au bord d'une fenêtre, meuble du premier plan vu de dos, tapis " +
+  "dont on ne voit qu'un coin. Un élément coupé existe : le rater le fait facturer comme " +
+  "NOUVEAU en aval alors que le client le possède déjà.";
 
 export async function detectElementProfiles(
   projectId: string,
@@ -1381,7 +1420,7 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
     // Éléments détectés à retirer pour ce type de pièce (asset ∩ détection).
     removeList: buildRemoveList(profiles, removeCategories),
     userInstructions,
-    designPlan: `${designPlan || "None — restyle freely to fit the style."}\n${await buildLightingPlanLine(profiles, styleName)}${buildRoomScaleLine(project.roomScale)}${buildVariationLine(project.id)}${buildInventoryLockLine(profiles)}${canaryPlanNote}`,
+    designPlan: `${designPlan || "None — restyle freely to fit the style."}\n${await buildLightingPlanLine(profiles, styleName, project.element_decisions as ElementDecision[] | undefined)}${buildRoomScaleLine(project.roomScale)}${buildVariationLine(project.id)}${buildInventoryLockLine(profiles)}${canaryPlanNote}`,
   };
 
   // Flux DIY beta : variante de prompt sous slug dédié (RESTYLE meuble en
@@ -1619,7 +1658,7 @@ async function runDispositionsPipelineInner(projectId: string): Promise<string[]
     userInstructions,
     // Mêmes lignes de plan que le rendu unique : la taille de pièce et la variation de
     // mobilier leur manquaient, d'où des dispositions vides et un mobilier « par défaut ».
-    designPlan: `${designPlan || "None — restyle freely to fit the style."}\n${await buildLightingPlanLine(profiles, styleName)}${buildRoomScaleLine(project.roomScale)}${buildVariationLine(project.id)}${buildInventoryLockLine(profiles)}`,
+    designPlan: `${designPlan || "None — restyle freely to fit the style."}\n${await buildLightingPlanLine(profiles, styleName, project.element_decisions as ElementDecision[] | undefined)}${buildRoomScaleLine(project.roomScale)}${buildVariationLine(project.id)}${buildInventoryLockLine(profiles)}`,
   };
 
   // Les assises conservées, montrées en photo — c'est ICI que le canapé se faisait le plus
