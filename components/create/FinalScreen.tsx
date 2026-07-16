@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ExternalLink, Pencil, Link2, Star, RefreshCw, Loader2, Eye, MapPin, ShoppingBag, Download } from "lucide-react";
+import { ExternalLink, Pencil, Star, RefreshCw, Loader2, Eye, MapPin, ShoppingBag, Download } from "lucide-react";
 import { toast } from "sonner";
 import { ProgressBar } from "@/components/create/ProgressBar";
 import { BeforeAfterSlider } from "@/components/create/BeforeAfterSlider";
@@ -242,27 +242,16 @@ function ScoreFoyerTab({
   );
 }
 
-// ── Shopping item row with "Choisir un produit précis" button ──────────────────
-function ShoppingItemRow({
-  item,
-  onProductUrl,
-}: {
-  item: ShoppingItem;
-  onProductUrl: () => void;
-}) {
+// ── Ligne d'article de la liste ────────────────────────────────────────────────
+// Le lien « Choisir un produit précis » a été retiré (inactif — demande Alexis
+// 2026-07-16) : le choix de produit passe par « Modifier » / « Intégrer ce meuble »
+// sur la carte, et par « Indiquer votre référence » en mode expert.
+function ShoppingItemRow({ item }: { item: ShoppingItem }) {
   const advice = RSE_ADVICE[item.category];
   return (
     <li>
       <div className="relative">
         <ShoppingCard item={item} />
-        <button
-          type="button"
-          onClick={onProductUrl}
-          className="mt-1 flex w-full items-center gap-1.5 rounded-xl bg-white/80 px-3 py-1.5 text-[12px] text-foyer-muted transition-colors hover:text-foyer-sage"
-        >
-          <Link2 className="size-3.5 shrink-0" />
-          Choisir un produit précis
-        </button>
       </div>
       {advice && (
         <p className="mt-1.5 rounded-xl bg-foyer-sage/10 px-3 py-2 text-[12px] leading-relaxed text-foyer-sage">
@@ -1094,11 +1083,7 @@ function EnhancedListeShoppingTab({
 
             <ul className="flex flex-col gap-3">
               {matched.map((item) => (
-                <ShoppingItemRow
-                  key={item.id}
-                  item={item}
-                  onProductUrl={onProductUrl}
-                />
+                <ShoppingItemRow key={item.id} item={item} />
               ))}
 
               {unmatched.map((item) => (
@@ -1142,6 +1127,17 @@ function EnhancedListeShoppingTab({
                 </li>
               ))}
             </ul>
+
+            {family === "Décoration" && (
+              <p className="mt-2 text-[12px] text-foyer-muted">
+                La petite décoration (vases, miroirs, cadres) sera disponible dans une prochaine version.
+              </p>
+            )}
+            {family === "Fournitures" && (
+              <p className="mt-2 text-[12px] text-foyer-muted">
+                La liste exhaustive des fournitures sera disponible dans une prochaine version : tasseaux, moulures, rouleau de peinture, bac de peinture, etc.
+              </p>
+            )}
           </section>
         );
       })}
