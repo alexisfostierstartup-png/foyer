@@ -2153,7 +2153,19 @@ export async function computeRenderInventory(
   taxonomy: Map<string, string | null>,
 ): Promise<{ adds: Alteration[]; profiles: ElementProfile[] }> {
   const renderImg = await loadImage(renderUrl);
-  const renderProfiles = await detectElementProfiles(projectId, renderImg, "render_inventory", { withBbox: true });
+  let renderProfiles = await detectElementProfiles(projectId, renderImg, "render_inventory", { withBbox: true });
+  // 0 élément sur un RENDU (toujours meublé) = détection cassée (parse flash-lite),
+  // pas une pièce vide. Avalé en silence, ce zéro cascadait : 0 addition → aucune
+  // ligne meuble → RIEN à swapper → le rendu expert servait le FAKE tel quel
+  // (O_nmJOEf, QA Alexis 2026-07-16 : « fake = rendu réel, aucun swap »). Un retry,
+  // puis échec BRUYANT — l'appelant retombe sur les additions de l'audit.
+  if (renderProfiles.length === 0) {
+    console.warn(`[pipeline:final] inventaire rendu VIDE — retry (détection probablement cassée)`);
+    renderProfiles = await detectElementProfiles(projectId, renderImg, "render_inventory_retry", { withBbox: true });
+    if (renderProfiles.length === 0) {
+      throw new Error("Inventaire du rendu vide après retry — détection cassée, fallback additions audit");
+    }
+  }
   const categories = await getElementCategories().catch(() => [] as ElementCategory[]);
   const fixedShoppable = new Set(
     categories.filter((c) => c.fixed_lightpoint && c.catalog_category).map((c) => c.slug),
