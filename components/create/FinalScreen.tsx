@@ -564,8 +564,12 @@ export function FinalScreen({
       // expertIntegratedPieces — la seule vérité de ce qui est dans l'image. Après
       // une itération changeant un meuble, les deux divergeaient.
       setNewRenderPrompt("");
-      router.refresh();
-      setRerendering(false);
+      // Rechargement DUR, pas router.refresh() : la liste vit dans l'état CLIENT
+      // (useState initialisé au montage + poll arrêté une fois la liste servie) —
+      // le refresh doux remettait l'image à jour mais laissait l'ANCIENNE liste à
+      // l'écran (EJFyzwWG, QA Alexis 2026-07-16 : « c'est encore l'ancienne liste,
+      // ça doit pas arriver »). Même geste que le pin « Modifier ce meuble ».
+      window.location.reload();
     } catch {
       toast.error("Le nouveau rendu a échoué. Réessayez.");
       setRerendering(false);
