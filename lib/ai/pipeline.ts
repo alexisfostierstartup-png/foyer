@@ -226,8 +226,35 @@ export function buildInventoryLockLine(profiles: ElementProfile[]): string {
   }
   if (compte.size === 0) return "";
 
+  // Position depuis la bbox quand la détection l'a donnée (meubles structurants,
+  // cf. OPENINGS_BOX_SUFFIX) : le verrou purement NUMÉRIQUE était violé quand le
+  // meuble est COUPÉ par le bord du cadre — le modèle gardait l'original hors-champ
+  // ET en bâtissait un second mieux placé (2 meubles TV, projet -qIiWS 2026-07-16).
+  // Nommer la place — surtout « coupé par le bord » — ancre l'exemplaire existant,
+  // exactement comme nommer le mur a ancré les ouvertures (a275927).
+  const positionDe = (p: ElementProfile): string | null => {
+    const b = p.bbox;
+    if (!b) return null;
+    const parts: string[] = [];
+    const mur = murDepuisBbox(b);
+    if (mur) parts.push(mur === "LEFT" ? "on the left" : mur === "RIGHT" ? "on the right" : "at the back");
+    if (b.y + b.h > 0.9) parts.push("in the foreground");
+    if (b.x <= 0.02 || b.x + b.w >= 0.98 || b.y + b.h >= 0.97) parts.push("partially CUT by the photo's edge — it still exists and still counts");
+    return parts.length ? parts.join(", ") : null;
+  };
+  const posParCat = new Map<string, string[]>();
+  for (const p of profiles) {
+    if (NON_MOBILIER.has(p.category)) continue;
+    const pos = positionDe(p);
+    if (pos) posParCat.set(p.category, [...(posParCat.get(p.category) ?? []), pos]);
+  }
+
   const liste = [...compte.entries()]
-    .map(([cat, n]) => `${n} ${cat.replace(/_/g, " ")}${n > 1 ? "s" : ""}`)
+    .map(([cat, n]) => {
+      const positions = posParCat.get(cat);
+      const ou = positions?.length ? ` (${positions.join("; ")})` : "";
+      return `${n} ${cat.replace(/_/g, " ")}${n > 1 ? "s" : ""}${ou}`;
+    })
     .join(", ");
 
   return (
@@ -241,7 +268,12 @@ export function buildInventoryLockLine(profiles: ElementProfile[]): string {
     // de meubles, et j'aurai une pièce vide »). Une pièce VIDE n'a d'ailleurs aucune ligne
     // de verrou du tout (rien à compter) : elle se meuble librement.
     `This list counts what EXISTS — it does NOT cap what is MISSING. Anything absent from it is genuinely absent from the room: ` +
-    `if this room type needs it and the room does not have it, ADD it (one of each). A room that ends up bare, or half-furnished, is a FAILED render.`
+    `if this room type needs it and the room does not have it, ADD it (one of each). A room that ends up bare, or half-furnished, is a FAILED render.` +
+    // Le cas qui violait le compte : meuble TV au premier plan, coupé par le cadre →
+    // le modèle en bâtissait un second face au canapé. On le nomme explicitement.
+    (compte.has("tv_stand") || compte.has("television")
+      ? ` THE TV LIVES WHERE THE PHOTO PUTS IT: the room's ONLY television sits on its photographed unit, even if that unit is at the edge of the frame or seen from behind — NEVER build a second TV, TV unit or media wall anywhere else.`
+      : "")
   );
 }
 
@@ -711,11 +743,20 @@ export async function detectElementProfiles(
   // Boîtes des OUVERTURES (pour dire au prompt quels murs sont pleins) et des ASSISES
   // (pour découper le canapé conservé et le MONTRER au modèle en référence : lui dire de
   // ne pas le redessiner ne suffit pas, il lui ajoute des accoudoirs quand même).
+  // + meubles STRUCTURANTS (tv_stand, sideboard…) depuis 2026-07-16 : le verrou
+  // d'inventaire était purement NUMÉRIQUE (« EXACTLY 1 tv stand ») et le modèle le
+  // violait quand le meuble est COUPÉ par le bord du cadre — il gardait l'original
+  // hors-champ ET en bâtissait un second face au canapé (projet -qIiWS, 2 meubles
+  // TV). Même leçon que les ouvertures (a275927) : le compte ne suffit pas, il faut
+  // NOMMER la position. La boîte permet de dire « au premier plan gauche, coupé par
+  // le cadre — c'est LE poste TV » dans buildInventoryLockLine.
   const OPENINGS_BOX_SUFFIX =
     "\n\nEN PLUS : pour les SEULS éléments dont la catégorie est window, french_door, door, wall_opening, " +
-    "sofa, armchair, chair, dining_chair ou bench, " +
+    "sofa, armchair, chair, dining_chair, bench, " +
+    "tv_stand, television, sideboard, dresser, bookshelf ou shelf, " +
     'ajoute "box_2d": [ymin, xmin, ymax, xmax] — boîte englobante SERRÉE, en ENTIERS de 0 à 1000 ' +
-    "(origine en haut à gauche). Aucun autre élément n'a besoin de box_2d.";
+    "(origine en haut à gauche), y compris si l'objet est PARTIELLEMENT COUPÉ par le bord de la photo " +
+    "(borne la boîte au bord). Aucun autre élément n'a besoin de box_2d.";
   const template = opts?.withBbox
     ? detPrompt.resolvedTemplate + NO_REFLECTION_SUFFIX + BBOX_SUFFIX + buildAttrsInstruction() + LEAN_INVENTORY_SUFFIX
     : detPrompt.resolvedTemplate + NO_REFLECTION_SUFFIX + ROOM_SCALE_SUFFIX + OPENINGS_BOX_SUFFIX;
