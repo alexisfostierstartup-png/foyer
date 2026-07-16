@@ -218,10 +218,19 @@ const NON_MOBILIER = new Set([
  * On lui donne donc le compte exact, catégorie par catégorie. Même patron que les points
  * lumineux, seul verrou qui ait jamais tenu : un NOMBRE explicite, pas une consigne molle.
  */
-export function buildInventoryLockLine(profiles: ElementProfile[]): string {
+export function buildInventoryLockLine(
+  profiles: ElementProfile[],
+  // Catégories à RETIRER pour ce type de pièce (room_defaults.removeCategories) :
+  // les compter mettait le verrou en guerre avec la removeList — pour un salon
+  // déclaré « chambre », il disait « EXACTLY 1 sofa … NEVER delete one » pendant
+  // que la removeList ordonnait de retirer ce canapé. Le modèle obéissait au
+  // verrou → salon rendu dans une chambre (jyhDc8bQ, 2026-07-16).
+  removeCategories: string[] = [],
+): string {
+  const aRetirer = new Set(removeCategories);
   const compte = new Map<string, number>();
   for (const p of profiles) {
-    if (NON_MOBILIER.has(p.category)) continue;
+    if (NON_MOBILIER.has(p.category) || aRetirer.has(p.category)) continue;
     compte.set(p.category, (compte.get(p.category) ?? 0) + 1);
   }
   if (compte.size === 0) return "";
@@ -1457,7 +1466,7 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
     // Éléments détectés à retirer pour ce type de pièce (asset ∩ détection).
     removeList: buildRemoveList(profiles, removeCategories),
     userInstructions,
-    designPlan: `${designPlan || "None — restyle freely to fit the style."}\n${await buildLightingPlanLine(profiles, styleName, project.element_decisions as ElementDecision[] | undefined)}${buildRoomScaleLine(project.roomScale)}${buildVariationLine(project.id)}${buildInventoryLockLine(profiles)}${canaryPlanNote}`,
+    designPlan: `${designPlan || "None — restyle freely to fit the style."}\n${await buildLightingPlanLine(profiles, styleName, project.element_decisions as ElementDecision[] | undefined)}${buildRoomScaleLine(project.roomScale)}${buildVariationLine(project.id)}${buildInventoryLockLine(profiles, removeCategories)}${canaryPlanNote}`,
   };
 
   // Flux DIY beta : variante de prompt sous slug dédié (RESTYLE meuble en
@@ -1695,7 +1704,7 @@ async function runDispositionsPipelineInner(projectId: string): Promise<string[]
     userInstructions,
     // Mêmes lignes de plan que le rendu unique : la taille de pièce et la variation de
     // mobilier leur manquaient, d'où des dispositions vides et un mobilier « par défaut ».
-    designPlan: `${designPlan || "None — restyle freely to fit the style."}\n${await buildLightingPlanLine(profiles, styleName, project.element_decisions as ElementDecision[] | undefined)}${buildRoomScaleLine(project.roomScale)}${buildVariationLine(project.id)}${buildInventoryLockLine(profiles)}`,
+    designPlan: `${designPlan || "None — restyle freely to fit the style."}\n${await buildLightingPlanLine(profiles, styleName, project.element_decisions as ElementDecision[] | undefined)}${buildRoomScaleLine(project.roomScale)}${buildVariationLine(project.id)}${buildInventoryLockLine(profiles, removeCategories)}`,
   };
 
   // Les assises conservées, montrées en photo — c'est ICI que le canapé se faisait le plus

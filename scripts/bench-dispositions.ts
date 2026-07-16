@@ -174,7 +174,7 @@ async function main() {
     `\n${await buildLightingPlanLine(profiles, styleName)}` +
     `${buildRoomScaleLine(projet?.roomScale ?? "large")}` +
     `${buildVariationLine(projet?.id ?? projectId)}`;
-  const inventoryLine = buildInventoryLockLine(profiles);
+  const inventoryLine = buildInventoryLockLine(profiles, removeCategories);
 
   const baseCtx = {
     styleName,

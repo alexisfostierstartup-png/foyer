@@ -136,7 +136,7 @@ async function main() {
     fixedFeatures: await buildFixedFeaturesSummary(profiles),
     removeList: buildRemoveList(profiles, removeCategories),
     userInstructions: projet ? await formatUserInstructions(choices as never) : "None — use your judgment within the guidance.",
-    designPlan: `${designPlanCore}\n${await buildLightingPlanLine(profiles, styleName)}${buildRoomScaleLine(projet?.roomScale ?? "large")}${buildVariationLine(projet?.id ?? projectId)}${buildInventoryLockLine(profiles)}`,
+    designPlan: `${designPlanCore}\n${await buildLightingPlanLine(profiles, styleName)}${buildRoomScaleLine(projet?.roomScale ?? "large")}${buildVariationLine(projet?.id ?? projectId)}${buildInventoryLockLine(profiles, removeCategories)}`,
   };
 
   const ARMS = [
