@@ -17,6 +17,10 @@ import type { RoomType, CustomProduct } from "@/lib/types";
 
 const STEPS = ["Photo", "Style", "Mobilier", "Rendu", "Projet"];
 
+// Pièces avec un catalogue/prompt encore incomplet — signalées « Bêta » sur leur
+// pill plutôt que masquées (demande Alexis 2026-07-16).
+const BETA_ROOM_TYPES = new Set(["salle_a_manger", "chambre_parentale", "chambre_enfant"]);
+
 // Gros meubles proposés pour « indiquer votre référence » à l'upload (flux expert).
 const UPLOAD_FURNITURE: { slug: string; label: string }[] = [
   { slug: "sofa", label: "Canapé" },
@@ -36,7 +40,10 @@ const UPLOAD_FURNITURE: { slug: string; label: string }[] = [
 const TIPS = [
   { icon: Frame, text: "Cadrez large (un mur entier visible)" },
   { icon: Sun, text: "Éclairage naturel idéalement" },
-  { icon: UserRoundX, text: "Sans être dans la pièce vous-même" },
+  // Élargi de « sans être dans la pièce vous-même » : aucune personne, y compris
+  // affichée sur un écran (TV, cadre photo…) — sinon la génération peut être
+  // refusée (retour Alexis 2026-07-16).
+  { icon: UserRoundX, text: "Aucune personne dans la photo (vous inclus, même à la télé ou sur un écran)" },
 ];
 
 type Props = {
@@ -200,13 +207,23 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
                     });
                   }}
                   className={cn(
-                    "rounded-full px-4 py-2 text-[14px] font-medium transition-all",
+                    "flex items-center gap-1.5 rounded-full px-4 py-2 text-[14px] font-medium transition-all",
                     selected
                       ? "bg-foyer-ink text-white"
                       : "border border-foyer-border bg-white text-foyer-ink hover:border-foyer-sage/60",
                   )}
                 >
                   {opt.label}
+                  {BETA_ROOM_TYPES.has(opt.slug) && (
+                    <span
+                      className={cn(
+                        "rounded-full px-1.5 py-0.5 text-[10px] uppercase tracking-wide",
+                        selected ? "bg-white/20" : "bg-clay/15 text-clay",
+                      )}
+                    >
+                      Beta
+                    </span>
+                  )}
                 </button>
               );
             })}

@@ -11,6 +11,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
+      // top-right : en bas à gauche les toasts (surtout les erreurs) passaient
+      // inaperçus — coin mort de l'écran (retour Alexis 2026-07-16).
+      position="top-right"
       icons={{
         success: (
           <CircleCheckIcon className="size-4" />
@@ -39,6 +42,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         classNames: {
           toast: "cn-toast",
+          // Erreurs : rouge franc + plus grand — sinon elles se fondent dans le
+          // même style neutre que les autres toasts et passent inaperçues.
+          error: "!bg-red-600 !text-white !border-red-700 !text-[15px] !py-4 [&_[data-icon]]:!text-white",
         },
       }}
       {...props}

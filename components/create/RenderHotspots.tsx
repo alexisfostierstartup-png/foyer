@@ -31,6 +31,7 @@ type Hotspot = {
   // elementId reste l'exemplaire précis (tap-to-target sur CE meuble-là).
   selectId: string;
   name: string;
+  category: string;
   cx: number; // centre bbox, en % du rendu
   cy: number;
   thumbs: { url: string; alt: string; idx: number }[];
@@ -168,6 +169,7 @@ export function RenderHotspots({
           elementId: id,
           selectId: it.elementId ?? id,
           name: it.name,
+          category: it.category,
           cx: Math.min(97, Math.max(3, px)),
           cy: Math.min(95, Math.max(5, py)),
           thumbs,
@@ -273,11 +275,14 @@ export function RenderHotspots({
                   <button
                     type="button"
                     onClick={() => { setModalFor(h); setTargetNote(""); setOpenId(null); }}
-                    className="mt-2 flex h-8 w-full items-center justify-center gap-1.5 rounded-full bg-foyer-sage text-[12px] font-medium text-white transition-opacity hover:opacity-90"
+                    // min-h (pas h-8 fixe) + flex-wrap : le texte + le badge « Payant »
+                    // ne tenaient pas sur une ligne dans les 210px du popover, la hauteur
+                    // fixe les rognait au lieu de laisser le bouton grandir (QA Alexis).
+                    className="mt-2 flex min-h-8 w-full flex-wrap items-center justify-center gap-x-1.5 gap-y-1 rounded-2xl bg-foyer-sage px-2 py-1.5 text-[12px] font-medium text-white transition-opacity hover:opacity-90"
                   >
-                    <Pencil className="size-3" aria-hidden />
-                    Modifier ce meuble
-                    <span className="ml-0.5 text-[10px] uppercase tracking-wide bg-white/20 px-1.5 py-0.5 rounded-full">
+                    <Pencil className="size-3 shrink-0" aria-hidden />
+                    {h.category === "paint" ? "Modifier la couleur" : "Modifier ce meuble"}
+                    <span className="text-[10px] uppercase tracking-wide bg-white/20 px-1.5 py-0.5 rounded-full">
                       Payant
                     </span>
                   </button>
@@ -303,7 +308,7 @@ export function RenderHotspots({
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-foyer-sage">
-                  Modifier ce meuble
+                  {modalFor.category === "paint" ? "Modifier la couleur" : "Modifier ce meuble"}
                   <span className="rounded-full bg-foyer-terra/10 px-1.5 py-0.5 text-foyer-terra">Payant</span>
                 </p>
                 <p className="mt-0.5 line-clamp-1 text-[14px] font-medium text-foyer-ink">{modalFor.name}</p>
