@@ -2312,7 +2312,16 @@ export async function ensureFinalAssets(
   const project = await getProject(projectId);
   if (!project?.generatedRenderUrl) return null;
   if (project.shoppingList && !opts?.force) {
-    return { shoppingList: project.shoppingList, scoreFoyer: project.scoreFoyer as ScoreFoyer };
+    // AUTO-GUÉRISON : une liste sans analyse alignée sur le rendu affiché = pins
+    // morts. Cas réel en PROD (zwtgBd, 2026-07-16) : le recalcul forcé post-swap
+    // est un `void …` fire-and-forget — la lambda Vercel est gelée à la réponse,
+    // le recalcul meurt, et ce raccourci « liste déjà là » verrouillait l'état
+    // cassé pour toujours. Si l'analyse est fraîche on sert le cache ; sinon on
+    // continue vers le recalcul (le polling /shopping-status répare tout seul).
+    if (project.renderAnalysis?.renderUrl === renduAffiche(project)) {
+      return { shoppingList: project.shoppingList, scoreFoyer: project.scoreFoyer as ScoreFoyer };
+    }
+    console.log("[pipeline:final] liste présente mais analyse absente/périmée → recalcul (auto-guérison)");
   }
   // Un autre process calcule déjà cette liste (bail DB frais) → les déclencheurs
   // fire-and-forget s'abstiennent au lieu de doubler le compute (et le coût).
