@@ -439,11 +439,29 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
   // → le swap n'y touche pas du tout. Le ciblage texte de NB2 ne sait pas viser un
   // objet précis quand deux semblables coexistent (la ligne ex-bar_table recatégorisée
   // coffee_table a fait remplacer la table basse CONSERVÉE, projet CVp7yLGh).
+  // LA LISTE EFFECTIVE FAIT FOI sur les décisions brutes (directive Alexis
+  // 2026-07-16) : une ligne NON-DIY avec elementId + matches signifie que l'audit a
+  // constaté que le rendu contient un objet À ACHETER — y compris un meuble décidé
+  // « garder » que le fake a modifié malgré tout (reclassé remplacé-de-fait par
+  // confirm_changes). Ce meuble-là DOIT être swappé vers le vrai produit : « jamais
+  // celui du rendu fake — soit le produit de la liste, soit l'original ». Sans ça,
+  // le swap le protégeait via sa décision brute none → canapé du fake ni à l'user
+  // ni achetable (EJFyzwWG).
+  const lignesEffectives = new Set(
+    shoppingList
+      .filter((it) => it.source !== "diy" && it.elementId && (it.matches?.length ?? 0) > 0)
+      .map((it) => it.elementId as string),
+  );
   const protectedCats = new Set(
     (project.element_decisions ?? [])
-      .filter((d) => d.mismatch_type === "none" || d.mismatch_type === "surface")
+      .filter(
+        (d) =>
+          (d.mismatch_type === "none" || d.mismatch_type === "surface") &&
+          !lignesEffectives.has(d.element_id),
+      )
       .map((d) => d.category),
   );
+  for (const id of lignesEffectives) replaceIds.add(id);
   // CHOIX EXPLICITE DU USER : « Choisir un produit précis » sur un élément écrase
   // la protection ET le gating replaceIds. Le user s'est contredit (il avait dit
   // « je customise »), on le suit : hiérarchie user > DIY > colorway.
