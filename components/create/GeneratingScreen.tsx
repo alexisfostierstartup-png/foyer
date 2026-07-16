@@ -121,6 +121,21 @@ export function GeneratingScreen({
           )}
         </div>
 
+        {/* EXPERT : le rendu réaliste (fake + incrustation des vrais produits) prend
+            40-60 s — sans explication, cette attente ressemble à une page cassée
+            (demande Alexis 2026-07-16). Le bandeau vit avec l'écran de chargement et
+            disparaît avec lui (navigation vers /final à la fin, ou état failed). */}
+        {expert && !failed && (
+          <div className="mt-4 rounded-xl border border-foyer-sage/30 bg-foyer-sage/10 px-4 py-3 text-center">
+            <p className="text-[14px] font-medium text-foyer-ink">
+              Votre rendu expert est en préparation — comptez 40 à 60 secondes.
+            </p>
+            <p className="mt-0.5 text-[13px] text-foyer-muted">
+              Nous composons votre pièce avec de vrais meubles du catalogue, à leur taille et à leur place réelles.
+            </p>
+          </div>
+        )}
+
         <div className="mt-8 flex flex-1 flex-col items-center">
           {failed ? (
             <>
