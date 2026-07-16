@@ -69,16 +69,22 @@ if (cmd === "dump") {
   const [prod, dev] = [await activeRow(slug, "prod"), await activeRow(slug, "dev")];
   if (!dev) { console.error(`✗ pas de dev active pour ${slug}`); process.exit(1); }
   const maxV = Math.max(...(await rows(slug)).map((p) => p.version ?? 0));
-  if (prod) await sb.from("prompts").update({ is_active: false, notes: `${prod.notes ?? ""} [remplacée par v${maxV + 1}]`.trim() }).eq("id", prod.id);
-  await sb.from("prompts").update({ is_active: false }).eq("id", dev.id);
+  // INSERT D'ABORD, désactivations ENSUITE. L'ordre inverse a laissé 6 slugs sans
+  // AUCUNE ligne active quand l'insert a échoué (2026-07-16 : conditions null sur
+  // colonne NOT NULL) — resolvePrompt plantait en prod. La nouvelle prod naît
+  // inactive, on ne bascule qu'une fois son insertion garantie.
   const { conditions, ...rest } = dev;
   const { channel: _c, ...prodConds } = conditions ?? {};
-  const { error } = await sb.from("prompts").insert({
+  const { data: inserted, error } = await sb.from("prompts").insert({
     slug, purpose: rest.purpose, provider: rest.provider, template: rest.template,
-    conditions: Object.keys(prodConds).length ? prodConds : null,
-    is_active: true, version: maxV + 1, notes: `promue depuis dev v${dev.version}`,
-  });
+    conditions: prodConds, // {} = prod ; jamais null (NOT NULL)
+    is_active: false, version: maxV + 1, notes: `promue depuis dev v${dev.version}`,
+  }).select("id").single();
   if (error) throw error;
+  if (prod) await sb.from("prompts").update({ is_active: false, notes: `${prod.notes ?? ""} [remplacée par v${maxV + 1}]`.trim() }).eq("id", prod.id);
+  await sb.from("prompts").update({ is_active: false }).eq("id", dev.id);
+  const { error: actErr } = await sb.from("prompts").update({ is_active: true }).eq("id", inserted.id);
+  if (actErr) throw actErr;
   console.log(`✓ ${slug} v${maxV + 1} est la nouvelle PROD (ex-prod v${prod?.version ?? "—"} désactivée, dev v${dev.version} désactivée).`);
 } else if (cmd === "rollback") {
   if (!slug) { console.error("usage: rollback <slug>"); process.exit(1); }
