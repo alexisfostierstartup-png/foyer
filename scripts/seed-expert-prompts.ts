@@ -18,11 +18,11 @@ async function main() {
   const sb = createSupabaseAdmin();
 
   const seeds = [
-    { slug: "expert_swap", purpose: "generation", provider: "nano_banana_2", template: EXPERT_SWAP_TEMPLATE,
+    { slug: "expert_swap", purpose: "generation", provider: "nano_banana", template: EXPERT_SWAP_TEMPLATE,
       notes: "Swap expert NB2 : incruster les produits catalogue dans le rendu ({{room}}, {{mapping}}). Migré du code 2026-07-16." },
-    { slug: "expert_iterate", purpose: "generation", provider: "nano_banana_2", template: EXPERT_ITERATE_TEMPLATE,
+    { slug: "expert_iterate", purpose: "generation", provider: "nano_banana", template: EXPERT_ITERATE_TEMPLATE,
       notes: "Itération expert (sol/peinture/objet ciblé) : {{userRequest}}, {{cible}}. Migré du code 2026-07-16." },
-    { slug: "render_hd", purpose: "generation", provider: "nano_banana_2", template: RENDER_HD_TEMPLATE,
+    { slug: "render_hd", purpose: "generation", provider: "nano_banana", template: RENDER_HD_TEMPLATE,
       notes: "Tirage HD 4K : détail/netteté uniquement, contenu figé. Migré du code 2026-07-16." },
   ];
 
