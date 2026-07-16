@@ -28,6 +28,12 @@ export async function POST(
     firstRenderUrl: url,
     iterationCount: 0,
     ...CLEAR_FINALIZE,
+    // …SAUF les dispositions : CLEAR_FINALIZE est pensé pour un NOUVEAU rendu, qui
+    // les invalide. Ici le rendu choisi EST l'une d'elles — le trio reste valide.
+    // L'effacer cassait le verrou d'idempotence : flèche retour du navigateur →
+    // page dispositions → 3 régénérations payantes pour revoir les mêmes choix
+    // (QA Alexis 2026-07-16, projet ND5qBys). Revenir en arrière doit RÉAFFICHER.
+    dispositionsRenderUrls: project.dispositionsRenderUrls,
   });
 
   // La disposition choisie est le rendu courant → précalcul shopping en fond
