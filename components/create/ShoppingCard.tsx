@@ -270,6 +270,20 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
   }
 
   const estPeinture = item.category === "paint";
+  // Pendant l'intégration/repeinte (~20-40 s + reload), un spinner sur le seul CTA
+  // se perdait dans la page — voile PLEIN ÉCRAN pour dire clairement que ça
+  // travaille (QA Alexis 2026-07-17).
+  const voileIntegration = integrating ? (
+    <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center gap-4 bg-foyer-ink/60 backdrop-blur-sm">
+      <Loader2 className="size-9 animate-spin text-white" aria-hidden />
+      <div className="px-8 text-center">
+        <p className="font-medium text-white">
+          {estPeinture ? "Nouvelle couleur en cours d'application…" : "Intégration du meuble dans votre rendu…"}
+        </p>
+        <p className="mt-1 text-[13px] text-white/80">Comptez 20 à 40 secondes — la page se rechargera toute seule.</p>
+      </div>
+    </div>
+  ) : null;
   // Intégrable : flux gratuit uniquement (l'expert a son flux d'overrides groupés),
   // un vrai meuble matché relié à un élément du rendu.
   const canIntegrate = !controlled && !estPeinture && !!item.elementId && item.source !== "diy";
@@ -281,6 +295,7 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
 
   return (
     <div className="rounded-2xl border border-foyer-border bg-white p-3">
+      {voileIntegration}
       {customPick ? (
         <div className="flex items-center gap-4">
           <Thumb url={customPick.imageUrl} alt={customPick.name ?? "Votre référence"} fallback={Icon} />
@@ -315,9 +330,13 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
             <div className="flex flex-wrap items-center gap-2">
               <SourceTag source={matchSource(best)} />
               <span className="text-[13px] text-foyer-muted">{best.merchant}</span>
-              <span className="rounded-full bg-foyer-sage/10 px-1.5 py-0.5 text-[11px] font-medium text-foyer-sage">
-                {Math.round(best.similarity * 100)}%
-              </span>
+              {/* % de similarité = outil de réglage, pas une info user (retiré de la
+                  vue publique, QA Alexis 2026-07-17) — visible avec ?debug=1. */}
+              {debug && (
+                <span className="rounded-full bg-foyer-sage/10 px-1.5 py-0.5 text-[11px] font-medium text-foyer-sage">
+                  {Math.round(best.similarity * 100)}%
+                </span>
+              )}
             </div>
             {debug && <ScoreBreakdown m={best} />}
           </div>
@@ -421,7 +440,10 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
                     <span className="line-clamp-2 text-[14px] text-foyer-ink">{m.name}</span>
                     <div className="flex items-center gap-2">
                       <SourceTag source={matchSource(m)} />
-                      <span className="text-[12px] text-foyer-muted">{m.merchant} · {Math.round(m.similarity * 100)}%</span>
+                      <span className="text-[12px] text-foyer-muted">
+                        {m.merchant}
+                        {debug ? ` · ${Math.round(m.similarity * 100)}%` : ""}
+                      </span>
                     </div>
                     {debug && <ScoreBreakdown m={m} />}
                   </div>
@@ -470,11 +492,14 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
         </p>
       )}
 
-      {/* Raw audit (mode test) — pour repérer un élément détecté mais non/mal matché. */}
-      <p className="mt-2 text-[11px] text-foyer-muted/80">
-        Détecté&nbsp;: <span className="font-medium">{item.name}</span> · {item.category}
-        {(item.quantity ?? 1) > 1 ? ` ×${item.quantity}` : ""}
-      </p>
+      {/* Raw audit — debug uniquement (?debug=1) : « Détecté : … » parlait aux
+          réglages, pas aux utilisateurs (QA Alexis 2026-07-17). */}
+      {debug && (
+        <p className="mt-2 text-[11px] text-foyer-muted/80">
+          Détecté&nbsp;: <span className="font-medium">{item.name}</span> · {item.category}
+          {(item.quantity ?? 1) > 1 ? ` ×${item.quantity}` : ""}
+        </p>
+      )}
 
       {/* Règle de pondération + attributs du rendu (debug scoring, ?debug=1). */}
       {debug && <ItemScoringHeader item={item} />}
