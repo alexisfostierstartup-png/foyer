@@ -2490,13 +2490,26 @@ async function analyzeRender(projectId: string, project: Project): Promise<Rende
     const comp = await buildBeforeAfterComposite(project.basePhotoUrl, renderUrl);
     const compBuf = comp.buffer as unknown as ImageInput;
     // Même composite → audit + murs repeints (getChangedWallColors ne renvoie QUE ce qui a changé).
-    const [r, wallColorsRes] = await Promise.all([
+    let [r, wallColorsRes] = await Promise.all([
       confirmChanges(projectId, candidates, compBuf, comp.afterLeftFrac, comp.afterWidthFrac),
       getChangedWallColors(compBuf).catch((e: unknown) => {
         console.warn("[paint] détection couleurs murs échouée:", e instanceof Error ? e.message : e);
         return [] as WallColor[];
       }),
     ]);
+    // AUDIT VIDE = AUDIT CASSÉ, jamais une réponse. 0 élément jugé sur N candidats
+    // (réponse vide/imparsable) tombait dans « non jugé → présumé appliqué » : les
+    // lignes gardaient la description d'AVANT et le matching proposait à l'achat
+    // les meubles de l'utilisateur (K5jLjMj, 54 audits vides en boucle, QA Alexis
+    // 2026-07-17). Un retry, puis échec BRUYANT — pas de liste plutôt qu'une
+    // liste mensongère (le poll retentera).
+    if (candidates.length > 0 && r.judgedIds.size === 0) {
+      console.warn(`[pipeline:final] audit VIDE (0/${candidates.length} jugés) → retry`);
+      r = await confirmChanges(projectId, candidates, compBuf, comp.afterLeftFrac, comp.afterWidthFrac);
+      if (r.judgedIds.size === 0) {
+        throw new Error(`Audit vide après retry (0/${candidates.length} jugés) — liste non construite`);
+      }
+    }
     appliedIds = r.appliedIds;
     judgedIds = r.judgedIds;
     replacedIds = r.replacedIds;
