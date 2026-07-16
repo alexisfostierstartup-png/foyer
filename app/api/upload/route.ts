@@ -122,6 +122,13 @@ export async function POST(request: NextRequest) {
       await updateProject(project.id, { mode: "expert" });
     }
 
+    // Tag testeur (cookie collant posé par le lien d'entrée …?t=lea) : gravé sur
+    // chaque projet → parcours reconstituable par testeur (user tests 2026-07-17).
+    const testerTag = request.cookies.get("foyer_tester")?.value;
+    if (testerTag && /^[\w-]{1,64}$/.test(testerTag)) {
+      await updateProject(project.id, { testerTag });
+    }
+
     // Flux DIY beta (?diy=beta sur /create) : persiste le flag sur le projet —
     // il suit toute sa vie (analyse, re-générations, shopping), aucune
     // contamination entre projets d'un même navigateur.

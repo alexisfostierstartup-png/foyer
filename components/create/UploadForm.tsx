@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Camera, ImagePlus, Frame, Sun, UserRoundX, Loader2 } from "lucide-react";
@@ -58,6 +58,14 @@ type Props = {
 
 export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = false }: Props) {
   const router = useRouter();
+  // Arrivée avec ?t=<prénom> (fin de formulaire → redirect) : le middleware vient
+  // de poser le cookie testeur — on rétro-tague aussi les projets DÉJÀ créés par
+  // ce navigateur (cas « test d'abord, formulaire ensuite »). Fire-and-forget.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).has("t")) {
+      fetch("/api/tester-tag", { method: "POST" }).catch(() => {});
+    }
+  }, []);
   const [roomType, setRoomType] = useState<RoomType | null>(null);
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -268,15 +276,29 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
                   // Le cadre 4/3 n'apparaît QU'UNE FOIS la photo choisie. Vide, il occupait
                   // 640px de haut sur un écran large : un grand rectangle beige pour ne rien
                   // montrer.
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={previewUrl}
-                    alt="Aperçu de votre photo"
-                    className="aspect-[4/3] w-full rounded-xl object-cover"
-                    // Filet : tout format que ce navigateur ne sait pas décoder retombe sur
-                    // le loader plutôt que sur la vignette cassée.
-                    onError={() => setPreviewUrl(null)}
-                  />
+                  <div className="relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={previewUrl}
+                      alt="Aperçu de votre photo"
+                      className="aspect-[4/3] w-full rounded-xl object-cover"
+                      // Filet : tout format que ce navigateur ne sait pas décoder retombe sur
+                      // le loader plutôt que sur la vignette cassée.
+                      onError={() => setPreviewUrl(null)}
+                    />
+                    {/* L'aperçu local s'affiche AVANT la fin de l'envoi, mais le bouton
+                        « Continuer » n'existe qu'après (projectId) : entre les deux, rien ne
+                        disait que ça travaillait (QA Alexis 2026-07-16). Loader PAR-DESSUS
+                        la photo le temps de l'envoi. */}
+                    {uploading && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-xl bg-foyer-ink/35 backdrop-blur-[2px]">
+                        <Loader2 className="size-7 animate-spin text-white" aria-hidden />
+                        <p className="text-[13px] font-medium text-white">
+                          Préparation de votre photo…
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   // La zone de dépôt EST le bouton d'import : un clic ouvre directement le
                   // sélecteur de photos. Le bouton « Importer depuis la galerie » qui vivait

@@ -83,12 +83,20 @@ function timeAgo(iso: string) {
   return `${Math.floor(h / 24)}j`;
 }
 
-export default async function AdminLogsPage() {
-  const { data: logs, error } = await createSupabaseAdmin()
+export default async function AdminLogsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ project?: string }>;
+}) {
+  // ?project=<id> : parcours d'UN projet (liens depuis /admin/testeurs).
+  const { project } = await searchParams;
+  let query = createSupabaseAdmin()
     .from("pipeline_logs")
     .select("*")
     .order("created_at", { ascending: false })
     .limit(200);
+  if (project) query = query.eq("project_id", project);
+  const { data: logs, error } = await query;
 
   const rows = (logs ?? []) as LogRow[];
 
@@ -98,6 +106,15 @@ export default async function AdminLogsPage() {
         <h1 className="font-serif text-2xl text-foyer-ink">Logs pipeline</h1>
         <p className="text-sm text-foyer-muted mt-1">
           {rows.length} événement{rows.length !== 1 ? "s" : ""} — 200 derniers
+          {project && (
+            <>
+              {" · projet "}
+              <span className="font-mono">{project.slice(0, 12)}…</span>{" "}
+              <a href="/admin/logs" className="text-foyer-sage hover:underline">
+                (tout voir)
+              </a>
+            </>
+          )}
         </p>
         {error && (
           <p className="mt-2 text-sm text-foyer-terra">Erreur : {error.message}</p>

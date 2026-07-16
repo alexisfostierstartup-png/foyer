@@ -87,6 +87,11 @@ export function Sidebar() {
           onClick={() => setMobileOpen(false)}
         />
         <NavLink
+          href="/admin/testeurs"
+          label="Testeurs"
+          onClick={() => setMobileOpen(false)}
+        />
+        <NavLink
           href="/admin/catalog"
           label="Catalogue"
           onClick={() => setMobileOpen(false)}

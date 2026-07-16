@@ -69,10 +69,13 @@ function mapRow(r: any): ProductMatch {
 async function rpcMatch(embedding: number[], category: string, topN: number): Promise<ProductMatch[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = createSupabaseAdmin() as any;
+  // topN + marge : les produits SANS image sont filtrés après coup (vignette vide
+  // en liste, inswappables par NB2 — « canapé 499 € sans photo », QA Alexis
+  // 2026-07-17) — on sur-demande pour garder topN candidats après filtre.
   const { data, error } = await supabase.rpc("match_partner_products_hybrid", {
     query_embedding: embedding,
     match_category: category,
-    match_count: topN,
+    match_count: topN + 4,
     alpha: MATCH_BLEND_ALPHA,
   });
   if (error) {
@@ -81,7 +84,8 @@ async function rpcMatch(embedding: number[], category: string, topN: number): Pr
   }
   return (data ?? [])
     .map(mapRow)
-    .filter((m: ProductMatch) => m.similarity >= MATCH_MIN_SIMILARITY);
+    .filter((m: ProductMatch) => m.similarity >= MATCH_MIN_SIMILARITY && m.primary_image_url)
+    .slice(0, topN);
 }
 
 export async function matchPartnerProducts(category: string, description: string, topN = 4): Promise<ProductMatch[]> {
@@ -222,7 +226,9 @@ async function rpcBlend(
       crop_embedding: cropEmbedding, // null → texte seul côté SQL
       desc_embedding: descEmbedding,
       match_category: category,
-      match_count: topN,
+      // Sur-demande : les produits sans image sont filtrés après coup (vignette
+      // vide + inswappables — QA Alexis 2026-07-17).
+      match_count: topN + 4,
       w_eco_new: weights.image_weight.eco_new,
       w_secondhand: weights.image_weight.secondhand,
       ...(useV2 ? { render_color_families: renderFamilies } : {}),
@@ -235,7 +241,10 @@ async function rpcBlend(
   // Scores BRUTS : le seuil d'affichage est appliqué par l'appelant, APRÈS d'éventuels
   // filtres (ex. matériau du sol) — sinon le seuil prunerait le pool avant le filtre et
   // ne laisserait que des produits hors-matériau bien notés (carrelage effet bois).
-  return (data ?? []).map(mapRowBlend);
+  return (data ?? [])
+    .map(mapRowBlend)
+    .filter((m: ProductMatch) => m.primary_image_url)
+    .slice(0, topN);
 }
 
 // Seuil d'affichage PAR SOURCE. Le seuil ne sert PLUS à éliminer le neuf (eco_new) : tant

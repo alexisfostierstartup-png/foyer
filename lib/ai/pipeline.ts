@@ -210,6 +210,26 @@ const SILHOUETTES_TABLE_BASSE = [
   "round, in metal and glass",
 ];
 
+// Type de pièce → libellé ANGLAIS pour les prompts. Le slug français partait tel
+// quel dans le prompt (« a REAL chambre ») : pour un modèle anglophone c'est un
+// mot opaque — sur une pièce VIDE (aucun meuble à retirer, verrou d'inventaire
+// muet), seul le bloc style parlait encore et il vante des canapés → chambre
+// meublée en SALON (7oEm4NqW, QA Alexis 2026-07-17). « bedroom » est sans appel.
+export const ROOM_LABEL_EN: Record<string, string> = {
+  salon: "living room",
+  chambre: "bedroom",
+  chambre_parentale: "master bedroom",
+  chambre_enfant: "child's bedroom",
+  salle_a_manger: "dining room",
+  cuisine: "kitchen",
+  bureau: "home office",
+  salle_de_bain: "bathroom",
+  entree: "entryway",
+};
+export function roomLabelEn(roomType: string): string {
+  return ROOM_LABEL_EN[roomType] ?? roomType.replace(/_/g, " ");
+}
+
 // Catégories NON-mobilières : elles n'entrent pas dans le compte des meubles.
 const NON_MOBILIER = new Set([
   "floor", "wall", "ceiling", "window", "french_door", "door", "wall_opening",
@@ -379,6 +399,25 @@ export function buildConversionLine(
   if (concernes.length === 0) return "";
   const noms = concernes.map((p) => p.description?.trim() || p.element || p.category).join("; ");
   return `\n- THIS ROOM CHANGES FUNCTION: the photo still shows furniture from a previous use (${noms}). These pieces are GONE — reproduce NONE of them, do not restyle them, do not keep even one: their floor space is FREED. Furnish the room as a true ${roomType} instead (ROOM CONTENT below). Removing them changes NOTHING about the shell: same walls, same openings, same floor, same viewpoint.`;
+}
+
+/**
+ * PIÈCE VIDE — la photo ne montre AUCUN meuble déplaçable. Le verrou d'inventaire
+ * est muet (rien à compter), la conversion aussi (rien à retirer) : seul le bloc
+ * style parle encore, et il vante le mobilier de ses photos de référence (canapés
+ * bohème) → une chambre vide se meublait en SALON (7oEm4NqW, 2026-07-17). On dit
+ * donc explicitement : vide + meuble-la en <roomLabel> COMPLET, et rien d'autre.
+ */
+export function buildEmptyRoomLine(
+  profiles: ElementProfile[],
+  roomLabel: string,
+  roomDefaults: string,
+): string {
+  // « Vide » = aucun meuble DÉPLAÇABLE : une étagère d'alcôve scellée au mur
+  // (movable=false) ne meuble pas une pièce — 7oEm4NqW n'avait qu'elle et
+  // l'architecture, c'est bien une pièce vide.
+  if (profiles.some((p) => !NON_MOBILIER.has(p.category) && p.movable !== false)) return "";
+  return `\n- THE ROOM IS EMPTY of movable furniture. Furnish it as a COMPLETE ${roomLabel} — it needs: ${roomDefaults}. This room is a ${roomLabel} and NOTHING else: never furnish it as a living room or any other kind of room, and add NO piece that does not belong in a ${roomLabel}.`;
 }
 
 /**
@@ -1535,15 +1574,15 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
   const genCtx = {
     styleName,
     styleMood,
-    roomType: project.roomType,
+    roomType: roomLabelEn(project.roomType),
     furnitureDefaults,
     visionJson: visionJsonPourPrompt(profiles, removeCategories),
-    conversionMission: buildConversionMission(profiles, removeCategories, project.roomType, roomDefaultsBruts),
+    conversionMission: buildConversionMission(profiles, removeCategories, roomLabelEn(project.roomType), roomDefaultsBruts),
     fixedFeatures: await buildFixedFeaturesSummary(profiles),
     // Éléments détectés à retirer pour ce type de pièce (asset ∩ détection).
     removeList: buildRemoveList(profiles, removeCategories),
     userInstructions,
-    designPlan: `${designPlan || "None — restyle freely to fit the style."}${buildConversionLine(profiles, removeCategories, project.roomType)}\n${await buildLightingPlanLine(profiles, styleName, project.element_decisions as ElementDecision[] | undefined)}${buildRoomScaleLine(project.roomScale)}${buildVariationLine(project.id, removeCategories)}${buildInventoryLockLine(profiles, removeCategories)}${canaryPlanNote}`,
+    designPlan: `${designPlan || "None — restyle freely to fit the style."}${buildConversionLine(profiles, removeCategories, roomLabelEn(project.roomType))}${buildEmptyRoomLine(profiles, roomLabelEn(project.roomType), roomDefaultsBruts)}\n${await buildLightingPlanLine(profiles, styleName, project.element_decisions as ElementDecision[] | undefined)}${buildRoomScaleLine(project.roomScale)}${buildVariationLine(project.id, removeCategories)}${buildInventoryLockLine(profiles, removeCategories)}${canaryPlanNote}`,
   };
 
   // Flux DIY beta : variante de prompt sous slug dédié (RESTYLE meuble en
@@ -1774,16 +1813,16 @@ async function runDispositionsPipelineInner(projectId: string): Promise<string[]
   const baseCtx = {
     styleName,
     styleMood,
-    roomType: project.roomType,
+    roomType: roomLabelEn(project.roomType),
     furnitureDefaults,
     visionJson: visionJsonPourPrompt(profiles, removeCategories),
-    conversionMission: buildConversionMission(profiles, removeCategories, project.roomType, roomDefaultsBruts),
+    conversionMission: buildConversionMission(profiles, removeCategories, roomLabelEn(project.roomType), roomDefaultsBruts),
     fixedFeatures: await buildFixedFeaturesSummary(profiles),
     removeList: buildRemoveList(profiles, removeCategories),
     userInstructions,
     // Mêmes lignes de plan que le rendu unique : la taille de pièce et la variation de
     // mobilier leur manquaient, d'où des dispositions vides et un mobilier « par défaut ».
-    designPlan: `${designPlan || "None — restyle freely to fit the style."}${buildConversionLine(profiles, removeCategories, project.roomType)}\n${await buildLightingPlanLine(profiles, styleName, project.element_decisions as ElementDecision[] | undefined)}${buildRoomScaleLine(project.roomScale)}${buildVariationLine(project.id, removeCategories)}${buildInventoryLockLine(profiles, removeCategories)}`,
+    designPlan: `${designPlan || "None — restyle freely to fit the style."}${buildConversionLine(profiles, removeCategories, roomLabelEn(project.roomType))}${buildEmptyRoomLine(profiles, roomLabelEn(project.roomType), roomDefaultsBruts)}\n${await buildLightingPlanLine(profiles, styleName, project.element_decisions as ElementDecision[] | undefined)}${buildRoomScaleLine(project.roomScale)}${buildVariationLine(project.id, removeCategories)}${buildInventoryLockLine(profiles, removeCategories)}`,
   };
 
   // Les assises conservées, montrées en photo — c'est ICI que le canapé se faisait le plus
@@ -2451,13 +2490,26 @@ async function analyzeRender(projectId: string, project: Project): Promise<Rende
     const comp = await buildBeforeAfterComposite(project.basePhotoUrl, renderUrl);
     const compBuf = comp.buffer as unknown as ImageInput;
     // Même composite → audit + murs repeints (getChangedWallColors ne renvoie QUE ce qui a changé).
-    const [r, wallColorsRes] = await Promise.all([
+    let [r, wallColorsRes] = await Promise.all([
       confirmChanges(projectId, candidates, compBuf, comp.afterLeftFrac, comp.afterWidthFrac),
       getChangedWallColors(compBuf).catch((e: unknown) => {
         console.warn("[paint] détection couleurs murs échouée:", e instanceof Error ? e.message : e);
         return [] as WallColor[];
       }),
     ]);
+    // AUDIT VIDE = AUDIT CASSÉ, jamais une réponse. 0 élément jugé sur N candidats
+    // (réponse vide/imparsable) tombait dans « non jugé → présumé appliqué » : les
+    // lignes gardaient la description d'AVANT et le matching proposait à l'achat
+    // les meubles de l'utilisateur (K5jLjMj, 54 audits vides en boucle, QA Alexis
+    // 2026-07-17). Un retry, puis échec BRUYANT — pas de liste plutôt qu'une
+    // liste mensongère (le poll retentera).
+    if (candidates.length > 0 && r.judgedIds.size === 0) {
+      console.warn(`[pipeline:final] audit VIDE (0/${candidates.length} jugés) → retry`);
+      r = await confirmChanges(projectId, candidates, compBuf, comp.afterLeftFrac, comp.afterWidthFrac);
+      if (r.judgedIds.size === 0) {
+        throw new Error(`Audit vide après retry (0/${candidates.length} jugés) — liste non construite`);
+      }
+    }
     appliedIds = r.appliedIds;
     judgedIds = r.judgedIds;
     replacedIds = r.replacedIds;

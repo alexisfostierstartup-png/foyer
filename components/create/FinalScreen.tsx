@@ -285,9 +285,6 @@ type Props = {
   // dérive dès que `matches` est réordonné).
   productPicks?: Record<string, string> | null;
   customProducts?: Record<string, CustomProduct> | null;
-  // ID testeur (8 premiers caractères de anon_id) — recopié dans le questionnaire
-  // pour recouper parcours ↔ réponses (user tests anonymes).
-  testerId?: string | null;
   // Expert : URL du rendu IA d'origine (fake) → bouton de comparaison sous le slider
   // (remplace l'ancien écran /expert supprimé du parcours).
   fakeRenderUrl?: string | null;
@@ -316,7 +313,6 @@ export function FinalScreen({
   productOverrides = null,
   productPicks = null,
   customProducts = null,
-  testerId = null,
   fakeRenderUrl = null,
   bboxById = null,
   anchorById = null,
@@ -892,12 +888,9 @@ export function FinalScreen({
                   </>
                 )}
               </button>
-              {testerId && (
-                <p className="mt-3 text-center text-[11px] text-foyer-muted">
-                  ID testeur : <span className="font-mono">{testerId}</span> — à recopier dans le
-                  questionnaire
-                </p>
-              )}
+              {/* Recoupement user test ↔ questionnaire : porté par le LIEN D'ENTRÉE
+                  personnalisé (…/create?t=lea → cookie → data.testerTag sur chaque
+                  projet). Rien à afficher ni à recopier ici (QA Alexis 2026-07-17). */}
             </div>
           )}
         </main>
