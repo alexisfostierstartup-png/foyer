@@ -1,5 +1,5 @@
 import { getProject, updateProject } from "@/lib/storage/projects";
-import { fetchImageBytes, computeRenderAdditions, buildBeforeAfterComposite, confirmChanges, mapCompositeBoxToRender, CLEAR_FINALIZE } from "@/lib/ai/pipeline";
+import { fetchImageBytes, computeRenderAdditions, buildBeforeAfterComposite, confirmChanges, mapCompositeBoxToRender, CLEAR_FINALIZE, ensureFinalAssets } from "@/lib/ai/pipeline";
 import { saveRender } from "@/lib/ai/saveRender";
 import { withTracking } from "@/lib/ai/track";
 import { enforceExpertIntegratedPieces } from "@/lib/shopping/integratedPieces";
@@ -609,13 +609,30 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
     (project.shoppingList ?? []) as ShoppingItem[],
     integratedPieces,
   );
+  // La liste épinglée reste servie IMMÉDIATEMENT (pas d'écran vide), mais l'analyse
+  // du fake est INVALIDÉE : pins, quantités et audit doivent suivre le rendu que
+  // l'utilisateur regarde — le rendu EXPERT post-swap, pas le fake (2 pins de table
+  // basse pour 1 table visible : le swap avait fusionné la paire du fake — dCpIA,
+  // QA Alexis 2026-07-16). Le prochain calcul /final ré-analyse sur renduAffiche()
+  // = expertRenderUrl ; les produits intégrés y survivent (épinglage par catégorie).
   await updateProject(projectId, {
     expertRenderUrl: url,
     expertIntegratedPieces: integratedPieces,
     shoppingList: pinnedList,
+    renderAnalysis: undefined,
+    builtShoppingList: undefined,
+    lockedShoppingList: undefined,
+    lockedShoppingListRenderUrl: undefined,
+    finalAssetsRenderUrl: undefined,
+    finalAssetsStartedAt: undefined,
   });
   console.log(
     `[expert] ${projectId} : rendu sauvegardé — ${reposees.length} produit(s) reposé(s), ${integratedPieces.length} au total dans l'image`,
+  );
+  // Recalcul en tâche de fond sur le rendu EXPERT (pins/quantités/audit corrects) :
+  // la liste épinglée reste affichée pendant ce temps, les pins arrivent par le poll.
+  void ensureFinalAssets(projectId, { force: true }).catch((e) =>
+    console.warn(`[expert] ${projectId} : ré-analyse post-swap échouée (pins du fake conservés):`, e instanceof Error ? e.message : e),
   );
   return url;
 }

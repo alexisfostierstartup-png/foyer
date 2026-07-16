@@ -2189,9 +2189,23 @@ const inflightFinalAssets = new Map<string, Promise<ShoppingAssets | null>>();
 // date de moins que le budget maxDuration des routes de calcul.
 const FINAL_ASSETS_LEASE_MS = 90_000;
 
+/**
+ * Le rendu que l'utilisateur REGARDE — la seule base légitime de l'analyse, de la
+ * liste, des pins et des quantités (directive Alexis, réaffirmée 2026-07-16 sur les
+ * 2 pins de table basse : « pins et quantités doivent suivre le rendu affiché »).
+ * En expert : le rendu post-swap (expertRenderUrl) dès qu'il existe — l'analyse sur
+ * le FAKE décrivait des meubles que le swap avait fusionnés/remplacés. Avant le
+ * swap (sélection des produits), le fake est encore le rendu affiché : correct.
+ */
+export function renduAffiche(project: Project): string | undefined {
+  return project.mode === "expert" && project.expertRenderUrl
+    ? project.expertRenderUrl
+    : project.generatedRenderUrl ?? undefined;
+}
+
 function isFinalAssetsComputing(project: Project): boolean {
   return (
-    project.finalAssetsRenderUrl === project.generatedRenderUrl &&
+    project.finalAssetsRenderUrl === renduAffiche(project) &&
     !!project.finalAssetsStartedAt &&
     Date.now() - Date.parse(project.finalAssetsStartedAt) < FINAL_ASSETS_LEASE_MS
   );
@@ -2199,11 +2213,14 @@ function isFinalAssetsComputing(project: Project): boolean {
 
 export async function ensureFinalAssets(
   projectId: string,
-  opts?: { skipIfComputing?: boolean },
+  // force : recalculer même si une liste existe — utilisé après le swap expert, où la
+  // liste ÉPINGLÉE est servie immédiatement mais où analyse/pins/quantités doivent
+  // être refaits sur le rendu affiché (renduAffiche = expertRenderUrl).
+  opts?: { skipIfComputing?: boolean; force?: boolean },
 ): Promise<ShoppingAssets | null> {
   const project = await getProject(projectId);
   if (!project?.generatedRenderUrl) return null;
-  if (project.shoppingList) {
+  if (project.shoppingList && !opts?.force) {
     return { shoppingList: project.shoppingList, scoreFoyer: project.scoreFoyer as ScoreFoyer };
   }
   // Un autre process calcule déjà cette liste (bail DB frais) → les déclencheurs
@@ -2212,7 +2229,7 @@ export async function ensureFinalAssets(
     console.log("[pipeline:final] calcul déjà en cours (bail DB) → skip");
     return null;
   }
-  const key = `${projectId}:${project.generatedRenderUrl}`;
+  const key = `${projectId}:${renduAffiche(project)}`;
   const inflight = inflightFinalAssets.get(key);
   if (inflight) return inflight;
   const run = ensureFinalAssetsInner(projectId, project).finally(() => inflightFinalAssets.delete(key));
@@ -2225,20 +2242,20 @@ async function ensureFinalAssetsInner(projectId: string, project: Project): Prom
   // assurent la correction ; le bail évite seulement le double compute).
   await updateProject(projectId, {
     finalAssetsStartedAt: new Date().toISOString(),
-    finalAssetsRenderUrl: project.generatedRenderUrl ?? undefined,
+    finalAssetsRenderUrl: renduAffiche(project),
   });
   // Réchauffe Jina pendant la phase vision (~15 s) : le cold start (~4 s) est
   // sinon payé au PREMIER embedding du matching. Fire-and-forget, sans await.
   computeTextEmbedding("warmup").catch(() => {});
   // Analyse vision : réutilisée tant que le rendu est le même (sinon recalcul + re-cache).
   let analysis = project.renderAnalysis;
-  if (!analysis || analysis.renderUrl !== project.generatedRenderUrl) {
+  if (!analysis || analysis.renderUrl !== renduAffiche(project)) {
     analysis = await analyzeRender(projectId, project);
     // Anti-staleness : si le rendu a changé pendant l'analyse (itération), on ne
     // persiste pas — on écraserait un cache plus frais. Le résultat reste retourné
     // (l'appelant interactif regarde forcément le rendu qu'il vient de demander).
     const current = await getProject(projectId);
-    if (current?.generatedRenderUrl === analysis.renderUrl) {
+    if (current && renduAffiche(current) === analysis.renderUrl) {
       await updateProject(projectId, { renderAnalysis: analysis });
     }
   } else {
@@ -2267,7 +2284,7 @@ export function precomputeFinalAssets(projectId: string, trigger: string): void 
 // ── Phase A : ANALYSE VISION (Gemini) — cacheable, indépendante des poids ────────────────
 async function analyzeRender(projectId: string, project: Project): Promise<RenderAnalysis> {
   // generatedRenderUrl est garanti non-null par l'appelant (ensureFinalAssets).
-  const renderUrl = project.generatedRenderUrl as string;
+  const renderUrl = renduAffiche(project) as string;
   // Remap catégorie par mot-clé de tête sur la description APRÈS (même table que la
   // détection) : ce que le rendu contient prime sur la catégorie d'origine.
   const remapTable = await getCategoryKeywordRemap();
@@ -2770,7 +2787,7 @@ async function buildMatchesAndScore(
   // Anti-staleness (précalcul en fond) : si le rendu a changé pendant le matching
   // (itération), on ne persiste pas une liste calculée sur l'ancien rendu — le
   // CLEAR_FINALIZE de l'itération vient de vider shoppingList, l'écraser la figerait.
-  if (current?.generatedRenderUrl === analysis.renderUrl) {
+  if (current && renduAffiche(current) === analysis.renderUrl) {
     // Le verrou est rafraîchi sur ce que le user va VOIR ; les demandes d'itération
     // en attente sont consommées (les catégories relâchées viennent d'être rejouées).
     await updateProject(projectId, {
