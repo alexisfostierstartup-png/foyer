@@ -24,6 +24,18 @@ function userMessage(err: unknown): { message: string; status: number } {
       status: 400,
     };
   }
+  // Gemini refuse d'éditer une image contenant un visage humain identifiable
+  // (le refus arrive en texte dans la réponse, cf. nanoBanana.ts "Model said: ...").
+  // Message dédié qui explique la VRAIE cause plutôt que l'erreur générique
+  // "on a eu du mal…" — sinon le user ne comprend pas qu'il n'a pas respecté
+  // la consigne « aucune personne dans la photo » (retour Alexis 2026-07-16).
+  if (/\b(person|people|human|face|individual|portrait|likeness|identifiable|child|minor)\b/i.test(msg)) {
+    return {
+      message:
+        "Impossible de générer votre rendu : un visage humain a été détecté sur la photo, et notre technologie ne peut pas transformer une image contenant une personne réelle. Reprenez une photo sans personne visible — ni en vrai, ni à l'écran (télé, cadre photo…) — et réessayez.",
+      status: 400,
+    };
+  }
   return {
     message: "On a eu du mal à générer un beau rendu. Réessayez ou changez la photo.",
     status: 503,

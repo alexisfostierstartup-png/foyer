@@ -45,6 +45,8 @@ const IMG = {
   salonParisien: "/landing/test4_apres.png",
   japandiBefore: "/landing/test9.png",
   japandi: "/landing/test9_apres.png",
+  parisVictorBefore: "/landing/Paris_victor.jpg",
+  saillyFinal: "/landing/Sailly_final.png",
 };
 
 const NAV = [
@@ -322,7 +324,7 @@ const PROJECTS: { img: string; before?: string; tag: string; name: string; surfa
   // chiffres codés en dur finiraient par se contredire en public.
   { img: IMG.salonParisien, before: IMG.salonParisienBefore, tag: "Haussmann", name: "Salon Parisien", surface: "32 m²", conserve: "68%", slug: "appartement-parisien" },
   { img: IMG.japandi, before: IMG.japandiBefore, tag: "Studio", name: "Chambre Japandi", surface: "14 m²", conserve: "55%" },
-  { img: IMG.arch4, tag: "Maison", name: "Salle à manger", surface: "22 m²", conserve: "72%" },
+  { img: IMG.saillyFinal, before: IMG.parisVictorBefore, tag: "Maison", name: "Salle à manger", surface: "22 m²", conserve: "72%" },
 ];
 
 async function Gallery() {
