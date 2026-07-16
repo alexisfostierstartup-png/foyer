@@ -230,7 +230,15 @@ export async function getChangedWallColors(composite: ImageInput): Promise<WallC
         deltaE(la, lb),
         lpot ? deltaE(la, lpot) : 0,
       );
-      if (dE < WALL_UNCHANGED_DELTAE) continue; // même peinture, seule la lumière varie
+      // DEUX NEUTRES (blanc/gris, chroma faible) : l'exposition seule crée un ΔE
+      // de 6-10 entre deux pans blancs (ombre vs plein jour) → un mur resté blanc
+      // devenait un pot « #f2f2f2 » à acheter (7oEm4NqW, QA Alexis 2026-07-17).
+      // Entre neutres, seul un écart de LUMINOSITÉ franc (blanc → gris anthracite)
+      // est un vrai repeint : le seuil monte.
+      const chroma = (l: [number, number, number]) => Math.hypot(l[1], l[2]);
+      const deuxNeutres = chroma(la) < 12 && chroma(lpot ?? lb) < 12;
+      const seuil = deuxNeutres ? 14 : WALL_UNCHANGED_DELTAE;
+      if (dE < seuil) continue; // même peinture, seule la lumière varie
 
       const group = Number(w.paint_group);
       out.push({
