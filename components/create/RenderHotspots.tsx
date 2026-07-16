@@ -145,7 +145,18 @@ export function RenderHotspots({
         // bbox ne l'est pas dès que le meuble n'est pas rectangulaire — sur un canapé
         // sectionnel, il tombe dans le creux du L (QA Alexis 2026-07-12). Repli sur le
         // centre de la boîte quand le modèle n'a pas fourni de point.
-        const a = anchorById?.[id];
+        // MAIS l'anchor n'est cru QUE s'il tombe dans sa propre bbox (marge 15 %) :
+        // le modèle renvoie parfois un point à l'opposé de sa boîte (fauteuil boxé à
+        // droite, anchor sur la chaise de gauche — pins faux, ND5qBys 2026-07-16).
+        // Boîte et point incohérents = point poubelle, le centre de la boîte gagne.
+        const a0 = anchorById?.[id];
+        const mx = b.w * 0.15, my = b.h * 0.15;
+        const a =
+          a0 &&
+          a0.x >= b.x - mx && a0.x <= b.x + b.w + mx &&
+          a0.y >= b.y - my && a0.y <= b.y + b.h + my
+            ? a0
+            : null;
         const px = a ? a.x * 100 : (b.x + b.w / 2) * 100;
         const py = a ? a.y * 100 : (b.y + b.h / 2) * 100;
         out.push({

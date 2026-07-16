@@ -150,15 +150,29 @@ async function sampleHex(image: Buffer, box: Bbox2): Promise<string | null> {
     if (width < 4 || height < 4) return null;
     const { data } = await sharp(image)
       .extract({ left, top, width, height })
-      .resize(8, 8, { fit: "fill" })
+      .resize(16, 16, { fit: "fill" })
       .removeAlpha()
       .raw()
       .toBuffer({ resolveWithObject: true });
-    let r = 0, g = 0, b = 0;
-    const n = data.length / 3;
-    for (let i = 0; i + 2 < data.length; i += 3) { r += data[i]; g += data[i + 1]; b += data[i + 2]; }
-    const hx = (v: number) => Math.round(v / n).toString(16).padStart(2, "0");
-    return `#${hx(r)}${hx(g)}${hx(b)}`;
+    // La MOYENNE de toute la boîte incluait ombres et recoins : sur un mur en partie
+    // ombré, le hex mesuré sortait bien plus sombre que la peinture réelle → pots
+    // matchés trop foncés (QA Alexis 2026-07-16, ND5qBys). On ne moyenne que la
+    // tranche ÉCLAIRÉE des pixels (quantiles 55-90 % de luminance) : les ombres
+    // tombent en dessous, les reflets brûlés au-dessus — reste la peinture telle
+    // qu'elle se lit en lumière du jour. Les deux panneaux (avant/après) passent
+    // par le même échantillonneur, le ΔE compare donc des mesures homogènes.
+    const px: Array<{ r: number; g: number; b: number; l: number }> = [];
+    for (let i = 0; i + 2 < data.length; i += 3) {
+      const [r, g, b] = [data[i], data[i + 1], data[i + 2]];
+      px.push({ r, g, b, l: 0.2126 * r + 0.7152 * g + 0.0722 * b });
+    }
+    px.sort((a, b) => a.l - b.l);
+    const tranche = px.slice(Math.floor(px.length * 0.55), Math.ceil(px.length * 0.9));
+    if (tranche.length === 0) return null;
+    const moy = (f: (p: (typeof px)[number]) => number) =>
+      tranche.reduce((s, p) => s + f(p), 0) / tranche.length;
+    const hx = (v: number) => Math.round(v).toString(16).padStart(2, "0");
+    return `#${hx(moy((p) => p.r))}${hx(moy((p) => p.g))}${hx(moy((p) => p.b))}`;
   } catch {
     return null;
   }
