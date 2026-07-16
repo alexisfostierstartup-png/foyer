@@ -1,5 +1,5 @@
 import { getProject, updateProject } from "@/lib/storage/projects";
-import { fetchImageBytes, computeRenderAdditions, buildBeforeAfterComposite, confirmChanges, mapCompositeBoxToRender } from "@/lib/ai/pipeline";
+import { fetchImageBytes, computeRenderAdditions, buildBeforeAfterComposite, confirmChanges, mapCompositeBoxToRender, CLEAR_FINALIZE } from "@/lib/ai/pipeline";
 import { saveRender } from "@/lib/ai/saveRender";
 import { enforceExpertIntegratedPieces } from "@/lib/shopping/integratedPieces";
 import { matchAlterationsToCatalog } from "@/lib/shopping/matcher";
@@ -582,6 +582,60 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
   console.log(
     `[expert] ${projectId} : rendu sauvegardé — ${reposees.length} produit(s) reposé(s), ${integratedPieces.length} au total dans l'image`,
   );
+  return url;
+}
+
+/**
+ * « INTÉGRER CE MEUBLE » — avant-goût du mode expert offert au flux GRATUIT
+ * (demande Alexis 2026-07-16) : depuis /final, le user choisit UN produit précis
+ * d'une ligne et le rendu est régénéré avec CE produit incrusté (swap NB2 d'une
+ * seule pièce, sur le rendu courant). Le rendu mis à jour DEVIENT le rendu du
+ * projet ; CLEAR_FINALIZE invalide liste/score/dispositions (le verrou de liste
+ * estampillé renderUrl fait reconstruire sur le nouveau rendu, et la pièce
+ * intégrée y reste autoritaire via expertIntegratedPieces).
+ */
+export async function integratePieceOnRender(
+  projectId: string,
+  elementId: string,
+  productId: string,
+): Promise<string> {
+  const project = await getProject(projectId);
+  if (!project) throw new Error(`Project not found: ${projectId}`);
+  if (!project.generatedRenderUrl) throw new Error("Pas de rendu — rien à intégrer.");
+
+  const shoppingList = (project.shoppingList ?? []) as ShoppingItem[];
+  const item = shoppingList.find((it) => it.elementId === elementId);
+  if (!item) throw new Error(`Élément introuvable dans la liste: ${elementId}`);
+  const idx = (item.matches ?? []).findIndex((m) => m.id === productId);
+  if (idx < 0) throw new Error(`Produit introuvable sur cet élément: ${productId}`);
+
+  // selectExpertPieces réutilisé pour UNE pièce : mêmes règles (image produit
+  // validée, noun, localisateur sourceDesc) que le swap expert complet.
+  const pieces = selectExpertPieces([item], { [elementId]: idx }, {}, new Set([elementId]), {
+    [elementId]: productId,
+  });
+  if (pieces.length === 0) throw new Error("Image produit indisponible pour ce meuble.");
+
+  const swap = await swapOnFake(project.generatedRenderUrl, pieces, project.roomType);
+  if (!swap) throw new Error("L'intégration a échoué (image produit injoignable).");
+
+  const url = await saveRender(swap.buffer, project.storageFolder, swap.mimeType, "integrate");
+
+  // Pièce intégrée = autoritaire dans la future liste (même mécanique que l'expert).
+  const parCle = new Map<string, ExpertIntegratedPiece>(
+    (project.expertIntegratedPieces ?? []).map((p) => [p.elementId ?? p.category, p]),
+  );
+  for (const p of swap.integrated) parCle.set(p.elementId ?? p.category, { ...p, bbox: null });
+
+  await updateProject(projectId, {
+    generatedRenderUrl: url,
+    expertIntegratedPieces: [...parCle.values()],
+    // Le choix du produit est persisté par ID (jamais par indice — les matches se
+    // réordonnent à chaque reconstruction, cf. incident 520213b).
+    productPicks: { ...((project.productPicks ?? {}) as Record<string, string>), [elementId]: productId },
+    ...CLEAR_FINALIZE,
+  });
+  console.log(`[integrate] ${projectId} : ${item.category} → ${productId} incrusté, rendu ${url}`);
   return url;
 }
 

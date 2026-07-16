@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import {
   Sofa, Table, CircleDot, LampFloor, Tv, Frame, Grid2x2, BookOpen, Shrub,
-  PaintBucket, Package, Pencil, Check, ExternalLink, X, type LucideIcon,
+  PaintBucket, Package, Pencil, Check, ExternalLink, X, Sparkles, Loader2, type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ShoppingItem, ShoppingSource, ProductMatch, CustomProduct } from "@/lib/types";
@@ -181,9 +182,22 @@ function Thumb({ url, alt, fallback }: { url: string | null; alt: string; fallba
   );
 }
 
+// L'id projet se lit dans l'URL (/create/<id>/final) : la carte est cliente et
+// n'a pas besoin d'un prop drilling pour un identifiant déjà dans l'adresse.
+function projectIdFromPath(): string | null {
+  const seg = window.location.pathname.split("/");
+  const i = seg.indexOf("create");
+  return i >= 0 && seg[i + 1] ? seg[i + 1] : null;
+}
+
 export function ShoppingCard({ item }: { item: ShoppingItem }) {
   const [open, setOpen] = useState(false);
   const [localSelIdx, setLocalSelIdx] = useState(0);
+  // « Intégrer ce meuble » (flux gratuit) : swap NB2 du produit choisi dans le rendu.
+  const [integrating, setIntegrating] = useState(false);
+  // « Modifier la couleur » (ligne peinture) : sélecteur de teinte → itération murs.
+  const [colorOpen, setColorOpen] = useState(false);
+  const [colorVal, setColorVal] = useState<string | null>(null);
   const debug = useDebug();
 
   // Rendu expert : la sélection d'un produit alternatif est CONTRÔLÉE par le
@@ -199,6 +213,66 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
     setOpen(false);
   };
   const pickCustom = (cp: CustomProduct) => { if (controlled) { ov!.setCustom(item.elementId!, cp); setOpen(false); } };
+
+  // Feature offerte au flux GRATUIT (demande Alexis 2026-07-16) : incruster le produit
+  // affiché dans le rendu, façon expert — un élément par geste, une passe NB2.
+  async function integrer(product: ProductMatch) {
+    const projectId = projectIdFromPath();
+    if (!projectId || !item.elementId || integrating) return;
+    setIntegrating(true);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/integrate-piece`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ elementId: item.elementId, productId: product.id }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        toast.error(data?.error ?? "L'intégration a échoué. Réessayez.");
+        setIntegrating(false);
+        return;
+      }
+      toast.success("Meuble intégré — le rendu et la liste se mettent à jour.");
+      window.location.reload();
+    } catch {
+      toast.error("L'intégration a échoué. Réessayez.");
+      setIntegrating(false);
+    }
+  }
+
+  // Ligne PEINTURE : plus d'alternatives de pots au CTA — le client choisit une
+  // TEINTE, le rendu est repeint (itération murs) et le pot re-matché derrière.
+  async function appliquerCouleur() {
+    const projectId = projectIdFromPath();
+    const hex = colorVal ?? item.targetHex;
+    if (!projectId || !hex || integrating) return;
+    setIntegrating(true);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/iterate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userRequest: `Repeindre les murs en ${hex} — peinture OPAQUE, TOUS les pans peints de ce pot dans cette même teinte, aucun pan oublié. Ne rien changer d'autre.`,
+        }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        toast.error(data?.error ?? "Le changement de couleur a échoué. Réessayez.");
+        setIntegrating(false);
+        return;
+      }
+      toast.success("Couleur appliquée — le rendu se met à jour.");
+      window.location.reload();
+    } catch {
+      toast.error("Le changement de couleur a échoué. Réessayez.");
+      setIntegrating(false);
+    }
+  }
+
+  const estPeinture = item.category === "paint";
+  // Intégrable : flux gratuit uniquement (l'expert a son flux d'overrides groupés),
+  // un vrai meuble matché relié à un élément du rendu.
+  const canIntegrate = !controlled && !estPeinture && !!item.elementId && item.source !== "diy";
 
   const Icon = CATEGORY_ICON[item.category] ?? Package;
   const matches = item.matches ?? [];
@@ -259,11 +333,29 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
                   <ExternalLink className="size-3" aria-hidden />Voir
                 </a>
               )}
-              {canModify && (
+              {estPeinture && !controlled ? (
+                // Peinture : plus d'alternatives de pots au CTA (demande Alexis
+                // 2026-07-16) — le client choisit une TEINTE, le rendu suit.
+                <button type="button" onClick={() => setColorOpen((o) => !o)} aria-expanded={colorOpen}
+                  disabled={integrating}
+                  className={cn("flex items-center gap-1 rounded-full border px-2.5 py-1 text-[13px] transition-colors",
+                    colorOpen ? "border-foyer-ink text-foyer-ink" : "border-foyer-border text-foyer-muted hover:text-foyer-ink")}>
+                  <PaintBucket className="size-3" aria-hidden />Modifier la couleur
+                </button>
+              ) : canModify ? (
                 <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open}
                   className={cn("flex items-center gap-1 rounded-full border px-2.5 py-1 text-[13px] transition-colors",
                     open ? "border-foyer-ink text-foyer-ink" : "border-foyer-border text-foyer-muted hover:text-foyer-ink")}>
                   <Pencil className="size-3" aria-hidden />Modifier
+                </button>
+              ) : null}
+              {canIntegrate && (
+                // Avant-goût du mode expert offert au flux gratuit : le produit
+                // affiché est INCRUSTÉ dans le rendu (1 passe NB2).
+                <button type="button" onClick={() => integrer(best)} disabled={integrating}
+                  className="flex items-center gap-1 rounded-full bg-foyer-sage px-2.5 py-1 text-[13px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60">
+                  {integrating ? <Loader2 className="size-3 animate-spin" aria-hidden /> : <Sparkles className="size-3" aria-hidden />}
+                  Intégrer ce meuble
                 </button>
               )}
             </div>
@@ -287,8 +379,27 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
         </div>
       )}
 
+      {/* Panneau PEINTURE : choix d'une nouvelle teinte → itération murs. */}
+      {colorOpen && estPeinture && (
+        <div className="mt-3 flex items-center gap-3 border-t border-foyer-border pt-3">
+          <input
+            type="color"
+            value={colorVal ?? item.targetHex ?? "#c58160"}
+            onChange={(e) => setColorVal(e.target.value)}
+            aria-label="Nouvelle couleur des murs"
+            className="size-9 cursor-pointer rounded-lg border border-foyer-border bg-white p-1"
+          />
+          <span className="font-mono text-[13px] text-foyer-ink">{colorVal ?? item.targetHex ?? ""}</span>
+          <button type="button" onClick={appliquerCouleur} disabled={integrating || !(colorVal ?? item.targetHex)}
+            className="ml-auto flex items-center gap-1 rounded-full bg-foyer-sage px-3 py-1.5 text-[13px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60">
+            {integrating ? <Loader2 className="size-3 animate-spin" aria-hidden /> : <Check className="size-3" aria-hidden />}
+            Appliquer cette couleur
+          </button>
+        </div>
+      )}
+
       {/* Panneau : produit sur-mesure (URL/JPEG) + alternatives matchées */}
-      {open && (controlled || matches.length > 1) && (
+      {open && !estPeinture && (controlled || matches.length > 1) && (
         <div className="mt-3 border-t border-foyer-border pt-3">
           {controlled && <CustomRefInput onPicked={pickCustom} />}
           {matches.length > 1 && (
