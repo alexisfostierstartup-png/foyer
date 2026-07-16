@@ -34,7 +34,16 @@ function timeAgo(iso: string) {
  * anon_id (cookie navigateur) sous un pseudonyme court — on voit donc aussi les
  * visiteurs arrivés sans lien personnalisé.
  */
-export default async function TesteursPage() {
+export default async function TesteursPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tous?: string }>;
+}) {
+  // Par défaut : seulement les testeurs à LIEN personnalisé — les groupes
+  // « anonyme » (cookie foyer_anon_id, historique d'un mois : navigateurs
+  // d'Alexis, visiteurs) noyaient la vue (« 29 testeurs » avant tout user test).
+  const { tous } = await searchParams;
+  const inclureAnonymes = tous === "1";
   const { data, error } = await createSupabaseAdmin()
     .from("foyer_projects")
     .select("id, created_at, anon_id, data")
@@ -55,19 +64,37 @@ export default async function TesteursPage() {
     g.projets.push(r);
     groupes.set(cle, g);
   }
-  const liste = [...groupes.values()].sort(
-    (a, b) => Date.parse(b.projets[0].created_at) - Date.parse(a.projets[0].created_at),
-  );
+  const liste = [...groupes.values()]
+    .filter((g) => inclureAnonymes || g.via === "lien")
+    .sort((a, b) => Date.parse(b.projets[0].created_at) - Date.parse(a.projets[0].created_at));
+  const nbAnonymes = [...groupes.values()].filter((g) => g.via === "anonyme").length;
 
   return (
     <div>
       <div className="mb-8">
         <h1 className="font-serif text-2xl text-foyer-ink">Testeurs</h1>
         <p className="text-sm text-foyer-muted mt-1">
-          {liste.length} testeur{liste.length !== 1 ? "s" : ""} · {rows.length} projet
-          {rows.length !== 1 ? "s" : ""} (400 derniers) — lien d&apos;entrée à distribuer :{" "}
+          {liste.length} testeur{liste.length !== 1 ? "s" : ""} à lien personnalisé — lien
+          d&apos;entrée à distribuer :{" "}
           <code className="rounded bg-foyer-border/40 px-1">/create?t=prenom</code>
+          {" · "}
+          {inclureAnonymes ? (
+            <Link href="/admin/testeurs" className="text-foyer-sage hover:underline">
+              masquer les anonymes
+            </Link>
+          ) : (
+            <Link href="/admin/testeurs?tous=1" className="text-foyer-sage hover:underline">
+              afficher aussi les {nbAnonymes} anonymes (historique)
+            </Link>
+          )}
         </p>
+        {liste.length === 0 && !inclureAnonymes && (
+          <p className="mt-3 text-sm italic text-foyer-muted">
+            Aucun testeur à lien pour l&apos;instant — distribue des liens {" "}
+            <code className="rounded bg-foyer-border/40 px-1">/create?t=prenom</code> et ils
+            apparaîtront ici dès leur premier projet.
+          </p>
+        )}
         {error && <p className="mt-2 text-sm text-foyer-terra">Erreur : {error.message}</p>}
       </div>
 
