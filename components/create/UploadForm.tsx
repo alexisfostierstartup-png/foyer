@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Camera, ImagePlus, Frame, Sun, UserRoundX, Loader2 } from "lucide-react";
@@ -58,6 +58,14 @@ type Props = {
 
 export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = false }: Props) {
   const router = useRouter();
+  // Arrivée avec ?t=<prénom> (fin de formulaire → redirect) : le middleware vient
+  // de poser le cookie testeur — on rétro-tague aussi les projets DÉJÀ créés par
+  // ce navigateur (cas « test d'abord, formulaire ensuite »). Fire-and-forget.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).has("t")) {
+      fetch("/api/tester-tag", { method: "POST" }).catch(() => {});
+    }
+  }, []);
   const [roomType, setRoomType] = useState<RoomType | null>(null);
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);

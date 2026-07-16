@@ -80,18 +80,27 @@ export async function middleware(req: NextRequest) {
     response.cookies.set("foyer_vres", vres, { sameSite: "lax", path: "/" });
   }
 
-  // TAG TESTEUR (user tests anonymes, 2026-07-17) : Alexis distribue des liens
-  // d'entrée personnalisés (…/expert-create?t=lea). Le tag devient COLLANT
-  // (cookie 90 j) dès le premier clic et l'upload le grave sur chaque projet
-  // (data.testerTag) → parcours entier reconstituable par testeur, recoupé au
-  // questionnaire par l'identité que le formulaire collecte déjà.
-  const testerTag = req.nextUrl.searchParams.get("t");
-  if (testerTag && /^[\w-]{1,64}$/.test(testerTag)) {
-    response.cookies.set("foyer_tester", testerTag, {
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 90,
-    });
+  // TAG TESTEUR (user tests anonymes, 2026-07-17) : la fin du formulaire
+  // redirige vers /create?t=<prénom-nom> (piping Tally/Typeform). Le tag devient
+  // COLLANT (cookie 90 j), l'upload le grave sur chaque projet (data.testerTag)
+  // et /api/tester-tag rétro-tague les projets déjà créés par ce navigateur.
+  // Slugifié (accents/espaces : « Léa Dupont » → lea-dupont), jamais rejeté.
+  const testerTagBrut = req.nextUrl.searchParams.get("t");
+  if (testerTagBrut) {
+    const tag = testerTagBrut
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^\w-]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .toLowerCase()
+      .slice(0, 64);
+    if (tag) {
+      response.cookies.set("foyer_tester", tag, {
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 90,
+      });
+    }
   }
 
   return response;
