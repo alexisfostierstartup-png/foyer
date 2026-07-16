@@ -66,8 +66,13 @@ export function RenderHotspots({
   // dans le VIEWPORT le permet, sinon en dessous (jamais coupée par la fenêtre).
   const [openAbove, setOpenAbove] = useState(true);
   const BOX_ESTIMATE_PX = 320;
+  // Header sticky (ProgressBar, ~64px) au-dessus du rendu : sans cette marge, un pin
+  // proche du haut de l'image ouvrait « au-dessus » et débordait SOUS le header au
+  // lieu de rester dessous (bug QA 2026-07-16 — z-40 sur le header règle le zIndex,
+  // ceci règle le PLACEMENT pour ne même plus tenter d'ouvrir là où ça ne rentre pas).
+  const HEADER_SAFE_PX = 64;
   const openAt = (id: string, el: HTMLElement) => {
-    setOpenAbove(el.getBoundingClientRect().top > BOX_ESTIMATE_PX);
+    setOpenAbove(el.getBoundingClientRect().top - HEADER_SAFE_PX > BOX_ESTIMATE_PX);
     setOpenId(id);
   };
   const rootRef = useRef<HTMLDivElement>(null);

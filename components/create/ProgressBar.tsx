@@ -8,7 +8,10 @@ type ProgressBarProps = {
 
 export function ProgressBar({ currentStep, labels }: ProgressBarProps) {
   return (
-    <header className="sticky top-0 z-10 border-b border-foyer-border bg-foyer-cream/95 backdrop-blur">
+    // z-40 : passe AU-DESSUS de la couche des pins du rendu (z-30, RenderHotspots) —
+    // sinon la box « Notre sélection » d'un pin proche du haut de l'image déborde
+    // sur ce header sticky au lieu de rester dessous (bug QA 2026-07-16).
+    <header className="sticky top-0 z-40 border-b border-foyer-border bg-foyer-cream/95 backdrop-blur">
       <div className="flex items-center justify-between px-5 py-3">
         {/* Même logo que la landing : le parcours affichait encore « Foyer » en toutes
             lettres, alors que la marque est Héra. */}

@@ -40,7 +40,7 @@ const IMG = {
   arch4: "/landing/v2/arch-4.jpg",
   // Photos réelles (Wizard-of-Oz)
   heroBefore: "/landing/test1.jpg",
-  heroAfter: "/landing/test1_apres.png",
+  heroAfter: "/landing/hero_final.png",
   salonParisienBefore: "/landing/test4.jpeg",
   salonParisien: "/landing/test4_apres.png",
   japandiBefore: "/landing/test9.png",

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ExternalLink, Pencil, Star, RefreshCw, Loader2, Eye, MapPin, ShoppingBag, Download } from "lucide-react";
+import { ExternalLink, Pencil, Star, RefreshCw, Loader2, Eye, MapPin, ShoppingBag, Download, Info } from "lucide-react";
 import { toast } from "sonner";
 import { ProgressBar } from "@/components/create/ProgressBar";
 import { BeforeAfterSlider } from "@/components/create/BeforeAfterSlider";
@@ -45,8 +45,6 @@ type Alteration = {
 const RSE_ADVICE: Record<string, string> = {
   floor_material:
     "Alternative durable : béton ciré sur chape existante = moins de déchets de chantier.",
-  paint:
-    "Optez pour une peinture à l'eau labellisée NF Environnement — VOC réduits, moins de pollution intérieure.",
   mouldings:
     "Les moulures en MDF recyclé sont plus légères et génèrent moins de déchets que le bois massif.",
 };
@@ -871,9 +869,11 @@ export function FinalScreen({
                 ) : (
                   <>
                     <Download className="size-4" aria-hidden /> Télécharger mon image en HD
-                    <span className="text-[10px] uppercase tracking-wide bg-foyer-terra/10 text-foyer-terra px-1.5 py-0.5 rounded-full">
-                      Payant
-                    </span>
+                    {!expertMode && (
+                      <span className="text-[10px] uppercase tracking-wide bg-foyer-terra/10 text-foyer-terra px-1.5 py-0.5 rounded-full">
+                        Payant
+                      </span>
+                    )}
                   </>
                 )}
               </button>
@@ -1129,12 +1129,14 @@ function EnhancedListeShoppingTab({
             </ul>
 
             {family === "Décoration" && (
-              <p className="mt-2 text-[12px] text-foyer-muted">
+              <p className="mt-2 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] font-medium text-amber-800">
+                <Info className="mt-0.5 size-3.5 shrink-0" aria-hidden />
                 La petite décoration (vases, miroirs, cadres) sera disponible dans une prochaine version.
               </p>
             )}
             {family === "Fournitures" && (
-              <p className="mt-2 text-[12px] text-foyer-muted">
+              <p className="mt-2 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] font-medium text-amber-800">
+                <Info className="mt-0.5 size-3.5 shrink-0" aria-hidden />
                 La liste exhaustive des fournitures sera disponible dans une prochaine version : tasseaux, moulures, rouleau de peinture, bac de peinture, etc.
               </p>
             )}
