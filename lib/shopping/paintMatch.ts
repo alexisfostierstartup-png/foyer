@@ -25,6 +25,7 @@ Liste CHAQUE mur peint visible (même s'il te semble inchangé — c'est un calc
 - "box_avant" : [ymin, xmin, ymax, xmax] (entiers 0-1000 sur l'image ENTIÈRE) — une zone de PEINTURE PURE de ce mur dans la moitié GAUCHE (AVANT)
 - "box_apres" : idem pour LE MÊME mur dans la moitié DROITE (APRÈS)
 - "paint_group" : un ENTIER (1, 2, 3…) identifiant LE POT DE PEINTURE utilisé sur ce mur dans l'APRÈS.
+- "paint_hex" : la couleur du POT de peinture de ce mur dans l'APRÈS, en hex "#rrggbb" — telle qu'elle serait NOMMÉE sur un nuancier, c'est-à-dire CORRIGÉE de l'éclairage : un mur terre cuite ensoleillé paraît délavé à l'écran et brun sombre à l'ombre, mais son POT reste terre cuite (rouge-orangé). Regarde TOUS les pans de ce pot, compense la lumière, et donne la teinte du PIGMENT — pas la moyenne des pixels.
 
 RÈGLE DU paint_group — c'est la question la plus importante :
 Deux pans peints avec LA MÊME peinture portent le MÊME paint_group, même s'ils n'ont pas l'air d'avoir la même couleur à l'écran. Un pan à l'ombre, un pan éclairé en plein par une fenêtre, un mur de biais, un retour d'angle : la lumière change énormément la teinte APPARENTE (un beige au soleil vire à l'orangé, à l'ombre au brun), mais c'est LE MÊME POT. Tu vois la lumière, toi — sers-t'en. Ne donne des paint_group DIFFÉRENTS que si le peintre a vraiment ouvert deux pots de couleurs différentes (ex. un mur d'accent terracotta contre trois murs blancs, ou un soubassement foncé sous un haut clair).
@@ -32,7 +33,7 @@ En cas de doute, donne le MÊME paint_group : un mur repeint en une seule couleu
 
 Les deux boîtes doivent cadrer une surface de mur NUE et bien éclairée : PAS de meuble, cadre, rideau, fenêtre, plinthe, plafond, ni zone d'ombre marquée ou de reflet. Plutôt petites et franchement au centre du pan de mur. box_avant doit être dans la moitié GAUCHE, box_apres dans la moitié DROITE.
 
-Réponds en JSON STRICT, rien d'autre : {"walls":[{"label":"...","paint_group":1,"box_avant":[ymin,xmin,ymax,xmax],"box_apres":[ymin,xmin,ymax,xmax]}]}`;
+Réponds en JSON STRICT, rien d'autre : {"walls":[{"label":"...","paint_group":1,"paint_hex":"#rrggbb","box_avant":[ymin,xmin,ymax,xmax],"box_apres":[ymin,xmin,ymax,xmax]}]}`;
 
 const norm = (h: string) => `#${h.trim().replace(/^#/, "").toLowerCase()}`;
 const validHex = (h?: string) => !!h && /^#?[0-9a-fA-F]{6}$/.test(h.trim());
@@ -190,7 +191,7 @@ export async function getChangedWallColors(composite: ImageInput): Promise<WallC
     });
     const walls =
       (res.parsed as {
-        walls?: Array<{ label?: string; paint_group?: unknown; box_avant?: unknown; box_apres?: unknown }>;
+        walls?: Array<{ label?: string; paint_group?: unknown; paint_hex?: string; box_avant?: unknown; box_apres?: unknown }>;
       } | null)?.walls ?? [];
 
     // La mesure exige les octets ; sans eux (cas théorique), on ne devine pas.
@@ -216,8 +217,16 @@ export async function getChangedWallColors(composite: ImageInput): Promise<WallC
       if (dE < WALL_UNCHANGED_DELTAE) continue; // même peinture, seule la lumière varie
 
       const group = Number(w.paint_group);
+      // TEINTE DU POT : l'estimation SÉMANTIQUE du modèle (paint_hex, corrigée de
+      // l'éclairage) prime sur la mesure pixel pour NOMMER la couleur à acheter.
+      // La mesure pixel est structurellement battue ici : un mur terre cuite lit
+      // gris-beige au soleil et brun-taupe à l'ombre — aucun quantile ne retrouve
+      // le pigment (mesuré sur ND5qBys : pot juste #c58160, pixels #9a7d6a).
+      // Le pixel GARDE le test « a changé » (ΔE avant/après ci-dessus) : deux
+      // mesures homogènes y restent plus fiables que deux estimations.
+      const potHex = validHex(w.paint_hex) ? norm(w.paint_hex!) : hexApres;
       out.push({
-        hex: hexApres,
+        hex: potHex,
         label: (w.label ?? "mur").trim() || "mur",
         group: Number.isFinite(group) ? group : undefined,
         bbox: boxApres,
