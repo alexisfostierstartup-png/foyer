@@ -411,8 +411,10 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
             Ou choisir un autre produit
           </p>
           <ul className="flex flex-col gap-2">
-            {matches.map((m, i) => (
-              <li key={m.id} className="flex items-center justify-between gap-3 rounded-xl border border-foyer-border p-2.5">
+            {/* Le choix actuel (selIdx) est déjà affiché en haut de la carte — pas besoin
+                de le re-lister ici (demande Alexis 2026-07-16). */}
+            {matches.map((m, i) => i === selIdx ? null : (
+              <li key={m.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-foyer-border p-2.5">
                 <div className="flex min-w-0 items-center gap-2.5">
                   <Thumb url={m.primary_image_url} alt={m.name} fallback={Icon} />
                   <div className="flex min-w-0 flex-col gap-1">
@@ -424,12 +426,27 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
                     {debug && <ScoreBreakdown m={m} />}
                   </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <span className="text-[14px] text-foyer-ink">{m.price != null ? `${m.price} €` : "–"}</span>
-                  <button type="button" disabled={i === selIdx} onClick={() => choose(i)}
-                    className={cn("flex items-center gap-1 rounded-full px-3 py-1 text-[13px] font-medium transition-colors",
-                      i === selIdx ? "cursor-default bg-foyer-sage/15 text-foyer-sage" : "bg-foyer-sage text-white hover:bg-foyer-sage/90")}>
-                    {i === selIdx ? <><Check className="size-3.5" aria-hidden />Choisi</> : "Choisir"}
+                <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+                  <span className="mr-1 text-[14px] text-foyer-ink">{m.price != null ? `${m.price} €` : "–"}</span>
+                  {m.product_url && (
+                    <a href={m.product_url} target="_blank" rel="noreferrer"
+                      className="flex items-center gap-1 rounded-full border border-foyer-border px-2.5 py-1 text-[13px] text-foyer-ink transition-colors hover:bg-foyer-cream">
+                      <ExternalLink className="size-3" aria-hidden />Voir
+                    </a>
+                  )}
+                  {canIntegrate && (
+                    <button type="button" onClick={() => integrer(m)} disabled={integrating}
+                      className="flex items-center gap-1 rounded-full bg-foyer-sage px-2.5 py-1 text-[13px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60">
+                      {integrating ? <Loader2 className="size-3 animate-spin" aria-hidden /> : <Sparkles className="size-3" aria-hidden />}
+                      Intégrer ce meuble
+                      <span className="ml-0.5 text-[10px] uppercase tracking-wide bg-white/20 px-1.5 py-0.5 rounded-full">
+                        Payant
+                      </span>
+                    </button>
+                  )}
+                  <button type="button" onClick={() => choose(i)}
+                    className="flex items-center gap-1 rounded-full bg-foyer-sage/15 px-3 py-1 text-[13px] font-medium text-foyer-sage transition-colors hover:bg-foyer-sage/25">
+                    Choisir
                   </button>
                 </div>
               </li>
