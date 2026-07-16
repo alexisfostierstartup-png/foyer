@@ -213,18 +213,26 @@ export async function getChangedWallColors(composite: ImageInput): Promise<WallC
       const la = hexToLab(hexAvant);
       const lb = hexToLab(hexApres);
       if (!la || !lb) continue;
-      const dE = deltaE(la, lb);
-      if (dE < WALL_UNCHANGED_DELTAE) continue; // même peinture, seule la lumière varie
-
-      const group = Number(w.paint_group);
       // TEINTE DU POT : l'estimation SÉMANTIQUE du modèle (paint_hex, corrigée de
       // l'éclairage) prime sur la mesure pixel pour NOMMER la couleur à acheter.
       // La mesure pixel est structurellement battue ici : un mur terre cuite lit
       // gris-beige au soleil et brun-taupe à l'ombre — aucun quantile ne retrouve
       // le pigment (mesuré sur ND5qBys : pot juste #c58160, pixels #9a7d6a).
-      // Le pixel GARDE le test « a changé » (ΔE avant/après ci-dessus) : deux
-      // mesures homogènes y restent plus fiables que deux estimations.
       const potHex = validHex(w.paint_hex) ? norm(w.paint_hex!) : hexApres;
+      // TEST « A CHANGÉ » : max(ΔE pixel, ΔE avant↔pot). Le pixel seul ratait des
+      // repeints réels : quand le modèle place la box APRÈS sur un pan en plein
+      // soleil, un terracotta délavé mesure ~gris clair — quasi le blanc d'origine,
+      // ΔE sous le seuil, pot supprimé (« il détecte plus la peinture », ND5qBys
+      // 2026-07-16). Le paint_hex du modèle, corrigé de la lumière, rattrape ce cas ;
+      // le pixel reste le premier juge (deux mesures homogènes).
+      const lpot = hexToLab(potHex);
+      const dE = Math.max(
+        deltaE(la, lb),
+        lpot ? deltaE(la, lpot) : 0,
+      );
+      if (dE < WALL_UNCHANGED_DELTAE) continue; // même peinture, seule la lumière varie
+
+      const group = Number(w.paint_group);
       out.push({
         hex: potHex,
         label: (w.label ?? "mur").trim() || "mur",
