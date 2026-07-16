@@ -285,9 +285,6 @@ type Props = {
   // dérive dès que `matches` est réordonné).
   productPicks?: Record<string, string> | null;
   customProducts?: Record<string, CustomProduct> | null;
-  // ID testeur (8 premiers caractères de anon_id) — recopié dans le questionnaire
-  // pour recouper parcours ↔ réponses (user tests anonymes).
-  testerId?: string | null;
   // Expert : URL du rendu IA d'origine (fake) → bouton de comparaison sous le slider
   // (remplace l'ancien écran /expert supprimé du parcours).
   fakeRenderUrl?: string | null;
@@ -316,7 +313,6 @@ export function FinalScreen({
   productOverrides = null,
   productPicks = null,
   customProducts = null,
-  testerId = null,
   fakeRenderUrl = null,
   bboxById = null,
   anchorById = null,
@@ -892,20 +888,9 @@ export function FinalScreen({
                   </>
                 )}
               </button>
-              {/* Recoupement user test ↔ questionnaire, AUTOMATIQUE : le lien porte
-                  l'ID testeur en paramètre (?uid=…) — un champ caché du formulaire le
-                  capte, personne ne recopie rien (QA Alexis 2026-07-17). Le bouton
-                  n'existe que si NEXT_PUBLIC_SURVEY_URL est configurée. */}
-              {testerId && process.env.NEXT_PUBLIC_SURVEY_URL && (
-                <a
-                  href={`${process.env.NEXT_PUBLIC_SURVEY_URL}${process.env.NEXT_PUBLIC_SURVEY_URL.includes("?") ? "&" : "?"}uid=${testerId}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-3 flex h-[52px] w-full items-center justify-center gap-2 rounded-full border border-foyer-sage font-medium text-foyer-sage transition-colors hover:bg-foyer-sage/10"
-                >
-                  Donner mon avis (2 min)
-                </a>
-              )}
+              {/* Recoupement user test ↔ questionnaire : porté par le LIEN D'ENTRÉE
+                  personnalisé (…/create?t=lea → cookie → data.testerTag sur chaque
+                  projet). Rien à afficher ni à recopier ici (QA Alexis 2026-07-17). */}
             </div>
           )}
         </main>

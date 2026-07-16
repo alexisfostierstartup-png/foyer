@@ -212,6 +212,10 @@ export type Project = {
   // suivre toute sa vie (analyse, re-générations, shopping) sans contamination
   // entre projets d'un même navigateur.
   diyMode?: "beta";
+  // Tag testeur (user tests anonymes) : posé par le lien d'entrée personnalisé
+  // (…/create?t=lea → cookie foyer_tester), gravé ici à l'upload. Recoupement
+  // parcours ↔ questionnaire sans rien demander au testeur.
+  testerTag?: string | null;
   generatedRenderUrl: string | null;
   firstRenderUrl?: string;
   // Rendu EXPERT : la pièce VIDÉE de son mobilier amovible (murs/fenêtres/parquet/

@@ -80,6 +80,20 @@ export async function middleware(req: NextRequest) {
     response.cookies.set("foyer_vres", vres, { sameSite: "lax", path: "/" });
   }
 
+  // TAG TESTEUR (user tests anonymes, 2026-07-17) : Alexis distribue des liens
+  // d'entrée personnalisés (…/expert-create?t=lea). Le tag devient COLLANT
+  // (cookie 90 j) dès le premier clic et l'upload le grave sur chaque projet
+  // (data.testerTag) → parcours entier reconstituable par testeur, recoupé au
+  // questionnaire par l'identité que le formulaire collecte déjà.
+  const testerTag = req.nextUrl.searchParams.get("t");
+  if (testerTag && /^[\w-]{1,64}$/.test(testerTag)) {
+    response.cookies.set("foyer_tester", testerTag, {
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 90,
+    });
+  }
+
   return response;
 }
 
