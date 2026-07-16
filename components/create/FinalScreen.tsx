@@ -876,7 +876,12 @@ export function FinalScreen({
                 {hdLoading ? (
                   <><Loader2 className="size-4 animate-spin" aria-hidden /> Tirage HD en cours…</>
                 ) : (
-                  <><Download className="size-4" aria-hidden /> Télécharger mon image en HD</>
+                  <>
+                    <Download className="size-4" aria-hidden /> Télécharger mon image en HD
+                    <span className="text-[10px] uppercase tracking-wide bg-foyer-terra/10 text-foyer-terra px-1.5 py-0.5 rounded-full">
+                      Payant
+                    </span>
+                  </>
                 )}
               </button>
             </div>

@@ -594,12 +594,13 @@ const PLANS: {
   price: string;
   per: string;
   feats: string[];
+  note?: string;
   cta: string;
   featured?: boolean;
 }[] = [
-  { name: "Découverte", desc: "Pour tester Héra sur une pièce.", price: "0€", per: "/ premier projet", feats: ["1 projet", "1 ambiance", "Inventaire IA", "Liste de courses"], cta: "Commencer" },
-  { name: "Héra", desc: "Pour transformer pièce après pièce.", price: "29€", per: "/ projet", feats: ["Projets illimités", "Ambiances illimitées", "Sourcing seconde main", "Commandes groupées", "Suivi livraison"], cta: "Choisir Héra", featured: true },
-  { name: "Studio Pro", desc: "Architectes, agences, hôtellerie.", price: "Sur devis", per: "B2B", feats: ["Multi-utilisateurs", "Marque blanche", "API", "Account manager"], cta: "Nous parler" },
+  { name: "Découverte", desc: "Pour tester Héra sur une pièce.", price: "0€", per: "/ premier projet", feats: ["1 projet gratuit + 1 modification incluse", "Articles similaires suggérés", "Commandes groupées"], note: "Envie d'aller plus loin ? Rechargez à 5€, quand vous voulez.", cta: "Commencer" },
+  { name: "Expert", desc: "Pour transformer pièce après pièce, à votre rythme.", price: "15€", per: "/ mois, résiliable à tout moment", feats: ["Fonctionnalités avancées", "Rendu avec les vrais articles", "Suivi de tous vos projets"], note: "Abonnement : 25€ de crédits pour 15€/mois.\nÀ l'usage : 15€, sans engagement.", cta: "Choisir Expert", featured: true },
+  { name: "Studio Pro", desc: "Architectes, agences, hôtellerie.", price: "Sur devis", per: "B2B", feats: ["Génération depuis photos ou URLs produit", "Rendus personnalisés par profil client", "Page projet dédiée pour chaque client"], cta: "Nous parler" },
 ];
 
 function Pricing() {
@@ -610,19 +611,19 @@ function Pricing() {
           <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-clay">
             <span className="h-px w-6 bg-current opacity-60" />Tarifs simples
           </span>
-          <h2 className="mt-5 font-display text-5xl sm:text-7xl text-balance">
-            Sans <em className="italic font-light text-clay">abonnement.</em>
+          <h2 className="mt-5 font-display text-4xl sm:text-5xl text-balance">
+            <span className="font-normal">Avec ou sans abonnement,</span> <em className="italic font-light text-clay">c'est vous qui décidez</em>
           </h2>
         </div>
-        <div className="grid lg:grid-cols-3 gap-4 lg:items-start">
+        <div className="grid lg:grid-cols-3 gap-4 items-stretch">
           {PLANS.map((plan, i) => (
             <RevealV2
               key={plan.name}
               delay={i * 80}
               from="translateY(30px)"
               className={cn(
-                "group relative rounded-3xl p-7 ring-1 transition-all duration-300 ease-out hover:-translate-y-1 hover:scale-[1.03] hover:shadow-card-lg",
-                plan.featured ? "bg-clay text-cream ring-clay shadow-card-lg" : "bg-card ring-line shadow-card",
+                "group relative flex flex-col rounded-3xl px-7 py-7 ring-1 transition-all duration-300 ease-out hover:-translate-y-1 hover:scale-[1.03] hover:shadow-card-lg",
+                plan.featured ? "bg-clay text-cream ring-clay shadow-card-lg lg:-mt-3 lg:py-10" : "h-full bg-card ring-line shadow-card",
               )}
             >
               {plan.featured && (
@@ -631,11 +632,14 @@ function Pricing() {
                 </span>
               )}
               <h3 className="font-display text-2xl">{plan.name}</h3>
-              <p className={cn("mt-1 text-[13px]", plan.featured ? "text-cream/80" : "text-muted-foreground")}>{plan.desc}</p>
+              <p className={cn("mt-1 min-h-[34px] text-[13px]", plan.featured ? "text-cream/80" : "text-muted-foreground")}>{plan.desc}</p>
               <div className="mt-6 flex items-baseline gap-2">
                 <span className="font-display text-5xl">{plan.price}</span>
                 <span className={cn("text-[13px]", plan.featured ? "text-cream/80" : "text-muted-foreground")}>{plan.per}</span>
               </div>
+              <p className={cn("mt-2 min-h-[30px] whitespace-pre-line text-[12px] leading-snug", plan.featured ? "text-cream/70" : "text-muted-foreground/80")}>
+                {plan.note ?? ""}
+              </p>
               <ul className="mt-6 space-y-2 text-[14px]">
                 {plan.feats.map((f) => (
                   <li key={f} className="flex items-start gap-2">

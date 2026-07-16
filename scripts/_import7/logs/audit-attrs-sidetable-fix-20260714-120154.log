@@ -1,0 +1,12 @@
+◇ injected env (18) from .env.local // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+[audit-attrs] démarrage 2026-07-14T10:01:55.704Z — marchands=maisons_du_monde modèle=gemini-flash-lite-latest catégories=1 style=on
+  maisons_du_monde/side_table: 50/527 (total global: 50)
+  maisons_du_monde/side_table: 100/527 (total global: 100)
+  maisons_du_monde/side_table: 150/527 (total global: 150)
+  maisons_du_monde/side_table: 200/527 (total global: 200)
+  maisons_du_monde/side_table: 250/527 (total global: 250)
+  maisons_du_monde/side_table: 300/527 (total global: 300)
+✓ maisons_du_monde side_table      339 extraits · 188 déjà faits · 0 échecs
+
+[audit-attrs] TERMINÉ 2026-07-14T10:38:36.169Z — 339 produits traités, 0 échecs, coût: voir ai_calls (request_payload->>'purpose'='attrs_and_style').

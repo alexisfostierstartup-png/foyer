@@ -1,0 +1,84 @@
+◇ injected env (18) from .env.local // tip: ◈ secrets for agents [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+[audit-attrs] démarrage 2026-07-14T14:54:38.780Z — marchands=maisons_du_monde,cyrillus modèle=gemini-flash-lite-latest catégories=31 style=on
+✓ maisons_du_monde sofa            0 extraits · 2087 déjà faits · 0 échecs
+✓ maisons_du_monde armchair        0 extraits · 1228 déjà faits · 0 échecs
+✓ maisons_du_monde chair           0 extraits · 1990 déjà faits · 0 échecs
+✓ cyrillus         chair           0 extraits · 2 déjà faits · 0 échecs
+✓ maisons_du_monde coffee_table    0 extraits · 1405 déjà faits · 0 échecs
+  ✗ extraction échouée — maisons_du_monde/dining_table — Table extensible effet bois frêne blanc 90x160/220 cm
+✓ maisons_du_monde dining_table    0 extraits · 1557 déjà faits · 1 échecs
+✓ maisons_du_monde side_table      0 extraits · 581 déjà faits · 0 échecs
+✓ maisons_du_monde sideboard       0 extraits · 1415 déjà faits · 0 échecs
+✓ maisons_du_monde dresser         0 extraits · 1323 déjà faits · 0 échecs
+✓ maisons_du_monde bookshelf       0 extraits · 1510 déjà faits · 0 échecs
+✓ maisons_du_monde stool           0 extraits · 1177 déjà faits · 0 échecs
+✓ maisons_du_monde desk            0 extraits · 692 déjà faits · 0 échecs
+✓ cyrillus         desk            0 extraits · 3 déjà faits · 0 échecs
+✓ maisons_du_monde bed             0 extraits · 1996 déjà faits · 0 échecs
+✓ cyrillus         bed             0 extraits · 6 déjà faits · 0 échecs
+✓ maisons_du_monde dressing_table  0 extraits · 1087 déjà faits · 0 échecs
+✓ maisons_du_monde nightstand      0 extraits · 951 déjà faits · 0 échecs
+✓ cyrillus         nightstand      0 extraits · 1 déjà faits · 0 échecs
+✓ maisons_du_monde bench           0 extraits · 688 déjà faits · 0 échecs
+✓ cyrillus         bench           0 extraits · 2 déjà faits · 0 échecs
+✓ maisons_du_monde pouf            0 extraits · 1077 déjà faits · 0 échecs
+✓ maisons_du_monde headboard       0 extraits · 1195 déjà faits · 0 échecs
+✓ maisons_du_monde display_cabinet 0 extraits · 140 déjà faits · 0 échecs
+✓ maisons_du_monde tv_stand        0 extraits · 1026 déjà faits · 0 échecs
+✓ maisons_du_monde room_divider    0 extraits · 9 déjà faits · 0 échecs
+✓ maisons_du_monde rug             0 extraits · 1919 déjà faits · 0 échecs
+✓ cyrillus         rug             0 extraits · 28 déjà faits · 0 échecs
+✓ maisons_du_monde curtains        0 extraits · 1459 déjà faits · 0 échecs
+✓ cyrillus         curtains        0 extraits · 55 déjà faits · 0 échecs
+✓ maisons_du_monde pendant_lamp    0 extraits · 1991 déjà faits · 0 échecs
+✓ maisons_du_monde table_lamp      0 extraits · 1274 déjà faits · 0 échecs
+  maisons_du_monde/wall_sconce: 50/1353 (total global: 50)
+  maisons_du_monde/wall_sconce: 100/1353 (total global: 100)
+  maisons_du_monde/wall_sconce: 150/1353 (total global: 150)
+  maisons_du_monde/wall_sconce: 200/1353 (total global: 200)
+  maisons_du_monde/wall_sconce: 250/1353 (total global: 250)
+  maisons_du_monde/wall_sconce: 300/1353 (total global: 300)
+✓ maisons_du_monde wall_sconce     343 extraits · 1010 déjà faits · 0 échecs
+  maisons_du_monde/floor_lamp: 50/785 (total global: 393)
+  maisons_du_monde/floor_lamp: 100/785 (total global: 443)
+  maisons_du_monde/floor_lamp: 150/785 (total global: 493)
+  maisons_du_monde/floor_lamp: 200/785 (total global: 543)
+  maisons_du_monde/floor_lamp: 250/785 (total global: 593)
+  maisons_du_monde/floor_lamp: 300/785 (total global: 643)
+  maisons_du_monde/floor_lamp: 350/785 (total global: 693)
+  maisons_du_monde/floor_lamp: 400/785 (total global: 743)
+✓ maisons_du_monde floor_lamp      413 extraits · 372 déjà faits · 0 échecs
+  maisons_du_monde/mirror: 50/1122 (total global: 806)
+  maisons_du_monde/mirror: 100/1122 (total global: 856)
+  maisons_du_monde/mirror: 150/1122 (total global: 906)
+  maisons_du_monde/mirror: 200/1122 (total global: 956)
+  maisons_du_monde/mirror: 250/1122 (total global: 1006)
+  maisons_du_monde/mirror: 300/1122 (total global: 1056)
+  maisons_du_monde/mirror: 350/1122 (total global: 1106)
+  maisons_du_monde/mirror: 400/1122 (total global: 1156)
+  maisons_du_monde/mirror: 450/1122 (total global: 1206)
+  maisons_du_monde/mirror: 500/1122 (total global: 1256)
+  maisons_du_monde/mirror: 550/1122 (total global: 1306)
+  maisons_du_monde/mirror: 600/1122 (total global: 1356)
+  maisons_du_monde/mirror: 650/1122 (total global: 1406)
+  maisons_du_monde/mirror: 700/1122 (total global: 1456)
+  maisons_du_monde/mirror: 750/1122 (total global: 1506)
+  maisons_du_monde/mirror: 800/1122 (total global: 1556)
+  maisons_du_monde/mirror: 850/1122 (total global: 1606)
+  maisons_du_monde/mirror: 900/1122 (total global: 1656)
+  maisons_du_monde/mirror: 950/1122 (total global: 1706)
+  maisons_du_monde/mirror: 1000/1122 (total global: 1756)
+  maisons_du_monde/mirror: 1050/1122 (total global: 1806)
+  maisons_du_monde/mirror: 1100/1122 (total global: 1856)
+✓ maisons_du_monde mirror          1122 extraits · 0 déjà faits · 0 échecs
+
+🛑 UNKNOWN — 1886 déjà persistés au total (8 sur maisons_du_monde/vase)
+   Marchand/Cat : maisons_du_monde / vase
+   Produit      : Vase décoratif en corde de papier
+   Image        : https://medias.maisonsdumonde.com/images/w_1000/mkp/M26112110_1/vase-decoratif-en-corde-de-papier.jpg
+   URL          : https://www.maisonsdumonde.com/FR/fr/p/vase-decoratif-en-corde-de-papier-M26112110.htm
+   Attrs        : {"shape":"amphora","material":"unknown","color":"#c4a484","size":"medium"}
+   ⚠️  unknown sur : material
+   (n/a cumulés sur cette catégorie : {})
+   → enrichir attributeSchemaV3.ts (vocab manquant) puis RELANCER la même commande (reprend sans perte).

@@ -1,0 +1,20 @@
+◇ injected env (18) from .env.local // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+[audit-attrs] démarrage 2026-07-14T10:56:52.964Z — marchands=maisons_du_monde,cyrillus modèle=gemini-flash-lite-latest catégories=31 style=on
+✓ maisons_du_monde sofa            0 extraits · 2087 déjà faits · 0 échecs
+✓ maisons_du_monde armchair        0 extraits · 1228 déjà faits · 0 échecs
+✓ maisons_du_monde chair           1 extraits · 1989 déjà faits · 0 échecs
+✓ cyrillus         chair           0 extraits · 2 déjà faits · 0 échecs
+✓ maisons_du_monde coffee_table    0 extraits · 1405 déjà faits · 0 échecs
+  ✗ extraction échouée — maisons_du_monde/dining_table — Table extensible effet bois frêne blanc 90x160/220 cm
+✓ maisons_du_monde dining_table    0 extraits · 1557 déjà faits · 1 échecs
+✓ maisons_du_monde side_table      0 extraits · 581 déjà faits · 0 échecs
+✓ maisons_du_monde sideboard       0 extraits · 1415 déjà faits · 0 échecs
+✓ maisons_du_monde dresser         0 extraits · 1323 déjà faits · 0 échecs
+✓ maisons_du_monde bookshelf       0 extraits · 1510 déjà faits · 0 échecs
+✓ maisons_du_monde stool           1 extraits · 1176 déjà faits · 0 échecs
+✓ maisons_du_monde desk            0 extraits · 692 déjà faits · 0 échecs
+✓ cyrillus         desk            0 extraits · 3 déjà faits · 0 échecs
+  maisons_du_monde/bed: 50/1996 (total global: 52)
+  maisons_du_monde/bed: 100/1996 (total global: 102)
+  maisons_du_monde/bed: 150/1996 (total global: 152)

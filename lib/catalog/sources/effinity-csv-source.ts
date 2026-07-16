@@ -11,7 +11,7 @@
  * dès le parsing, mémoïsé, pour éviter de re-scanner le fichier à chaque catégorie.
  */
 import { createReadStream } from "fs";
-import { resolveEffinityCategory, resolveCyrillusKidsCategory, CYRILLUS_AMBIGUOUS_BUCKETS, isKidsTitle } from "../effinity-category-map";
+import { resolveEffinityCategory, resolveCyrillusKidsCategory, CYRILLUS_AMBIGUOUS_BUCKETS, isKidsTitle, resolveCoffeeTableTitleOverride, isDecorativeNeonTitle } from "../effinity-category-map";
 import type { ProductSource, PartnerProductInput } from "../types";
 
 const WANTED_COLUMNS = [
@@ -181,6 +181,16 @@ export class EffinityCsvSource implements ProductSource {
         // supprimé pour autant, juste non importé ici (candidat pour un futur mapping
         // chambre_enfant dédié, cf. resolveCyrillusKidsCategory).
         category = null;
+      } else if (category === "coffee_table") {
+        // Garde-fou général (2026-07-14) : le rayon "Bouts de canapés"/"Table basse" est un
+        // fourre-tout MdM — le titre est plus fiable que le chemin ici (cf. commentaire
+        // resolveCoffeeTableTitleOverride).
+        category = resolveCoffeeTableTitleOverride(row.title) ?? category;
+      } else if (category === "wall_sconce" && isDecorativeNeonTitle(row.title)) {
+        // Garde-fou général (2026-07-14) : enseignes néon décoratives mélangées aux vraies
+        // appliques murales dans le rayon MdM "Appliques murales et spots" (cf.
+        // isDecorativeNeonTitle) — pas une applique fonctionnelle.
+        category = "decorative_object";
       }
       if (!category) return;
       const input = this.toInput(row, category);

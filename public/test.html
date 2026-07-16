@@ -305,7 +305,7 @@ const SECTIONS = [
 
   ${q("Qu’avez-vous fait spontanément ?", checks("libre", "actions", [
     "J’ai ajouté des contraintes avant le 1er rendu",
-    "J’ai survolé ou lu la description d’un style",
+    "J’ai lu la description d’un style",
     "J’ai lancé les 3 dispositions",
     "J’ai modifié le premier rendu",
     "J’ai changé un meuble qui ne me convenait pas",
@@ -349,24 +349,8 @@ const SECTIONS = [
   </div>
 
   <div class="feature-card">
-    <h3>🛋️ Garder, personnaliser, remplacer</h3>
-    <div class="fdesc">Sur l’écran « Voici ce qu’on va faire », testez les trois options sur des meubles différents.</div>
-    ${q("Votre pièce reste-t-elle la vôtre ? (murs, fenêtres, portes à leur place)", radio("fonctions", "piece_respectee", [
-      "Oui, intacte", "Quelques libertés", "Ce n’était plus du tout la même",
-    ]))}
-    ${q("Utilité de pouvoir garder ou personnaliser, plutôt que tout remplacer", scale("fonctions", "utilite_garder", 5, "Gadget", "Indispensable"))}
-  </div>
-
-  <div class="feature-card">
-    <h3>🛒 La liste de courses</h3>
-    <div class="fdesc">Ouvrez 2 ou 3 produits de votre liste.</div>
-    ${q("Les produits proposés ressemblent-ils à ceux du rendu ?", scale("fonctions", "produits_fideles", 5, "Rien à voir", "Quasi identiques"))}
-    ${q("La liste vous fait-elle gagner du temps, vs chercher vous-même ?", scale("fonctions", "gain_temps", 5, "Non", "Énormément"))}
-  </div>
-
-  <div class="feature-card">
     <h3>🔁 Peaufiner le rendu</h3>
-    <div class="fdesc">Sur l’écran du rendu, il y a un bouton « Modifier ». Relancez un ou deux ajustements.</div>
+    <div class="fdesc">Sur l’écran du rendu, il y a un bouton « Modifier ». Relancez 1 modification.</div>
     ${q("Auriez-vous eu envie de continuer à itérer ?", radio("fonctions", "iterer", [
       "Oui, j’aurais enchaîné plusieurs fois",
       "Une ou deux fois de plus, pas davantage",
@@ -387,6 +371,13 @@ const SECTIONS = [
     ${pay ? `<div class="reveal">✓ Noté : <b>${esc(pay)}</b>. Aucun paiement réel, évidemment.</div>` : ""}
   </div>
 
+  <div class="feature-card">
+    <h3>🛒 La liste de courses</h3>
+    <div class="fdesc">Ouvrez 2 ou 3 produits de votre liste.</div>
+    ${q("Les produits proposés ressemblent-ils à ceux du rendu ?", scale("fonctions", "produits_fideles", 5, "Rien à voir", "Quasi identiques"))}
+    ${q("La liste vous fait-elle gagner du temps, vs chercher vous-même ?", scale("fonctions", "gain_temps", 5, "Non", "Énormément"))}
+  </div>
+
   ${nav(1, 3)}`;
 }},
 
@@ -398,14 +389,8 @@ const SECTIONS = [
   <div class="feature-card">
     <h3>📐 Les 3 dispositions</h3>
     <div class="fdesc">Sur l’écran « Voici ce qu’on va faire », à côté de « Lancer 1 rendu », il y a « Lancer 3 dispositions » : trois agencements différents de votre pièce, dans le même style.</div>
-    ${q("Avez-vous réussi à lancer les 3 dispositions ?", radio("valider", "dispo_fait", [
-      "Oui",
-      "Non, je n’ai pas trouvé le bouton",
-      "Non, ça a échoué ou c’était trop long",
-      "Non, je n’en ai pas eu envie",
-    ]))}
     ${q("Utile pour vous projeter ?", scale("valider", "dispo_utile", 5, "Sans intérêt", "Très utile"))}
-    ${q("Cette fonction coûte 0,10 €. L’utiliseriez-vous ?", radio("valider", "dispo_payer", [
+    ${q("Cette fonction coûte 0,20 € de crédits. L’utiliseriez-vous ?", radio("valider", "dispo_payer", [
       "Oui, à chaque projet",
       "Oui, mais seulement sur une pièce compliquée",
       "Non, un seul rendu me suffit",
@@ -416,11 +401,11 @@ const SECTIONS = [
   <div class="feature-card">
     <h3>💎 Le mode Expert</h3>
     <div class="fdesc">Lancez un projet via <a href="${APP_URL}/expert-create" target="_blank" rel="noopener">${APP_URL}/expert-create</a>, puis tentez une retouche ciblée du rendu.</div>
-    ${q("Avez-vous réussi à aller au bout du mode Expert ?", radio("valider", "expert_fait", [
-      "Oui",
-      "Non, je me suis perdu(e) en route",
-      "Non, ça a échoué ou c’était trop long",
-      "Non, je n’en ai pas eu envie",
+    ${q("Avez-vous été satisfait du rendu au réel ?", radio("valider", "expert_satisfait", [
+      "Oui, très satisfait(e)",
+      "Plutôt oui",
+      "Plutôt non",
+      "Pas du tout",
     ]))}
 
     <div class="card">

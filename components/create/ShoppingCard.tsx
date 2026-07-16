@@ -356,6 +356,9 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
                   className="flex items-center gap-1 rounded-full bg-foyer-sage px-2.5 py-1 text-[13px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60">
                   {integrating ? <Loader2 className="size-3 animate-spin" aria-hidden /> : <Sparkles className="size-3" aria-hidden />}
                   Intégrer ce meuble
+                  <span className="ml-0.5 text-[10px] uppercase tracking-wide bg-white/20 px-1.5 py-0.5 rounded-full">
+                    Payant
+                  </span>
                 </button>
               )}
             </div>

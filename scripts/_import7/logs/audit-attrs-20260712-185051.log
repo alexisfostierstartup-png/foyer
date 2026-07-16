@@ -143,3 +143,80 @@
   maisons_du_monde/sideboard: 200/1415 (total global: 5884)
   maisons_du_monde/sideboard: 250/1415 (total global: 5934)
   maisons_du_monde/sideboard: 300/1415 (total global: 5984)
+  maisons_du_monde/sideboard: 350/1415 (total global: 6034)
+  maisons_du_monde/sideboard: 400/1415 (total global: 6084)
+  maisons_du_monde/sideboard: 450/1415 (total global: 6134)
+  maisons_du_monde/sideboard: 500/1415 (total global: 6184)
+  maisons_du_monde/sideboard: 550/1415 (total global: 6234)
+  maisons_du_monde/sideboard: 600/1415 (total global: 6284)
+  maisons_du_monde/sideboard: 650/1415 (total global: 6334)
+  maisons_du_monde/sideboard: 700/1415 (total global: 6384)
+  maisons_du_monde/sideboard: 750/1415 (total global: 6434)
+  maisons_du_monde/sideboard: 800/1415 (total global: 6484)
+✓ maisons_du_monde sideboard       815 extraits · 600 déjà faits · 0 échecs
+  maisons_du_monde/dresser: 50/1323 (total global: 6549)
+  maisons_du_monde/dresser: 100/1323 (total global: 6599)
+  maisons_du_monde/dresser: 150/1323 (total global: 6649)
+  maisons_du_monde/dresser: 200/1323 (total global: 6699)
+  maisons_du_monde/dresser: 250/1323 (total global: 6749)
+  maisons_du_monde/dresser: 300/1323 (total global: 6799)
+  maisons_du_monde/dresser: 350/1323 (total global: 6849)
+  maisons_du_monde/dresser: 400/1323 (total global: 6899)
+  maisons_du_monde/dresser: 450/1323 (total global: 6949)
+  maisons_du_monde/dresser: 500/1323 (total global: 6999)
+  maisons_du_monde/dresser: 550/1323 (total global: 7049)
+  maisons_du_monde/dresser: 600/1323 (total global: 7099)
+  maisons_du_monde/dresser: 650/1323 (total global: 7149)
+  maisons_du_monde/dresser: 700/1323 (total global: 7199)
+✓ maisons_du_monde dresser         724 extraits · 599 déjà faits · 0 échecs
+  maisons_du_monde/bookshelf: 50/1510 (total global: 7273)
+  maisons_du_monde/bookshelf: 100/1510 (total global: 7323)
+  maisons_du_monde/bookshelf: 150/1510 (total global: 7373)
+  maisons_du_monde/bookshelf: 200/1510 (total global: 7423)
+  maisons_du_monde/bookshelf: 250/1510 (total global: 7473)
+  maisons_du_monde/bookshelf: 300/1510 (total global: 7523)
+  maisons_du_monde/bookshelf: 350/1510 (total global: 7573)
+  maisons_du_monde/bookshelf: 400/1510 (total global: 7623)
+  maisons_du_monde/bookshelf: 450/1510 (total global: 7673)
+  maisons_du_monde/bookshelf: 500/1510 (total global: 7723)
+  maisons_du_monde/bookshelf: 550/1510 (total global: 7773)
+  maisons_du_monde/bookshelf: 600/1510 (total global: 7823)
+  maisons_du_monde/bookshelf: 650/1510 (total global: 7873)
+  maisons_du_monde/bookshelf: 700/1510 (total global: 7923)
+  maisons_du_monde/bookshelf: 750/1510 (total global: 7973)
+  maisons_du_monde/bookshelf: 800/1510 (total global: 8023)
+  maisons_du_monde/bookshelf: 850/1510 (total global: 8073)
+  maisons_du_monde/bookshelf: 900/1510 (total global: 8123)
+✓ maisons_du_monde bookshelf       912 extraits · 598 déjà faits · 0 échecs
+  maisons_du_monde/stool: 50/1177 (total global: 8185)
+  maisons_du_monde/stool: 100/1177 (total global: 8235)
+  maisons_du_monde/stool: 150/1177 (total global: 8285)
+  maisons_du_monde/stool: 200/1177 (total global: 8335)
+  maisons_du_monde/stool: 250/1177 (total global: 8385)
+  maisons_du_monde/stool: 300/1177 (total global: 8435)
+  maisons_du_monde/stool: 350/1177 (total global: 8485)
+[ai:retry] vision gemini-flash-lite-latest erreur transitoire (tentative 1/4), retry dans 631ms — fetch failed
+[ai:retry] vision gemini-flash-lite-latest erreur transitoire (tentative 1/4), retry dans 560ms — fetch failed
+[ai:retry] vision gemini-flash-lite-latest erreur transitoire (tentative 1/4), retry dans 907ms — fetch failed
+  maisons_du_monde/stool: 400/1177 (total global: 8535)
+[ai:retry] vision gemini-flash-lite-latest erreur transitoire (tentative 1/4), retry dans 824ms — fetch failed
+[ai:retry] vision gemini-flash-lite-latest erreur transitoire (tentative 1/4), retry dans 721ms — fetch failed
+[ai:retry] vision gemini-flash-lite-latest erreur transitoire (tentative 1/4), retry dans 549ms — fetch failed
+[ai:retry] vision gemini-flash-lite-latest erreur transitoire (tentative 1/4), retry dans 644ms — fetch failed
+[ai:retry] vision gemini-flash-lite-latest erreur transitoire (tentative 1/4), retry dans 612ms — fetch failed
+  maisons_du_monde/stool: 450/1177 (total global: 8585)
+[ai:retry] vision gemini-flash-lite-latest erreur transitoire (tentative 1/4), retry dans 758ms — fetch failed
+  maisons_du_monde/stool: 500/1177 (total global: 8635)
+  ✗ PERSISTANCE ÉCHOUÉE — maisons_du_monde/stool — f09e4961-1337-4d58-a4df-8e20169aa634 — TypeError: fetch failed
+  maisons_du_monde/stool: 550/1177 (total global: 8685)
+✓ maisons_du_monde stool           576 extraits · 600 déjà faits · 1 échecs
+  maisons_du_monde/desk: 50/692 (total global: 8761)
+✓ maisons_du_monde desk            93 extraits · 599 déjà faits · 0 échecs
+✓ cyrillus         desk            0 extraits · 3 déjà faits · 0 échecs
+  maisons_du_monde/bed: 50/1996 (total global: 8854)
+  maisons_du_monde/bed: 100/1996 (total global: 8904)
+  maisons_du_monde/bed: 150/1996 (total global: 8954)
+  maisons_du_monde/bed: 200/1996 (total global: 9004)
+  maisons_du_monde/bed: 250/1996 (total global: 9054)
+  maisons_du_monde/bed: 300/1996 (total global: 9104)
+  maisons_du_monde/bed: 350/1996 (total global: 9154)

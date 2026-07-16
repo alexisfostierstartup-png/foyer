@@ -1,0 +1,49 @@
+◇ injected env (19) from .env.local // tip: ⌘ enable debugging { debug: true }
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+[audit-attrs] démarrage 2026-07-14T15:28:11.490Z — marchands=maisons_du_monde,cyrillus modèle=gemini-flash-lite-latest catégories=31 style=on
+✓ maisons_du_monde sofa            0 extraits · 2087 déjà faits · 0 échecs
+✓ maisons_du_monde armchair        0 extraits · 1228 déjà faits · 0 échecs
+✓ maisons_du_monde chair           0 extraits · 1990 déjà faits · 0 échecs
+✓ cyrillus         chair           0 extraits · 2 déjà faits · 0 échecs
+✓ maisons_du_monde coffee_table    0 extraits · 1405 déjà faits · 0 échecs
+  ✗ extraction échouée — maisons_du_monde/dining_table — Table extensible effet bois frêne blanc 90x160/220 cm
+✓ maisons_du_monde dining_table    0 extraits · 1557 déjà faits · 1 échecs
+✓ maisons_du_monde side_table      0 extraits · 581 déjà faits · 0 échecs
+✓ maisons_du_monde sideboard       0 extraits · 1415 déjà faits · 0 échecs
+✓ maisons_du_monde dresser         0 extraits · 1323 déjà faits · 0 échecs
+✓ maisons_du_monde bookshelf       0 extraits · 1510 déjà faits · 0 échecs
+✓ maisons_du_monde stool           0 extraits · 1177 déjà faits · 0 échecs
+✓ maisons_du_monde desk            0 extraits · 692 déjà faits · 0 échecs
+✓ cyrillus         desk            0 extraits · 3 déjà faits · 0 échecs
+✓ maisons_du_monde bed             0 extraits · 1996 déjà faits · 0 échecs
+✓ cyrillus         bed             0 extraits · 6 déjà faits · 0 échecs
+✓ maisons_du_monde dressing_table  0 extraits · 1087 déjà faits · 0 échecs
+✓ maisons_du_monde nightstand      0 extraits · 951 déjà faits · 0 échecs
+✓ cyrillus         nightstand      0 extraits · 1 déjà faits · 0 échecs
+✓ maisons_du_monde bench           0 extraits · 688 déjà faits · 0 échecs
+✓ cyrillus         bench           0 extraits · 2 déjà faits · 0 échecs
+✓ maisons_du_monde pouf            0 extraits · 1077 déjà faits · 0 échecs
+✓ maisons_du_monde headboard       0 extraits · 1195 déjà faits · 0 échecs
+✓ maisons_du_monde display_cabinet 0 extraits · 140 déjà faits · 0 échecs
+✓ maisons_du_monde tv_stand        0 extraits · 1026 déjà faits · 0 échecs
+✓ maisons_du_monde room_divider    0 extraits · 9 déjà faits · 0 échecs
+✓ maisons_du_monde rug             0 extraits · 1919 déjà faits · 0 échecs
+✓ cyrillus         rug             0 extraits · 28 déjà faits · 0 échecs
+✓ maisons_du_monde curtains        0 extraits · 1459 déjà faits · 0 échecs
+✓ cyrillus         curtains        0 extraits · 55 déjà faits · 0 échecs
+✓ maisons_du_monde pendant_lamp    0 extraits · 1991 déjà faits · 0 échecs
+✓ maisons_du_monde table_lamp      0 extraits · 1274 déjà faits · 0 échecs
+✓ maisons_du_monde wall_sconce     0 extraits · 1353 déjà faits · 0 échecs
+✓ maisons_du_monde floor_lamp      0 extraits · 785 déjà faits · 0 échecs
+✓ maisons_du_monde mirror          0 extraits · 1122 déjà faits · 0 échecs
+✓ maisons_du_monde vase            0 extraits · 300 déjà faits · 0 échecs
+  maisons_du_monde/decorative_object: 50/313 (total global: 50)
+  maisons_du_monde/decorative_object: 100/313 (total global: 100)
+  maisons_du_monde/decorative_object: 150/313 (total global: 150)
+  maisons_du_monde/decorative_object: 200/313 (total global: 200)
+  maisons_du_monde/decorative_object: 250/313 (total global: 250)
+✓ maisons_du_monde decorative_object 266 extraits · 47 déjà faits · 0 échecs
+  maisons_du_monde/cushion: 50/77 (total global: 316)
+✓ maisons_du_monde cushion         77 extraits · 0 déjà faits · 0 échecs
+
+[audit-attrs] TERMINÉ 2026-07-14T15:29:44.848Z — 343 produits traités, 1 échecs, coût: voir ai_calls (request_payload->>'purpose'='attrs_and_style').

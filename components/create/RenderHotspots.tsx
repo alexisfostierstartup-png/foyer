@@ -272,6 +272,9 @@ export function RenderHotspots({
                   >
                     <Pencil className="size-3" aria-hidden />
                     Modifier ce meuble
+                    <span className="ml-0.5 text-[10px] uppercase tracking-wide bg-white/20 px-1.5 py-0.5 rounded-full">
+                      Payant
+                    </span>
                   </button>
                 )}
               </div>
@@ -294,7 +297,10 @@ export function RenderHotspots({
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-foyer-sage">Modifier ce meuble</p>
+                <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-foyer-sage">
+                  Modifier ce meuble
+                  <span className="rounded-full bg-foyer-terra/10 px-1.5 py-0.5 text-foyer-terra">Payant</span>
+                </p>
                 <p className="mt-0.5 line-clamp-1 text-[14px] font-medium text-foyer-ink">{modalFor.name}</p>
               </div>
               <button

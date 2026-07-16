@@ -167,6 +167,33 @@ export function resolveEffinityCategory(pathOrTitle: string): string | null {
   return null;
 }
 
+// Garde-fou GÉNÉRAL (tous marchands) : le rayon MdM "Bouts de canapés" (et "Table basse")
+// route vers coffee_table par le CHEMIN, mais c'est un vrai fourre-tout : vraies tables
+// basses, tables d'appoint/dessertes, bouts de canapé (= table d'appoint par définition),
+// guéridons, consoles, voire des tables de chevet égarées. Seul le TITRE distingue.
+// Découvert 2026-07-14 (339 "table d'appoint"/"desserte" mal classées) puis étendu (bouts de
+// canapé signalés par Alexis, + guéridon/console/chevet trouvés en creusant le même rayon).
+// Le chemin garde la priorité pour tout le reste (une vraie "table basse" reste coffee_table)
+// — seul un titre qui nomme explicitement un autre type de meuble bascule.
+const COFFEE_TABLE_TITLE_OVERRIDES: CategoryRule[] = [
+  { category: "side_table", test: /tables?.*d.*appoint|dessertes?\b(?!.*a.*roulettes)|bouts?\s+de\s+canap[ée]s?|gu[ée]ridons?\b/ },
+  { category: "dressing_table", test: /\bconsoles?\b/ },
+  { category: "nightstand", test: /tables?.*de.*chevet|\bchevets?\b/ },
+];
+// Même fourre-tout du côté luminaires : "Luminaires > Appliques murales et spots" contient
+// aussi des enseignes néon décoratives ("Eclairage néon let's party/cactus/shhh...") — pas
+// une applique fonctionnelle (pas de finition/type d'applique qui s'applique). Découvert
+// 2026-07-14 (stop-on-unknown sur wall_sconce.type/finish), 13 produits.
+export function isDecorativeNeonTitle(title: string): boolean {
+  return /\bn[ée]ons?\b/.test(norm(title));
+}
+
+export function resolveCoffeeTableTitleOverride(title: string): string | null {
+  const text = norm(title);
+  for (const rule of COFFEE_TABLE_TITLE_OVERRIDES) if (rule.test.test(text)) return rule.category;
+  return null;
+}
+
 // ── Cyrillus « partie enfant » (2026-07-12) ──────────────────────────────────────
 // Taxonomie CSV Cyrillus PLATE (category seul, level2-4 vides) sur ces 4 rayons : la
 // distinction enfant/adulte et le TYPE de meuble ne sont lisibles que dans le TITRE produit

@@ -290,7 +290,7 @@ export function ReviewScreen({ projectId, initialDecisions, allowedByCategory, f
           >
             Lancer 3 dispositions
             <span className="ml-1.5 align-middle text-[10px] uppercase tracking-wide bg-foyer-terra/10 text-foyer-terra px-1.5 py-0.5 rounded-full">
-              expert
+              Payant
             </span>
           </button>
         </div>
