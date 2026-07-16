@@ -1050,12 +1050,37 @@ export async function runExpertIteration(
 
   const prompt = await promptExpert("expert_iterate", { userRequest, cible }, EXPERT_ITERATE_TEMPLATE);
 
-  const { buffer, mimeType } = await callNb2(prompt, [await toDataUri(parentUrl)]);
+  // Même traçabilité que le swap (ai_calls + pipeline_logs) : l'itération expert
+  // était le dernier appel image invisible en base (constat Alexis 2026-07-16,
+  // projet -3TxWNN : « IT_1 apparu, aucune génération dans les logs »).
+  const t0 = Date.now();
+  const res = await withTracking(
+    {
+      step: "generation",
+      projectId,
+      provider: "nano_banana_2",
+      requestPayload: { promptName: "expert_iterate", userRequest, target: target?.targetLabel ?? null, prompt },
+    },
+    async () => {
+      const r = await callNb2(prompt, [await toDataUri(parentUrl)]);
+      return { ...r, durationMs: Date.now() - t0, modelUsed: "nano-banana-2", usage: { imagesIn: 1, imagesOut: 1 } };
+    },
+  );
+  const { buffer, mimeType } = res;
   const n = (project.iterationCount ?? 0) + 1;
   const url = await saveRender(buffer, project.storageFolder, mimeType, `iterate_${n}`);
   // expertIterated : à partir d'ici, le rendu expert peut contenir des meubles que
   // le fake n'a jamais eus → le fake n'est plus une base de swap valide.
   await updateProject(projectId, { expertRenderUrl: url, iterationCount: n, expertIterated: true });
+  await logPipelineEvent({
+    project_id: projectId,
+    event: "iterate",
+    step: "expert_iterate",
+    provider: "nano_banana_2",
+    duration_ms: Date.now() - t0,
+    render_url: url,
+    metadata: { userRequest: userRequest.slice(0, 200), target: target?.targetLabel ?? null, iteration: n },
+  });
   console.log(`[expert] ${projectId} : itération expert #${n} sauvegardée`);
   return url;
 }
