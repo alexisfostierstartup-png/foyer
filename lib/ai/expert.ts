@@ -375,7 +375,7 @@ async function swapChunk(
   // QUEL meuble remplacer quand plusieurs sont proches ; l'apparence cible vient
   // toujours de l'image de référence, jamais de cette description.
   const mapping = validated
-    .map((v, i) => `every ${v.p.noun}${v.p.sourceDesc ? ` (currently: "${v.p.sourceDesc.slice(0, 60)}")` : ""} → image ${i + 2}`)
+    .map((v, i) => `every ${v.p.noun}${v.p.sourceDesc ? ` (currently: "${v.p.sourceDesc.slice(0, 110)}")` : ""} → image ${i + 2}`)
     .join(", ");
   const prompt =
     `This is a beautifully styled photo of a ${room}. YOUR TASK — MANDATORY: replace EACH listed ` +
@@ -480,7 +480,19 @@ export async function runExpertRenderPipeline(projectId: string): Promise<string
   );
   for (const id of userPicked) replaceIds.add(id);
   const picks = (project.productPicks ?? {}) as Record<string, string>;
-  const allPieces = selectExpertPieces(swappable, overrides, customProducts, replaceIds, picks);
+  const allPieces = selectExpertPieces(swappable, overrides, customProducts, replaceIds, picks)
+    // Localisateur POSITIONNEL : la description seule ne désambiguïse pas deux pièces
+    // proches (deux tables rondes → le bout de canapé blanc posé au CENTRE, la table
+    // basse jamais swappée — zt-9pvI, 2026-07-16). Même recette que les ouvertures et
+    // l'inventaire : nommer la place. La bbox vient de l'analyse du rendu de base.
+    .map((p) => {
+      const b = p.elementId ? project.renderAnalysis?.bboxById?.[p.elementId] : undefined;
+      if (!b) return p;
+      const cx = b.x + b.w / 2;
+      const zone = cx < 0.34 ? "on the LEFT side" : cx > 0.66 ? "on the RIGHT side" : "in the CENTER";
+      const avantPlan = b.y + b.h > 0.85 ? ", foreground" : "";
+      return { ...p, sourceDesc: `${zone}${avantPlan}: ${p.sourceDesc ?? p.category}` };
+    });
 
   // BASE DU SWAP. Par défaut le fake : il porte le style validé, et repartir de lui
   // à chaque fois évite d'empiler les éditions (dégradation de l'image).
