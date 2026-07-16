@@ -2487,6 +2487,15 @@ async function analyzeRender(projectId: string, project: Project): Promise<Rende
     }
 
     if (judged && changed) {
+      // PROMOTION D'UN GARDÉ (« Conserver » changé malgré tout) : seulement si le rendu
+      // montre un AUTRE OBJET à sa place (change_kind=replaced — le canapé d'EJFyzwWG :
+      // « jamais celui du fake, un de la liste ou l'original »). Un gardé simplement
+      // RE-FINI (étagères repeintes en beige, 7woTi 2026-07-16) reste le meuble de
+      // l'utilisateur : rien à acheter — « l'original est acceptable », la ligne
+      // « à sourcer » ne faisait que du bruit.
+      if (!wasCandidate && !replacedIds.has(d.element_id)) {
+        return after ? { ...d, description: after } : d;
+      }
       let base: ElementDecision = wasCandidate
         ? d
         : { ...d, mismatch_type: "structural", action_slug: null, supply_items: null, qty: null };
