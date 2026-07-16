@@ -374,7 +374,7 @@ export async function swapOnFake(
   let last: { buffer: Buffer; mimeType: string } | null = null;
   for (let i = 0; i < validated.length; i += chunkSize) {
     const chunk = validated.slice(i, i + chunkSize);
-    last = await swapChunk(currentUri, chunk, room, aspectRatio);
+    last = await swapChunk(currentUri, chunk, room, aspectRatio, projectId);
     currentUri = `data:${last.mimeType};base64,${last.buffer.toString("base64")}`;
   }
   return { ...last!, integrated: validated.map((v) => v.p) };
@@ -385,6 +385,7 @@ async function swapChunk(
   validated: { p: Piece; uri: string }[],
   room: string,
   aspectRatio?: string,
+  projectId?: string,
 ): Promise<{ buffer: Buffer; mimeType: string }> {
 
   // Pluriel-safe : une catégorie peut représenter plusieurs pièces identiques (ex.
@@ -396,10 +397,11 @@ async function swapChunk(
     .map((v, i) => `every ${v.p.noun}${v.p.sourceDesc ? ` (currently: "${v.p.sourceDesc.slice(0, 110)}")` : ""} → image ${i + 2}`)
     .join(", ");
   const prompt = await promptExpert("expert_swap", { room, mapping }, EXPERT_SWAP_TEMPLATE);
-  return withTracking(
+  const t0 = Date.now();
+  const res = await withTracking(
     {
-      step: "expert_swap",
-      projectId: projectId ?? "unknown",
+      step: "generation",
+      projectId: projectId ?? "expert-swap-sans-projet",
       provider: "nano_banana_2",
       requestPayload: {
         promptName: "expert_swap",
@@ -408,8 +410,17 @@ async function swapChunk(
         prompt,
       },
     },
-    () => callNb2(prompt, [baseUri, ...validated.map((v) => v.uri)], aspectRatio),
+    async () => {
+      const r = await callNb2(prompt, [baseUri, ...validated.map((v) => v.uri)], aspectRatio);
+      return {
+        ...r,
+        durationMs: Date.now() - t0,
+        modelUsed: "nano-banana-2",
+        usage: { imagesIn: 1 + validated.length, imagesOut: 1 },
+      };
+    },
   );
+  return { buffer: res.buffer, mimeType: res.mimeType };
 }
 
 /**

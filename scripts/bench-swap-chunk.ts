@@ -59,7 +59,7 @@ async function main() {
     const passes = Math.ceil(pieces.length / taille);
     console.log(`── paquets de ${taille} → ${passes} passe(s), ${(passes * 0.08).toFixed(2)} $ ──`);
     const t = Date.now();
-    const r = await swapOnFake(p.generatedRenderUrl, pieces, p.roomType, taille);
+    const r = await swapOnFake(p.generatedRenderUrl, pieces, p.roomType, undefined, taille);
     if (!r) { console.log("   ❌ échec\n"); continue; }
     const f = `${OUT}/chunk-${taille}.png`;
     writeFileSync(f, r.buffer);
