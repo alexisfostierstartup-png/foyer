@@ -892,11 +892,19 @@ export function FinalScreen({
                   </>
                 )}
               </button>
-              {testerId && (
-                <p className="mt-3 text-center text-[11px] text-foyer-muted">
-                  ID testeur : <span className="font-mono">{testerId}</span> — à recopier dans le
-                  questionnaire
-                </p>
+              {/* Recoupement user test ↔ questionnaire, AUTOMATIQUE : le lien porte
+                  l'ID testeur en paramètre (?uid=…) — un champ caché du formulaire le
+                  capte, personne ne recopie rien (QA Alexis 2026-07-17). Le bouton
+                  n'existe que si NEXT_PUBLIC_SURVEY_URL est configurée. */}
+              {testerId && process.env.NEXT_PUBLIC_SURVEY_URL && (
+                <a
+                  href={`${process.env.NEXT_PUBLIC_SURVEY_URL}${process.env.NEXT_PUBLIC_SURVEY_URL.includes("?") ? "&" : "?"}uid=${testerId}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-3 flex h-[52px] w-full items-center justify-center gap-2 rounded-full border border-foyer-sage font-medium text-foyer-sage transition-colors hover:bg-foyer-sage/10"
+                >
+                  Donner mon avis (2 min)
+                </a>
               )}
             </div>
           )}

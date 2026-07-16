@@ -322,30 +322,36 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
           </div>
         </div>
       ) : best ? (
-        <div className="flex items-center gap-4">
-          <Thumb url={best.primary_image_url} alt={best.name} fallback={Icon} />
+        // Prix à droite du produit, ACTIONS sur leur propre ligne pleine largeur
+        // (flex-wrap) : l'ancienne colonne de droite (prix + 3 CTA en ligne, shrink-0)
+        // faisait ~350 px à elle seule et explosait la carte sur téléphone
+        // (responsive « ne va pas du tout », QA Alexis 2026-07-17).
+        <div>
+          <div className="flex items-start gap-3">
+            <Thumb url={best.primary_image_url} alt={best.name} fallback={Icon} />
 
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <p className="line-clamp-2 text-[15px] font-medium text-foyer-ink">{best.name}</p>
-            <div className="flex flex-wrap items-center gap-2">
-              <SourceTag source={matchSource(best)} />
-              <span className="text-[13px] text-foyer-muted">{best.merchant}</span>
-              {/* % de similarité = outil de réglage, pas une info user (retiré de la
-                  vue publique, QA Alexis 2026-07-17) — visible avec ?debug=1. */}
-              {debug && (
-                <span className="rounded-full bg-foyer-sage/10 px-1.5 py-0.5 text-[11px] font-medium text-foyer-sage">
-                  {Math.round(best.similarity * 100)}%
-                </span>
-              )}
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <p className="line-clamp-2 text-[15px] font-medium text-foyer-ink">{best.name}</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <SourceTag source={matchSource(best)} />
+                <span className="text-[13px] text-foyer-muted">{best.merchant}</span>
+                {/* % de similarité = outil de réglage, pas une info user (retiré de la
+                    vue publique, QA Alexis 2026-07-17) — visible avec ?debug=1. */}
+                {debug && (
+                  <span className="rounded-full bg-foyer-sage/10 px-1.5 py-0.5 text-[11px] font-medium text-foyer-sage">
+                    {Math.round(best.similarity * 100)}%
+                  </span>
+                )}
+              </div>
+              {debug && <ScoreBreakdown m={best} />}
             </div>
-            {debug && <ScoreBreakdown m={best} />}
-          </div>
 
-          <div className="flex shrink-0 flex-col items-end gap-1.5">
-            <span className="font-serif text-[17px] text-foyer-ink">
+            <span className="shrink-0 font-serif text-[17px] text-foyer-ink">
               {best.price != null ? `${best.price} €` : "–"}
             </span>
-            <div className="flex items-center gap-1.5">
+          </div>
+
+          <div className="mt-2.5 flex flex-wrap items-center justify-end gap-1.5">
               {best.product_url && (
                 <a href={best.product_url} target="_blank" rel="noreferrer"
                   className="flex items-center gap-1 rounded-full border border-foyer-border px-2.5 py-1 text-[13px] text-foyer-ink transition-colors hover:bg-foyer-cream">
@@ -380,7 +386,6 @@ export function ShoppingCard({ item }: { item: ShoppingItem }) {
                   </span>
                 </button>
               )}
-            </div>
           </div>
         </div>
       ) : (
