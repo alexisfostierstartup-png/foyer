@@ -182,7 +182,9 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-foyer-sage">
             Quelle pièce ?
           </p>
-          <div className="mt-2 grid grid-cols-2 gap-3">
+          {/* Pills compactes qui s'enroulent : les gros boutons h-16 en grille prenaient
+              toute la largeur sur desktop pour un simple choix de pièce. */}
+          <div className="mt-3 flex flex-wrap gap-2">
             {roomTypes.map((opt) => {
               const selected = roomType === opt.slug;
               return (
@@ -198,10 +200,10 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
                     });
                   }}
                   className={cn(
-                    "h-16 rounded-2xl bg-white font-medium text-foyer-ink transition-all",
+                    "rounded-full px-4 py-2 text-[14px] font-medium transition-all",
                     selected
-                      ? "border-2 border-foyer-ink"
-                      : "border border-foyer-border",
+                      ? "bg-foyer-ink text-white"
+                      : "border border-foyer-border bg-white text-foyer-ink hover:border-foyer-sage/60",
                   )}
                 >
                   {opt.label}
@@ -211,9 +213,13 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
           </div>
         </div>
 
-        {/* Upload zone — revealed after room type selected */}
+        {/* Une fois la pièce choisie : sur desktop, le visuel à GAUCHE et les contraintes
+            à DROITE (deux colonnes) — les contraintes deviennent visibles sans scroll. Sur
+            mobile, ça reste empilé. Le cadre photo, borné à une colonne, cesse d'être trop
+            large et de déborder après import. */}
         {roomType && (
-          <div ref={blocPhoto} className="mt-6 scroll-mt-4 duration-300 animate-in fade-in">
+          <div className="mt-8 lg:grid lg:grid-cols-2 lg:items-start lg:gap-6">
+          <div ref={blocPhoto} className="scroll-mt-4 duration-300 animate-in fade-in">
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-foyer-sage">
               Votre pièce en photo
             </p>
@@ -348,11 +354,11 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
               )}
             </div>
           </div>
-        )}
 
-        {/* Constraints — revealed after photo uploaded */}
-        {projectId && (
-          <div className="mt-6 duration-300 animate-in fade-in">
+          {/* Colonne DROITE — contraintes. Conditionnées au choix de la PIÈCE (et non plus
+              à l'import photo) : elles ne dépendent que du roomType, on les montre donc dès
+              qu'il est choisi, à côté du visuel, sans attendre l'upload ni scroller. */}
+          <div className="mt-6 duration-300 animate-in fade-in lg:mt-0">
             <ConstraintsAccordion
               choices={choices}
               setChoices={setChoices}
@@ -396,6 +402,7 @@ export function UploadForm({ floorPresets, roomTypes, expert = false, diyBeta = 
                 )}
               </div>
             )}
+          </div>
           </div>
         )}
       </main>
