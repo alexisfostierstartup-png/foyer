@@ -277,6 +277,43 @@ export function buildInventoryLockLine(profiles: ElementProfile[]): string {
   );
 }
 
+// Idée Alexis (2026-07-16) : si la détection a déjà trouvé un genre de meuble, la liste
+// des défauts ne doit plus pousser à en AJOUTER un — c'est elle qui semait le doublon
+// (« TV stand with TV » listé alors que la photo en a un, vu de dos au bord du cadre →
+// le modèle en bâtit un « visible »). On n'en RETIRE aucun (le template dit « no other
+// kind belongs here » : un canapé retiré deviendrait un intrus à supprimer) — on ANNOTE.
+const DEFAULTS_KIND_CATEGORIES: Array<[RegExp, string[]]> = [
+  [/tv stand|tv unit|meuble tv/i, ["tv_stand", "television"]],
+  [/coffee table/i, ["coffee_table"]],
+  [/dining table/i, ["dining_table"]],
+  [/dining chair/i, ["dining_chair"]],
+  [/floor lamp/i, ["floor_lamp"]],
+  [/pendant/i, ["pendant_lamp"]],
+  [/bookshelf|shelf/i, ["bookshelf", "shelf"]],
+  [/sofa/i, ["sofa"]],
+  [/armchair/i, ["armchair"]],
+  [/\brug\b/i, ["rug"]],
+  [/\bbed\b/i, ["bed"]],
+  [/nightstand/i, ["nightstand"]],
+  [/wardrobe/i, ["wardrobe"]],
+  [/dresser/i, ["dresser"]],
+  [/sideboard/i, ["sideboard"]],
+  [/desk/i, ["desk"]],
+  [/mirror/i, ["mirror"]],
+];
+
+export function annoteDefaultsSelonDetection(defaults: string, profiles: ElementProfile[]): string {
+  const present = new Set(profiles.map((p) => p.category));
+  return defaults
+    .split(/,\s*/)
+    .map((entry) => {
+      const cats = DEFAULTS_KIND_CATEGORIES.find(([re]) => re.test(entry))?.[1] ?? [];
+      const deja = cats.some((c) => present.has(c));
+      return deja ? `${entry} (ALREADY in the photo — keep or replace THAT one, NEVER add a second)` : entry;
+    })
+    .join(", ");
+}
+
 /** Somme des codes de caractères : stable, suffisante pour répartir sur 6 variantes. */
 function graine(projectId: string): number {
   let n = 0;
@@ -1395,7 +1432,7 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
     lockWalls: Boolean(choices.walls?.repaint),
   });
   if (colorwaySlug) console.log(`[pipeline:generate] déclinaison couleur: ${colorwaySlug} (gen #${colorwayIndex + 1})`);
-  const furnitureDefaults = await loadRoomDefaults(project.roomType);
+  const furnitureDefaults = annoteDefaultsSelonDetection(await loadRoomDefaults(project.roomType), profiles);
   const userInstructions = await formatUserInstructions(choices);
 
   // 3. Generation
@@ -1638,7 +1675,7 @@ async function runDispositionsPipelineInner(projectId: string): Promise<string[]
     colorwayIndex: Math.max(0, (await countGenerationRenders(projectId)) - 1),
     lockWalls: Boolean(choices.walls?.repaint),
   });
-  const furnitureDefaults = await loadRoomDefaults(project.roomType);
+  const furnitureDefaults = annoteDefaultsSelonDetection(await loadRoomDefaults(project.roomType), profiles);
   const userInstructions = await formatUserInstructions(choices);
   const designPlan = formatDesignPlan(
     project.element_decisions,

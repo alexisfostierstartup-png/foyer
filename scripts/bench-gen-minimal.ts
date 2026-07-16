@@ -63,7 +63,7 @@ Réponds en JSON STRICT, sans texte autour :
 async function main() {
   const { detectElementProfiles, buildFixedFeaturesSummary, buildRemoveList,
     buildLightingPlanLine, buildRoomScaleLine, buildVariationLine, buildInventoryLockLine,
-    constraintsToChoices, visionJsonPourPrompt } = await import("../lib/ai/pipeline");
+    constraintsToChoices, visionJsonPourPrompt, annoteDefaultsSelonDetection } = await import("../lib/ai/pipeline");
   const { loadStyleContext, loadRoomDefaults, loadRoomRemoveCategories,
     formatUserInstructions, formatDesignPlan } = await import("../lib/prompts/helpers");
   const { resolveRawTemplate } = await import("../lib/prompts/engine");
@@ -111,7 +111,7 @@ async function main() {
   const { styleName, styleMood } = await loadStyleContext(styleIdEff, {
     lockWalls: Boolean((choices as { walls?: { repaint?: boolean } }).walls?.repaint),
   });
-  const furnitureDefaults = await loadRoomDefaults(roomTypeEff);
+  const furnitureDefaultsBruts = await loadRoomDefaults(roomTypeEff);
   const removeCategories = await loadRoomRemoveCategories(roomTypeEff);
 
   let profiles;
@@ -126,6 +126,7 @@ async function main() {
   const designPlanCore = projet
     ? formatDesignPlan(projet.element_decisions as never) || "None — restyle freely to fit the style."
     : "None — restyle freely to fit the style.";
+  const furnitureDefaults = annoteDefaultsSelonDetection(furnitureDefaultsBruts, profiles as never);
   const ctx = {
     styleName,
     styleMood,
@@ -142,7 +143,9 @@ async function main() {
     { cle: "prod17k", template: prodT.template as string },
     { cle: "dev-min", template: devT.template as string },
   ];
-  const arms = CANARY ? ARMS.slice(1) : ARMS; // canary = le minimal (c'est lui qu'on teste)
+  // --arm=prod17k (ou dev-min) : ne lancer que ce bras.
+  const armFilter = arg("arm")?.split(",");
+  const arms = (CANARY ? ARMS.slice(1) : ARMS).filter((a) => !armFilter || armFilter.includes(a.cle));
   const rounds = CANARY ? 1 : ROUNDS;
   console.log(`Banc gen : ${arms.length} bras × ${rounds} round(s)\nSortie: ${outDir}\n`);
 
