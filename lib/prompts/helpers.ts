@@ -407,9 +407,11 @@ export function formatDesignPlan(
       opts.renderableSlugs.has(d.action_slug);
     if (d.mismatch_type === "surface" && surfaceRenderable) {
       const qty = d.qty && d.qty_unit ? ` (≈ ${d.qty} ${d.qty_unit})` : "";
-      // Beta : le label ANGLAIS du verdict prime pour le prompt image (banc :
-      // « Teinter le bois en espresso » 0/4 vs « Stain the wood dark espresso » 2/2).
-      const label = (beta ? d.action_label_en : null) ?? d.action_label ?? restyleParDefaut(d.category);
+      // Le label ANGLAIS du verdict prime pour le prompt image dès qu'il existe —
+      // plus seulement en beta (audit #17) : la mesure vaut pour tous les flux
+      // (banc : « Teinter le bois en espresso » 0/4 vs « Stain the wood dark
+      // espresso » 2/2). Le FR reste la version AFFICHÉE en review.
+      const label = d.action_label_en ?? d.action_label ?? restyleParDefaut(d.category);
       // « must be clearly visible » : banc nuit 2026-07-10 — les restyles de
       // finition (teinte bois, abat-jour, moulures) étaient souvent ignorés,
       // l'objet restant à l'identique dans le rendu.

@@ -132,10 +132,16 @@ export async function getCandidateActions(
   // Beta : le match catégorie doit couvrir applies_to_categories ∪
   // beta_categories → fetch élargi puis filtrage en JS (table petite).
   const base = createSupabaseAdmin().from("diy_actions").select("*");
+  // Audit #3 (validé Alexis) : le flux STANDARD ne propose au verdict que des actions
+  // dont le rendu image est fiable (renderable). « Retapisser un canapé » (seule action
+  // non-renderable active) promettait un DIY que la génération convertissait de toute
+  // façon en REPLACE — le verdict le dit désormais franchement (siège incompatible =
+  // remplacer). « Repeindre une table » reste. Data-driven : une future action bascule
+  // via son flag, pas ici. Le mode beta garde sa propre logique (renderableSlugs aval).
   const { data, error } =
     opts?.mode === "beta"
       ? await base.or("is_active.eq.true,beta.eq.true")
-      : await base.eq("is_active", true).contains("applies_to_categories", [profile.category]);
+      : await base.eq("is_active", true).eq("renderable", true).contains("applies_to_categories", [profile.category]);
 
   if (error) {
     console.error("[diy/rules] getCandidateActions error:", error);

@@ -131,6 +131,20 @@ async function lightpointProfiles(profiles: ElementProfile[]): Promise<ElementPr
   return profiles.filter((p) => cats.has(p.category));
 }
 
+// Audit #13 (validé Alexis) : le JSON de détection injecté dans les prompts de
+// GÉNÉRATION charrie dims/condition/surface_features — du bruit pour un modèle
+// image (l'état d'usure ne le regarde pas) qui gonfle chaque prompt de plusieurs
+// milliers de caractères. On élague à l'ASSEMBLAGE uniquement : la détection
+// complète reste en DB pour le matching, le DIY et les audits. `movable` RESTE
+// (demande explicite d'Alexis : c'est lui qui distingue ce qui peut bouger).
+export function visionJsonPourPrompt(profiles: ElementProfile[]): string {
+  return JSON.stringify(
+    profiles.map(({ dims: _d, condition: _c, surface_features: _s, ...garde }) => garde),
+    null,
+    2,
+  );
+}
+
 // Ligne LIGHT FIXTURES injectée dans LE PLAN (la section la mieux suivie par le
 // modèle image — mesuré sur les REPLACE) : fix « au premier generate » du luminaire
 // ajouté au lieu de swappé. Le repère de position (description courte) ancre le
@@ -140,11 +154,12 @@ async function lightpointProfiles(profiles: ElementProfile[]): Promise<ElementPr
 // meublent pas pareil). Détectée par la vision (room_scale), persistée projet.
 export function buildRoomScaleLine(roomScale?: "small" | "medium" | "large"): string {
   if (roomScale === "large") {
-    // Consigne rendue COMPTABLE : « meublez à son plein potentiel » restait un vœu, et le
-    // modèle laissait la moitié de la pièce nue (projet ZczF0oeRR : un canapé, une table
-    // basse et un fauteuil dans un grand salon). On énumère un minimum vérifiable, en
-    // restant dans les catégories que le catalogue sait vendre.
-    return `\n- ROOM SIZE — LARGE: this room is BIG. A single seating group leaves it looking half-empty — that is a failed render. The main zone carries AT LEAST: a large sofa (or corner sofa), a coffee table, TWO armchairs, a rug that reaches under the front legs of every seat, a floor lamp, a sideboard or bookcase against a free wall, plus plants, cushions and wall art. If floor area STILL remains bare, add a SECOND zone that matches the style — a reading nook (armchair + floor lamp + side table), a console with a mirror, or a pair of poufs. Every added piece stands FREE on the floor, never built into a wall. Circulation stays clear, and every rule above still holds.`;
+    // Audit #18 (validé Alexis) : la version précédente ÉNUMÉRAIT un mobilier minimum
+    // obligatoire (« AT LEAST: a large sofa, TWO armchairs… ») — le modèle l'exécutait
+    // comme une liste de courses, même quand la pièce réelle appelait autre chose. On
+    // garde l'exigence vérifiable (pas de moitié de pièce nue, seconde zone si besoin)
+    // sans dicter l'inventaire : le contenu vient de la pièce et du roomType.
+    return `\n- ROOM SIZE — LARGE: this room is BIG. A single small seating group leaves it half-empty — that is a failed render. Furnish it to its REAL potential with what this room type calls for: a generously sized, complete main zone (seating, tables, lighting, a rug that anchors the seats, textiles, wall decor) — and if open floor still dominates, a SECOND distinct zone in the style (a reading nook, a console with a mirror, a pair of poufs…). Every added piece stands FREE on the floor, never built into a wall. Circulation stays clear, and every rule above still holds.`;
   }
   if (roomScale === "small") {
     return `\n- ROOM SIZE — SMALL: keep to the essentials, correctly scaled (no oversized furniture); prioritize breathing room and circulation over adding pieces.`;
@@ -1320,7 +1335,7 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
     styleMood,
     roomType: project.roomType,
     furnitureDefaults,
-    visionJson: JSON.stringify(profiles, null, 2),
+    visionJson: visionJsonPourPrompt(profiles),
     fixedFeatures: await buildFixedFeaturesSummary(profiles),
     // Éléments détectés à retirer pour ce type de pièce (asset ∩ détection).
     removeList: buildRemoveList(profiles, removeCategories),
@@ -1557,7 +1572,7 @@ async function runDispositionsPipelineInner(projectId: string): Promise<string[]
     styleMood,
     roomType: project.roomType,
     furnitureDefaults,
-    visionJson: JSON.stringify(profiles, null, 2),
+    visionJson: visionJsonPourPrompt(profiles),
     fixedFeatures: await buildFixedFeaturesSummary(profiles),
     removeList: buildRemoveList(profiles, removeCategories),
     userInstructions,

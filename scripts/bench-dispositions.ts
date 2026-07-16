@@ -85,7 +85,7 @@ function leanPrompt(styleName: string, brief: string, roomType: string): string 
 async function main() {
   const { detectElementProfiles, buildFixedFeaturesSummary, buildRemoveList,
     buildLightingPlanLine, buildRoomScaleLine, buildVariationLine, buildInventoryLockLine,
-    constraintsToChoices, refsAssisesConservees, DISPOSITION_BRIEFS } = await import("../lib/ai/pipeline");
+    constraintsToChoices, refsAssisesConservees, visionJsonPourPrompt, DISPOSITION_BRIEFS } = await import("../lib/ai/pipeline");
   const { loadStyleContext, loadRoomDefaults, loadRoomRemoveCategories,
     formatUserInstructions, formatDesignPlan } = await import("../lib/prompts/helpers");
   const { resolvePrompt, resolveRawTemplate } = await import("../lib/prompts/engine");
@@ -181,7 +181,7 @@ async function main() {
     styleMood,
     roomType: roomTypeEff,
     furnitureDefaults,
-    visionJson: JSON.stringify(profiles, null, 2),
+    visionJson: visionJsonPourPrompt(profiles),
     fixedFeatures: await buildFixedFeaturesSummary(profiles),
     removeList: buildRemoveList(profiles, removeCategories),
     userInstructions,
