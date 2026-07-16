@@ -1448,28 +1448,19 @@ export async function runGenerationPipeline(projectId: string): Promise<void> {
 // jumeaux + la recolorisation forcée du mobilier. Le style et les meubles (identité +
 // couleur vraie) restent constants ; c'est le mur/la déco/le layout qui varient.
 export const DISPOSITION_BRIEFS = [
-  // L'AGENCEMENT d'abord, la couleur ensuite. Les briefs précédents mêlaient les deux, et
-  // le modèle ne retenait que la couleur du mur — facile — en laissant les meubles où ils
-  // étaient (constat Alexis 2026-07-13 : « la disposition ne change pas vraiment »).
-  // Chaque brief décrit maintenant une GÉOMÉTRIE vérifiable : où est le canapé, ce qu'il
-  // regarde, ce qu'il y a au centre. La couleur reste, mais en second, et clairement
-  // annoncée comme secondaire.
-  // ⚠️ AUCUN NOM D'ARCHITECTURE ICI. Le commentaire ci-dessus disait déjà la règle, et le
-  // code faisait l'inverse : la variation A demandait au canapé de « faire face au point
-  // focal (CHEMINÉE, TV ou FENÊTRE) » et la C de « CREUSER (carve out) une seconde zone ».
-  // Une pièce sans cheminée ni fenêtre sur ce mur ? Le modèle en fabriquait une pour obéir.
-  // La cheminée en marbre, le balcon et les arches venaient de LÀ (constat Alexis
-  // 2026-07-14 : « un modèle n'inventerait pas une ouverture si rien ne la lui demandait »).
-  // Les briefs ne parlent plus que de MEUBLES : où ils sont, ce qu'ils regardent, ce qui est
-  // au centre. Le décor et l'architecture ne sont jamais nommés.
-  // TROIS MARCHES, PAS TROIS GÉOMÉTRIES AU HASARD (idée d'Alexis, 2026-07-14). Les briefs
-  // précédents proposaient trois agencements arbitraires : l'utilisateur ne savait pas ce
-  // qu'il comparait, ni lequel était « le sien ». On monte donc en intensité — je garde ma
-  // pièce / je la réorganise / j'ose — ce qui correspond à trois niveaux d'engagement réels
-  // et rend le choix immédiatement lisible.
-  "Variation 1 — MA PIÈCE, EN MIEUX. The furniture STAYS WHERE IT IS: every piece keeps the place it occupies in the photo, same spot, same orientation. NOTHING moves. What changes is everything else — the style: the pieces the plan replaces become their new {{styleName}} counterparts IN THE SAME SPOT, the surfaces the plan allows you to repaint take the style's colour, and the room is fully dressed (rug, cushions, throws, plants, wall art, dressed surfaces). This is the SAME layout, transformed. It must still look like a magazine photograph — never like the original photo with a filter.",
-  "Variation 2 — RÉORGANISÉE. Now the furniture MOVES. Rearrange the movable pieces into a genuinely different, better composition: pull the seating group together so the seats face each other rather than the wall, anchor it on a rug, give the room a clear circulation path. Every piece has a REASON to be where you put it. The style, the palette and the staging are as committed as in the other variations. The result must be visibly a DIFFERENT arrangement of the same room — not the photo's layout redecorated.",
-  "Variation 3 — LA PLUS AUDACIEUSE. Go furthest. Rethink how the room is used: a bold seating composition placed where nobody would have thought to put it, plus a SECOND distinct zone in the floor space it frees (a reading corner — armchair, floor lamp, side table — or a console with a mirror above it). The boldest colour of the style palette on the surfaces the plan allows you to repaint, and one statement decor piece. Everything you add STANDS FREE ON THE FLOOR: nothing is ever built into, recessed into or cut out of a wall. It should feel like a designer's proposal, not a tidy-up — while every architectural rule above still holds, without exception.",
+  // MOINS AMBITIEUX, MAIS FIABLE (décision Alexis, 2026-07-16). On a essayé de faire BOUGER
+  // les meubles entre les 3 dispositions ; sur NB1 ça déclenchait une dérive d'architecture
+  // (boiseries ajoutées, fenêtres changées, surtout sur les grandes pièces ouvertes) — le
+  // modèle, dès qu'on lui rend de la liberté d'agencement, en profite pour redessiner les
+  // murs. « L'architecture n'a rien à faire dans l'agencement » (Alexis). Donc : édition
+  // stricte (murs ET meubles gardés en place), et les 3 variations diffèrent par le STYLE —
+  // palette et densité de déco — pas par le layout. Fiable d'abord.
+  //
+  // Aucun nom d'architecture ici (pas de cheminée/fenêtre/mur) : les nommer poussait le
+  // modèle à en fabriquer (cheminée de marbre, balcon inventés).
+  "Variation 1 — DOUCE ET LUMINEUSE. Keep the room's layout exactly as the photo (nothing moves). Dress it in the LIGHTEST, airiest reading of the {{styleName}} palette: pale, warm neutrals on the surfaces the plan allows you to repaint, natural textures, restrained decor — a large soft rug, a few cushions, one throw, greenery, calm wall art. Bright and serene. Magazine-quality, unmistakably {{styleName}}.",
+  "Variation 2 — CHALEUREUSE ET HABITÉE. Same layout, nothing moves. Now the deepest, most saturated version of the {{styleName}} palette on the surfaces the plan allows you to repaint, and a richly layered, collected look: more textiles, more plants, a bold rug, generously dressed surfaces, a statement piece of wall art. Warm and enveloping. Clearly a different mood from the other two.",
+  "Variation 3 — GRAPHIQUE ET CONTRASTÉE. Same layout, nothing moves. A more graphic take on {{styleName}}: one confident accent colour from the palette on the surfaces the plan allows you to repaint, cleaner and more contrasted styling — fewer but stronger decor objects, bolder patterns on the rug and textiles, striking wall art. Distinctly the most design-forward of the three, while staying, wall for wall AND piece for piece, the SAME room as the photo.",
 ];
 
 /**
