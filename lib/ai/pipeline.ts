@@ -2166,9 +2166,22 @@ function reconcileRenderAdditions(
   // achetable, alors qu'on ne peut ni promettre ni chiffrer le passage du courant.
   replaceOnly?: Set<string>,
 ): Alteration[] {
-  const covered = new Map<string, number>(); // multiset des catégories catalogue de l'AVANT
+  // COUSINS DE COUVERTURE : la détection hésite entre ces catégories pour le MÊME
+  // meuble (dresser sur la photo, sideboard sur le rendu — zwtgBd 2026-07-16 : le
+  // buffet de l'utilisateur, gardé, proposé à l'achat). La couverture se calcule
+  // par CLASSE, pas par catégorie exacte. La dédup géométrique ne suffit pas :
+  // l'audit ne renvoie pas toujours la bbox du candidat gardé.
+  const COVERAGE_COUSINS: Record<string, string> = {
+    dresser: "dresser|sideboard",
+    sideboard: "dresser|sideboard",
+  };
+  const classeDe = (cat: string): string | null => {
+    const c = resolveCatalogCategory(cat, taxonomy);
+    return c ? (COVERAGE_COUSINS[c] ?? c) : null;
+  };
+  const covered = new Map<string, number>(); // multiset des CLASSES catalogue de l'AVANT
   for (const d of candidates) {
-    const c = resolveCatalogCategory(d.category, taxonomy);
+    const c = classeDe(d.category);
     if (c) covered.set(c, (covered.get(c) ?? 0) + 1);
   }
   const seen = new Map<string, number>();
@@ -2181,8 +2194,8 @@ function reconcileRenderAdditions(
     if (replaceOnly?.has(p.category)) continue; // remplaçable, jamais ajoutable
     if ((p.movable === false && !fixedShoppable?.has(p.category)) || ADDITION_SKIP.has(p.category)) continue;
     if (GHOST.test(p.description ?? "") || !(p.description ?? "").trim()) continue;
-    const c = resolveCatalogCategory(p.category, taxonomy);
-    if (!c) continue; // non shoppable
+    if (!resolveCatalogCategory(p.category, taxonomy)) continue; // non shoppable
+    const c = classeDe(p.category)!; // même clé de CLASSE que `covered` (cousins)
     const used = seen.get(c) ?? 0;
     seen.set(c, used + 1);
     if (used < (covered.get(c) ?? 0)) continue; // déjà couvert par un candidat AVANT
@@ -2312,7 +2325,16 @@ export async function ensureFinalAssets(
   const project = await getProject(projectId);
   if (!project?.generatedRenderUrl) return null;
   if (project.shoppingList && !opts?.force) {
-    return { shoppingList: project.shoppingList, scoreFoyer: project.scoreFoyer as ScoreFoyer };
+    // AUTO-GUÉRISON : une liste sans analyse alignée sur le rendu affiché = pins
+    // morts. Cas réel en PROD (zwtgBd, 2026-07-16) : le recalcul forcé post-swap
+    // est un `void …` fire-and-forget — la lambda Vercel est gelée à la réponse,
+    // le recalcul meurt, et ce raccourci « liste déjà là » verrouillait l'état
+    // cassé pour toujours. Si l'analyse est fraîche on sert le cache ; sinon on
+    // continue vers le recalcul (le polling /shopping-status répare tout seul).
+    if (project.renderAnalysis?.renderUrl === renduAffiche(project)) {
+      return { shoppingList: project.shoppingList, scoreFoyer: project.scoreFoyer as ScoreFoyer };
+    }
+    console.log("[pipeline:final] liste présente mais analyse absente/périmée → recalcul (auto-guérison)");
   }
   // Un autre process calcule déjà cette liste (bail DB frais) → les déclencheurs
   // fire-and-forget s'abstiennent au lieu de doubler le compute (et le coût).

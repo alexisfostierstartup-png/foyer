@@ -285,6 +285,9 @@ type Props = {
   // dérive dès que `matches` est réordonné).
   productPicks?: Record<string, string> | null;
   customProducts?: Record<string, CustomProduct> | null;
+  // ID testeur (8 premiers caractères de anon_id) — recopié dans le questionnaire
+  // pour recouper parcours ↔ réponses (user tests anonymes).
+  testerId?: string | null;
   // Expert : URL du rendu IA d'origine (fake) → bouton de comparaison sous le slider
   // (remplace l'ancien écran /expert supprimé du parcours).
   fakeRenderUrl?: string | null;
@@ -313,6 +316,7 @@ export function FinalScreen({
   productOverrides = null,
   productPicks = null,
   customProducts = null,
+  testerId = null,
   fakeRenderUrl = null,
   bboxById = null,
   anchorById = null,
@@ -877,6 +881,12 @@ export function FinalScreen({
                   </>
                 )}
               </button>
+              {testerId && (
+                <p className="mt-3 text-center text-[11px] text-foyer-muted">
+                  ID testeur : <span className="font-mono">{testerId}</span> — à recopier dans le
+                  questionnaire
+                </p>
+              )}
             </div>
           )}
         </main>
@@ -895,9 +905,12 @@ export function FinalScreen({
           <div className="mx-auto flex max-w-[480px] flex-col gap-1.5">
             <div className="flex items-center gap-2.5">
               {orderUrls.length > 0 && (
+                // Route vers la COMMANDE CONSOLIDÉE (articles par enseigne, poubelle,
+                // total) — l'ouverture en rafale des pages produit vit là-bas. La rafale
+                // directe ici faisait perdre la vue d'ensemble (retour Alexis 2026-07-16).
                 <button
                   type="button"
-                  onClick={() => { for (const url of orderUrls) window.open(url, "_blank"); }}
+                  onClick={() => router.push(`/create/${projectId}/commande`)}
                   className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-foyer-sage font-medium text-white shadow-[0_2px_8px_rgba(107,142,111,0.35)] transition-all hover:-translate-y-0.5"
                 >
                   <ShoppingBag className="size-4" aria-hidden />

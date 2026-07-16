@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { getProject } from "@/lib/storage/projects";
+import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { FinalScreen } from "@/components/create/FinalScreen";
 import { precomputeFinalAssets } from "@/lib/ai/pipeline";
 import { resolveHotspots } from "@/lib/shopping/hotspots";
@@ -38,6 +39,17 @@ export default async function FinalPage({
   // — y compris en expert, dont le rendu dérive du fake analysé. Cf. resolveHotspots.
   const { bboxById, anchorById, items: analysisItems } = resolveHotspots(project);
 
+  // ID TESTEUR (user tests anonymes, demande Alexis 2026-07-16) : anon_id du
+  // projet (colonne posée à l'upload via le cookie foyer_anon_id, httpOnly).
+  // Affiché en pied de page pour être recopié dans le questionnaire → recoupement
+  // parcours (projets par anon_id → ai_calls/pipeline_logs) ↔ réponses.
+  const { data: anonRow } = await createSupabaseAdmin()
+    .from("foyer_projects")
+    .select("anon_id")
+    .eq("id", projectId)
+    .single();
+  const testerId = (anonRow?.anon_id as string | null)?.slice(0, 8) ?? null;
+
   return (
     <FinalScreen
       projectId={projectId}
@@ -58,6 +70,7 @@ export default async function FinalPage({
       productOverrides={project.productOverrides ?? null}
       productPicks={project.productPicks ?? null}
       customProducts={project.customProducts ?? null}
+      testerId={testerId}
     />
   );
 }
