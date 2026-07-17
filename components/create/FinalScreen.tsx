@@ -30,74 +30,6 @@ import type { PaywallTrigger } from "@/components/paywalls/PaywallModal";
 
 const STEPS = ["Photo", "Style", "Mobilier", "Rendu", "Projet"];
 
-// « Et votre prénom ? » — fin de parcours user test : nomme la SESSION (tous les
-// projets passés/futurs de ce navigateur) côté serveur. Se souvient localement
-// pour ne pas re-demander à chaque visite de /final.
-function FinDeTestPrenom() {
-  const [prenom, setPrenom] = useState("");
-  const [nom, setNom] = useState("");
-  const [fait, setFait] = useState(false);
-  const [busy, setBusy] = useState(false);
-  useEffect(() => {
-    try { if (localStorage.getItem("foyer-prenom-donne")) setFait(true); } catch { /* tant pis */ }
-  }, []);
-  if (fait) return null;
-  async function envoyer() {
-    if (!prenom.trim() || !nom.trim() || busy) return;
-    setBusy(true);
-    try {
-      const res = await fetch("/api/tester-name", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName: prenom.trim(), lastName: nom.trim() }),
-      });
-      if (res.ok) {
-        try { localStorage.setItem("foyer-prenom-donne", "1"); } catch { /* tant pis */ }
-        setFait(true);
-        toast.success("Merci ! Votre retour est bien rattaché.");
-      } else {
-        toast.error("Ça n'a pas marché — réessayez.");
-      }
-    } catch {
-      toast.error("Ça n'a pas marché — réessayez.");
-    } finally {
-      setBusy(false);
-    }
-  }
-  return (
-    <div className="mt-4 rounded-2xl border border-foyer-border bg-white p-4">
-      <p className="text-[15px] font-medium text-foyer-ink">Une dernière chose 🙏</p>
-      <p className="mt-0.5 text-[13px] text-foyer-muted">
-        Votre prénom et votre nom, pour relier votre test à vos réponses au questionnaire.
-      </p>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <input
-          value={prenom}
-          onChange={(e) => setPrenom(e.target.value)}
-          placeholder="Prénom"
-          autoComplete="given-name"
-          className="h-11 w-0 min-w-[120px] flex-1 rounded-full border border-foyer-border bg-white px-4 text-[15px] outline-none focus:border-foyer-sage"
-        />
-        <input
-          value={nom}
-          onChange={(e) => setNom(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && envoyer()}
-          placeholder="Nom"
-          autoComplete="family-name"
-          className="h-11 w-0 min-w-[120px] flex-1 rounded-full border border-foyer-border bg-white px-4 text-[15px] outline-none focus:border-foyer-sage"
-        />
-        <button
-          type="button"
-          onClick={envoyer}
-          disabled={busy || !prenom.trim() || !nom.trim()}
-          className="flex h-11 shrink-0 items-center justify-center rounded-full bg-foyer-sage px-5 font-medium text-white disabled:opacity-50"
-        >
-          {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : "Envoyer"}
-        </button>
-      </div>
-    </div>
-  );
-}
 const TABS = ["Liste shopping", "Score Foyer"] as const;
 type Tab = (typeof TABS)[number];
 
@@ -957,11 +889,9 @@ export function FinalScreen({
                   </>
                 )}
               </button>
-              {/* FIN DE PARCOURS — « et votre prénom ? » (spec Alexis 2026-07-17) :
-                  la session (cookie) rattache déjà tous les projets ; le prénom donné
-                  ici la NOMME — tous les projets passés et futurs de ce navigateur
-                  portent le nom, visible dans l'admin Testeurs. */}
-              <FinDeTestPrenom />
+              {/* Le nom du testeur vient du QUESTIONNAIRE externe, jamais d'un champ
+                  ici (retiré sur demande ferme d'Alexis 2026-07-17). Le rattachement
+                  passe par la session + /api/tester-name (webhook/admin). */}
             </div>
           )}
         </main>
