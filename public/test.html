@@ -159,7 +159,7 @@ function pushRemote() {
         session_id: S.session_id,
         sid_app: S.sid_app,
         prenom: profil.prenom || null,
-        nom: null,
+        nom: profil.nom || null,
         email: reco.email || null,
         data: S.data,
         exits: [],
@@ -579,6 +579,8 @@ const SECTIONS = [
 
   ${q("Prénom", txt("profil", "prenom", "Camille"))}
 
+  ${q("Nom", txt("profil", "nom", "Dupont"))}
+
   ${q("Votre âge", radio("profil", "age", [
     "Moins de 25 ans", "25 à 34 ans", "35 à 44 ans", "45 à 54 ans", "55 à 64 ans", "65 ans et plus",
   ], { row: true }))}
@@ -676,6 +678,19 @@ function go(i) {
 
 function finish() {
   set("reco", "termine", new Date().toISOString());
+  // LIEN SESSION ↔ NOM (spec Alexis 2026-07-17) : le formulaire vit sur le MÊME
+  // domaine que l'app → les cookies de session du testeur partent avec cet appel.
+  // /api/tester-name renomme la session : tous les projets DÉJÀ créés par ce
+  // navigateur sont re-tagués (rétro), et le cookie posé couvre les suivants.
+  // Peu importe qu'il ait testé avant ou après le questionnaire.
+  const profil = S.data.profil || {};
+  if (profil.prenom || profil.nom) {
+    fetch("/api/tester-name", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ firstName: profil.prenom || "", lastName: profil.nom || "" }),
+    }).catch(() => { /* best-effort : les réponses, elles, sont déjà sauvegardées */ });
+  }
   go(9);
 }
 
