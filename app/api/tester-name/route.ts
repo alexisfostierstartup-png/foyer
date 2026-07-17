@@ -35,7 +35,13 @@ export async function POST(req: NextRequest) {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   const userId = auth?.user?.id;
-  if (!anonId && !userId) return NextResponse.json({ ok: true, tagged: 0, tag });
+  const poseCookie = (res: NextResponse) => {
+    // Toujours posé, MÊME sans session existante (formulaire rempli AVANT le
+    // premier projet) : les projets à venir de ce navigateur porteront le nom.
+    res.cookies.set("foyer_tester", tag, { sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 90 });
+    return res;
+  };
+  if (!anonId && !userId) return poseCookie(NextResponse.json({ ok: true, tagged: 0, tag }));
 
   // Tous les projets de la session (les deux identités si les deux existent).
   const admin = createSupabaseAdmin();
@@ -55,8 +61,5 @@ export async function POST(req: NextRequest) {
   }
   console.log(`[tester-name] session nommée « ${complet} » → ${n} projet(s)`);
 
-  const res = NextResponse.json({ ok: true, tagged: n, tag });
-  // Les projets FUTURS de ce navigateur héritent du nom (gravé à l'upload).
-  res.cookies.set("foyer_tester", tag, { sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 90 });
-  return res;
+  return poseCookie(NextResponse.json({ ok: true, tagged: n, tag }));
 }
