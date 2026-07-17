@@ -1,13 +1,16 @@
 export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { NommerTesteur } from "@/components/admin/NommerTesteur";
 
 type Row = {
   id: string;
   created_at: string;
   anon_id: string | null;
+  user_id: string | null;
   data: {
     testerTag?: string | null;
+    testerName?: string | null;
     roomType?: string;
     mode?: string;
     selectedStyleId?: string;
@@ -46,20 +49,35 @@ export default async function TesteursPage({
   const inclureAnonymes = tous === "1";
   const { data, error } = await createSupabaseAdmin()
     .from("foyer_projects")
-    .select("id, created_at, anon_id, data")
+    .select("id, created_at, anon_id, user_id, data")
     .order("created_at", { ascending: false })
     .limit(400);
 
   const rows = (data ?? []) as Row[];
   // Groupe : tag explicite sinon anon_id raccourci.
-  const groupes = new Map<string, { nom: string; via: "lien" | "anonyme"; projets: Row[] }>();
+  const groupes = new Map<
+    string,
+    { nom: string; via: "lien" | "anonyme"; projets: Row[]; anonId?: string; userId?: string }
+  >();
   for (const r of rows) {
     const tag = r.data?.testerTag?.trim();
-    const cle = tag ? `t:${tag}` : r.anon_id ? `a:${r.anon_id}` : `p:${r.id}`;
+    // Regroupement : tag > compte connecté > cookie anonyme. Sans le user_id, deux
+    // projets du MÊME utilisateur connecté (anon_id null) devenaient deux
+    // « visiteurs » distincts (QA Alexis 2026-07-17).
+    const cle = tag ? `t:${tag}` : r.user_id ? `u:${r.user_id}` : r.anon_id ? `a:${r.anon_id}` : `p:${r.id}`;
     const g = groupes.get(cle) ?? {
-      nom: tag ?? (r.anon_id ? `visiteur ${r.anon_id.slice(0, 6)}` : `projet ${r.id.slice(0, 6)}`),
+      nom:
+        r.data?.testerName?.trim() ??
+        tag ??
+        (r.user_id
+          ? `compte ${r.user_id.slice(0, 6)}`
+          : r.anon_id
+            ? `visiteur ${r.anon_id.slice(0, 6)}`
+            : `projet ${r.id.slice(0, 6)}`),
       via: tag ? ("lien" as const) : ("anonyme" as const),
       projets: [],
+      anonId: r.anon_id ?? undefined,
+      userId: r.user_id ?? undefined,
     };
     g.projets.push(r);
     groupes.set(cle, g);
@@ -112,7 +130,11 @@ export default async function TesteursPage({
                   {g.via === "lien" ? "lien personnalisé" : "anonyme"}
                 </span>
               </span>
-              <span className="text-sm text-foyer-muted">
+              <span className="flex items-center gap-3 text-sm text-foyer-muted">
+                {/* Nommer après coup (session sans prénom) : tague tous les projets du groupe. */}
+                {g.via === "anonyme" && (g.anonId || g.userId) && (
+                  <NommerTesteur anonId={g.anonId} userId={g.anonId ? undefined : g.userId} />
+                )}
                 {g.projets.length} projet{g.projets.length !== 1 ? "s" : ""}
               </span>
             </header>

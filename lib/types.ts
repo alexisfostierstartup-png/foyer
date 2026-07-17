@@ -216,6 +216,9 @@ export type Project = {
   // (…/create?t=lea → cookie foyer_tester), gravé ici à l'upload. Recoupement
   // parcours ↔ questionnaire sans rien demander au testeur.
   testerTag?: string | null;
+  // Nom complet AFFICHABLE (« Léa Dupont ») donné en fin de parcours — le tag
+  // reste le slug technique (lea-dupont), le nom sert à l'admin.
+  testerName?: string | null;
   generatedRenderUrl: string | null;
   firstRenderUrl?: string;
   // Rendu EXPERT : la pièce VIDÉE de son mobilier amovible (murs/fenêtres/parquet/

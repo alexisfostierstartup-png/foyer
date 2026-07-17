@@ -1465,8 +1465,25 @@ export async function runAnalysisPipeline(
     console.log(`[pipeline:analyze] ${retires} élément(s) étranger(s) à « ${project.roomType} » → à retirer, hors plan`);
   }
 
-  await updateProject(projectId, { element_decisions: decisionsPropres, visionOutput: profiles, ...CLEAR_FINALIZE });
-  console.log(`[pipeline:analyze] saved ${decisionsPropres.length} decisions (2 calls: detection + verdict)`);
+  // ── 10. UN ÉLÉMENT NON DÉPLAÇABLE NE SE « REMPLACE » PAS ────────────────────
+  // Le verdict a décidé « remplacer » le comptoir de bar SCELLÉ d'un studio
+  // (movable=false) : pour le rendu, remplacer un élément fixe = permis de
+  // DÉMOLIR la séparation de cuisine (wQhwRzeQ, QA Alexis 2026-07-17). Un
+  // élément que la détection déclare non-déplaçable est de la quasi-architecture :
+  // au mieux on le RESURFACE (peinture, habillage — décision surface), jamais on
+  // ne le supprime ni ne le remplace. Sol/mur/plafond gardent leur régime propre.
+  const ARCHI_PROPRE = new Set(["floor", "wall", "ceiling"]);
+  const movableById = new Map(profiles.map((p) => [p.element_id, p.movable]));
+  const decisionsClampees = decisionsPropres.map((d) => {
+    if (d.mismatch_type !== "structural") return d;
+    if (ARCHI_PROPRE.has(d.category)) return d;
+    if (movableById.get(d.element_id) !== false) return d;
+    console.log(`[pipeline:analyze] ${d.element_id} non-déplaçable : REPLACE rétrogradé en KEEP`);
+    return { ...d, mismatch_type: "none" as const, action_slug: null, action_label: null, supply_items: null, qty: null };
+  });
+
+  await updateProject(projectId, { element_decisions: decisionsClampees, visionOutput: profiles, ...CLEAR_FINALIZE });
+  console.log(`[pipeline:analyze] saved ${decisionsClampees.length} decisions (2 calls: detection + verdict)`);
 }
 
 // Nombre de générations "premier rendu" déjà effectuées pour ce projet
