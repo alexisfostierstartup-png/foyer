@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
+import { NommerTesteur } from "@/components/admin/NommerTesteur";
 
 type Row = {
   id: string;
@@ -53,7 +54,10 @@ export default async function TesteursPage({
 
   const rows = (data ?? []) as Row[];
   // Groupe : tag explicite sinon anon_id raccourci.
-  const groupes = new Map<string, { nom: string; via: "lien" | "anonyme"; projets: Row[] }>();
+  const groupes = new Map<
+    string,
+    { nom: string; via: "lien" | "anonyme"; projets: Row[]; anonId?: string; userId?: string }
+  >();
   for (const r of rows) {
     const tag = r.data?.testerTag?.trim();
     // Regroupement : tag > compte connecté > cookie anonyme. Sans le user_id, deux
@@ -70,6 +74,8 @@ export default async function TesteursPage({
             : `projet ${r.id.slice(0, 6)}`),
       via: tag ? ("lien" as const) : ("anonyme" as const),
       projets: [],
+      anonId: r.anon_id ?? undefined,
+      userId: r.user_id ?? undefined,
     };
     g.projets.push(r);
     groupes.set(cle, g);
@@ -122,7 +128,11 @@ export default async function TesteursPage({
                   {g.via === "lien" ? "lien personnalisé" : "anonyme"}
                 </span>
               </span>
-              <span className="text-sm text-foyer-muted">
+              <span className="flex items-center gap-3 text-sm text-foyer-muted">
+                {/* Nommer après coup (session sans prénom) : tague tous les projets du groupe. */}
+                {g.via === "anonyme" && (g.anonId || g.userId) && (
+                  <NommerTesteur anonId={g.anonId} userId={g.anonId ? undefined : g.userId} />
+                )}
                 {g.projets.length} projet{g.projets.length !== 1 ? "s" : ""}
               </span>
             </header>
