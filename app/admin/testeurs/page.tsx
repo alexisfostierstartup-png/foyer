@@ -6,6 +6,7 @@ type Row = {
   id: string;
   created_at: string;
   anon_id: string | null;
+  user_id: string | null;
   data: {
     testerTag?: string | null;
     roomType?: string;
@@ -46,7 +47,7 @@ export default async function TesteursPage({
   const inclureAnonymes = tous === "1";
   const { data, error } = await createSupabaseAdmin()
     .from("foyer_projects")
-    .select("id, created_at, anon_id, data")
+    .select("id, created_at, anon_id, user_id, data")
     .order("created_at", { ascending: false })
     .limit(400);
 
@@ -55,9 +56,18 @@ export default async function TesteursPage({
   const groupes = new Map<string, { nom: string; via: "lien" | "anonyme"; projets: Row[] }>();
   for (const r of rows) {
     const tag = r.data?.testerTag?.trim();
-    const cle = tag ? `t:${tag}` : r.anon_id ? `a:${r.anon_id}` : `p:${r.id}`;
+    // Regroupement : tag > compte connecté > cookie anonyme. Sans le user_id, deux
+    // projets du MÊME utilisateur connecté (anon_id null) devenaient deux
+    // « visiteurs » distincts (QA Alexis 2026-07-17).
+    const cle = tag ? `t:${tag}` : r.user_id ? `u:${r.user_id}` : r.anon_id ? `a:${r.anon_id}` : `p:${r.id}`;
     const g = groupes.get(cle) ?? {
-      nom: tag ?? (r.anon_id ? `visiteur ${r.anon_id.slice(0, 6)}` : `projet ${r.id.slice(0, 6)}`),
+      nom:
+        tag ??
+        (r.user_id
+          ? `compte ${r.user_id.slice(0, 6)}`
+          : r.anon_id
+            ? `visiteur ${r.anon_id.slice(0, 6)}`
+            : `projet ${r.id.slice(0, 6)}`),
       via: tag ? ("lien" as const) : ("anonyme" as const),
       projets: [],
     };
