@@ -10,6 +10,7 @@ type Row = {
   user_id: string | null;
   data: {
     testerTag?: string | null;
+    testerName?: string | null;
     roomType?: string;
     mode?: string;
     selectedStyleId?: string;
@@ -66,6 +67,7 @@ export default async function TesteursPage({
     const cle = tag ? `t:${tag}` : r.user_id ? `u:${r.user_id}` : r.anon_id ? `a:${r.anon_id}` : `p:${r.id}`;
     const g = groupes.get(cle) ?? {
       nom:
+        r.data?.testerName?.trim() ??
         tag ??
         (r.user_id
           ? `compte ${r.user_id.slice(0, 6)}`

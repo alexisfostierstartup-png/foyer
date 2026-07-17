@@ -35,6 +35,7 @@ const STEPS = ["Photo", "Style", "Mobilier", "Rendu", "Projet"];
 // pour ne pas re-demander à chaque visite de /final.
 function FinDeTestPrenom() {
   const [prenom, setPrenom] = useState("");
+  const [nom, setNom] = useState("");
   const [fait, setFait] = useState(false);
   const [busy, setBusy] = useState(false);
   useEffect(() => {
@@ -42,13 +43,13 @@ function FinDeTestPrenom() {
   }, []);
   if (fait) return null;
   async function envoyer() {
-    if (!prenom.trim() || busy) return;
+    if (!prenom.trim() || !nom.trim() || busy) return;
     setBusy(true);
     try {
       const res = await fetch("/api/tester-name", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: prenom.trim() }),
+        body: JSON.stringify({ firstName: prenom.trim(), lastName: nom.trim() }),
       });
       if (res.ok) {
         try { localStorage.setItem("foyer-prenom-donne", "1"); } catch { /* tant pis */ }
@@ -67,20 +68,28 @@ function FinDeTestPrenom() {
     <div className="mt-4 rounded-2xl border border-foyer-border bg-white p-4">
       <p className="text-[15px] font-medium text-foyer-ink">Une dernière chose 🙏</p>
       <p className="mt-0.5 text-[13px] text-foyer-muted">
-        Votre prénom, pour relier votre test à vos réponses au questionnaire.
+        Votre prénom et votre nom, pour relier votre test à vos réponses au questionnaire.
       </p>
-      <div className="mt-3 flex items-center gap-2">
+      <div className="mt-3 flex flex-wrap items-center gap-2">
         <input
           value={prenom}
           onChange={(e) => setPrenom(e.target.value)}
+          placeholder="Prénom"
+          autoComplete="given-name"
+          className="h-11 w-0 min-w-[120px] flex-1 rounded-full border border-foyer-border bg-white px-4 text-[15px] outline-none focus:border-foyer-sage"
+        />
+        <input
+          value={nom}
+          onChange={(e) => setNom(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && envoyer()}
-          placeholder="Votre prénom"
-          className="h-11 min-w-0 flex-1 rounded-full border border-foyer-border bg-white px-4 text-[15px] outline-none focus:border-foyer-sage"
+          placeholder="Nom"
+          autoComplete="family-name"
+          className="h-11 w-0 min-w-[120px] flex-1 rounded-full border border-foyer-border bg-white px-4 text-[15px] outline-none focus:border-foyer-sage"
         />
         <button
           type="button"
           onClick={envoyer}
-          disabled={busy || !prenom.trim()}
+          disabled={busy || !prenom.trim() || !nom.trim()}
           className="flex h-11 shrink-0 items-center justify-center rounded-full bg-foyer-sage px-5 font-medium text-white disabled:opacity-50"
         >
           {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : "Envoyer"}

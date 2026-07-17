@@ -15,8 +15,14 @@ export async function POST(req: NextRequest) {
   if (!(await checkRateLimit(getClientIp(req), "tester-name", 10))) {
     return NextResponse.json(RATE_LIMITED_BODY, { status: 429 });
   }
-  const { name } = (await req.json().catch(() => ({}))) as { name?: string };
-  const tag = (name ?? "")
+  const { name, firstName, lastName } = (await req.json().catch(() => ({}))) as {
+    name?: string;
+    firstName?: string;
+    lastName?: string;
+  };
+  // Nom COMPLET affichable (« Léa Dupont ») + tag slug (« lea-dupont »).
+  const complet = [firstName, lastName].filter((s) => s?.trim()).join(" ").trim() || (name ?? "").trim();
+  const tag = complet
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
     .replace(/[^\w-]+/g, "-")
@@ -44,10 +50,10 @@ export async function POST(req: NextRequest) {
   }
   let n = 0;
   for (const id of ids) {
-    await updateProject(id, { testerTag: tag });
+    await updateProject(id, { testerTag: tag, testerName: complet.slice(0, 120) });
     n += 1;
   }
-  console.log(`[tester-name] session nommée « ${tag} » → ${n} projet(s)`);
+  console.log(`[tester-name] session nommée « ${complet} » → ${n} projet(s)`);
 
   const res = NextResponse.json({ ok: true, tagged: n, tag });
   // Les projets FUTURS de ce navigateur héritent du nom (gravé à l'upload).
